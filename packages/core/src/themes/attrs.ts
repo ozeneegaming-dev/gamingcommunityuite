@@ -2,8 +2,8 @@ import { THEME_FORUM_STATS, THEME_HEADER_IMAGE_AREAS, THEME_LIST_LAYOUTS, THEME_
 
 /**
  * Atributele de pe `<html>` ale setărilor de sistem care schimbă aspectul componentelor (orice temă): aspectul listelor,
- * statisticile forumurilor, stilul loader-ului, banda „Sus / Jos”, bara de derulare, fragmentul din lista topicurilor și
- * imaginea antetului (unde stă și dacă apare pe telefon). CSS-ul de bază (`lists.css`, `loaders.css`, `scroll.css`,
+ * statisticile forumurilor, stilul loader-ului, banda „Sus / Jos”, bara de derulare, fragmentul din lista topicurilor,
+ * imaginea antetului (unde stă și dacă apare pe telefon) și videoul antetului (unde stă). CSS-ul de bază (`lists.css`, `loaders.css`, `scroll.css`,
  * `header-menus.css`) le citește; layout-ul rădăcină le pune la randare, iar sincronizarea (navigarea ACP ↔ site) și
  * previzualizarea editorului vizual le schimbă live.
  */
@@ -16,6 +16,7 @@ export const THEME_HTML_ATTRS = [
   "data-gcs-snippet",
   "data-gcs-header-image",
   "data-gcs-header-image-mobile",
+  "data-gcs-header-video",
 ] as const;
 export type GcsThemeHtmlAttr = (typeof THEME_HTML_ATTRS)[number];
 export type GcsThemeHtmlAttrs = Record<GcsThemeHtmlAttr, string>;
@@ -34,6 +35,8 @@ export function themeHtmlAttrs(s: Pick<GcsThemeSettings, "lists" | "loader" | "s
     // Fără imagine (nici încărcată, nici inclusă), antetul își păstrează fundalul temei.
     "data-gcs-header-image": image ? s.header.imageArea : "off",
     "data-gcs-header-image-mobile": onOff(s.header.imageMobile),
+    // Videoul stă în același loc ca imaginea (tot antetul sau primul rând).
+    "data-gcs-header-video": s.header.video !== null ? s.header.imageArea : "off",
   };
 }
 
@@ -47,6 +50,7 @@ const ALLOWED: Record<GcsThemeHtmlAttr, readonly string[]> = {
   "data-gcs-snippet": ["on", "off"],
   "data-gcs-header-image": ["off", ...THEME_HEADER_IMAGE_AREAS],
   "data-gcs-header-image-mobile": ["on", "off"],
+  "data-gcs-header-video": ["off", ...THEME_HEADER_IMAGE_AREAS],
 };
 
 /** Atributele primite sunt exact cele cunoscute, cu valori permise. */

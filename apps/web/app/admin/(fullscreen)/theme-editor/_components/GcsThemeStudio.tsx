@@ -3,6 +3,7 @@
 import type { GcsResult } from "@gcs/core";
 import {
   CUSTOM_CSS_FILE,
+  HEADER_VIDEO_MAX_MB,
   compileThemeCss,
   derivePalette,
   joinThemeCssFiles,
@@ -70,6 +71,8 @@ function imageUrl(v: GcsThemeStudioValue, slot: GcsStudioImageSlot): string | nu
       return v.settings.logo.imageMobileLight;
     case "headerImage":
       return v.settings.header.image;
+    case "headerVideo":
+      return v.settings.header.video;
     case "cockpitImage":
       return v.settings.cockpit.image;
   }
@@ -89,6 +92,7 @@ function headerOptions(s: GcsThemeSettings): Record<string, unknown> {
     mega: s.header.mega,
     navAlign: s.header.navAlign,
     placement: s.mobileNav.placement,
+    video: s.header.video,
   };
 }
 
@@ -96,6 +100,7 @@ function withImage(v: GcsThemeStudioValue, slot: GcsStudioImageSlot, url: string
   if (slot === "logo") return { ...v, logoUrl: url };
   if (slot === "favicon") return { ...v, faviconUrl: url };
   if (slot === "headerImage") return { ...v, settings: withThemePath(v.settings, "header.image", url) };
+  if (slot === "headerVideo") return { ...v, settings: withThemePath(v.settings, "header.video", url) };
   if (slot === "cockpitImage") return { ...v, settings: withThemePath(v.settings, "cockpit.image", url) };
   const key = slot === "logoLight" ? "imageLight" : slot === "logoMobile" ? "imageMobile" : "imageMobileLight";
   return { ...v, settings: withThemePath(v.settings, `logo.${key}`, url) };
@@ -362,6 +367,11 @@ export function GcsThemeStudio({
 
   // ─── Imaginile ─────────────────────────────────────────────────────────────
   const upload = async (slot: GcsStudioImageSlot, file: File) => {
+    const video = slot === "headerVideo";
+    // Videoul (până la 25 MB): un fișier prea mare se refuză înainte de trimitere (serverul verifică oricum).
+    if (video && file.size > HEADER_VIDEO_MAX_MB * 1024 * 1024) {
+      return setStatus({ tone: "error", text: t("images.videoTooLarge", { maxMb: HEADER_VIDEO_MAX_MB }) });
+    }
     setUploading(slot);
     await flush();
     setStatus({ tone: "muted", text: t("status.uploading") });
@@ -369,7 +379,7 @@ export function GcsThemeStudio({
     body.set("file", file);
     body.set("kind", slot);
     body.set("theme", themeKey);
-    const res = (await fetch("/api/themes/images", { method: "POST", body })
+    const res = (await fetch(video ? "/api/themes/video" : "/api/themes/images", { method: "POST", body })
       .then((r) => r.json())
       .catch(() => ({ ok: false, error: { code: "internal", status: 500 } }))) as GcsResult<{ url: string }>;
     setUploading(null);

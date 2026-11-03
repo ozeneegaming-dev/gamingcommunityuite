@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { themeHtmlAttrs } from "./attrs";
+import { isThemeHtmlAttrs, themeHtmlAttrs } from "./attrs";
 import { compileThemeCss } from "./css";
 import {
   DEFAULT_THEME_SETTINGS,
   GCS_DARK_THEME_SETTINGS,
   GCS_WHITE_THEME_SETTINGS,
+  HEADER_VIDEO_MAX_MB,
   NOVA_ONLY_FIELDS,
   NOVA_THEME_SETTINGS,
   THEME_FIELDS,
@@ -56,6 +57,32 @@ describe("setările imaginii antetului", () => {
   });
 });
 
+describe("videoul antetului", () => {
+  test("setare a sistemului, implicit fără video în toate temele, doar un fișier al site-ului", () => {
+    expect(THEME_FIELDS["header.video"]).toEqual({ kind: "file" });
+    expect(NOVA_ONLY_FIELDS).not.toContain("header.video");
+    for (const s of [DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS, GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) expect(s.header.video).toBeNull();
+    expect(normalizeThemeSettings({ preset: "nova", header: { image: null } }).header.video).toBeNull();
+    expect(themeSettingsErrors({ header: { video: "/files/clip_01" } })).toEqual({});
+    for (const bad of ["https://cdn.example.com/a.mp4", "javascript:alert(1)", "/files/../etc/passwd", 7]) {
+      expect(themeSettingsErrors({ header: { video: bad } }), String(bad)).toEqual({ "header.video": "invalid" });
+    }
+    expect(normalizeThemeSettings({ header: { video: "https://cdn.example.com/a.mp4" } }).header.video).toBeNull();
+    expect(HEADER_VIDEO_MAX_MB).toBe(25);
+  });
+
+  test("atributul de pe <html>: `off` fără video, altfel zona imaginii (și fără imagine de rezervă)", () => {
+    expect(themeHtmlAttrs(DEFAULT_THEME_SETTINGS)["data-gcs-header-video"]).toBe("off");
+    expect(themeHtmlAttrs(set(DEFAULT_THEME_SETTINGS, { "header.art": "forja" }))["data-gcs-header-video"]).toBe("off");
+    const alone = themeHtmlAttrs(set(DEFAULT_THEME_SETTINGS, { "header.video": "/files/clip01" }));
+    expect([alone["data-gcs-header-video"], alone["data-gcs-header-image"]]).toEqual(["all", "off"]);
+    const top = themeHtmlAttrs(set(GCS_DARK_THEME_SETTINGS, { "header.video": "/files/clip01", "header.imageArea": "top" }));
+    expect([top["data-gcs-header-video"], top["data-gcs-header-image"]]).toEqual(["top", "top"]);
+    expect(isThemeHtmlAttrs(top)).toBe(true);
+    expect(isThemeHtmlAttrs({ ...top, "data-gcs-header-video": "middle" })).toBe(false);
+  });
+});
+
 describe("CSS-ul temei", () => {
   test("imaginea inclusă vine din variabila de pe <html>, cea încărcată are prioritate", () => {
     expect(compileThemeCss(DEFAULT_THEME_SETTINGS, "")).toContain("--gcs-header-image: none;");
@@ -102,6 +129,21 @@ describe("fișierele", () => {
     expect(sheet).toContain("transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)");
     // Doar fundaluri: un pseudo-element poziționat ar acoperi rândurile statice ale antetului Esports.
     expect(sheet).not.toMatch(/data-gcs-header-image[^{]*::(before|after)/);
+  });
+
+  test("videoul: un strat sub rânduri în contextul antetului, cu straturile imaginii, ascuns în bara compactă", () => {
+    // Antetul are deja un context de suprapunere (poziționat, z-index 40): stratul cu z-index -1 stă peste fundalul lui
+    // și sub rândurile statice (altfel ar cădea sub fundalul paginii).
+    expect(sheet).toMatch(/:root \.gcs-hb \{[^}]*position: relative;[^}]*z-index: 40;/);
+    expect(sheet).toMatch(/:root \.gcs-hb__video \{[^}]*position: absolute;[^}]*inset: 0;[^}]*z-index: -1;[^}]*overflow: hidden;[^}]*pointer-events: none;[^}]*opacity: 0;/);
+    expect(sheet).toContain(":root .gcs-hb__video[data-playing] {\n  opacity: 1;");
+    expect(sheet).toContain(":root .gcs-hb[data-compact] > .gcs-hb__video {\n  opacity: 0;\n  visibility: hidden;");
+    expect(sheet).toContain(':root[data-gcs-header-video="top"] .gcs-hb__video {\n  bottom: auto;\n  height: var(--hb-video-h, 100%);');
+    // Nuanța, întunecarea și estomparea imaginii se aplică și videoului.
+    expect(sheet).toMatch(/\.gcs-hb__video::before \{[^}]*var\(--gcs-header-image-tint, 0%\)[^}]*mix-blend-mode: color;/);
+    expect(sheet).toMatch(/\.gcs-hb__video::after \{[^}]*var\(--gcs-header-image-fade, 85%\)[^}]*var\(--gcs-header-image-dim, 15%\)/);
+    // Cât rulează videoul, imaginea de pe primul rând (în flux, deasupra stratului) se scoate.
+    expect(sheet).toContain(":root .gcs-hb:has(> .gcs-hb__video[data-playing]):not([data-compact]) > .gcs-hb__row:first-child {\n  background: none;");
   });
 
   test("layout-ul rădăcină dă adresa fiecărei imagini incluse", () => {

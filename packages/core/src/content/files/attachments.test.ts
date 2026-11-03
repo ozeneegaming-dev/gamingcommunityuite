@@ -9,7 +9,8 @@ import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from ".
 import type { GcsModule } from "../../modules/registry";
 import { GcsRateLimiter } from "../../auth/rateLimit";
 import type { GcsActor } from "../../permissions/types";
-import { GCS_DEFAULT_UPLOAD_POLICY, GcsAttachmentService, thumbnailKey } from "./attachments";
+import { HEADER_VIDEO_MAX_MB } from "../../themes/settings";
+import { GCS_DEFAULT_UPLOAD_POLICY, GcsAttachmentService, HEADER_VIDEO_CONTENT_TYPE, thumbnailKey } from "./attachments";
 import { GCS_IMAGE_DEFAULTS, type GcsUploadPolicy } from "./images";
 import { GcsLocalFileStore } from "./localStore";
 
@@ -229,6 +230,100 @@ describe("GcsAttachmentService.uploadSiteImage", () => {
     await expect(service.uploadSiteImage(member, { name: "a.svg", bytes: Buffer.from("<svg onload=alert(1)/>") }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);
     await expect(service.uploadSiteImage(member, { name: "a.png", bytes: Buffer.alloc(3 * 1024 * 1024) }, { kind: "logo", themeKey: "default" })).rejects.toBeInstanceOf(GcsValidationError);
     await expect(service.uploadSiteImage(guest, { name: "a.png", bytes: await png() }, { kind: "favicon", themeKey: "default" })).rejects.toBeInstanceOf(GcsForbidden);
+  });
+});
+
+/** O cutie MP4: mărimea (4 octeți), tipul și conținutul. */
+function box(type: string, ...parts: Buffer[]): Buffer {
+  const body = Buffer.concat(parts);
+  const head = Buffer.alloc(8);
+  head.writeUInt32BE(8 + body.length, 0);
+  head.write(type, 4, "latin1");
+  return Buffer.concat([head, body]);
+}
+
+/** Un MP4 minim (`ftyp` cu marca dată + `moov/mvhd` cu durata), ca în testele media ale pluginurilor. */
+function mp4(seconds: number, brand = "isom"): Buffer {
+  const mvhd = Buffer.alloc(100);
+  mvhd.writeUInt32BE(1000, 12);
+  mvhd.writeUInt32BE(seconds * 1000, 16);
+  return Buffer.concat([box("ftyp", Buffer.from(`${brand}\0\0\x02\0${brand}iso2mp41`, "latin1")), box("moov", box("mvhd", mvhd))]);
+}
+
+/** Un element EBML cu id-ul și conținutul (mărimea pe 8 octeți). */
+function ebml(id: number[], data: Buffer): Buffer {
+  const size = Buffer.alloc(8);
+  size.writeUInt8(0x01, 0);
+  size.writeUIntBE(data.length, 2, 6);
+  return Buffer.concat([Buffer.from(id), size, data]);
+}
+
+/** Un WebM minim: antetul EBML (doctype `webm`) și `Segment/Info` cu durata. */
+function webm(seconds: number): Buffer {
+  const header = ebml([0x1a, 0x45, 0xdf, 0xa3], ebml([0x42, 0x82], Buffer.from("webm")));
+  const duration = Buffer.alloc(8);
+  duration.writeDoubleBE(seconds * 1000, 0);
+  const info = ebml([0x15, 0x49, 0xa9, 0x66], Buffer.concat([ebml([0x2a, 0xd7, 0xb1], Buffer.from([0x0f, 0x42, 0x40])), ebml([0x44, 0x89], duration)]));
+  return Buffer.concat([header, ebml([0x18, 0x53, 0x80, 0x67], info)]);
+}
+
+/** Codul erorii de validare a fișierului (sau `ok`). */
+async function fileError(p: Promise<unknown>): Promise<string> {
+  try {
+    await p;
+    return "ok";
+  } catch (e) {
+    return e instanceof GcsValidationError ? (e.fields.file ?? "?") : e instanceof GcsForbidden ? "forbidden" : String(e);
+  }
+}
+
+describe("GcsAttachmentService.uploadSiteVideo (videoul antetului)", () => {
+  test("MP4 și WebM, tipul citit din conținut, păstrate neschimbate; publice prin tema lor și afișate în pagină", async () => {
+    const bytes = mp4(4);
+    const clip = await service.uploadSiteVideo(member, { name: "intro.mov", bytes }, { themeKey: "gcs-dark" });
+    expect(clip).toMatchObject({ mime: "video/mp4", filename: "header-video.mp4", size: bytes.length, isImage: false, url: `/files/${clip.id}` });
+    expect(await world.db.attachment.findUniqueOrThrow({ where: { id: clip.id } })).toMatchObject({ contentType: HEADER_VIDEO_CONTENT_TYPE, contentId: "gcs-dark" });
+    service.registerAccess(HEADER_VIDEO_CONTENT_TYPE, async () => true);
+    const opened = await service.open(guest, clip.id);
+    expect(opened).toMatchObject({ mime: "video/mp4", inline: true, seekable: true, range: null, size: bytes.length });
+    expect((await readAll(opened.body)).equals(bytes)).toBe(true);
+    await expect(service.uploadSiteVideo(member, { name: "loop.webm", bytes: webm(3) }, { themeKey: "gcs-dark" })).resolves.toMatchObject({ mime: "video/webm", filename: "header-video.webm" });
+  });
+
+  test("cererile Range primesc doar partea cerută (mărimea rămâne a întregului fișier)", async () => {
+    const bytes = mp4(6);
+    const clip = await service.uploadSiteVideo(member, { name: "a.mp4", bytes }, { themeKey: "gcs-dark" });
+    service.registerAccess(HEADER_VIDEO_CONTENT_TYPE, async () => true);
+    let seen = 0;
+    const part = await service.open(guest, clip.id, {
+      range: (size) => {
+        seen = size;
+        return { start: 10, end: 39 };
+      },
+    });
+    expect(seen).toBe(bytes.length);
+    expect(part).toMatchObject({ size: bytes.length, range: { start: 10, end: 39 } });
+    expect((await readAll(part.body)).equals(bytes.subarray(10, 40))).toBe(true);
+  });
+
+  test("celelalte fișiere nu se derulează: Range e ignorat, fișierul vine întreg", async () => {
+    const att = await service.upload(member, { name: "a.png", bytes: await png() }, CTX);
+    const opened = await service.open(member, att.id, { range: () => ({ start: 0, end: 1 }) });
+    expect(opened.seekable).toBeUndefined();
+    expect((await readAll(opened.body)).length).toBe(opened.size);
+  });
+
+  test("refuzate: alt tip (după conținut, nu după nume), containerul fără durată, peste 25 MB, vizitatorul", async () => {
+    const upload = (bytes: Buffer, actor = member) => service.uploadSiteVideo(actor, { name: "a.mp4", bytes }, { themeKey: "gcs-dark" });
+    expect(await fileError(upload(await png()))).toBe("unsupported_type");
+    expect(await fileError(upload(Buffer.from("<html><script>alert(1)</script></html>")))).toBe("unsupported_type");
+    // QuickTime (`qt  `) nu e MP4: browserele nu-l redau peste tot.
+    expect(await fileError(upload(mp4(4, "qt  ")))).toBe("unsupported_type");
+    // Semnătura MP4 fără `moov`: nu e un video adevărat.
+    expect(await fileError(upload(box("ftyp", Buffer.from("isom\0\0\x02\0isomiso2mp41", "latin1"))))).toBe("invalid_video");
+    expect(await fileError(upload(Buffer.concat([mp4(4), Buffer.alloc(HEADER_VIDEO_MAX_MB * 1024 * 1024)])))).toBe("too_large");
+    expect(await fileError(upload(mp4(4), guest))).toBe("forbidden");
+    expect(await world.db.attachment.count({ where: { contentType: HEADER_VIDEO_CONTENT_TYPE } })).toBe(0);
   });
 });
 

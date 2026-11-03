@@ -352,6 +352,7 @@
       "invalid_parent": "Parent not allowed",
       "cycle": "A forum can't be moved under its own subforum",
       "invalid_image": "Invalid or damaged image",
+      "invalid_video": "Invalid or damaged video",
       "invalid_number": "The value must be a number.",
       "same_email": "This is already your address.",
       "taken": "This value is already used by another account.",
@@ -7446,9 +7447,13 @@
       "logoMobileLight": "Mobile logo (light mode)",
       "favicon": "Favicon",
       "none": "No image",
+      "noVideo": "No video",
       "upload": "Upload",
       "remove": "Remove",
+      "videoTooLarge": "The video is over {maxMb} MB. Upload a smaller one.",
       "headerImage": "Your image (takes priority)",
+      "headerVideo": "Header video (MP4 / WebM)",
+      "headerVideoHelp": "Plays by itself, muted and looping, on desktop and tablet, up to 25 MB. The image above stays as the fallback: on phones, for visitors with reduced motion and until the video loads.",
       "cockpitImage": "Console background"
     },
     "tokens": {

@@ -213,6 +213,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
         mega: s.header.mega,
         navAlign: s.header.navAlign,
         placement: s.mobileNav.placement,
+        video: s.header.video,
       }}
       mobileBar={
         <GcsMobileBar
