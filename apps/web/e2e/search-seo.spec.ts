@@ -38,7 +38,12 @@ test("Review Focus #2: un topic dintr-un forum ascuns vizitatorilor lipsește di
   const visible = await topicWithReplies(request, open.forum.id, `secret-${id}@example.com`, `Public${id} pentru toți`);
   await fixture(request, { action: "permissions", forumId: t.forum.id, groupKey: "guest", actions: [] });
 
-  const sitemap = await (await request.get("/sitemap.xml")).text();
+  // `/sitemap.xml` e indexul: adresele sunt în fișierele lui (`/sitemap/topics-1.xml`…).
+  const index = await (await request.get("/sitemap.xml")).text();
+  const files = [...index.matchAll(/<loc>[^<]*(\/sitemap\/[^<]+)<\/loc>/g)].map((m) => m[1]!);
+  expect(files.length).toBeGreaterThan(0);
+  let sitemap = "";
+  for (const f of files) sitemap += await (await request.get(f)).text();
   expect(sitemap).toContain(`/topic/${visible.topicId}-`);
   expect(sitemap).not.toContain(`/topic/${hidden.topicId}-`);
   expect(sitemap).not.toContain(`/forum/${t.forum.id}-`);

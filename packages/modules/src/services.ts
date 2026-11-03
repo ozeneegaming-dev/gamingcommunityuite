@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
+  applyContentPolicy,
+  remoteImageShown,
   GcsInstallState,
   GcsLicenseOnline,
   GcsAcpDashboardService,
@@ -168,6 +170,11 @@ import { GcsMemberPanelData } from "./profile/memberPanels";
 import { GcsAntispamService } from "./antispam/service";
 import { GcsIpToolsService, IP_TOOLS_ACP_SECTION } from "./antispam/ipTools";
 import { GcsRetentionService } from "./security/retention";
+import { loadContentPolicy } from "./seo/meta";
+import { GcsIndexNowService } from "./seo/indexnow";
+import { GcsSitemapService } from "./seo/sitemap";
+import { GcsOrphanFilesService } from "./uploads/orphans";
+import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
   db: PrismaClient;
@@ -243,6 +250,12 @@ export type GcsServices = {
   passwordReset: GcsPasswordResetService;
   /** Perioadele de păstrare a datelor (jobul zilnic `system.retention`). */
   retention: GcsRetentionService;
+  /** Sitemap-ul (ACP → Promovare → SEO): indexul și fișierele pe tip de conținut, doar ce vede un vizitator. */
+  sitemap: GcsSitemapService;
+  /** IndexNow (ACP → Promovare → SEO): cheia și jobul care anunță topicurile publice noi. */
+  indexNow: GcsIndexNowService;
+  /** Curățarea fișierelor încărcate și nelegate de nimic (jobul zilnic `uploads.orphans`). */
+  orphanFiles: GcsOrphanFilesService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -506,7 +519,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     secret: () => process.env.GCS_SECRET ?? "gcs-dev-secret-not-for-production-use",
   });
   const files = createFileStore(opts.configDir);
-  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter });
+  // Extensiile permise și imaginile (latura, calitatea, WebP, metadatele, miniaturile): ACP → Setări → Încărcări și imagini.
+  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter, policy: () => loadUploadPolicy(settings) });
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
@@ -692,6 +706,14 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   // Stilul numelor din pastilele mențiunilor (decorarea de bază, înaintea extensiilor); `appearance` e creat mai jos.
   chatExtensions.useBase(chatMentionNames({ db, letterUsers: () => appearance.letterUsers() }));
+  // Linkurile externe (nofollow după ACP → SEO) și imaginile externe (ACP → Încărcări și imagini) ale mesajelor.
+  chatExtensions.useBase(async (views) => {
+    const policy = await loadContentPolicy(settings, siteHost(await settings.get<string>("site.url")));
+    for (const v of views) {
+      v.html = applyContentPolicy(v.html, policy);
+      if (policy.remoteImages !== "allow") v.embeds = v.embeds.filter((e) => e.kind !== "image" || remoteImageShown(e.url, policy));
+    }
+  });
   const chatQueries = new GcsChatQueries({ db, permissions, extensions: chatExtensions, rights: chatRights });
   const chatModeration = new GcsChatModeration({ db, permissions, settings, realtime, acp, chat, warnings, notifications, reports });
   const chatPro = new GcsChatProService({
@@ -867,6 +889,21 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     if (typeof userId === "string") await jobs.enqueue(BOT_WELCOME_JOB, { userId }, { jobId: `bot-welcome-${userId}` });
   });
 
+  // Sitemap-ul: ce vede grupul `guest` (forumuri, topicuri, profiluri publice, clanuri, servere).
+  const sitemap = new GcsSitemapService({
+    db,
+    settings,
+    permissions,
+    apps,
+    cache,
+    guest: async () => {
+      const g = await db.group.findUniqueOrThrow({ where: { key: "guest" }, select: { id: true } });
+      return { userId: null, groupIds: [g.id], primaryGroupId: g.id, isBanned: false, ip: "0.0.0.0" };
+    },
+    clansVisible: (actor) => clanQueries.canView(actor),
+    serverIds: (actor) => serverQueries.visibleIds(actor),
+  });
+
   const services: GcsServices = {
     db,
     licenseOnline,
@@ -933,6 +970,14 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       ipLimit: () => process.env.GCS_DISABLE_RATE_LIMIT !== "1",
     }),
     retention: new GcsRetentionService({ db, settings }),
+    sitemap,
+    indexNow: new GcsIndexNowService({
+      db,
+      settings,
+      siteUrl: async () => baseUrl(await settings.get<string>("site.url")),
+      changedTopics: (since, limit) => sitemap.changedTopics(since, limit),
+    }),
+    orphanFiles: new GcsOrphanFilesService({ db, settings, attachments }),
     files,
     attachments,
     forums,

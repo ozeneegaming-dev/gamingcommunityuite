@@ -10,7 +10,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
-import type { GcsByteRange, GcsFileStore, GcsStoredFile } from "./store";
+import type { GcsByteRange, GcsFileStore, GcsFileStoreInfo, GcsStoredFile } from "./store";
 
 export type GcsS3Config = { endpoint: string; accessKey: string; secretKey: string; bucket: string; region?: string };
 
@@ -73,5 +73,11 @@ export class GcsS3FileStore implements GcsFileStore {
 
   async delete(key: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
+  }
+
+  /** Host-ul endpoint-ului și bucket-ul (fără cheile de acces). */
+  describe(): GcsFileStoreInfo {
+    const host = URL.canParse(this.config.endpoint) ? new URL(this.config.endpoint).host : this.config.endpoint;
+    return { driver: "s3", location: `${host}/${this.config.bucket}` };
   }
 }

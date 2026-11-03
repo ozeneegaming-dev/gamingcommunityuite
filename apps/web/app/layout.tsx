@@ -9,7 +9,8 @@ import { themeMode, viewerTheme } from "@/lib/appearance";
 import { nameLetterUsers } from "@/lib/member-names";
 import type { ReactNode } from "react";
 import { services } from "@/lib/services";
-import { siteBaseUrl } from "@/lib/seo";
+import { titleTemplate, verificationMetadata } from "@gcs/modules";
+import { seoMeta, siteBaseUrl } from "@/lib/seo";
 import { designClass, SITE_AREA_HEADER } from "@/lib/theme-preview";
 import { GcsThemePreviewBridge } from "./(site)/_components/edit/GcsThemePreviewBridge";
 import "./globals.css";
@@ -30,18 +31,26 @@ async function orDefault<T>(value: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-/** Titlul vine din setarea `site.name` (ACP → Setări → Generale) și se schimbă fără restart. */
+/**
+ * Titlul vine din setarea `site.name` (ACP → Setări → Generale), în formatul din ACP → Promovare → SEO
+ * (`{page} · {site}`); tot de acolo descrierea implicită, imaginea de distribuire, contul X și codurile de verificare
+ * ale motoarelor de căutare. Se schimbă fără restart.
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const siteName = await orDefault(() => services().settings.get<string>("site.name"), "GamingCommunitySuite");
   const base = await siteBaseUrl();
   const { shown } = await viewerTheme();
-  const custom = await orDefault(() => services().settings.get<string>("site.description"), "");
-  const description = custom.trim() || (await orDefault(async () => (await getTranslations("site"))("metaDescription", { name: siteName }), siteName));
+  const seo = await seoMeta();
+  const description = seo.description || (await orDefault(async () => (await getTranslations("site"))("metaDescription", { name: siteName }), siteName));
+  const images = seo.shareImage ? [seo.shareImage] : undefined;
+  const verification = verificationMetadata(seo.verification);
   return {
-    title: { default: siteName, template: `%s · ${siteName}` },
+    title: { default: siteName, template: titleTemplate(seo.titleFormat, siteName) },
     description,
     metadataBase: new URL(base),
-    openGraph: { siteName, type: "website" },
+    openGraph: { siteName, type: "website", title: siteName, description, ...(images ? { images } : {}) },
+    twitter: { card: images ? "summary_large_image" : "summary", title: siteName, description, ...(images ? { images } : {}), ...(seo.xHandle ? { site: seo.xHandle } : {}) },
+    ...(verification ? { verification } : {}),
     ...(shown.faviconUrl ? { icons: { icon: [{ url: shown.faviconUrl, type: "image/png" }] } } : {}),
   };
 }

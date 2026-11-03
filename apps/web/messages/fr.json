@@ -471,7 +471,15 @@
       "invalid_svg": "Le SVG n'est pas valide ou ne peut pas être nettoyé.",
       "password_needs_mix": "Le mot de passe doit contenir des lettres et des chiffres.",
       "password_too_long": "Le mot de passe peut avoir au plus 128 caractères.",
-      "password_policy_length": "Le mot de passe est trop court pour la règle du site (voir sous le champ)."
+      "password_policy_length": "Le mot de passe est trop court pour la règle du site (voir sous le champ).",
+      "extension_not_allowed": "Cette extension de fichier n’est pas autorisée sur ce site.",
+      "dangerous_type": "Ce type de fichier ne peut pas être envoyé (programmes, scripts, pages web).",
+      "type_mismatch": "L’extension ne correspond pas au type réel du fichier.",
+      "dangerous_extension": "La liste contient une extension dangereuse (programmes, scripts, pages web, SVG).",
+      "unknown_extension": "La liste contient une extension que la plateforme n’accepte pas.",
+      "invalid_domain": "Seulement des domaines (ex. exemple.fr), un par ligne.",
+      "page_placeholder": "Le format doit contenir '{page}' une seule fois, sans chevrons.",
+      "invalid_token": "Code invalide : seulement la valeur de content=\"…\" ou toute la balise meta."
     }
   },
   "acp": {
@@ -563,7 +571,8 @@
         "apps_dev": "Development",
         "update": "Mise à jour",
         "cron": "Cron",
-        "bot": "Bot de la communauté"
+        "bot": "Bot de la communauté",
+        "settings_uploads": "Envois et images"
       },
       "members": {
         "members": "Membres",
@@ -1421,7 +1430,9 @@
         "donations": "Dons",
         "warnings": "Avertissements",
         "2fa": "Sécurité",
-        "terms": "Conditions et confidentialité"
+        "terms": "Conditions et confidentialité",
+        "uploads": "Envois et images",
+        "seo": "SEO"
       },
       "save": "Enregistrer les paramètres",
       "secretSet": "•••• enregistré (laissez vide pour conserver la valeur)",
@@ -4871,6 +4882,70 @@
         "notifications": "Notifications lues : {value}.",
         "edit": "Modifier"
       }
+    },
+    "seo": {
+      "title": "SEO",
+      "intro": "Comment la communauté apparaît dans les moteurs de recherche et quand elle est partagée : titres, robots.txt, sitemap, IndexNow, vérification du site et liens externes.",
+      "save": "Enregistrer",
+      "meta": {
+        "title": "Titre et métadonnées",
+        "hint": "Le titre dans la barre du navigateur, la description par défaut et l’image affichée quand une page est partagée.",
+        "image": "Image de partage",
+        "imageHint": "PNG, JPEG, WebP ou GIF, 5 Mo max. ; 1200 × 630 px recommandé. Convertie en WebP.",
+        "upload": "Envoyer",
+        "replace": "Remplacer",
+        "uploading": "Envoi…",
+        "remove": "Retirer"
+      },
+      "robots": {
+        "title": "robots.txt",
+        "hint": "Les pages que les robots des moteurs de recherche peuvent lire.",
+        "preview": "Ce que reçoivent les robots maintenant :"
+      },
+      "sitemap": {
+        "title": "Sitemap",
+        "hint": "La liste des pages publiques pour les moteurs de recherche : seulement ce que voit un visiteur, avec la date de dernière modification.",
+        "status": "Fichiers dans l’index : {files}.",
+        "off": "Le sitemap est désactivé (/sitemap.xml répond 404)."
+      },
+      "indexNow": {
+        "title": "IndexNow",
+        "hint": "Signale aussitôt le nouveau contenu aux moteurs de recherche (Bing, Yandex et les autres qui utilisent le protocole). La clé est générée automatiquement.",
+        "key": "Clé",
+        "noKey": "générée à l’activation",
+        "keyFile": "fichier de la clé",
+        "lastRun": "Dernier lot : {at}",
+        "lastSent": "envoyées : {count}, à {at}",
+        "lastError": "erreur : {error}",
+        "retryAt": "prochaine tentative : {at}",
+        "never": "jamais",
+        "regenerate": "Nouvelle clé",
+        "regenerateConfirm": "La clé actuelle ne sera plus servie ; les moteurs recevront la nouvelle au prochain lot."
+      },
+      "verification": {
+        "title": "Vérification du site",
+        "hint": "Les codes des consoles des moteurs de recherche ; ajoutés comme balises meta dans l’en-tête de chaque page."
+      },
+      "links": {
+        "title": "Liens externes",
+        "hint": "Appliqué à l’affichage, aussi au contenu déjà écrit : messages, signatures, profils, messages privés et chat."
+      }
+    },
+    "uploads": {
+      "storageTitle": "Stockage des fichiers",
+      "driver": "Pilote",
+      "drivers": {
+        "local": "Disque local",
+        "s3": "S3 / MinIO",
+        "unknown": "Inconnu"
+      },
+      "driverHint": "Choisi dans l’environnement du serveur (S3_ENDPOINT pour S3 / MinIO, sinon le dossier des envois), pas dans l’ACP.",
+      "limitsTitle": "Taille maximale par groupe",
+      "limitsHint": "Le réglage de groupe « upload.max_mb », modifiable sur chaque groupe (ACP → Groupes).",
+      "unlimited": "illimitée",
+      "mb": "{mb} Mo",
+      "none": "ne peut pas envoyer",
+      "unattached": "Fichiers envoyés et pas encore joints à un contenu : {count}."
     }
   },
   "settings": {
@@ -4939,7 +5014,12 @@
       "all_devices": "Tous les appareils",
       "poll": "Polling uniquement (hébergeurs qui coupent les connexions longues)",
       "backup_codes": "Codes de secours uniquement",
-      "email_code": "Codes de secours ou un code par e-mail"
+      "email_code": "Codes de secours ou un code par e-mail",
+      "default": "Par défaut (généré par la plateforme)",
+      "custom": "Personnalisé",
+      "allow": "Affichées",
+      "https_only": "HTTPS uniquement",
+      "block": "Bloquées (affichées comme lien)"
     },
     "forums": {
       "posts_per_page": "Postes par page",
@@ -5575,6 +5655,60 @@
       "plugin_log_days_hint": "Erreurs et messages des plugins.",
       "sessions_days": "Sessions expirées (jours)",
       "sessions_days_hint": "Sessions et codes de vérification expirés depuis autant de jours."
+    },
+    "seo": {
+      "robots_mode": "robots.txt",
+      "robots_mode_hint": "Par défaut : tout le site est ouvert, sauf l’ACP, l’API, l’installateur, la connexion, la recherche et les pages privées des membres.",
+      "robots_custom": "Texte personnalisé",
+      "robots_custom_hint": "Utilisé seulement avec « Personnalisé » (10 000 caractères au plus). La ligne Sitemap est ajoutée automatiquement si elle manque.",
+      "sitemap_enabled": "Sitemap activé",
+      "sitemap_pages": "Page d’accueil et pages publiques",
+      "sitemap_forums": "Forums",
+      "sitemap_topics": "Sujets",
+      "sitemap_members": "Profils des membres",
+      "sitemap_clans": "Clans",
+      "sitemap_servers": "Serveurs de jeu",
+      "sitemap_max_urls": "Adresses par type de contenu (maximum)",
+      "sitemap_max_urls_hint": "L’index est découpé en fichiers de 10 000 adresses au plus (la limite du protocole est 50 000).",
+      "indexnow_enabled": "IndexNow activé",
+      "indexnow_enabled_hint": "Les nouveaux sujets publics et ceux avec de nouvelles réponses sont signalés aux moteurs de recherche, par lots, toutes les 10 minutes.",
+      "indexnow_key": "Clé IndexNow",
+      "title_format": "Format du titre",
+      "title_format_hint": "'{page}' = titre de la page (obligatoire), '{site}' = nom du site. Ex. : '{page} · {site}'",
+      "description": "Description du site",
+      "description_hint": "Utilisée comme méta-description sur les pages sans description propre (300 caractères max.). Vide = un texte générique avec le nom du site.",
+      "share_image": "Image de partage (adresse)",
+      "share_image_hint": "Une adresse https:// ou une image envoyée ci-dessous ; affichée quand une page sans image est partagée (OpenGraph, X).",
+      "x_handle": "Compte X (Twitter)",
+      "x_handle_hint": "Ex. : @ma_communaute — affiché dans les cartes X des pages.",
+      "google_verification": "Google Search Console",
+      "google_verification_hint": "Seulement le code de content=\"…\" ou toute la balise meta copiée depuis la console.",
+      "bing_verification": "Bing Webmaster Tools",
+      "yandex_verification": "Yandex Webmaster",
+      "nofollow_external": "rel=\"nofollow\" sur les liens externes",
+      "nofollow_external_hint": "Les liens du contenu des membres vers d’autres sites reçoivent rel=\"nofollow ugc noopener\". Pas les liens internes.",
+      "nofollow_exclude": "Domaines sans nofollow",
+      "nofollow_exclude_hint": "Un domaine par ligne (ex. les sites des serveurs de la communauté). Les sous-domaines sont inclus.",
+      "index_profiles": "Indexer les profils des membres",
+      "index_profiles_hint": "Désactivé : les profils reçoivent noindex et sont exclus du sitemap."
+    },
+    "uploads": {
+      "allowed_extensions": "Extensions autorisées pour les pièces jointes",
+      "allowed_extensions_hint": "Séparées par des virgules. L’extension et le type réel du fichier sont vérifiés ; programmes, scripts, pages web et SVG sont toujours refusés.",
+      "image_max_side": "Côté maximal des images (px)",
+      "image_max_side_hint": "Les images plus grandes sont réduites à l’envoi (320–10 000).",
+      "image_quality": "Qualité des images (%)",
+      "image_quality_hint": "Pour JPEG et WebP (30–100). S’applique aussi aux avatars et couvertures.",
+      "convert_webp": "Convertir les images en WebP",
+      "convert_webp_hint": "Fichiers plus légers à qualité égale ; les GIF animés restent animés.",
+      "strip_metadata": "Supprimer les métadonnées (EXIF, GPS)",
+      "strip_metadata_hint": "Recommandé : les photos de téléphone contiennent la position et le modèle de l’appareil.",
+      "thumbnail_side": "Côté des miniatures (px)",
+      "thumbnail_side_hint": "0 = sans miniatures ; sinon 64–1200. Créées seulement pour les images plus grandes.",
+      "remote_images": "Images d’autres sites",
+      "remote_images_hint": "Dans les messages, signatures, profils et messages privés. Bloquées = affichées comme lien vers l’image.",
+      "orphan_days": "Supprimer les fichiers inutilisés après (jours)",
+      "orphan_days_hint": "Fichiers envoyés et jamais joints à un message, chaque jour, par lots. 0 = désactivé. Recommandé : au moins 7."
     }
   },
   "permissions": {

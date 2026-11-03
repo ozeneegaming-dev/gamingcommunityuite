@@ -13,6 +13,7 @@ import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumListSlots, forumPageSlots, GcsSlot, GcsSlotStyles } from "@/lib/forum-slots";
 import { forumHref, newTopicHref } from "@/lib/forum-urls";
 import { GcsNamedHtml } from "@/lib/member-names";
+import { pageMetadata } from "@/lib/seo";
 import { services } from "@/lib/services";
 import { TOPIC_VIEW_COOKIE, TOPIC_VIEWS } from "@/lib/view-cookies";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
@@ -35,12 +36,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!forum) return {};
   const canonical = forumHref(forum, pageParam((await searchParams).page));
   const rss = (await services().settings.get<boolean>("forums.rss_enabled")) ? { types: { "application/rss+xml": `/forum/${forum.id}/rss.xml` } } : {};
-  return {
-    title: forum.name,
-    ...(forum.description ? { description: forum.description } : {}),
-    alternates: { canonical, ...rss },
-    openGraph: { title: forum.name, url: canonical },
-  };
+  return pageMetadata({ title: forum.name, description: forum.description, path: canonical, alternates: rss });
 }
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);

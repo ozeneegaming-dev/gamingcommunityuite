@@ -5,6 +5,8 @@ import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
 import { LEGAL_SETTING_DEFS, RETENTION_SETTING_DEFS, SECURITY_SETTING_DEFS } from "../security/settings";
+import { SEO_SETTING_DEFS } from "../seo/settings";
+import { UPLOAD_SETTING_DEFS } from "../uploads/settings";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, WARNINGS_ACK_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
@@ -55,8 +57,7 @@ const botFeaturesError = (v: unknown) =>
 
 const settings: GcsSettingDef[] = [
   setting("site.name", "string", "Comunitatea mea", "general", notEmpty),
-  // Descrierea din `<meta name="description">` (motoarele de căutare); goală → un text generic cu numele site-ului.
-  setting("site.description", "string", "", "general", (v) => ((v as string).length > 300 ? "too_long" : null)),
+  // Descrierea din `<meta name="description">` (`site.description`) e în ACP → Promovare → SEO (`SEO_SETTING_DEFS`).
   setting("site.url", "string", "", "general", isUrlOrEmpty),
   { ...setting("site.locale", "string", "ro", "general", oneOf([...GCS_LOCALE_KEYS])), options: [...GCS_LOCALE_KEYS] },
   setting("site.timezone", "string", "Europe/Bucharest", "general", notEmpty),
@@ -138,6 +139,10 @@ const settings: GcsSettingDef[] = [
   ...SECURITY_SETTING_DEFS,
   ...LEGAL_SETTING_DEFS,
   ...RETENTION_SETTING_DEFS,
+  // ACP → Promovare → SEO (robots.txt, sitemap, IndexNow, metadatele, verificările, linkurile externe) și → Setări →
+  // Încărcări și imagini (extensiile, imaginile, imaginile externe, fișierele orfane).
+  ...SEO_SETTING_DEFS,
+  ...UPLOAD_SETTING_DEFS,
 ];
 
 function groupPermission(key: string, defaults: GcsPermissionDef["default"], merge?: "max" | "min"): GcsPermissionDef {
@@ -264,6 +269,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["settings_terms", "/admin/settings/terms", "fa-solid fa-file-contract"],
     ["settings_rules", "/admin/settings/rules", "fa-solid fa-scale-balanced"],
     ["settings_posting", "/admin/settings/posting", "fa-solid fa-pen-to-square"],
+    ["settings_uploads", "/admin/settings/uploads", "fa-solid fa-images"],
     ["settings_email", "/admin/settings/email", "fa-solid fa-envelope"],
     ["settings_languages", "/admin/settings/languages", "fa-solid fa-language"],
     ["settings_auth", "/admin/settings/auth", "fa-solid fa-right-to-bracket"],

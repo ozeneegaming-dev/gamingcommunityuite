@@ -155,7 +155,8 @@ export class GcsChatEmoteService {
       }
       let info;
       try {
-        info = await attachments.importFile(actor.userId, file, { maxBytes: maxKb * 1024 });
+        // Emoticoanele au limitele lor (latura, KB) și își păstrează formatul (animația GIF / WebP).
+        info = await attachments.importFile(actor.userId, file, { maxBytes: maxKb * 1024, original: true });
       } catch {
         rejected.push({ name: file.name, reason: "unsupported_type" });
         continue;
