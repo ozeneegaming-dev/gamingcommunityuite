@@ -30,8 +30,10 @@ function Trophy() {
  * Tot), primele trei locuri mereu aur / argint / bronz (trofeul în insigna nuanțată, rândul nuanțat cu chenar și
  * lumină, inelul pe avatar, valoarea colorată), de la 4 numărul într-o insignă neutră. În coloana laterală („widget”):
  * butonul de mesaj pe fiecare rând, „Tu: locul X” și „Clasament complet →”. Schimbările de loc se animă.
+ * „compact” (topul săptămânii din coloana îngustă a primei pagini): doar tab-urile măsurilor (Postatori / Jucători /
+ * Clanuri) și rândurile, cu perioada fixată de amplasare.
  */
-export function GcsRankingPanel({ initial, metrics, variant, testId = "gcs-ranking" }: { initial: GcsRankingResult; metrics: GcsRankingMetric[]; variant: "cockpit" | "widget"; testId?: string }) {
+export function GcsRankingPanel({ initial, metrics, variant, testId = "gcs-ranking" }: { initial: GcsRankingResult; metrics: GcsRankingMetric[]; variant: "cockpit" | "widget" | "compact"; testId?: string }) {
   const t = useTranslations("cockpit.top");
   const format = useFormatter();
   const realtime = useRealtime();
@@ -77,32 +79,38 @@ export function GcsRankingPanel({ initial, metrics, variant, testId = "gcs-ranki
     return t(`values.${m}`, { count: row.value });
   };
   const widget = variant === "widget";
+  const compact = variant === "compact";
   const metricLabel = (m: GcsRankingMetric) => t(widget ? `widgetMetrics.${m}` : `metrics.${m}`);
 
   return (
     <div className={`gcs-rank gcs-rank--${variant}`} data-testid={testId} aria-busy={busy || undefined}>
-      <div className="gcs-hbSeg gcs-rank__metrics" role="tablist" aria-label={t("metricLabel")} style={{ "--i": Math.max(0, metrics.indexOf(metric)), "--n": metrics.length } as CSSProperties}>
-        {metrics.map((m) => (
-          <button key={m} type="button" role="tab" aria-selected={m === metric} className={`gcs-hbSeg__btn${m === metric ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setMetric(m)} data-testid={`${testId}-metric-${m}`}>
-            {metricLabel(m)}
-          </button>
-        ))}
-      </div>
-      <div className="gcs-hbSeg gcs-rank__periods" role="group" aria-label={t("periodLabel")} data-off={periodless(metric) ? "" : undefined} style={{ "--i": Math.max(0, PERIODS.indexOf(period)), "--n": PERIODS.length } as CSSProperties}>
-        {PERIODS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            aria-pressed={!periodless(metric) && p === period}
-            disabled={periodless(metric)}
-            className={`gcs-hbSeg__btn${!periodless(metric) && p === period ? " gcs-hbSeg__btn--on" : ""}`}
-            onClick={() => setPeriod(p)}
-            data-testid={`${testId}-period-${p}`}
-          >
-            {t(`periods.${p}`)}
-          </button>
-        ))}
-      </div>
+      {/* O singură măsură (ex. fără Servere și fără Clanuri): fără tab-uri. */}
+      {metrics.length > 1 && (
+        <div className="gcs-hbSeg gcs-rank__metrics" role="tablist" aria-label={t("metricLabel")} style={{ "--i": Math.max(0, metrics.indexOf(metric)), "--n": metrics.length } as CSSProperties}>
+          {metrics.map((m) => (
+            <button key={m} type="button" role="tab" aria-selected={m === metric} className={`gcs-hbSeg__btn${m === metric ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setMetric(m)} data-testid={`${testId}-metric-${m}`}>
+              {metricLabel(m)}
+            </button>
+          ))}
+        </div>
+      )}
+      {!compact && (
+        <div className="gcs-hbSeg gcs-rank__periods" role="group" aria-label={t("periodLabel")} data-off={periodless(metric) ? "" : undefined} style={{ "--i": Math.max(0, PERIODS.indexOf(period)), "--n": PERIODS.length } as CSSProperties}>
+          {PERIODS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              aria-pressed={!periodless(metric) && p === period}
+              disabled={periodless(metric)}
+              className={`gcs-hbSeg__btn${!periodless(metric) && p === period ? " gcs-hbSeg__btn--on" : ""}`}
+              onClick={() => setPeriod(p)}
+              data-testid={`${testId}-period-${p}`}
+            >
+              {t(`periods.${p}`)}
+            </button>
+          ))}
+        </div>
+      )}
       {data.rows.length === 0 ? (
         <p className="gcs-rank__empty" role="status">
           <GcsIconSvg icon={faTrophy} />
@@ -132,7 +140,7 @@ export function GcsRankingPanel({ initial, metrics, variant, testId = "gcs-ranki
                 )}
                 <span className="gcs-rank__who">
                   <span className="gcs-rank__name">{r.user ? <GcsMemberName userId={r.user.id} name={r.user.name} nameKey={r.user.nameKey} href={r.href} /> : <Link href={r.href}>{r.name}</Link>}</span>
-                  {widget ? <span className="gcs-rank__value">{value(r, data.metric)}</span> : r.sub && <span className="gcs-rank__sub">{r.sub}</span>}
+                  {widget ? <span className="gcs-rank__value">{value(r, data.metric)}</span> : !compact && r.sub && <span className="gcs-rank__sub">{r.sub}</span>}
                 </span>
                 {!widget && <span className="gcs-rank__value">{value(r, data.metric)}</span>}
                 {widget && r.user && (

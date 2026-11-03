@@ -238,6 +238,23 @@
   border-bottom: 0;
   border-radius: var(--gcs-band-radius);
 }
+/*
+ * Prima pagină pe telefon: widget-urile coloanei din dreapta (învelite în `.gcs-widgetFold`) sunt rânduri strânse
+ * implicit (doar banda cu titlul și săgeata), din prima randare; alegerea membrului (`data-collapsed` / `data-open`)
+ * câștigă. Doar casetele cu săgeată se strâng, ca un widget fără ea să nu rămână închis pentru totdeauna.
+ */
+:root .gcs-widgetFold {
+  display: contents;
+}
+@media (max-width: 767px) {
+  :root .gcs-widgetFold > .gcs-card:has(> .gcs-collapseToggle):not([data-open]) > :not(:first-child):not(.gcs-collapseToggle) {
+    display: none;
+  }
+  :root .gcs-widgetFold > .gcs-card:has(> .gcs-collapseToggle):not([data-open]) > :first-child {
+    border-bottom: 0;
+    border-radius: var(--gcs-band-radius);
+  }
+}
 @media (hover: none) {
   :root .gcs-collapseToggle {
     opacity: 1;
@@ -971,6 +988,158 @@
     min-height: 44px;
   }
 }
+/*
+ * ─── Consola compactă (`cockpit.layout` = compact; prima pagină nouă, varianta A) ──────────────────────────
+ * Un rând: salutul (numele mare), pastilele de stare și butoanele rapide în dreapta; dedesubt pastilele serverelor
+ * (marginea stângă verde = online, numărul roșu = plin, estompat = offline), derulate orizontal când nu încap.
+ */
+:root .gcs-ckWrap--compact {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gcs-body-bg, var(--gcs-bg)) 40%, transparent), var(--gcs-body-bg, var(--gcs-bg))),
+    var(--ck-image, none) center / cover no-repeat;
+}
+:root .gcs-ck--compact {
+  padding: 20px 0 0;
+  gap: 12px;
+}
+:root .gcs-ck__greet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  min-width: 0;
+}
+:root .gcs-ck__hello {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+:root .gcs-ck__helloKicker {
+  font: 600 13.5px var(--gcs-font-text);
+  color: var(--gcs-muted);
+}
+:root .gcs-ck__helloName {
+  font: 800 20px / 1.2 var(--gcs-font-display);
+  color: var(--gcs-ui-strong);
+  overflow-wrap: anywhere;
+}
+:root .gcs-ck__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root .gcs-ck__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-border);
+  background-color: var(--gcs-surface);
+  font: 600 12.5px var(--gcs-font-text);
+  color: var(--gcs-text);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color var(--gcs-dur), color var(--gcs-dur);
+}
+:root a.gcs-ck__pill:is(:hover, :focus-visible) {
+  border-color: var(--gcs-ui-hover-border);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-ck__pill svg {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-ck__guestText {
+  max-width: 56ch;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gcs-ck-sub);
+}
+:root .gcs-ck__go {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+:root .gcs-ck__strips--compact {
+  flex-wrap: nowrap;
+  /* Loc pentru lumina pastilelor la hover (derularea orizontală taie și pe verticală). */
+  padding: 2px 0 4px;
+  border-radius: 0;
+  background: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+:root .gcs-ck__strips--compact::-webkit-scrollbar {
+  display: none;
+}
+:root .gcs-ck__strips--compact .gcs-ck__strip {
+  --edge: var(--gcs-ui-ok);
+  flex: 1 0 150px;
+  max-width: 320px;
+  height: 36px;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  border-left: 3px solid var(--edge);
+  background-color: var(--gcs-surface);
+  font-size: 12px;
+}
+:root .gcs-ck__strips--compact .gcs-ck__stripFill {
+  display: none;
+}
+:root .gcs-ck__strips--compact .gcs-ck__stripCount {
+  margin-left: auto;
+  color: var(--gcs-ui-ok);
+  font-variant-numeric: tabular-nums;
+}
+:root .gcs-ck__strips--compact .gcs-ck__strip--full .gcs-ck__stripCount {
+  color: var(--gcs-danger);
+}
+:root .gcs-ck__strips--compact .gcs-ck__strip--off {
+  --edge: var(--gcs-ui-edge-strong);
+}
+:root .gcs-ck__strips--compact .gcs-ck__strip--off > b,
+:root .gcs-ck__strips--compact .gcs-ck__strip--off .gcs-ck__stripCount {
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+@media (max-width: 767px) {
+  :root .gcs-ck--compact {
+    padding-top: 14px;
+    gap: 10px;
+  }
+  :root .gcs-ck__helloName {
+    font-size: 18px;
+  }
+  /* Pe telefon (ca în machetă): fără rang și fără butoanele rapide (bara de jos / antetul le au). */
+  :root .gcs-ck__pillItem--rank,
+  :root .gcs-ck__go--member {
+    display: none;
+  }
+  :root .gcs-ck__go {
+    margin-left: 0;
+  }
+  /* Pastilele serverelor se derulează până la marginea ecranului (fără derularea paginii). */
+  :root .gcs-ck__strips--compact {
+    margin: 0 -12px;
+    padding: 2px 12px 4px;
+  }
+  :root .gcs-ck__strips--compact .gcs-ck__strip {
+    flex: 0 0 180px;
+    height: 36px;
+    padding: 0 10px;
+  }
+}
+
 /* ─── Clasamentul compact (panoul „Top” și widget-ul „Clasament”) ──────────────────────────────────────── */
 :root .gcs-hbSeg {
   position: relative;
@@ -1031,6 +1200,21 @@
 }
 :root .gcs-rank--widget {
   padding: 12px;
+}
+/* Topul din coloana îngustă (tab-urile „Comunitate”): fără perioade, rândurile mai strânse, valoarea în dreapta. */
+:root .gcs-rank--compact {
+  padding: 12px;
+}
+:root .gcs-rank--compact .gcs-rank__list {
+  gap: 5px;
+}
+:root .gcs-rank--compact .gcs-rank__row {
+  gap: 9px;
+  padding: 5px 8px;
+}
+:root .gcs-rank--compact .gcs-rank__badge {
+  width: 26px;
+  height: 26px;
 }
 :root .gcs-rank__list {
   display: flex;

@@ -7766,6 +7766,14 @@
           "all": "Sur toutes les pages"
         }
       },
+      "cockpit_layout": {
+        "label": "Disposition de la console",
+        "help": "Compacte : une ligne avec l'accueil, le statut et les boutons, puis les serveurs, sans les 3 panneaux.",
+        "options": {
+          "full": "Complète (avec les panneaux)",
+          "compact": "Compacte (une ligne et les serveurs)"
+        }
+      },
       "cockpit_left": {
         "label": "Panneau de gauche",
         "options": {
@@ -7961,7 +7969,8 @@
       "onlineDay": "Qui était en ligne (24 h)",
       "groupLegend": "Légende du groupe",
       "ranking": "Classement",
-      "guestCta": "Bloc pour les visiteurs"
+      "guestCta": "Bloc pour les visiteurs",
+      "rankingTop": "{period, select, day {Top du jour} week {Top de la semaine} month {Top du mois} year {Top de l'année} other {Top de tous les temps}}"
     },
     "forums": {
       "stats": "Statistiques",
@@ -7988,7 +7997,9 @@
       "lastDonor": "Dernier donateur",
       "donorCount": "Nombre de donateurs",
       "rare": "Quels badges",
-      "group": "Seulement les membres du groupe"
+      "group": "Seulement les membres du groupe",
+      "tabs": "Onglets du classement",
+      "layout": "Disposition"
     },
     "periods": {
       "week": "cette semaine",
@@ -8024,7 +8035,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Les matchs mix en cours : les équipes, le score, la carte et la manche."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8038,7 +8050,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Matchs en direct"
     },
     "games": {
       "all": "All games",
@@ -8078,7 +8091,22 @@
       "empty": "Aucune réussite pour l’instant.",
       "received": "a reçu"
     },
-    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} many {# votes} other {# votes}}"
+    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} many {# votes} other {# votes}}",
+    "tabs": {
+      "forum": "Forum (messages, sujets, réputation, temps en ligne)",
+      "community": "Communauté (posteurs, joueurs, clans), sans périodes"
+    },
+    "layouts": {
+      "full": "Complète (adresse, boutons, remplissage)",
+      "compact": "Compacte (nom, joueurs, barre)"
+    },
+    "home": {
+      "activity": "Activité",
+      "all": "Tous",
+      "allCount": "Tous ({count})",
+      "players": "{count, plural, one {# joueur} many {# joueurs} other {# joueurs}}",
+      "more": "et {count} de plus"
+    }
   },
   "pageEditor": {
     "title": "Modifier la page",
@@ -10319,7 +10347,9 @@
       "offline": "{name}, hors ligne",
       "off": "hors ligne",
       "playNow": "Jouer maintenant"
-    }
+    },
+    "newTopic": "Nouveau sujet",
+    "status": "Ton statut dans la communauté"
   },
   "groups": {
     "pill": {

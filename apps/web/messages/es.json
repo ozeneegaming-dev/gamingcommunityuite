@@ -7766,6 +7766,14 @@
           "all": "En todas las páginas"
         }
       },
+      "cockpit_layout": {
+        "label": "Diseño de la consola",
+        "help": "Compacto: una fila con el saludo, el estado y los botones, luego los servidores, sin los 3 paneles.",
+        "options": {
+          "full": "Completo (con los paneles)",
+          "compact": "Compacto (una fila y los servidores)"
+        }
+      },
       "cockpit_left": {
         "label": "Panel izquierdo",
         "options": {
@@ -7961,7 +7969,8 @@
       "onlineDay": "Quien estaba en línea (24 h)",
       "groupLegend": "Leyenda del grupo",
       "ranking": "Clasificación",
-      "guestCta": "Bloque para visitantes"
+      "guestCta": "Bloque para visitantes",
+      "rankingTop": "{period, select, day {Top del día} week {Top de la semana} month {Top del mes} year {Top del año} other {Top histórico}}"
     },
     "forums": {
       "stats": "Estadísticas",
@@ -7988,7 +7997,9 @@
       "lastDonor": "Último donante",
       "donorCount": "Número de donantes",
       "rare": "Qué insignias",
-      "group": "Solo miembros del grupo"
+      "group": "Solo miembros del grupo",
+      "tabs": "Pestañas de la clasificación",
+      "layout": "Diseño"
     },
     "periods": {
       "week": "esta semana",
@@ -8024,7 +8035,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Las partidas mix en curso ahora: los equipos, el marcador, el mapa y la ronda."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8038,7 +8050,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Partidas en vivo"
     },
     "games": {
       "all": "All games",
@@ -8078,7 +8091,22 @@
       "empty": "Aún no hay logros.",
       "received": "recibió"
     },
-    "ratingAria": "{avg} de 5, {count, plural, one {# voto} many {# votos} other {# votos}}"
+    "ratingAria": "{avg} de 5, {count, plural, one {# voto} many {# votos} other {# votos}}",
+    "tabs": {
+      "forum": "Foro (mensajes, temas, reputación, tiempo en línea)",
+      "community": "Comunidad (participantes, jugadores, clanes), sin periodos"
+    },
+    "layouts": {
+      "full": "Completo (dirección, botones, ocupación)",
+      "compact": "Compacto (nombre, jugadores, barra)"
+    },
+    "home": {
+      "activity": "Actividad",
+      "all": "Todas",
+      "allCount": "Todas ({count})",
+      "players": "{count, plural, one {# jugador} many {# jugadores} other {# jugadores}}",
+      "more": "y {count} más"
+    }
   },
   "pageEditor": {
     "title": "Editar página",
@@ -10319,7 +10347,9 @@
       "offline": "{name}, desconectado",
       "off": "desconectado",
       "playNow": "Jugar ahora"
-    }
+    },
+    "newTopic": "Nuevo tema",
+    "status": "Tu estado en la comunidad"
   },
   "groups": {
     "pill": {

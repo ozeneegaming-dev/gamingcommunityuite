@@ -102,7 +102,7 @@ describe("designul Nova: setările", () => {
 
   test("doar decorul e al designului GCS; funcțiile (antetul, consola, bara de jos, efectele) sunt ale sistemului", () => {
     expect([...NOVA_ONLY_FIELDS].sort()).toEqual(["bands.icon", "bands.style", "header.crumbs", "header.image", "header.overlay", "header.pattern"]);
-    for (const path of ["header.layout", "header.dropdowns", "header.mega", "cockpit.enabled", "mobileNav.placement", "mobileNav.items", "effects.hover"]) {
+    for (const path of ["header.layout", "header.dropdowns", "header.mega", "cockpit.enabled", "cockpit.layout", "mobileNav.placement", "mobileNav.items", "effects.hover"]) {
       expect(NOVA_ONLY_FIELDS, path).not.toContain(path);
     }
     expect(themeHasDesignDecor("nova")).toBe(true);
@@ -114,7 +114,9 @@ describe("designul Nova: setările", () => {
     expect(themeSingleScheme(GCS_WHITE_THEME_SETTINGS)).toBe("light");
     expect(themeSingleScheme(NOVA_THEME_SETTINGS)).toBeNull();
     expect(GCS_WHITE_THEME_SETTINGS.light).toEqual(NOVA_THEME_SETTINGS.light);
-    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: NOVA_THEME_SETTINGS.header, logo: NOVA_THEME_SETTINGS.logo }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
+    expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: NOVA_THEME_SETTINGS.header, logo: NOVA_THEME_SETTINGS.logo, cockpit: NOVA_THEME_SETTINGS.cockpit }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
+    // Prima pagină nouă (varianta A, 2026-11-03): consola temelor incluse e compactă.
+    expect([GCS_DARK_THEME_SETTINGS.cockpit.layout, GCS_WHITE_THEME_SETTINGS.cockpit.layout, NOVA_THEME_SETTINGS.cockpit.layout]).toEqual(["compact", "compact", "full"]);
     // Antetul de pe preview (2026-11-02): Esports, cu chatul, limba, breadcrumb-ul și serverele live; compact, ascuns la derulare.
     for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
       expect(s.header.layout.preset).toBe("esports");

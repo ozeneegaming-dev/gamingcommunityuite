@@ -175,7 +175,9 @@ test("widget-ul „Servere” pe pagina principală; aplicația dezactivată dis
   await page.getByTestId("gcs-page-editor-save").click();
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a fost salvată.");
   await page.getByTestId("gcs-page-editor-done").click();
-  const widget = page.getByTestId("gcs-widget-servers").filter({ visible: true });
+  // Pagina principală implicită are deja serverele (aspectul compact, primul în coloană): widget-ul adăugat (aspectul
+  // complet) e ultimul din coloană.
+  const widget = page.getByTestId("gcs-widget-servers").filter({ visible: true }).last();
   const row = widget.getByTestId("gcs-widget-server").filter({ hasText: CS });
   await expect(row).toHaveAttribute("data-state", "online");
   await expect(row.getByTestId("gcs-widget-server-players")).toContainText("/ 32");

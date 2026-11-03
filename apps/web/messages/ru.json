@@ -7766,6 +7766,14 @@
           "all": "На всех страницах"
         }
       },
+      "cockpit_layout": {
+        "label": "Вид консоли",
+        "help": "Компактный: одна строка с приветствием, статусом и кнопками, затем серверы, без 3 панелей.",
+        "options": {
+          "full": "Полный (с панелями)",
+          "compact": "Компактный (строка и серверы)"
+        }
+      },
       "cockpit_left": {
         "label": "Левая панель",
         "options": {
@@ -7961,7 +7969,8 @@
       "onlineDay": "Кто был онлайн (24 часа)",
       "groupLegend": "Легенда группы",
       "ranking": "Рейтинг",
-      "guestCta": "Блок для гостей"
+      "guestCta": "Блок для гостей",
+      "rankingTop": "{period, select, day {Топ дня} week {Топ недели} month {Топ месяца} year {Топ года} other {Топ за всё время}}"
     },
     "forums": {
       "stats": "Статистика",
@@ -7988,7 +7997,9 @@
       "lastDonor": "Последний жертвователь",
       "donorCount": "Число жертвователей",
       "rare": "Какие значки",
-      "group": "Только участники группы"
+      "group": "Только участники группы",
+      "tabs": "Вкладки рейтинга",
+      "layout": "Вид"
     },
     "periods": {
       "week": "на этой неделе",
@@ -8024,7 +8035,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Микс-матчи, которые идут сейчас: команды, счёт, карта и раунд."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8038,7 +8050,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Матчи в эфире"
     },
     "games": {
       "all": "All games",
@@ -8078,7 +8091,22 @@
       "empty": "Достижений пока нет.",
       "received": "получил(а)"
     },
-    "ratingAria": "{avg} из 5, {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}"
+    "ratingAria": "{avg} из 5, {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}",
+    "tabs": {
+      "forum": "Форум (сообщения, темы, репутация, время онлайн)",
+      "community": "Сообщество (авторы, игроки, кланы), без периодов"
+    },
+    "layouts": {
+      "full": "Полный (адрес, кнопки, заполненность)",
+      "compact": "Компактный (название, игроки, полоса)"
+    },
+    "home": {
+      "activity": "Активность",
+      "all": "Все",
+      "allCount": "Все ({count})",
+      "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
+      "more": "и ещё {count}"
+    }
   },
   "pageEditor": {
     "title": "Редактировать страницу",
@@ -10319,7 +10347,9 @@
       "offline": "{name}, не в сети",
       "off": "не в сети",
       "playNow": "Играть сейчас"
-    }
+    },
+    "newTopic": "Новая тема",
+    "status": "Твой статус в сообществе"
   },
   "groups": {
     "pill": {

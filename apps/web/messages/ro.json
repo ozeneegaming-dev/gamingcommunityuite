@@ -7766,6 +7766,14 @@
           "all": "Pe toate paginile"
         }
       },
+      "cockpit_layout": {
+        "label": "Aspectul consolei",
+        "help": "Compact: un rând cu salutul, starea și butoanele, apoi serverele, fără cele 3 panouri.",
+        "options": {
+          "full": "Complet (cu panourile)",
+          "compact": "Compact (un rând și serverele)"
+        }
+      },
       "cockpit_left": {
         "label": "Panoul din stânga",
         "options": {
@@ -7961,7 +7969,8 @@
       "onlineDay": "Cine a fost online (24 h)",
       "groupLegend": "Legenda grupurilor",
       "ranking": "Clasament",
-      "guestCta": "Bloc pentru vizitatori"
+      "guestCta": "Bloc pentru vizitatori",
+      "rankingTop": "{period, select, day {Topul zilei} week {Topul săptămânii} month {Topul lunii} year {Topul anului} other {Topul tuturor timpurilor}}"
     },
     "forums": {
       "stats": "Statistici",
@@ -7988,7 +7997,9 @@
       "lastDonor": "Ultimul donator",
       "donorCount": "Numărul donatorilor",
       "rare": "Ce badge-uri",
-      "group": "Doar membrii grupului"
+      "group": "Doar membrii grupului",
+      "tabs": "Tab-urile clasamentului",
+      "layout": "Aspectul"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -8024,7 +8035,8 @@
       },
       "servers": {
         "list": "Statusul live al serverelor de joc: jucători, hartă, adresă.",
-        "adminsOnline": "Adminii din joc online acum: numele, serverul și de cât timp joacă."
+        "adminsOnline": "Adminii din joc online acum: numele, serverul și de cât timp joacă.",
+        "liveMatches": "Meciurile mix în desfășurare acum: echipele, scorul, harta și runda."
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
@@ -8038,7 +8050,8 @@
     },
     "servers": {
       "list": "Servere",
-      "adminsOnline": "Admini online"
+      "adminsOnline": "Admini online",
+      "liveMatches": "Meciuri live"
     },
     "games": {
       "all": "Toate jocurile",
@@ -8078,7 +8091,22 @@
       "empty": "Nicio realizare încă.",
       "received": "a primit"
     },
-    "ratingAria": "{avg} din 5, {count, plural, one {# vot} few {# voturi} other {# de voturi}}"
+    "ratingAria": "{avg} din 5, {count, plural, one {# vot} few {# voturi} other {# de voturi}}",
+    "tabs": {
+      "forum": "Forum (postări, topicuri, reputație, timp online)",
+      "community": "Comunitate (postatori, jucători, clanuri), fără perioade"
+    },
+    "layouts": {
+      "full": "Complet (adresa, butoanele, ocuparea)",
+      "compact": "Compact (numele, jucătorii, bara)"
+    },
+    "home": {
+      "activity": "Activitate",
+      "all": "Toate",
+      "allCount": "Toate ({count})",
+      "players": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
+      "more": "și încă {count}"
+    }
   },
   "pageEditor": {
     "title": "Editează pagina",
@@ -10319,7 +10347,9 @@
       "offline": "{name}, offline",
       "off": "offline",
       "playNow": "Joacă acum"
-    }
+    },
+    "newTopic": "Topic nou",
+    "status": "Starea ta în comunitate"
   },
   "groups": {
     "pill": {

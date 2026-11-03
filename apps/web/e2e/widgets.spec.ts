@@ -5,6 +5,12 @@ import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
 /** Tipurile widget-urilor dintr-o zonă a editorului, în ordine. */
 const editorOrder = (zone: Locator) => zone.getByTestId("gcs-edit-item").evaluateAll((els) => els.map((e) => e.getAttribute("data-widget-type")));
 
+/**
+ * Coloana din dreapta implicită a primei pagini (varianta A, 2026-11-03): serverele, cine e online, topul săptămânii,
+ * ultimele postări, meciurile live și shoutbox-ul la final.
+ */
+const DEFAULT_SIDEBAR = ["servers.list", "core.online", "core.ranking", "forums.recentPosts", "servers.liveMatches", "chat.shoutbox"];
+
 /** Pe pagina publică: elementul `a` apare înaintea lui `b` (selectori CSS). */
 const before = (page: Page, a: string, b: string) =>
   page.evaluate(([x, y]) => {
@@ -38,7 +44,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   const top = page.getByTestId("gcs-zone-top");
   const sidebar = page.getByTestId("gcs-zone-sidebar");
   const bottom = page.getByTestId("gcs-zone-bottom");
-  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics", "profile.recentBadges"]);
+  await expect.poll(() => editorOrder(sidebar)).toEqual(DEFAULT_SIDEBAR);
   await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
 
   // Panoul de statistici în zona de sus (din selectorul de zonă al widget-ului).
@@ -104,7 +110,7 @@ test("adminul aranjează widget-urile; vizitatorul vede aranjarea, fără widget
   await page.getByTestId("gcs-page-editor-default").click();
   await page.getByTestId("gcs-page-editor-default-confirm").click();
   await expect(page.getByTestId("gcs-page-editor-status")).toHaveText("Pagina a revenit la widget-urile implicite.");
-  await expect.poll(() => editorOrder(sidebar)).toEqual(["chat.shoutbox", "forums.recentTopics", "profile.recentBadges"]);
+  await expect.poll(() => editorOrder(sidebar)).toEqual(DEFAULT_SIDEBAR);
   await expect.poll(() => editorOrder(bottom)).toEqual(["core.statsPanel"]);
   await page.getByTestId("gcs-page-editor-done").click();
   await expect(editor).toHaveCount(0);

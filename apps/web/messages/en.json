@@ -7766,6 +7766,14 @@
           "all": "Every page"
         }
       },
+      "cockpit_layout": {
+        "label": "Console layout",
+        "help": "Compact: one row with the greeting, status and buttons, then the servers, without the 3 panels.",
+        "options": {
+          "full": "Full (with the panels)",
+          "compact": "Compact (one row and the servers)"
+        }
+      },
       "cockpit_left": {
         "label": "Left panel",
         "options": {
@@ -7961,7 +7969,8 @@
       "onlineDay": "Who was online (24 h)",
       "groupLegend": "Group legend",
       "ranking": "Ranking",
-      "guestCta": "Guest block"
+      "guestCta": "Guest block",
+      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}"
     },
     "forums": {
       "stats": "Statistics",
@@ -7988,7 +7997,9 @@
       "lastDonor": "Latest donor",
       "donorCount": "Donor count",
       "rare": "Which badges",
-      "group": "Only members of the group"
+      "group": "Only members of the group",
+      "tabs": "Leaderboard tabs",
+      "layout": "Layout"
     },
     "periods": {
       "week": "this week",
@@ -8024,7 +8035,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Mix matches in progress right now: the teams, score, map and round."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8038,7 +8050,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Live matches"
     },
     "games": {
       "all": "All games",
@@ -8078,7 +8091,22 @@
       "empty": "No achievements yet.",
       "received": "earned"
     },
-    "ratingAria": "{avg} out of 5, {count, plural, one {# vote} other {# votes}}"
+    "ratingAria": "{avg} out of 5, {count, plural, one {# vote} other {# votes}}",
+    "tabs": {
+      "forum": "Forum (posts, topics, reputation, time online)",
+      "community": "Community (posters, players, clans), no periods"
+    },
+    "layouts": {
+      "full": "Full (address, buttons, fill)",
+      "compact": "Compact (name, players, bar)"
+    },
+    "home": {
+      "activity": "Activity",
+      "all": "All",
+      "allCount": "All ({count})",
+      "players": "{count, plural, one {# player} other {# players}}",
+      "more": "and {count} more"
+    }
   },
   "pageEditor": {
     "title": "Edit page",
@@ -10319,7 +10347,9 @@
       "offline": "{name}, offline",
       "off": "offline",
       "playNow": "Play now"
-    }
+    },
+    "newTopic": "New topic",
+    "status": "Your community status"
   },
   "groups": {
     "pill": {

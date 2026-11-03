@@ -267,7 +267,8 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
   });
 
   await test.step("pornită pe pagina principală: banda personală, feed-ul, meciul live, topul cu trofee, benzile serverelor", async () => {
-    await patchNova({ cockpit: { enabled: true, pages: "home", left: "feed", center: "live", right: "top" } });
+    // Aspectul complet (cu panourile); temele incluse livrează aspectul compact (vezi `home-a.spec.ts`).
+    await patchNova({ cockpit: { enabled: true, pages: "home", layout: "full", left: "feed", center: "live", right: "top" } });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/");
     const cockpit = page.getByTestId("gcs-cockpit");
@@ -318,11 +319,15 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
   });
 
   await test.step("widget-ul „Clasament” în coloana laterală: măsurile, perioada, trofeele, mesajul, locul tău", async () => {
-    await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '[]')`);
+    // Widget-ul cu tab-urile forumului (pagina principală implicită are deja topul săptămânii, cu tab-urile comunității):
+    // rândul adăugat aici se șterge după id, ca amplasarea implicită să rămână.
+    const [added] = await sql<{ id: number }>(
+      `INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '[]') RETURNING id`,
+    );
     await clearWidgetCache();
     await page.goto("/");
     // Widgeturile vin în flux (streaming): rezerva ascunsă rămâne în pagină, deci doar copia vizibilă.
-    const widget = page.getByTestId("gcs-ranking-widget").filter({ visible: true }).first();
+    const widget = page.locator(`section[aria-labelledby="gcs-widget-${added!.id}"]`).filter({ visible: true }).getByTestId("gcs-ranking-widget");
     await expect(widget).toBeVisible();
     await expect(widget.getByTestId("gcs-ranking-widget-row").first()).toHaveAttribute("data-medal", "gold");
     await expect(widget.getByTestId("gcs-ranking-widget-trophy")).toHaveCount(3);
@@ -331,7 +336,7 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await widget.getByTestId("gcs-ranking-widget-metric-online").click();
     await expect(widget.getByTestId("gcs-ranking-widget-metric-online")).toHaveAttribute("aria-selected", "true");
     await shot(page, "08-ranking-widget");
-    await sql(`DELETE FROM widget_placements WHERE type = 'core.ranking'`);
+    await sql(`DELETE FROM widget_placements WHERE id = $1`, [added!.id]);
     await clearWidgetCache();
   });
 });
@@ -356,7 +361,7 @@ test("mobil (375 px): antetul compact, cardul LIVE, cardurile cu puncte, bara de
   await patchNova({
     header: { layout: await preset("cockpit") },
     mobileNav: { placement: "bottom", labels: true, items: ["forum", "servers", "create", "messages", "notifications"] },
-    cockpit: { enabled: true, pages: "home", left: "feed", center: "live", right: "top" },
+    cockpit: { enabled: true, pages: "home", layout: "full", left: "feed", center: "live", right: "top" },
   });
   await page.goto("/");
   const header = page.getByTestId("gcs-header-builder");

@@ -1,4 +1,4 @@
-import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor } from "@gcs/core";
+import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor, type GcsWidgetPage, type GcsWidgetZone } from "@gcs/core";
 import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
@@ -16,8 +16,8 @@ import { GcsCollapseToggle } from "../GcsCollapseToggle";
 import { GcsClanLogo } from "../clans/GcsClanLogo";
 import { GcsRelTime } from "../forum/GcsRelTime";
 import { GcsServerLiveProvider } from "../servers/GcsServerLive";
-import { GcsServerWidgetList } from "../servers/GcsServerWidgetList";
-import { GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
+import { GcsServerPlayersTotal, GcsServerWidgetList } from "../servers/GcsServerWidgetList";
+import { GcsOnlineSummary, GcsWhoIsOnline } from "../forum/GcsWhoIsOnline";
 import { GcsGroupLegend, GcsStatsPanel, GcsWhoWasOnline } from "./GcsStatsPanel";
 import { GcsCarousel } from "./GcsCarousel";
 import { GcsGuestCta } from "../GcsGuestCta";
@@ -30,10 +30,12 @@ import { GcsMemberLink } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
 import { GcsDonationGoal } from "../donations/GcsDonationGoal";
 import { donationCta } from "@/lib/donations.server";
-import { WIDGET_METRICS } from "@/lib/ranking";
-import { isRankingMetric, isRankingPeriod, rankingRows } from "@/lib/ranking.server";
+import { COMMUNITY_METRICS, WIDGET_METRICS } from "@/lib/ranking";
+import { isRankingMetric, isRankingPeriod, rankingMetrics, rankingRows } from "@/lib/ranking.server";
+import { liveMatchList } from "@/lib/cockpit.server";
 
-export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor };
+/** Ce primește randarea unui widget: amplasarea (id, config), viewer-ul și locul ei (pagina, zona). */
+export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor; page: GcsWidgetPage; zone: GcsWidgetZone };
 type Renderer = (p: GcsWidgetRenderProps) => Promise<ReactNode>;
 
 const limitOf = (config: Record<string, unknown>, fallback: number) => (typeof config.limit === "number" ? config.limit : fallback);
@@ -139,6 +141,7 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
+  // „Cine e online”: sumarul (membri · vizitatori) în dreapta titlului, avatarele și numele primilor membri, „și încă N”.
   "core.online": async ({ id, config }) => {
     const [view, t, locale] = await Promise.all([onlineView(), getTranslations("online"), getLocale()]);
     const headingId = `gcs-widget-${id}`;
@@ -147,8 +150,9 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         initial={view}
         locale={locale}
         headingId={headingId}
+        collapseKey={`widget-${id}`}
         heading={
-          <GcsWidgetTitle id={headingId} icon={widgetIcon("core.online", config)}>
+          <GcsWidgetTitle id={headingId} icon={widgetIcon("core.online", config)} extra={<GcsOnlineSummary template={t.raw("summary") as string} />}>
             {t("title")}
           </GcsWidgetTitle>
         }
@@ -264,22 +268,37 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
-  "forums.recentPosts": async ({ id, config, actor }) => {
+  // În coloana îngustă: titlul topicului pe un rând, autorul și timpul (fără fragment), linkul „Activitate” sus.
+  "forums.recentPosts": async ({ id, config, actor, zone }) => {
+    const narrow = zone === "sidebar";
     const [t, posts] = await Promise.all([getTranslations("widgets"), services().forumQueries.recentPosts(actor, limitOf(config, 5))]);
     return (
-      <GcsWidgetCard id={id} type="forums.recentPosts" config={config} title={t("forums.recentPosts")}>
+      <GcsWidgetCard
+        id={id}
+        type="forums.recentPosts"
+        config={config}
+        title={t("forums.recentPosts")}
+        testId="gcs-widget-recent-posts"
+        extra={
+          narrow ? (
+            <Link href="/activity" className="gcs-widgetTitle__link">
+              {t("home.activity")}
+            </Link>
+          ) : undefined
+        }
+      >
         {posts.length === 0 ? (
           <p className="gcs-sideCard__line">{t("empty")}</p>
         ) : (
-          <ul className="gcs-widgetList">
+          <ul className={`gcs-widgetList${narrow ? " gcs-widgetList--oneLine" : ""}`}>
             {posts.map((p) => (
               <li key={p.id} className="gcs-widgetRow">
                 <RowAvatar user={p.user} />
                 <span className="gcs-widgetRow__body">
-                  <Link href={postHref(p.topicId, p.id)} className="gcs-widgetRow__title">
+                  <Link href={postHref(p.topicId, p.id)} className="gcs-widgetRow__title" title={narrow ? p.topicTitle : undefined}>
                     {p.topicTitle}
                   </Link>
-                  {p.excerpt && <span className="gcs-widget__excerpt">{p.excerpt}</span>}
+                  {!narrow && p.excerpt && <span className="gcs-widget__excerpt">{p.excerpt}</span>}
                   <RowMeta user={p.user}>
                     <GcsRelTime at={p.at} />
                   </RowMeta>
@@ -321,13 +340,17 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
+  // Tab-urile „Forum” (implicit): măsurile forumului și perioada. Tab-urile „Comunitate” (prima pagină nouă): „Topul
+  // săptămânii” (sau al perioadei alese) cu Postatori / Jucători / Clanuri (doar aplicațiile la care viewer-ul are acces).
   "core.ranking": async ({ id, config, actor }) => {
-    const metric = isRankingMetric(config.metric) && WIDGET_METRICS.includes(config.metric) ? config.metric : "posts";
+    const community = config.tabs === "community";
+    const metrics = community ? await rankingMetrics(actor, COMMUNITY_METRICS) : [...WIDGET_METRICS];
+    const metric = isRankingMetric(config.metric) && metrics.includes(config.metric) ? config.metric : (metrics[0] ?? "posts");
     const period = isRankingPeriod(config.period) ? config.period : "day";
     const [t, initial] = await Promise.all([getTranslations("widgets"), rankingRows(actor, metric, period, 5)]);
     return (
-      <GcsWidgetCard id={id} type="core.ranking" config={config} title={t("core.ranking")} testId="gcs-widget-ranking">
-        <GcsRankingPanel initial={initial} metrics={[...WIDGET_METRICS]} variant="widget" testId="gcs-ranking-widget" />
+      <GcsWidgetCard id={id} type="core.ranking" config={config} title={community ? t("core.rankingTop", { period }) : t("core.ranking")} testId="gcs-widget-ranking">
+        <GcsRankingPanel initial={initial} metrics={metrics} variant={community ? "compact" : "widget"} testId="gcs-ranking-widget" />
       </GcsWidgetCard>
     );
   },
@@ -447,28 +470,87 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
 
   "chat.shoutbox": async ({ config, actor }) => <GcsShoutbox actor={actor} channelKey={typeof config.channel === "string" && config.channel ? config.channel : null} />,
 
-  // Aplicația Servere: lista compactă, cu statusul live (realtime sau, fără el, cererea periodică).
+  // Aplicația Servere: lista, cu statusul live (realtime sau, fără el, cererea periodică). Aspectul compact (coloana
+  // îngustă a primei pagini): numele, jucătorii și bara de ocupare, cu jucătorii de pe toate serverele lângă titlu.
   "servers.list": async ({ id, config, actor }) => {
     const { serverQueries, settings } = services();
     const family = typeof config.game === "string" && config.game ? config.game : null;
+    const compact = config.layout === "compact";
     const [t, ts, list, interval] = await Promise.all([
       getTranslations("widgets"),
       getTranslations("servers"),
       serverQueries.list(actor, { family, limit: limitOf(config, 5) }),
       settings.get<number>(POLL_INTERVAL_SETTING),
     ]);
-    return (
-      <GcsWidgetCard id={id} type="servers.list" config={config} title={t("servers.list")} testId="gcs-widget-servers">
-        {list.length === 0 ? (
-          <p className="gcs-sideCard__line">{ts("widgetEmpty")}</p>
-        ) : (
-          <GcsServerLiveProvider initial={initialStatuses(list)} pollSeconds={interval}>
-            <GcsServerWidgetList servers={list.map((v) => cardData(v))} />
-          </GcsServerLiveProvider>
-        )}
+    const card = (
+      <GcsWidgetCard
+        id={id}
+        type="servers.list"
+        config={config}
+        title={t("servers.list")}
+        testId="gcs-widget-servers"
+        extra={compact && list.length > 0 ? <GcsServerPlayersTotal ids={list.map((v) => v.id)} /> : undefined}
+      >
+        {list.length === 0 ? <p className="gcs-sideCard__line">{ts("widgetEmpty")}</p> : <GcsServerWidgetList servers={list.map((v) => cardData(v))} variant={compact ? "compact" : "full"} />}
         <Link href="/servers" className="gcs-serverList__all">
           {ts("viewAll")}
         </Link>
+      </GcsWidgetCard>
+    );
+    // Statusul live ajunge și la totalul din titlu, deci furnizorul cuprinde tot cardul.
+    return list.length === 0 ? (
+      card
+    ) : (
+      <GcsServerLiveProvider initial={initialStatuses(list)} pollSeconds={interval}>
+        {card}
+      </GcsServerLiveProvider>
+    );
+  },
+
+  // „Meciuri live”: meciurile mix în desfășurare (aceleași date ca panoul „Live acum” al consolei), cu scorul; fără
+  // niciunul, „Niciun meci live acum”. Fără aplicația Servere sau fără dreptul la statistici, widget-ul nu apare.
+  "servers.liveMatches": async ({ id, config, actor }) => {
+    const data = await liveMatchList(actor, limitOf(config, 3));
+    if (!data) return null;
+    const [t, tl] = await Promise.all([getTranslations("widgets"), getTranslations("cockpit.live")]);
+    return (
+      <GcsWidgetCard
+        id={id}
+        type="servers.liveMatches"
+        config={config}
+        title={t("servers.liveMatches")}
+        testId="gcs-widget-live-matches"
+        extra={
+          <Link href="/servers/matches?status=live" className="gcs-widgetTitle__link" data-testid="gcs-live-matches-all">
+            {data.total > data.items.length ? t("home.allCount", { count: data.total }) : t("home.all")}
+          </Link>
+        }
+      >
+        {data.items.length === 0 ? (
+          <p className="gcs-liveMatches__empty" data-testid="gcs-live-matches-empty">
+            {tl("nothing")}
+          </p>
+        ) : (
+          <ul className="gcs-liveMatches">
+            {data.items.map((m) => (
+              <li key={m.id} className="gcs-liveMatches__row" data-testid="gcs-live-match">
+                <Link href={m.href} className="gcs-liveMatches__link">
+                  <span className="gcs-liveMatches__meta">
+                    <span className="gcs-liveMatches__badge">{tl("badge")}</span>
+                    <span className="gcs-liveMatches__where">{[m.server, m.map, tl("round", { round: m.round })].filter(Boolean).join(" · ")}</span>
+                  </span>
+                  <span className="gcs-liveMatches__score">
+                    <b className="gcs-liveMatches__team">{m.teams.A.name}</b>
+                    <span className="gcs-liveMatches__points">
+                      {m.teams.A.score}:{m.teams.B.score}
+                    </span>
+                    <b className="gcs-liveMatches__team gcs-liveMatches__team--b">{m.teams.B.name}</b>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </GcsWidgetCard>
     );
   },

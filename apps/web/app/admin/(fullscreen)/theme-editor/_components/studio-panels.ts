@@ -185,10 +185,11 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       "header.customHtml",
     ],
   },
-  // Consola Hero Cockpit de sub antet (sistemul, orice temă): pornită, pe ce pagini, ce panou în fiecare loc, imaginea.
+  // Consola Hero Cockpit de sub antet (sistemul, orice temă): pornită, pe ce pagini, aspectul (complet / compact), ce
+  // panou în fiecare loc (aspectul complet), imaginea.
   cockpit: {
     icon: faGauge,
-    settings: ["cockpit.enabled", "cockpit.pages", { heading: "cockpitPanels" }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage" }, { image: "cockpitImage" }],
+    settings: ["cockpit.enabled", "cockpit.pages", "cockpit.layout", { heading: "cockpitPanels" }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage" }, { image: "cockpitImage" }],
   },
   headerDesktop: {
     icon: faDesktop,
