@@ -10116,6 +10116,14 @@
         "pageEditor": "Seite bearbeiten",
         "acp": "Administrationsbereich (ACP)"
       },
+      "tiles": {
+        "attachments": "Anhänge",
+        "privacy": "Privatsphäre",
+        "player": "Spielerprofil"
+      },
+      "line": {
+        "posts": "{count, plural, one {Beitrag} other {Beiträge}}"
+      },
       "theme": {
         "label": "Theme",
         "dark": "Dunkel",

@@ -10116,6 +10116,14 @@
         "pageEditor": "Edit page",
         "acp": "Admin panel (ACP)"
       },
+      "tiles": {
+        "attachments": "Attachments",
+        "privacy": "Privacy",
+        "player": "Player profile"
+      },
+      "line": {
+        "posts": "{count, plural, one {post} other {posts}}"
+      },
       "theme": {
         "label": "Theme",
         "dark": "Dark",

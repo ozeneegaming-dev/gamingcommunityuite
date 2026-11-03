@@ -10116,6 +10116,14 @@
         "pageEditor": "Editează pagina",
         "acp": "Panoul de administrare (ACP)"
       },
+      "tiles": {
+        "attachments": "Atașamente",
+        "privacy": "Confidențialitate",
+        "player": "Profil jucător"
+      },
+      "line": {
+        "posts": "{count, plural, one {postare} few {postări} other {de postări}}"
+      },
       "theme": {
         "label": "Tema",
         "dark": "Întunecată",

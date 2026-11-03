@@ -13,9 +13,10 @@ const before = (page: Page, a: string, b: string) =>
     return !!ea && !!eb && (ea.compareDocumentPosition(eb) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   }, [a, b]);
 
-/** „Editor pagină” din meniul contului: pornește modul „Editează pagina” pe pagina curentă. */
+/** „Editor pagină” din meniul contului (submeniul „Staff”): pornește modul „Editează pagina” pe pagina curentă. */
 async function openPageEditor(page: Page) {
   await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-account-staff").click();
   await page.getByTestId("gcs-menu-page-editor").click();
 }
 
@@ -230,5 +231,6 @@ test("un membru nu vede „Editor pagină” în meniu", async ({ page, context 
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
   await expect(page.getByTestId("gcs-menu-settings")).toBeVisible();
+  await expect(page.getByTestId("gcs-account-staff")).toHaveCount(0);
   await expect(page.getByTestId("gcs-menu-page-editor")).toHaveCount(0);
 });

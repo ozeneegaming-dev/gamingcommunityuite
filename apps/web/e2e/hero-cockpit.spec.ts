@@ -176,12 +176,20 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   await expect(menu.getByRole("link", { name: `Contul${id}` })).toBeVisible();
   await expect(menu.getByTestId("gcs-account-group").first()).toHaveAttribute("href", /\/members\?group=\d+$/);
   await expect(menu.getByTestId("gcs-account-section-content")).toContainText("Profilul meu");
-  await expect(menu.getByTestId("gcs-account-section-settings")).toContainText("Confidențialitate și ignorați");
-  await expect(menu.getByTestId("gcs-account-section-staff")).toContainText("Panoul de administrare (ACP)");
-  await expect(menu.getByTestId("gcs-account-section-staff")).toContainText("Coada de moderare");
+  // Plăcile cu eticheta scurtă păstrează textul întreg în tooltip.
+  await expect(menu.getByTestId("gcs-account-section-settings")).toContainText("Confidențialitate");
+  await expect(menu.getByTestId("gcs-account-privacy")).toHaveAttribute("title", "Confidențialitate și ignorați");
   await expect(menu.getByTestId("gcs-account-section-gaming")).toContainText("Conturi legate");
   await expect(menu.getByTestId("gcs-account-remaining")).toContainText("până la rangul");
+  // „Staff”: un singur rând; submeniul are linkurile staff-ului.
+  await menu.getByTestId("gcs-account-staff").click();
+  const staffMenu = menu.getByTestId("gcs-account-staff-menu");
+  await expect(staffMenu).toBeVisible();
+  await expect(staffMenu).toContainText("Panoul de administrare (ACP)");
+  await expect(staffMenu).toContainText("Coada de moderare");
   await shot(page, "06-account-menu");
+  await menu.getByTestId("gcs-account-staff").click();
+  await expect(staffMenu).toBeHidden();
 
   // Statusul „Invizibil” = „Arată când sunt online” oprit (confidențialitatea).
   await menu.getByTestId("gcs-account-status-invisible").click();
@@ -203,6 +211,7 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   const m2 = p2.getByTestId("gcs-account-menu");
   await expect(m2.getByTestId("gcs-account-section-content")).toBeVisible();
   await expect(m2.getByTestId("gcs-account-section-staff")).toHaveCount(0);
+  await expect(m2.getByTestId("gcs-account-staff")).toHaveCount(0);
   await ctx.close();
 });
 

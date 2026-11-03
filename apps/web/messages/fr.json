@@ -10116,6 +10116,14 @@
         "pageEditor": "Modifier la page",
         "acp": "Panneau d'administration (ACP)"
       },
+      "tiles": {
+        "attachments": "Pièces jointes",
+        "privacy": "Confidentialité",
+        "player": "Profil de joueur"
+      },
+      "line": {
+        "posts": "{count, plural, one {message} many {messages} other {messages}}"
+      },
       "theme": {
         "label": "Thème",
         "dark": "Sombre",
