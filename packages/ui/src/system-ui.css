@@ -231,6 +231,24 @@
 :root .gcs-sideCard:has(> .gcs-collapseToggle) > .gcs-sideCard__title {
   padding-right: 52px;
 }
+/*
+ * Titlul widget-urilor pe un singur rând (și în coloana îngustă, și pe telefon): textul se scurtează cu „…”, iar
+ * informația din dreapta (ex. „19 membri · 26 vizitatori”) cedează prima; butoanele din dreapta nu se taie.
+ */
+:root .gcs-widgetTitle__text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .gcs-widgetTitle__extra:not(:has(button, input, select)) {
+  flex: 0 3 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 :root .gcs-card[data-collapsed] > :not(:first-child):not(.gcs-collapseToggle) {
   display: none;
 }
