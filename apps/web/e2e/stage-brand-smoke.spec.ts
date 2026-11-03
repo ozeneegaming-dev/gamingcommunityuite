@@ -31,7 +31,7 @@ test("o instalare nouă: antetul de pe preview, contoarele la hover, fără deru
     const row = page.locator(".gcs-forumRow").first();
     await expect(row.locator(".gcs-forumRow__stats")).toBeHidden();
     await row.hover();
-    await expect(row.locator(".gcs-forumRow__bubble")).toBeVisible();
+    await expect(page.locator(".gcs-forumRow__bubble")).toBeVisible();
     await page.waitForTimeout(400);
     if (SHOTS) await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS, `new-forum-${skin}-hover.png`) });
     await page.mouse.move(0, 0);

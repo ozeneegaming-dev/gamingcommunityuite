@@ -106,7 +106,8 @@ test("aspectul listelor: carduri separate (designul GCS) și listă continuă (C
   const btn = c.row.getByTestId("gcs-forum-stats-btn");
   await expect(btn).toBeVisible();
   expect(await style(btn, "width")).toBe("26px");
-  const bubble = c.row.getByTestId("gcs-forum-bubble");
+  // Bula e un tooltip al sistemului, în `<body>` (nu o taie caseta categoriei).
+  const bubble = cards.page.getByTestId("gcs-forum-bubble");
   await expect(bubble).toBeHidden();
   await btn.click();
   await expect(bubble).toBeVisible();
@@ -154,7 +155,7 @@ test("statistici forum „La hover”: contoarele ies din rând și apar în bul
   const { row } = category(page);
   await expect(row).toBeVisible();
   await expect(row.locator(".gcs-forumRow__stats")).toBeHidden();
-  const bubble = row.getByTestId("gcs-forum-bubble");
+  const bubble = page.getByTestId("gcs-forum-bubble");
   await expect(bubble).toBeHidden();
   await row.hover();
   await expect(bubble).toBeVisible();

@@ -192,64 +192,18 @@
   border-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
-/* Bula: stânga butonului (nu iese din caseta categoriei, care taie conținutul), cu săgeata spre buton. */
+/*
+ * Bula: un tooltip al sistemului (`.gcs-tooltip`: culorile din tokenuri, săgeata, așezarea sus / jos ținută în ecran),
+ * pus în `<body>` de `GcsForumStatsButton`, deci nu o taie caseta categoriei sau cardurile din grilă. Aici doar rândurile.
+ */
 .gcs-forumRow__bubble {
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  z-index: 5;
-  display: none;
-  gap: 2px 12px;
-  padding: 7px 11px;
-  border: 1px solid #222a39;
-  border-radius: 5px;
-  background: #0b0f17;
-  color: #c6ceda;
-  font: 600 12px/1.35 var(--gcs-font-text, system-ui, sans-serif);
+  display: grid;
+  gap: 2px;
   white-space: nowrap;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.42);
-  transform: translateY(-50%);
-  transform-origin: right center;
-  pointer-events: none;
-}
-.gcs-forumRow__bubble::after {
-  content: "";
-  position: absolute;
-  right: -5px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  background: inherit;
-  border: 1px solid #222a39;
-  border-left: 0;
-  border-bottom: 0;
-  transform: translateY(-50%) rotate(45deg);
-}
-.gcs-forumRow__bubble b {
-  color: #fff;
+  text-align: left;
 }
 .gcs-forumRow__bubble > span {
   display: block;
-}
-:root:not([data-gcs-stats="hidden"]) .gcs-forumRow[data-stats-open] .gcs-forumRow__bubble,
-:root[data-gcs-stats="hover"] .gcs-forumRow:is(:hover, :focus-within) .gcs-forumRow__bubble {
-  display: grid;
-  animation: gcs-bubble-skew var(--gcs-motion-base, 0.22s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
-}
-@keyframes gcs-bubble-skew {
-  from {
-    opacity: 0;
-    transform: translate(6px, -50%) skewX(-12deg);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  :root .gcs-forumRow .gcs-forumRow__bubble {
-    animation: gcs-tip-fade 0.15s linear both;
-  }
 }
 
 /* „La hover” și „Ascunse”: contoarele nu mai stau în rând (la hover le arată bula). */
@@ -281,18 +235,6 @@
   :root[data-gcs-lists="cards"] .gcs-category__well .gcs-forumRow__last {
     flex: 1 1 0;
     width: auto;
-  }
-  /* Bula se deschide spre dreapta butonului (în stânga n-ar mai avea loc). */
-  .gcs-forumRow__bubble {
-    right: auto;
-    left: calc(100% + 10px);
-  }
-  .gcs-forumRow__bubble::after {
-    right: auto;
-    left: -5px;
-    border: 1px solid #222a39;
-    border-right: 0;
-    border-top: 0;
   }
 }
 
