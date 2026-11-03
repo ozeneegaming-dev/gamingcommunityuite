@@ -372,6 +372,7 @@
       "not_vip": "Le groupe choisi n'est pas un niveau VIP.",
       "permanent": "Un VIP permanent ne peut pas être prolongé.",
       "image": "Télécharger une image pour un cadre d'image.",
+      "preview_image": "Importer une image pour « Mon image ».",
       "signature_media": "La signature ne peut contenir d'images ou de vidéos.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Recherche d'une icône (p. ex. gamepad, shield)",
         "iconNone": "Aucune icône",
         "iconNoResults": "Aucune icône trouvée.",
-        "subforumColumns": "Colonnes du sous-Forum"
+        "subforumColumns": "Colonnes du sous-Forum",
+        "preview": {
+          "legend": "Image d'aperçu",
+          "hint": "L'image en haut de la carte dans la vue en grille. Importer une image et la recadrer au format de la carte (16:7). Sans image, la carte crée son propre aperçu.",
+          "modes": {
+            "auto": {
+              "label": "Automatique depuis le dernier message (recommandé)",
+              "help": "La première image du dernier message visible par les visiteurs ; sinon le titre, les premières lignes et l'auteur sur la couleur du forum. Se met à jour à chaque nouveau message, depuis le cache."
+            },
+            "image": {
+              "label": "Mon image",
+              "help": "L'image importée ci-dessous, toujours la même."
+            },
+            "color": {
+              "label": "Couleur du forum uniquement",
+              "help": "Le dégradé avec la grande icône, comme pour un forum sans messages."
+            }
+          },
+          "upload": "Importer une image",
+          "replace": "Changer l'image",
+          "remove": "Retirer l'image",
+          "uploading": "Importation…",
+          "empty": "Aucune image importée",
+          "crop": "Partie visible sur la carte",
+          "cropHint": "Faire glisser le cadre (ou le déplacer avec les flèches) pour choisir la partie visible sur la carte ; le reste est rogné.",
+          "result": "Rendu sur la carte",
+          "autoNote": "Avec une image importée, la carte l'utilise aussi en mode automatique ; la retirer pour revenir à l'aperçu du dernier message."
+        }
       },
       "icons": {
         "chat": "Débat",
@@ -6323,6 +6351,8 @@
     "statsOf": "Statistiques du forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}}",
     "statsPosts": "{count, plural, one {<b>#</b> réponse} many {<b>#</b> réponses} other {<b>#</b> réponses}}",
+    "cardStats": "{topics, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}} / {posts, plural, one {<b>#</b> message} many {<b>#</b> messages} other {<b>#</b> messages}}",
+    "cardLastBy": "Dernière réponse de <name></name>, <when></when>",
     "pageHint": "Page",
     "archived": "Archivé",
     "popularNow": "Populaire en ce moment",

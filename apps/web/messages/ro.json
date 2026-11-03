@@ -372,6 +372,7 @@
       "not_vip": "Grupul ales nu e un nivel VIP.",
       "permanent": "Un VIP permanent nu se prelungește.",
       "image": "Încarcă o imagine pentru rama de tip imagine.",
+      "preview_image": "Încarcă o imagine pentru „Imaginea mea”.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
       "format_not_allowed": "Conținutul folosește o formatare care nu e permisă aici (ex. imagini, video sau titluri).",
       "too_many_images": "Prea multe imagini.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Caută o iconiță (ex. gamepad, shield)",
         "iconNone": "Fără iconiță",
         "iconNoResults": "Nicio iconiță găsită.",
-        "subforumColumns": "Coloane pentru subforumuri"
+        "subforumColumns": "Coloane pentru subforumuri",
+        "preview": {
+          "legend": "Imagine de previzualizare",
+          "hint": "Imaginea de sus a cardului, în aspectul grilă. Încarci o imagine și o decupezi la forma cardului (16 : 7). Fără imagine, cardul își formează singur previzualizarea.",
+          "modes": {
+            "auto": {
+              "label": "Automat din ultima postare (recomandat)",
+              "help": "Prima imagine din ultima postare vizibilă vizitatorilor; altfel titlul, primele rânduri și autorul, peste culoarea forumului. Se actualizează la fiecare postare nouă, din cache."
+            },
+            "image": {
+              "label": "Imaginea mea",
+              "help": "Imaginea încărcată mai jos, mereu aceeași."
+            },
+            "color": {
+              "label": "Doar culoarea forumului",
+              "help": "Gradientul cu iconița mare, ca la un forum fără postări."
+            }
+          },
+          "upload": "Încarcă o imagine",
+          "replace": "Schimbă imaginea",
+          "remove": "Scoate imaginea",
+          "uploading": "Se încarcă…",
+          "empty": "Nicio imagine încărcată",
+          "crop": "Partea vizibilă pe card",
+          "cropHint": "Trage chenarul (sau mută-l din săgeți) ca să alegi partea vizibilă pe card; în afara lui, imaginea se taie.",
+          "result": "Cum arată pe card",
+          "autoNote": "Cu o imagine încărcată, cardul o folosește și în modul automat; scoate-o ca să revii la previzualizarea din ultima postare."
+        }
       },
       "icons": {
         "chat": "Discuții",
@@ -6323,6 +6351,8 @@
     "statsOf": "Statisticile forumului {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}}",
     "statsPosts": "{count, plural, one {<b>#</b> răspuns} few {<b>#</b> răspunsuri} other {<b>#</b> de răspunsuri}}",
+    "cardStats": "{topics, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}} / {posts, plural, one {<b>#</b> postare} few {<b>#</b> postări} other {<b>#</b> de postări}}",
+    "cardLastBy": "Ultimul răspuns de <name></name>, <when></when>",
     "pageHint": "Pagină",
     "archived": "Arhivat",
     "popularNow": "Popular acum",

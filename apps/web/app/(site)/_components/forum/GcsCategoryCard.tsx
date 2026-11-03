@@ -12,9 +12,9 @@ const DEFAULT_CATEGORY_ICON = "fa-solid fa-folder-open";
 /**
  * O categorie cu forumurile ei (macheta Main): bara de culoare, iconița categoriei într-un pătrat de accent și titlul.
  * Forum v2: stilul extensiilor pe secțiune (`category`) și slotul `category.header` în bandă, înaintea butonului de
- * restrângere.
+ * restrângere. În vederea în grilă (`view="grid"`), forumurile sunt carduri.
  */
-export function GcsCategoryCard({ category, slots }: { category: GcsIndexCategory; slots?: Map<number, GcsForumSlotBundle> }) {
+export function GcsCategoryCard({ category, slots, view = "rows" }: { category: GcsIndexCategory; slots?: Map<number, GcsForumSlotBundle>; view?: "rows" | "grid" }) {
   const icon = isGcsIcon(category.icon) ? category.icon : DEFAULT_CATEGORY_ICON;
   const own = slots?.get(category.id);
   return (
@@ -39,7 +39,7 @@ export function GcsCategoryCard({ category, slots }: { category: GcsIndexCategor
       {/* Puțul categoriei: în aspectul „Carduri separate” fiecare forum e un card pe un fundal puțin mai închis. */}
       <div className="gcs-category__well">
         {category.forums.map((f) => (
-          <GcsForumRow key={f.id} forum={f} accent={category.color} slots={slots?.get(f.id)} />
+          <GcsForumRow key={f.id} forum={f} accent={category.color} slots={slots?.get(f.id)} card={view === "grid"} />
         ))}
       </div>
     </section>

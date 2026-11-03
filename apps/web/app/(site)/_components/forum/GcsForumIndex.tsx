@@ -27,13 +27,15 @@ export const slotPlugins = (bundles: Map<number, GcsForumSlotBundle>) => [...new
  * statisticile, „Cine e online”…), aranjate de admin din „Editează pagina”. Pe `/` sau, când aplicația de pornire e alta,
  * pe `/forum`. Extensiile (Forum v2) își pun conținutul și stilul în rânduri și în benzile categoriilor.
  * Vederea (Forum v2): forumurile pe rânduri sau în grilă, alegerea membrului (cookie), altfel cea implicită din setări.
+ * În grilă, forumurile sunt carduri cu zona de imagine (din ACP sau din ultima postare, din cache).
  */
 export async function GcsForumIndex() {
   const t = await getTranslations("forum");
   const { forumQueries, settings } = services();
-  const [categories, defaultView, jar] = await Promise.all([forumQueries.index(await currentActor()), settings.get<string>("forums.forum_view"), cookies()]);
+  const [actor, defaultView, jar] = await Promise.all([currentActor(), settings.get<string>("forums.forum_view"), cookies()]);
   const chosen = jar.get(FORUM_VIEW_COOKIE)?.value;
   const view: (typeof FORUM_VIEWS)[number] = chosen === "rows" || chosen === "grid" ? chosen : defaultView === "grid" ? "grid" : "rows";
+  const categories = await forumQueries.index(actor, { previews: view === "grid" });
   const slots = await forumListSlots("index", indexSlotNodes(categories));
   return (
     <GcsWidgetPage page="index">
@@ -50,7 +52,7 @@ export async function GcsForumIndex() {
             {t("emptyForums")}
           </GcsCard>
         ) : (
-          categories.map((c) => <GcsCategoryCard key={c.id} category={c} slots={slots} />)
+          categories.map((c) => <GcsCategoryCard key={c.id} category={c} slots={slots} view={view} />)
         )}
       </div>
     </GcsWidgetPage>
