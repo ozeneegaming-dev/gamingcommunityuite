@@ -13,9 +13,9 @@ async function idOf(email: string): Promise<string> {
   return row!.id;
 }
 
-/** Adaugă un destinatar în câmpul cu sugestii (scrie numele, alege sugestia). */
-async function pick(page: Page, name: string): Promise<void> {
-  await page.locator("#gcs-pick-user").fill(name);
+/** Adaugă un destinatar în câmpul cu sugestii (scrie numele, eventual cu `@` în față, și alege sugestia). */
+async function pick(page: Page, name: string, typed = name): Promise<void> {
+  await page.locator("#gcs-pick-user").fill(typed);
   await page.getByRole("option").getByRole("button", { name }).click();
 }
 
@@ -33,7 +33,8 @@ test("A scrie lui B și C; B citește și răspunde; C pleacă; A îl invită pe
   // A → B (din profil: destinatarul precompletat) + C (din sugestii).
   await page.goto(`/messages/new?to=${await idOf(`b-${id}@example.com`)}`);
   await expect(page.getByTestId("gcs-recipient")).toHaveText([`Bogdan${id}`]);
-  await pick(page, `Cristi${id}`);
+  // Ca o mențiune: cu `@` în față.
+  await pick(page, `Cristi${id}`, `@Cristi${id}`);
   await page.getByLabel("Titlu").fill(`Echipa ${id}`);
   await typeInEditor(page, "Intrați la turneu?", page.locator("form"));
   await page.getByRole("button", { name: "Trimite" }).click();

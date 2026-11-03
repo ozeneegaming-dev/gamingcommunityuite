@@ -392,13 +392,14 @@
   color: var(--gcs-btn-primary-text, #fff);
 }
 /*
- * Pătratele iconițelor doar unde e loc (de la 1600 px): sub, bara arată doar etichetele, ca itemii să rămână pe bară în
- * loc să treacă în „Mai mult” (meniul împărțit Esports și antetul Standard, pe ecranele de 1366–1512 px).
+ * Pătratele iconițelor doar când încap toți itemii cu ele. Altfel bara pune `data-compact` (GcsMegaNav) și toate barele
+ * antetului (și cealaltă jumătate a meniului împărțit Esports) arată doar etichetele, înainte ca vreun item să treacă în
+ * „Mai mult”. Lățimea antetului e limitată, deci decide spațiul barei, nu lățimea ecranului. `data-measure` forțează o
+ * variantă cât timp bara se măsoară.
  */
-@media (max-width: 1599px) {
-  :root .gcs-hb__navBar .gcs-hb__nav > .gcs-hb__navIcon {
-    display: none;
-  }
+:root .gcs-hb:has(.gcs-hb__navBar[data-compact]) .gcs-hb__navBar:not([data-measure="icons"]) .gcs-hb__nav > .gcs-hb__navIcon,
+:root .gcs-hb__navBar[data-measure="text"] .gcs-hb__nav > .gcs-hb__navIcon {
+  display: none;
 }
 :root .gcs-hb__navLabel {
   min-width: 0;
@@ -1349,6 +1350,8 @@
   gap: 4px;
 }
 :root .gcs-am__group {
+  min-width: 0;
+  max-width: 100%;
   padding: 1px 7px;
   border-radius: 4px;
   border: 1px solid color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 45%, transparent);
@@ -1359,6 +1362,12 @@
   text-transform: uppercase;
   text-decoration: none;
   transition: background-color var(--gcs-dur), border-color var(--gcs-dur), box-shadow var(--gcs-dur), transform var(--gcs-dur) var(--gcs-ease-out);
+}
+:root .gcs-am__groupText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 :root .gcs-am__group:is(:hover, :focus-visible) {
   background-color: color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 30%, transparent);

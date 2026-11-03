@@ -332,13 +332,26 @@ function Bar({ items, label, moreLabel, quickLabel, home, testId }: Props) {
     const el = nav.current;
     if (!el) return;
     if (vertical) {
+      el.removeAttribute("data-compact");
       setFit(items.length);
       return;
     }
     const measure = () => {
       const width = (n: Element | null) => n?.getBoundingClientRect().width ?? 0;
       const gap = Number.parseFloat(getComputedStyle(el).columnGap) || 0;
-      setFit(fitCount([...el.querySelectorAll(":scope > [data-nav-item]")].map(width), width(el.querySelector(":scope > [data-nav-more]")), gap, el.clientWidth));
+      // `data-measure` forțează varianta măsurată (cu pătratele iconițelor sau doar etichetele), sincron, fără randare.
+      const count = (mode: "icons" | "text") => {
+        el.dataset.measure = mode;
+        return fitCount([...el.querySelectorAll(":scope > [data-nav-item]")].map(width), width(el.querySelector(":scope > [data-nav-more]")), gap, el.clientWidth);
+      };
+      // Iconițele sunt decor: dacă nu încap toți itemii cu ele, bara cere varianta compactă (doar etichetele, pe toate
+      // barele antetului, CSS-ul din header-menus.css) și abia ce nu încape nici așa trece în „Mai mult”.
+      const withIcons = count("icons");
+      const compact = withIcons < items.length;
+      const shown = compact ? count("text") : withIcons;
+      delete el.dataset.measure;
+      el.toggleAttribute("data-compact", compact);
+      setFit(shown);
     };
     measure();
     const observer = new ResizeObserver(measure);

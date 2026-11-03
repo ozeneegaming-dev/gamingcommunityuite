@@ -184,6 +184,13 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("link", { name: `Contul${id}` })).toBeVisible();
   await expect(menu.getByTestId("gcs-account-group").first()).toHaveAttribute("href", /\/members\?group=\d+$/);
+  // Un nume de grup lung se taie cu „…” și nu intră sub comutatorul de status.
+  const groupFit = await menu.getByTestId("gcs-account-group").first().evaluate((pill) => {
+    pill.querySelector(".gcs-am__groupText")!.textContent = "GAMINGCOMMUNITYSUITE COMMUNITY";
+    const status = pill.closest(".gcs-am__idRow")!.querySelector(".gcs-am__status")!.getBoundingClientRect();
+    return { pillRight: pill.getBoundingClientRect().right, statusLeft: status.left };
+  });
+  expect(groupFit.pillRight).toBeLessThanOrEqual(groupFit.statusLeft);
   await expect(menu.getByTestId("gcs-account-section-content")).toContainText("Profilul meu");
   // Plăcile cu eticheta scurtă păstrează textul întreg în tooltip.
   await expect(menu.getByTestId("gcs-account-section-settings")).toContainText("Confidențialitate");
