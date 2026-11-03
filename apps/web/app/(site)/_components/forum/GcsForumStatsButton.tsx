@@ -60,28 +60,33 @@ export function GcsForumStatsButton({ label, bubbleId, children }: { label: stri
     const onDown = (e: PointerEvent) => {
       if (!(e.target instanceof Node) || !ref.current?.contains(e.target)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
     document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
 
-  // La derulare sau redimensionare bula s-ar desprinde de buton: se închide (cea de la hover revine la mișcarea mouse-ului).
+  /*
+   * Escape o închide (și pe cea de la hover, până când mouse-ul iese din rând). La derularea paginii sau a unei zone care
+   * conține butonul, ori la redimensionare, bula s-ar desprinde de buton: se închide. Derularea altor zone (ex. un chat
+   * din pagină) n-o atinge.
+   */
   useEffect(() => {
     if (!visible) return;
     const close = () => {
       setOpen(false);
       setOnRow(false);
     };
-    window.addEventListener("scroll", close, true);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    const onScroll = (e: Event) => {
+      if (!(e.target instanceof Node) || e.target === document || e.target.contains(ref.current)) close();
+    };
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", close);
     return () => {
-      window.removeEventListener("scroll", close, true);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", close);
     };
   }, [visible]);

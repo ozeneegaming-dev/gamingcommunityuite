@@ -45,14 +45,17 @@ export function GcsTooltip({ content, children, side = "top", className }: GcsTo
     if (open && wrap.current && bubble.current) positionTooltip(wrap.current, bubble.current, side);
   }, [open, side, content]);
 
-  // La derulare sau redimensionare bula s-ar desprinde de element: se închide.
+  // La derularea paginii (sau a unei zone care conține elementul) ori la redimensionare bula s-ar desprinde: se închide.
   useEffect(() => {
     if (!open) return;
     const close = () => setHost(null);
-    window.addEventListener("scroll", close, true);
+    const onScroll = (e: Event) => {
+      if (!(e.target instanceof Node) || e.target === document || e.target.contains(wrap.current)) close();
+    };
+    window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", close);
     return () => {
-      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", close);
     };
   }, [open]);
