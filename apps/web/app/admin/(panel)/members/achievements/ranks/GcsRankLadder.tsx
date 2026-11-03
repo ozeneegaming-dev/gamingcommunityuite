@@ -5,7 +5,7 @@ import { GcsBadgeArt, GcsButton, GcsIconSvg, GcsTooltip } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { GcsConfirmDialog } from "../../../_components/GcsConfirmDialog";
 import { applyRankPreset, duplicateRank, exportRanks, importRanks, reorderRanks } from "../actions";
@@ -21,14 +21,16 @@ export type GcsLadderCard = {
   /** Pragurile, ca text scurt („100 XP · 50 ore jucate”). */
   summary: string;
   perks: string[];
+  /** Butonul „Editează” cu panoul rangului (formularul randat pe server). */
+  edit: ReactNode;
 };
 
 /**
- * Scara rangurilor (Realizări v2): cardurile cu emblema pe trepte, de la cel mai înalt la primul, câți membri are fiecare
- * (link spre lista filtrată), reordonarea prin tragere sau cu săgețile, copia, exportul / importul și scările
- * prestabilite (cu confirmare în pagină).
+ * Scara rangurilor (Realizări v2), singura listă a paginii: cardurile cu emblema pe trepte, de la cel mai înalt la
+ * primul, câți membri are fiecare (link spre lista filtrată), reordonarea prin tragere sau cu săgețile, copia,
+ * „Editează” (panoul rangului), exportul / importul, scările prestabilite (cu confirmare în pagină) și „Rang nou”.
  */
-export function GcsRankLadder({ ranks, presets, unranked }: { ranks: GcsLadderCard[]; presets: { key: string; label: string }[]; unranked: number }) {
+export function GcsRankLadder({ ranks, presets, unranked, addButton }: { ranks: GcsLadderCard[]; presets: { key: string; label: string }[]; unranked: number; addButton?: ReactNode }) {
   const t = useTranslations("acp.achievements.v2");
   const format = useFormatter();
   const router = useRouter();
@@ -42,7 +44,9 @@ export function GcsRankLadder({ ranks, presets, unranked }: { ranks: GcsLadderCa
   const [replace, setReplace] = useState(true);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const shown = [...order].reverse();
+  // Ordinea vine din stare (mutările se văd pe loc); datele fiecărui rând, din ultima randare a serverului.
+  const latest = new Map(ranks.map((r) => [r.id, r]));
+  const shown = [...order].reverse().map((r) => latest.get(r.id) ?? r);
 
   async function save(next: GcsLadderCard[]) {
     const prev = order;
@@ -146,6 +150,7 @@ export function GcsRankLadder({ ranks, presets, unranked }: { ranks: GcsLadderCa
               if (f) setConfirm({ kind: "import", text: await f.text() });
             }}
           />
+          {addButton}
         </div>
       </div>
       <ol className="gcs-rankLadder__list">
@@ -153,15 +158,27 @@ export function GcsRankLadder({ ranks, presets, unranked }: { ranks: GcsLadderCa
           <li
             key={r.id}
             className={`gcs-rankCard gcs-rankCard--${r.tier}${drag === r.id ? " is-dragging" : ""}`}
-            draggable
-            onDragStart={() => setDrag(r.id)}
-            onDragEnd={() => setDrag(null)}
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              if (drag !== null) e.preventDefault();
+            }}
             onDrop={() => dropOn(r.id)}
             data-testid="gcs-rank-card"
             data-rank={r.name}
           >
-            <span className="gcs-rankCard__grip" aria-hidden="true">
+            {/* Se trage de mâner (nu de tot rândul): câmpurile din panoul rangului rămân selectabile. */}
+            <span
+              className="gcs-rankCard__grip"
+              aria-hidden="true"
+              draggable
+              onDragStart={(e) => {
+                setDrag(r.id);
+                const li = e.currentTarget.closest("li");
+                if (li) e.dataTransfer.setDragImage(li, 16, 16);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(r.id));
+              }}
+              onDragEnd={() => setDrag(null)}
+            >
               <GcsIconSvg icon={faGripVertical} />
             </span>
             <span className="gcs-rankCard__level">{shown.length - i}</span>
@@ -201,6 +218,7 @@ export function GcsRankLadder({ ranks, presets, unranked }: { ranks: GcsLadderCa
                 </button>
               </GcsTooltip>
             </span>
+            <span className="gcs-rankCard__edit">{r.edit}</span>
           </li>
         ))}
       </ol>

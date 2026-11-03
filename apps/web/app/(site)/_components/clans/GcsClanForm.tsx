@@ -1,14 +1,16 @@
 "use client";
 
-import { faFloppyDisk, faImage, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faFloppyDisk, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { GCS_RICH_FIELDS } from "@gcs/core/rich-fields";
-import type { GcsResult } from "@gcs/core";
 import { CLAN_LINK_KINDS, tagInk } from "@gcs/modules/clans-text";
 import { GcsButton, GcsClanTag, GcsIconSvg } from "@gcs/ui";
 import type { GcsEditorTool } from "@gcs/ui/editor";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState, type CSSProperties, type FormEvent } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { createClan, updateClan } from "../../clan-actions";
 import { GcsRichTextInput } from "../editor/GcsRichTextInput";
@@ -67,6 +69,7 @@ export function GcsClanForm({
   const tf = useTranslations("errors.fields");
   const router = useRouter();
   const errorMessage = useErrorMessage();
+  const post = useUploadPost();
   const uid = useId();
   const [tag, setTag] = useState(initial.tag);
   const [name, setName] = useState(initial.name);
@@ -80,7 +83,6 @@ export function GcsClanForm({
   const [logo, setLogo] = useState<Image>(initial.logo);
   const [banner, setBanner] = useState<Image>(initial.banner);
   const [changed, setChanged] = useState({ logo: false, banner: false });
-  const [uploading, setUploading] = useState<"logo" | "banner" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, setPending] = useState(false);
@@ -93,23 +95,19 @@ export function GcsClanForm({
       </span>
     ) : null;
 
-  async function upload(kind: "logo" | "banner", file: File | undefined) {
-    if (!file) return;
-    setUploading(kind);
+  /** Încărcarea din popup (cu progres): întoarce textul erorii, arătat în popup, sau `null`. */
+  async function upload(kind: "logo" | "banner", file: File, onProgress: (fraction: number) => void): Promise<string | null> {
     setFieldErrors((e) => ({ ...e, [kind]: "" }));
     const fd = new FormData();
     fd.set("kind", kind);
     if (clanId !== null) fd.set("clanId", String(clanId));
     fd.set("file", file);
-    const res = (await fetch("/api/clans/image", { method: "POST", body: fd }).then((r) => r.json()).catch(() => null)) as GcsResult<{ id: string; url: string }> | null;
-    setUploading(null);
-    if (!res || !res.ok) {
-      setFieldErrors((e) => ({ ...e, [kind]: res && !res.ok ? (Object.values(res.error.fields ?? {})[0] ?? "invalid_image") : "invalid_image" }));
-      return;
-    }
+    const res = await post<{ id: string; url: string }>("/api/clans/image", fd, onProgress);
+    if (!res.ok) return res.error;
     if (kind === "logo") setLogo(res.data);
     else setBanner(res.data);
     setChanged((c) => ({ ...c, [kind]: true }));
+    return null;
   }
 
   function remove(kind: "logo" | "banner") {
@@ -218,33 +216,25 @@ export function GcsClanForm({
                 {t(kind)}
                 {required(kind) ? " *" : ""}
               </span>
-              <div className="gcs-clanForm__image">
-                {image &&
-                  (kind === "logo" ? (
+              {image && (
+                <div className="gcs-clanForm__image">
+                  {kind === "logo" ? (
                     <span className="gcs-clanLogo" style={{ "--gcs-clan-color": preview.color } as CSSProperties}>
                       <img src={image.url} alt={t("logoCurrent")} />
                     </span>
                   ) : (
                     <img className="gcs-clanForm__bannerPreview" src={image.url} alt={t("bannerCurrent")} />
-                  ))}
-                <label className="gcs-btn gcs-btn--ghost gcs-btn--sm" style={{ cursor: "pointer" }}>
-                  <GcsIconSvg icon={faImage} />
-                  {uploading === kind ? t("uploading") : image ? t("replace") : t("upload")}
-                  <input
-                    id={`gcs-clan-${kind}`}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp,image/gif"
-                    className="gcs-srOnly"
-                    aria-labelledby={`${uid}-${kind}-label`}
-                    onChange={(e) => void upload(kind, e.target.files?.[0])}
-                  />
-                </label>
-                {image && (
-                  <GcsButton type="button" variant="ghost" size="sm" icon={<GcsIconSvg icon={faTrash} />} onClick={() => remove(kind)}>
-                    {t("removeImage")}
-                  </GcsButton>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
+              <GcsUploadInput
+                title={t(kind)}
+                rules={UPLOAD_RULES.image(maxKb / 1024)}
+                current={image ? { url: image.url, name: kind === "logo" ? t("logoCurrent") : t("bannerCurrent") } : null}
+                upload={(file, onProgress) => upload(kind, file, onProgress)}
+                onRemove={() => remove(kind)}
+                testId={`gcs-clan-${kind}`}
+              />
               <span className="gcs-field__hint">{t(`${kind}Hint`, { kb: maxKb })}</span>
               {fieldError(kind)}
             </div>
@@ -332,7 +322,7 @@ export function GcsClanForm({
         </p>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <GcsButton type="submit" variant="primary" disabled={pending || uploading !== null} icon={<GcsIconSvg icon={mode === "create" ? faPlus : faFloppyDisk} />} data-testid="gcs-clan-submit">
+        <GcsButton type="submit" variant="primary" disabled={pending} icon={<GcsIconSvg icon={mode === "create" ? faPlus : faFloppyDisk} />} data-testid="gcs-clan-submit">
           {mode === "create" ? t("create") : t("save")}
         </GcsButton>
         {status && (

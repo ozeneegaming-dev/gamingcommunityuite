@@ -4,15 +4,22 @@ import { faFaceSmile, faImage } from "@fortawesome/free-regular-svg-icons";
 import { faArrowTurnDown, faMagnifyingGlass, faMicrophone, faStop, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { GcsAttachmentInfo, GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatConfig, GcsGif } from "@gcs/modules";
-import { GcsIconSvg, GcsSpinner } from "@gcs/ui";
+import { GcsIconSvg, GcsSpinner, GcsUploadDialog } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { GcsChatEmojiPicker } from "./GcsChatEmojiPicker";
 import { useDismiss } from "./use-dismiss";
+import { UPLOAD_RULES, uploadLabels } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 import { useMentionInput } from "@gcs/ui/mention-input";
 import type { GcsMentionHint } from "@gcs/core/text-mentions";
 
 const MAX_FILES = 4;
+/**
+ * Imaginile din popup: tipurile pipeline-ului și plafonul rutei (`/api/chat/uploads`, 30 MB); limita grupului
+ * (`upload.max_mb`) o verifică serverul, iar eroarea lui apare în popup.
+ */
+const CHAT_IMAGE_RULES = UPLOAD_RULES.image(30);
 const VOICE_TYPES = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
 
 export type GcsChatComposerHandle = {
@@ -99,6 +106,10 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
   const [files, setFiles] = useState<Pending[]>([]);
   const [panel, setPanel] = useState<"emoji" | "gif" | null>(null);
   const [uploading, setUploading] = useState(false);
+  /** Popupul de încărcare al unei imagini (butonul „Adaugă imagine”); lipirea și tragerea încarcă direct. */
+  const [picking, setPicking] = useState(false);
+  const tu = useTranslations("ui");
+  const post = useUploadPost();
   // @mențiunile: aceeași listă de sugestii ca în editorul postărilor (membri și grupuri), ancorată de câmp.
   const te = useTranslations("topic.editor");
   const mention = useMentionInput<HTMLInputElement>({
@@ -111,7 +122,6 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
   });
   const inputRef = mention.ref;
   const formRef = useRef<HTMLFormElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const emojiButton = useRef<HTMLButtonElement>(null);
   const gifButton = useRef<HTMLButtonElement>(null);
@@ -232,6 +242,8 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
     };
     const drop = (e: DragEvent) => {
       if (!e.dataTransfer?.files.length) return;
+      // Peste popupul de încărcare, fișierul e al popupului (verificările, apoi „Folosește”).
+      if ((e.target as Element | null)?.closest?.(".gcs-modal")) return;
       e.preventDefault();
       void addFiles([...e.dataTransfer.files]);
     };
@@ -574,21 +586,36 @@ export const GcsChatComposer = forwardRef<GcsChatComposerHandle, Props>(function
           <div className="gcs-chat__buttons">
             {config.allowImages && (
               <>
-                <button type="button" className="gcs-chat__tool" aria-label={t("addImage")} title={t("addImage")} disabled={off} onClick={() => fileRef.current?.click()}>
+                <button
+                  type="button"
+                  className="gcs-chat__tool"
+                  aria-label={t("addImage")}
+                  title={t("addImage")}
+                  disabled={off}
+                  onClick={() => (files.length >= MAX_FILES ? onError(t("tooManyFiles", { max: MAX_FILES })) : setPicking(true))}
+                  data-testid="gcs-chat-file-open"
+                >
                   <GcsIconSvg icon={faImage} />
                 </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/gif,image/webp"
-                  multiple
-                  hidden
-                  data-testid="gcs-chat-file"
-                  onChange={(e) => {
-                    void addFiles([...(e.target.files ?? [])]);
-                    e.target.value = "";
-                  }}
-                />
+                {picking && (
+                  <GcsUploadDialog
+                    title={t("addImage")}
+                    rules={CHAT_IMAGE_RULES}
+                    labels={uploadLabels(tu)}
+                    upload={async (file, onProgress) => {
+                      const fd = new FormData();
+                      fd.set("channel", channel);
+                      fd.set("file", file, file.name || "imagine.png");
+                      const res = await post<GcsAttachmentInfo>("/api/chat/uploads", fd, onProgress);
+                      if (!res.ok) return res.error;
+                      setFiles((list) => [...list, { id: res.data.id, url: res.data.url, name: res.data.filename }].slice(0, MAX_FILES));
+                      return null;
+                    }}
+                    onAccept={() => setPicking(false)}
+                    onClose={() => setPicking(false)}
+                    testId="gcs-chat-file"
+                  />
+                )}
               </>
             )}
             {(ext?.gifPanel !== undefined || config.giphy) && (

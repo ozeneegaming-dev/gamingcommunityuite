@@ -22,6 +22,7 @@ export type GcsProfileFieldInput = {
   maxLength: number;
   visibility: FieldVisibility;
   showOnCard: boolean;
+  /** Ordinea; `NaN` (lipsă) = rămâne cea de acum, iar un câmp nou vine ultimul. */
   position: number;
   /** Etapa 5: iconița Font Awesome, afișarea în postbit și imaginile opțiunilor (`IMAGE_SELECT`). */
   icon?: string | null;
@@ -34,6 +35,15 @@ export type GcsProfileFieldInput = {
 };
 
 export type GcsProfileFieldGroupInput = { key: string; label: string; helper: string; icon?: string | null; position: number };
+
+/** O ordine nouă trebuie să conțină exact rândurile existente, fiecare o dată (altfel s-ar pierde sau dubla poziții). */
+function assertSameIds(ids: number[], existing: number[]): void {
+  const given = Array.isArray(ids) ? ids : [];
+  const sorted = (list: number[]) => [...list].sort((a, b) => a - b).join(",");
+  if (!given.every((id) => Number.isInteger(id)) || new Set(given).size !== given.length || sorted(given) !== sorted(existing)) {
+    throw new GcsValidationError({ order: "invalid_order" });
+  }
+}
 
 /** ACP → Membri → Setări membri → Profiluri: câmpurile custom de profil (specul etapei 3, §9) și grupurile lor (v2). */
 export class GcsProfileFieldAdmin {
@@ -70,6 +80,12 @@ export class GcsProfileFieldAdmin {
     const groupId = input.groupId ?? null;
     if (groupId !== null && !(await db.profileFieldGroup.findUnique({ where: { id: groupId }, select: { id: true } }))) errors.groupId = "invalid_choice";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    const before = id === null ? null : await db.profileField.findUnique({ where: { id } });
+    if (id !== null && !before) throw new GcsNotFound();
+    // Fără poziție (panoul din ACP, unde ordinea se schimbă prin tragere): câmpul își păstrează locul; unul nou vine ultimul.
+    const position = Number.isInteger(input.position)
+      ? input.position
+      : (before?.position ?? ((await db.profileField.aggregate({ _max: { position: true } }))._max.position ?? -1) + 1);
     const data = {
       key: input.key,
       label,
@@ -83,13 +99,11 @@ export class GcsProfileFieldAdmin {
       maxLength: input.maxLength,
       visibility: input.visibility,
       showOnCard: input.showOnCard,
-      position: Number.isInteger(input.position) ? input.position : 0,
+      position,
       groupId,
       helper,
       linkTemplate,
     };
-    const before = id === null ? null : await db.profileField.findUnique({ where: { id } });
-    if (id !== null && !before) throw new GcsNotFound();
     const row = await (id === null ? db.profileField.create({ data }) : db.profileField.update({ where: { id }, data })).catch((error: unknown) => {
       if ((error as { code?: string }).code === "P2002") throw new GcsValidationError({ key: "taken" });
       throw error;
@@ -110,6 +124,30 @@ export class GcsProfileFieldAdmin {
     await bus.emit({ name: "profile_fields.updated", payload: { id }, tags: ["profile-fields", "cosmetics"] });
   }
 
+  /** Ordinea câmpurilor (tragerea din ACP): exact id-urile tuturor câmpurilor, fiecare o dată. */
+  async reorder(actor: GcsActor, ids: number[]): Promise<void> {
+    const { db, acp, bus } = this.deps;
+    await acp.assert(actor, PROFILES_ACP_SECTION, "edit");
+    assertSameIds(ids, (await db.profileField.findMany({ select: { id: true } })).map((r) => r.id));
+    await db.$transaction(async (tx) => {
+      for (const [position, id] of ids.entries()) await tx.profileField.update({ where: { id }, data: { position } });
+      await writeAudit(tx, { actorId: actor.userId, action: "profile_field.reorder", targetType: "profile_field", targetId: "order", after: ids, ip: actor.ip });
+    });
+    await bus.emit({ name: "profile_fields.updated", payload: { order: ids.length }, tags: ["profile-fields", "cosmetics"] });
+  }
+
+  /** Ordinea grupurilor de câmpuri (tragerea din ACP): exact id-urile tuturor grupurilor, fiecare o dată. */
+  async reorderGroups(actor: GcsActor, ids: number[]): Promise<void> {
+    const { db, acp, bus } = this.deps;
+    await acp.assert(actor, PROFILES_ACP_SECTION, "edit");
+    assertSameIds(ids, (await db.profileFieldGroup.findMany({ select: { id: true } })).map((r) => r.id));
+    await db.$transaction(async (tx) => {
+      for (const [position, id] of ids.entries()) await tx.profileFieldGroup.update({ where: { id }, data: { position } });
+      await writeAudit(tx, { actorId: actor.userId, action: "profile_field_group.reorder", targetType: "profile_field_group", targetId: "order", after: ids, ip: actor.ip });
+    });
+    await bus.emit({ name: "profile_fields.updated", payload: { groupOrder: ids.length }, tags: ["profile-fields"] });
+  }
+
   /** Un grup de câmpuri (nou sau editat): cheia stabilă, titlul, textul de ajutor din formular, iconița și ordinea. */
   async saveGroup(actor: GcsActor, id: number | null, input: GcsProfileFieldGroupInput): Promise<ProfileFieldGroup> {
     const { db, acp, bus } = this.deps;
@@ -125,7 +163,11 @@ export class GcsProfileFieldAdmin {
     if (helper.length > HELPER_MAX) errors.helper = "too_long";
     if (input.icon && !isGcsIcon(input.icon)) errors.icon = "invalid_choice";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    const data = { key, label, helper, icon: input.icon || null, position: Number.isInteger(input.position) ? input.position : 0 };
+    // Fără poziție (panoul din ACP, ordinea se schimbă prin tragere): grupul își păstrează locul; unul nou vine ultimul.
+    const position = Number.isInteger(input.position)
+      ? input.position
+      : (before?.position ?? ((await db.profileFieldGroup.aggregate({ _max: { position: true } }))._max.position ?? -1) + 1);
+    const data = { key, label, helper, icon: input.icon || null, position };
     const row = await (id === null ? db.profileFieldGroup.create({ data }) : db.profileFieldGroup.update({ where: { id }, data })).catch((error: unknown) => {
       if ((error as { code?: string }).code === "P2002") throw new GcsValidationError({ key: "taken" });
       throw error;

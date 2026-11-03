@@ -231,7 +231,12 @@ test("ACP: „Imaginea mea” cu o imagine încărcată și decupată apare pe c
   const field = page.getByTestId("gcs-forum-preview");
   await expect(field.getByTestId("gcs-forum-preview-mode-auto")).toBeChecked();
   await field.getByTestId("gcs-forum-preview-mode-image").check();
-  await field.getByTestId("gcs-forum-preview-file").setInputFiles(file);
+  // Popupul de încărcare: alegerea, verificările, apoi „Folosește” (încarcă imediat, cu progres).
+  await field.getByTestId("gcs-forum-preview-file-open").click();
+  await page.getByTestId("gcs-forum-preview-file-pick").setInputFiles(file);
+  await expect(page.getByTestId("gcs-forum-preview-file-dialog").locator('[data-check="okReal"]')).toBeVisible();
+  await page.getByTestId("gcs-forum-preview-file-use").click();
+  await expect(page.getByTestId("gcs-forum-preview-file-dialog")).toBeHidden({ timeout: 20_000 });
   await expect(field.getByTestId("gcs-forum-preview-image")).toBeVisible({ timeout: 20_000 });
   // Imaginea (120 × 40) e mai lată decât cardul: chenarul se mută pe orizontală, din săgeți.
   const crop = field.getByTestId("gcs-forum-preview-crop");

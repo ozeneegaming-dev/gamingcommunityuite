@@ -107,17 +107,18 @@ select option {
  * THIRD-PARTY-NOTICES.md). Bula stă în `<body>` cu poziție fixă (coordonatele vin din script), peste meniurile deschise
  * și panourile cu `overflow`; săgeata urmează centrul elementului (`--gcs-tip-arrow`).
  * Culorile vin din tokenurile temei (o temă le poate da direct: `--gcs-tooltip-bg`, `--gcs-tooltip-text`,
- * `--gcs-tooltip-border`): pe tema închisă bula e un ardezie mai deschis decât cardurile (se desprinde de pagină), pe
- * cea luminoasă un ardezie mai închis; textul alb are contrast ≥ 7:1 în ambele.
+ * `--gcs-tooltip-border`): pe tema închisă bula e deschisă (aproape albă, cu textul închis al paginii și marginea în
+ * culoarea accentului), deci se desprinde clar de cardurile și paginile închise; pe cea luminoasă e închisă, cu text alb.
+ * Contrastul textului e ≥ 7:1 în ambele.
  */
 .gcs-tooltipWrap {
   position: relative;
   display: inline-flex;
 }
 .gcs-tooltip {
-  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, var(--gcs-text) 20%, var(--gcs-surface2)));
-  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-text) 34%, var(--gcs-surface2)));
-  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-heading, #fff));
+  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, #fff 92%, var(--gcs-text)));
+  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-accent) 65%, #fff));
+  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-bg, #0b0f17));
   position: fixed;
   left: 0;
   top: 0;
@@ -136,7 +137,7 @@ select option {
   white-space: normal;
   overflow-wrap: anywhere;
   pointer-events: none;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.42);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.55);
   transition: none;
   transform-origin: bottom center;
   animation: gcs-tip-skew var(--gcs-motion-base, 0.22s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
@@ -545,21 +546,121 @@ dialog:modal {
   cursor: pointer;
 }
 
-/* Selectorul de iconițe. */
+/* Selectorul de iconițe: butonul cu iconița aleasă și popupul (căutare, categorii, grilă, „Fără iconiță”). */
 .gcs-iconPicker {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+.gcs-iconPicker__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gcs-iconPicker__trigger:hover,
+.gcs-iconPicker--open .gcs-iconPicker__trigger {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, var(--gcs-border));
+}
+.gcs-iconPicker__trigger--compact {
+  padding: 3px;
+}
+.gcs-iconPicker__tile {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 15px;
+}
+.gcs-iconPicker__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-iconPicker__chev {
+  margin-left: auto;
+  color: var(--gcs-muted);
+  font-size: 11px;
+}
+.gcs-iconPicker__pop {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(420px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+}
+.gcs-iconPicker__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gcs-iconPicker__search > svg {
+  position: absolute;
+  left: 12px;
+  color: var(--gcs-muted);
+  pointer-events: none;
+}
+.gcs-iconPicker__search .gcs-input {
+  width: 100%;
+  padding-left: 36px;
+}
+.gcs-iconPicker__cats {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gcs-iconPicker__cat {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.gcs-iconPicker__cat[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 18%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-text));
+  font-weight: 600;
 }
 .gcs-iconPicker__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
   gap: 6px;
-  max-height: 240px;
+  max-height: 232px;
   overflow-y: auto;
 }
 .gcs-iconPicker__item {
-  height: 44px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -569,13 +670,372 @@ dialog:modal {
   color: var(--gcs-text);
   cursor: pointer;
 }
+.gcs-iconPicker__item:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+}
 .gcs-iconPicker__item[aria-selected="true"] {
   border-color: var(--gcs-accent);
-  background: rgb(214 40 57 / 0.15);
+  background: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-text));
+}
+.gcs-iconPicker__empty {
+  margin: 0;
+}
+.gcs-iconPicker__foot {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Câmpul de încărcare: miniatura, numele și regulile, butonul care deschide popupul. */
+.gcs-upfield {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-upfield--disabled {
+  opacity: 0.6;
+}
+.gcs-upfield__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.gcs-upfield__thumb {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--gcs-text) 9%, transparent) 0% 25%, transparent 0% 50%) 50% / 12px 12px;
+  color: var(--gcs-muted);
+  font-size: 18px;
+}
+.gcs-upfield__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gcs-upfield__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-upfield__meta b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--gcs-text);
+}
+.gcs-upfield__meta span {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+
+/* Popupul de încărcare: zona de tragere, verificările, previzualizarea, progresul. */
+.gcs-updialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-updialog__drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  border: 2px dashed var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--gcs-dur, 0.15s) ease,
+    background-color var(--gcs-dur, 0.15s) ease;
+}
+.gcs-updialog__drop:hover,
+.gcs-updialog__drop--over {
+  border-color: var(--gcs-accent);
+  background: color-mix(in srgb, var(--gcs-accent) 8%, var(--gcs-surface2));
+}
+.gcs-updialog__drop b {
+  font-size: 15px;
+  color: var(--gcs-text);
+}
+.gcs-updialog__big {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gcs-accent) 15%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 22px;
+}
+.gcs-updialog__preview {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+.gcs-updialog__pv {
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--gcs-text) 9%, transparent) 0% 25%, transparent 0% 50%) 50% / 14px 14px;
+  color: var(--gcs-muted);
+  font-size: 34px;
+}
+.gcs-updialog__pv img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gcs-updialog__checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+}
+.gcs-updialog__checks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-updialog__file b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-text);
+}
+.gcs-updialog__ok {
+  color: var(--gcs-ok, #2fb67c);
+}
+.gcs-updialog__bad {
+  color: #ff8a8d;
+}
+.gcs-updialog__rules {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+.gcs-updialog__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+}
+.gcs-updialog__bar i {
+  display: block;
+  height: 100%;
+  background: var(--gcs-accent);
+  transition: width 0.2s ease;
+}
+.gcs-updialog__error {
+  margin: 0;
+  color: #ff8a8d;
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-updialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 520px) {
+  .gcs-updialog__preview {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .gcs-upfield {
+    flex-wrap: wrap;
+  }
+}
+
+/* Panoul de editare din dreapta (listă + panou): titlul, conținutul derulabil, bara de jos fixă. */
+.gcs-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(5 6 10 / 0.6);
+  animation: gcs-fade-in var(--gcs-dur, 0.15s) ease both;
+}
+.gcs-drawer__panel {
+  width: min(520px, 100%);
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--gcs-surface);
+  border-left: 1px solid var(--gcs-border);
+  box-shadow: -24px 0 60px rgb(0 0 0 / 0.45);
+  outline: none;
+  animation: gcs-drawer-in var(--gcs-dur-slow, 0.25s) var(--gcs-ease-out, ease-out) both;
+}
+.gcs-drawer__panel--lg {
+  width: min(720px, 100%);
+}
+@keyframes gcs-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+.gcs-drawer__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-drawer__icon {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  border: 1px solid var(--gcs-border);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-drawer__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  color: var(--gcs-text);
+}
+.gcs-drawer__close {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+}
+.gcs-drawer__close:hover {
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-drawer__body {
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+/* Butonul de salvare al formularului principal rămâne vizibil, lipit jos în panou. */
+.gcs-drawer__body > .gcs-actionForm:last-child > .gcs-actionForm__actions {
+  position: sticky;
+  bottom: -16px;
+  z-index: 2;
+  margin: 0 -16px -16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  justify-content: flex-end;
+}
+.gcs-drawer__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+}
+/* Secțiunile unui formular din panou: titlul mic, cu linie, și câmpurile pe grilă. */
+.gcs-formSec {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gcs-formSec > legend,
+.gcs-formSec > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-formSec > legend::after,
+.gcs-formSec > h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--gcs-border);
+}
+.gcs-formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.gcs-formGrid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.gcs-formGrid > .gcs-formGrid__wide {
+  grid-column: 1 / -1;
+}
+.gcs-toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+@media (max-width: 560px) {
+  .gcs-formGrid,
+  .gcs-formGrid--3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gcs-toast {
+  .gcs-toast,
+  .gcs-drawer,
+  .gcs-drawer__panel {
     animation: none;
   }
   input[type="checkbox"]::before,

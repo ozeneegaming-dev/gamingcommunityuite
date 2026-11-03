@@ -39,8 +39,15 @@ test("etapa 1: instalare → 2FA → grup VIP cu gradient → membru → ban →
   let groupUrl = "";
   await test.step("grupul „VIP Test” cu nume în gradient", async () => {
     await page.goto("/admin/groups");
-    await page.getByLabel("Numele grupului").fill("VIP Test");
-    await page.getByRole("button", { name: "Creează grupul" }).click();
+    // „Grup nou” din antet: dialogul cu numele, apoi direct pagina grupului.
+    await page.getByTestId("gcs-group-new").click();
+    const create = page.getByRole("dialog", { name: "Grup nou" });
+    await create.getByLabel("Numele grupului").fill("VIP Test");
+    await create.getByRole("button", { name: "Creează grupul" }).click();
+    await expect(page).toHaveURL(/\/admin\/groups\/\d+$/);
+    await expect(page.getByRole("heading", { name: "VIP Test", level: 1 })).toBeVisible();
+    // Înapoi în listă, grupul are rândul lui cu „Editează”.
+    await page.goto("/admin/groups");
     await page.getByRole("link", { name: "Editează: VIP Test" }).click();
     await expect(page.getByRole("heading", { name: "VIP Test", level: 1 })).toBeVisible();
     groupUrl = page.url();
@@ -58,10 +65,12 @@ test("etapa 1: instalare → 2FA → grup VIP cu gradient → membru → ban →
     await member.goto(`/members/${memberId}`);
     await expect(member.getByTestId("gcs-profile-name")).toBeVisible();
 
-    const groups = page.getByRole("region", { name: "Grupuri" });
-    await groups.getByLabel("Grup principal").selectOption({ label: "VIP Test" });
+    // Grupurile se schimbă din popupul „Grupuri” al barei de acțiuni; după salvare popupul se închide.
+    await page.getByTestId("gcs-member-act-groups").click();
+    const groups = page.getByTestId("gcs-member-modal-groups");
+    await groups.getByTestId("gcs-member-primary-group").selectOption({ label: "VIP Test" });
     await groups.getByRole("button", { name: "Salvează grupul principal" }).click();
-    await expect(groups.getByRole("status")).toHaveText("Salvat");
+    await expect(groups).toHaveCount(0);
 
     const started = Date.now();
     await member.reload();
@@ -73,10 +82,12 @@ test("etapa 1: instalare → 2FA → grup VIP cu gradient → membru → ban →
   });
 
   await test.step("banarea membrului îl deloghează", async () => {
-    const ban = page.getByRole("region", { name: "Ban" });
-    await ban.getByLabel("Motiv").fill("test smoke");
+    // Banul se dă din popupul „Banează” al barei de acțiuni; după salvare popupul se închide.
+    await page.getByTestId("gcs-member-act-ban").click();
+    const ban = page.getByRole("dialog", { name: "Banează membrul" });
+    await ban.getByTestId("gcs-acp-ban-reason").fill("test smoke");
     await ban.getByRole("button", { name: "Banează" }).click();
-    await expect(ban.getByRole("status")).toHaveText("Salvat");
+    await expect(ban).toHaveCount(0);
     await member.goto("/");
     await expect(member.getByRole("link", { name: "Autentificare" })).toBeVisible();
     await expect(member.getByTestId("gcs-header-user")).toHaveCount(0);

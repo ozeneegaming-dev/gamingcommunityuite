@@ -38,11 +38,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsPortAnalysis, GcsPortArea, GcsPortListItem, GcsPortNote, GcsPortReport, GcsPortView } from "@gcs/modules";
-import { GcsButton, GcsCard, GcsField, GcsIconSvg, cx, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsButton, GcsCard, GcsField, GcsIconSvg, cx, type GcsIconSvgProps, type GcsUploadRules } from "@gcs/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { postWithProgress } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { convertPortAction, deletePortAction, handoffPortAction } from "./actions";
 
@@ -160,27 +162,20 @@ export function GcsPortingWizard({ port: initial, missing, recent, canEdit, canD
     onOk(result.data);
   }
 
-  async function upload(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const file = fd.get("file");
-    if (!(file instanceof File) || file.size === 0) {
-      setMessage({ ok: false, text: t("errors.required") });
-      return;
-    }
-    if (file.size > maxBytes) {
-      setMessage({ ok: false, text: t("errors.archive_too_large", { max: String(maxBytes) }) });
-      return;
-    }
-    await act(
-      "upload",
-      async () => {
-        const res = await fetch("/api/acp/porting/upload", { method: "POST", body: fd });
-        return (await res.json()) as GcsResult<{ id: string }>;
-      },
-      // Pagina se reîncarcă pe portarea nouă (adresa ei rămâne valabilă la un refresh).
-      (data) => router.push(`${PATH}?id=${encodeURIComponent(data.id)}`),
-    );
+  /**
+   * Încărcarea din popupul sistemului (tipul și mărimea verificate înainte, progresul real): eroarea serverului (arhiva
+   * respinsă și motivul) rămâne în popup, ca să se poată alege alt fișier.
+   */
+  async function upload(file: File, onProgress: (fraction: number) => void): Promise<string | null> {
+    setMessage(null);
+    const fd = new FormData();
+    fd.set("file", file);
+    const res = await postWithProgress<{ id: string }>("/api/acp/porting/upload", fd, onProgress);
+    if (!res.ok) return res.error.code === "network" ? t("upload.network") : errorText(res.error);
+    setPending("upload");
+    // Pagina se reîncarcă pe portarea nouă (adresa ei rămâne valabilă la un refresh).
+    router.push(`${PATH}?id=${encodeURIComponent(res.data.id)}`);
+    return null;
   }
 
   const phase: Phase = !port ? "upload" : port.status === "converted" ? "result" : pending === "convert" ? "convert" : "rights";
@@ -217,7 +212,7 @@ export function GcsPortingWizard({ port: initial, missing, recent, canEdit, canD
         ))}
       </ol>
 
-      {!port && <UploadPanel canEdit={canEdit} pending={pending === "upload"} maxBytes={maxBytes} maxFiles={maxFiles} onSubmit={upload} />}
+      {!port && <UploadPanel canEdit={canEdit} pending={pending === "upload"} maxBytes={maxBytes} maxFiles={maxFiles} onUpload={upload} />}
 
       {port && (
         <DetectedPanel
@@ -307,43 +302,30 @@ function Panel({ icon, title, sub, actions, children, testId }: { icon: Icon; ti
   );
 }
 
+/** Ce primește `/api/acp/porting/upload`: arhivele (.zip, .tar, .tar.gz) și pluginurile într-un singur fișier XML. */
+const SOURCE_TYPES = [".zip", ".tar", ".tgz", ".gz", ".xml", "application/zip", "application/x-zip-compressed", "application/x-tar", "application/gzip", "application/x-gzip", "application/xml", "text/xml"];
+
 function UploadPanel({
   canEdit,
   pending,
   maxBytes,
   maxFiles,
-  onSubmit,
+  onUpload,
 }: {
   canEdit: boolean;
   pending: boolean;
   maxBytes: number;
   maxFiles: number;
-  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  onUpload: (file: File, onProgress: (fraction: number) => void) => Promise<string | null>;
 }) {
   const t = useTranslations("porting");
   const format = useFormatter();
-  const [name, setName] = useState<string | null>(null);
+  const rules: GcsUploadRules = { accept: SOURCE_TYPES, typesLabel: "ZIP, TAR, TAR.GZ, XML", maxBytes };
   return (
     <Panel icon={faUpload} title={t("upload.title")} sub={t("upload.hint")} testId="gcs-porting-upload">
-      <form onSubmit={onSubmit} className="gcs-pluginUpload" noValidate>
-        <label className={cx("gcs-pluginUpload__drop", !canEdit && "is-disabled")}>
-          <span className="gcs-pluginUpload__icon" aria-hidden="true">
-            <GcsIconSvg icon={faFileZipper} />
-          </span>
-          <span className="gcs-pluginUpload__text">
-            <strong>{name ?? t("upload.file")}</strong>
-            <small>{t("upload.limits", { size: format.number(Math.round(maxBytes / (1024 * 1024))), files: format.number(maxFiles) })}</small>
-          </span>
-          <input
-            type="file"
-            name="file"
-            accept=".zip,.tar,.tgz,.gz,.xml,application/zip,application/x-tar,application/gzip,application/xml,text/xml"
-            className="gcs-srOnly"
-            disabled={!canEdit || pending}
-            onChange={(e) => setName(e.currentTarget.files?.[0]?.name ?? null)}
-            data-testid="gcs-porting-file"
-          />
-        </label>
+      <div className="gcs-pluginUpload">
+        <GcsUploadInput title={t("upload.file")} rules={rules} upload={onUpload} disabled={!canEdit || pending} testId="gcs-porting-file" />
+        <small className="gcs-muted">{t("upload.limits", { size: format.number(Math.round(maxBytes / (1024 * 1024))), files: format.number(maxFiles) })}</small>
         <p className="gcs-import__label">{t("upload.formats")}</p>
         <ul className="gcs-porting__formats">
           {FORMATS.map((f) => (
@@ -353,20 +335,7 @@ function UploadPanel({
             </li>
           ))}
         </ul>
-        {canEdit && (
-          <div className="gcs-pluginUpload__actions">
-            <GcsButton
-              variant="primary"
-              type="submit"
-              disabled={pending}
-              icon={<GcsIconSvg icon={pending ? faCircleNotch : faUpload} className={pending ? "gcs-import__spin" : undefined} />}
-              data-testid="gcs-porting-submit"
-            >
-              {pending ? t("upload.uploading") : t("upload.submit")}
-            </GcsButton>
-          </div>
-        )}
-      </form>
+      </div>
     </Panel>
   );
 }

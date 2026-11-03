@@ -1,9 +1,12 @@
 "use client";
 
-import type { GcsResult } from "@gcs/core";
+import { faArrowUpFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { GcsButton, GcsIconSvg, GcsUploadDialog } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState, type FormEvent } from "react";
+import { UPLOAD_RULES, uploadLabels } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { createSanction, liftSanction, updateSanction } from "../../bridge-actions";
 import { GcsPlayerPicker, type GcsPickedPlayer } from "./GcsPlayerPicker";
@@ -37,6 +40,9 @@ export function allowed(a: GcsSanctionAbilities, type: Type, scope: Scope, serve
   return flags.includes("v") && minutes > 0 && minutes <= a.tempbanMax;
 }
 
+/** Capturile-dovadă: limitele serverului (`SANCTION_EVIDENCE_MAX_BYTES` = 5 MB, imaginile pipeline-ului). */
+const EVIDENCE_RULES = UPLOAD_RULES.image(5);
+
 type Initial = { scope: Scope; serverId: number | null; reason: string; minutes: number; evidence: string[] };
 
 /**
@@ -50,6 +56,8 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
   const tf = useTranslations("errors.fields");
   const router = useRouter();
   const errorMessage = useErrorMessage();
+  const tu = useTranslations("ui");
+  const post = useUploadPost();
   const uid = useId();
   const firstServer = abilities.servers.find((s) => abilities.staff || flagsOn(abilities, s.id) !== "")?.id ?? null;
   const [type, setType] = useState<Type>(fixedType ?? "BAN");
@@ -67,7 +75,8 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
   const [custom, setCustom] = useState(String(startMinutes || 60));
   const [evidence, setEvidence] = useState((initial?.evidence ?? []).join("\n"));
   const [files, setFiles] = useState<{ id: string; url: string }[]>([]);
-  const [uploading, setUploading] = useState(false);
+  /** Popupul de încărcare al capturilor (mai multe odată; cel mult 10). */
+  const [picking, setPicking] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, setPending] = useState(false);
@@ -242,33 +251,37 @@ export function GcsSanctionForm({ mode, abilities, sanctionId, type: fixedType, 
         </label>
         {mode === "create" && (
           <div className="gcs-field">
-            <label htmlFor={`${uid}-files`}>{t("images")}</label>
-            <input
-              id={`${uid}-files`}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              multiple
-              disabled={uploading || files.length >= 10}
-              data-testid="gcs-sanction-files"
-              onChange={async (e) => {
-                const chosen = [...(e.target.files ?? [])].slice(0, 10 - files.length);
-                e.target.value = "";
-                if (chosen.length === 0) return;
-                setUploading(true);
-                setFieldErrors((f) => ({ ...f, attachments: "" }));
-                for (const file of chosen) {
-                  const fd = new FormData();
-                  fd.set("file", file);
-                  const res = (await fetch("/api/servers/evidence", { method: "POST", body: fd })
-                    .then((r) => r.json())
-                    .catch(() => null)) as GcsResult<{ id: string; url: string }> | null;
-                  if (res?.ok) setFiles((list) => [...list, res.data]);
-                  else setFieldErrors((f) => ({ ...f, attachments: res && !res.ok ? (Object.values(res.error.fields ?? {})[0] ?? "invalid_image") : "invalid_image" }));
-                }
-                setUploading(false);
-              }}
-            />
-            <span className="gcs-field__hint">{uploading ? t("uploading") : t("imagesHint")}</span>
+            <span>{t("images")}</span>
+            <div>
+              <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faArrowUpFromBracket} />} disabled={files.length >= 10} onClick={() => setPicking(true)} data-testid="gcs-sanction-files-open">
+                {tu("upload.upload")}
+              </GcsButton>
+            </div>
+            <span className="gcs-field__hint">{t("imagesHint")}</span>
+            {picking && (
+              <GcsUploadDialog
+                title={t("images")}
+                rules={EVIDENCE_RULES}
+                labels={uploadLabels(tu)}
+                multiple
+                uploadMany={async (chosen, onProgress) => {
+                  // Câte una, cu progresul total; cel mult 10 capturi pe sancțiune.
+                  const batch = chosen.slice(0, Math.max(0, 10 - files.length));
+                  for (const [i, file] of batch.entries()) {
+                    const fd = new FormData();
+                    fd.set("file", file);
+                    const res = await post<{ id: string; url: string }>("/api/servers/evidence", fd, (f) => onProgress((i + f) / batch.length));
+                    if (!res.ok) return res.error;
+                    setFiles((list) => [...list, res.data].slice(0, 10));
+                  }
+                  return null;
+                }}
+                onAccept={() => setPicking(false)}
+                onAcceptMany={() => setPicking(false)}
+                onClose={() => setPicking(false)}
+                testId="gcs-sanction-files"
+              />
+            )}
             {fieldError("attachments")}
             {files.length > 0 && (
               <ul className="gcs-evidenceThumbs" data-testid="gcs-sanction-thumbs">

@@ -1,10 +1,9 @@
 "use client";
 
-import type { GcsErrorPayload, GcsResult } from "@gcs/core";
-import { GcsButton } from "@gcs/ui";
-import { GcsIcon } from "@gcs/ui/icons";
 import { useEffect, useRef, useState } from "react";
-import { useErrorMessage } from "@/lib/use-error-message";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 
 /** Unde se încarcă imaginea: ținta (forumul sau amplasarea widget-ului), extensia, tabul și câmpul (limitele le știe serverul). */
 export type GcsExtImageUpload = { scope: "forum" | "widget"; id: number; extension: string; tab: string; field: string };
@@ -12,17 +11,35 @@ export type GcsExtImageUpload = { scope: "forum" | "widget"; id: number; extensi
 type Labels = { upload: string; replace: string; remove: string; uploading: string; preview: string };
 
 /**
- * Un câmp imagine dintr-un tab contribuit (Aspect forumuri): încărcarea pleacă imediat spre `/api/decor-image` (stocarea
- * platformei: WebP, SVG curățat), iar id-ul fișierului intră în câmpul ascuns, salvat cu formularul. Schimbarea anunță
- * formularul (`input`), ca previzualizarea live să se actualizeze.
+ * Un câmp imagine dintr-un tab contribuit (Aspect forumuri): popupul sistemului verifică fișierul (tipurile stocării
+ * decorative, inclusiv SVG, și mărimea `maxKb` a câmpului declarat), apoi încărcarea pleacă imediat spre
+ * `/api/decor-image` (WebP, SVG curățat), cu progres, iar id-ul fișierului intră în câmpul ascuns, salvat cu formularul.
+ * Schimbarea anunță formularul (`input`), ca previzualizarea live să se actualizeze.
  */
-export function GcsExtImageField({ name, value, upload, labels, hint, testId }: { name: string; value: string; upload: GcsExtImageUpload; labels: Labels; hint?: string; testId?: string }) {
+export function GcsExtImageField({
+  name,
+  value,
+  upload,
+  labels,
+  title,
+  maxKb,
+  hint,
+  testId,
+}: {
+  name: string;
+  value: string;
+  upload: GcsExtImageUpload;
+  labels: Labels;
+  /** Titlul popupului (numele câmpului). */
+  title: string;
+  /** Mărimea maximă a câmpului declarat (KB), aceeași pe care o aplică serverul. */
+  maxKb: number;
+  hint?: string;
+  testId?: string;
+}) {
   const [id, setId] = useState(value);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<GcsErrorPayload | null>(null);
-  const file = useRef<HTMLInputElement>(null);
   const hidden = useRef<HTMLInputElement>(null);
-  const message = useErrorMessage();
+  const post = useUploadPost();
 
   const first = useRef(true);
   // Câmpul ascuns e controlat (altfel React l-ar readuce la valoarea inițială la randare); după fiecare schimbare,
@@ -34,61 +51,35 @@ export function GcsExtImageField({ name, value, upload, labels, hint, testId }: 
     }
     hidden.current?.dispatchEvent(new Event("input", { bubbles: true }));
   }, [id]);
-  const change = (next: string) => setId(next);
 
-  const send = async (picked: File) => {
-    setBusy(true);
-    setError(null);
+  const send = async (picked: File, onProgress: (fraction: number) => void): Promise<string | null> => {
     const body = new FormData();
     body.set("file", picked);
     for (const [k, v] of Object.entries(upload)) body.set(k, String(v));
-    try {
-      const res = await fetch("/api/decor-image", { method: "POST", body });
-      const result = (await res.json()) as GcsResult<{ id: string; url: string }>;
-      if (result.ok) change(result.data.id);
-      else setError(result.error);
-    } catch {
-      setError({ code: "network", status: 0 });
-    } finally {
-      setBusy(false);
-      if (file.current) file.current.value = "";
-    }
+    const res = await post<{ id: string; url: string }>("/api/decor-image", body, onProgress);
+    if (!res.ok) return res.error;
+    setId(res.data.id);
+    return null;
+  };
+
+  const rules = {
+    ...UPLOAD_RULES.image(maxKb / 1024),
+    accept: ["image/png", "image/webp", "image/gif", "image/jpeg", "image/svg+xml"],
+    typesLabel: "PNG, WebP, GIF, JPG, SVG",
   };
 
   return (
-    <div className="gcs-extImage" data-testid={testId}>
+    <div className="gcs-extImageField" data-testid={testId}>
       <input ref={hidden} type="hidden" name={name} value={id} readOnly />
-      <span className="gcs-extImage__preview" aria-hidden={id ? undefined : true}>
-        {id ? <img src={`/files/${id}`} alt={labels.preview} /> : <GcsIcon name="fa-regular fa-image" />}
-      </span>
-      <span className="gcs-extImage__tools">
-        <input
-          ref={file}
-          type="file"
-          className="gcs-srOnly"
-          accept="image/png,image/webp,image/gif,image/jpeg,image/svg+xml,.svg"
-          onChange={(e) => {
-            const picked = e.target.files?.[0];
-            if (picked) void send(picked);
-          }}
-          data-testid={testId ? `${testId}-file` : undefined}
-          tabIndex={-1}
-        />
-        <GcsButton type="button" variant="ghost" size="sm" loading={busy} disabled={busy} onClick={() => file.current?.click()} icon={<GcsIcon name="fa-solid fa-upload" />} data-testid={testId ? `${testId}-upload` : undefined}>
-          {busy ? labels.uploading : id ? labels.replace : labels.upload}
-        </GcsButton>
-        {id && (
-          <GcsButton type="button" variant="ghost" size="sm" disabled={busy} onClick={() => change("")} icon={<GcsIcon name="fa-solid fa-xmark" />} data-testid={testId ? `${testId}-remove` : undefined}>
-            {labels.remove}
-          </GcsButton>
-        )}
-        {hint && <span className="gcs-muted gcs-acpHint">{hint}</span>}
-        {error && (
-          <span className="gcs-field__error" role="alert">
-            {message(error)}
-          </span>
-        )}
-      </span>
+      <GcsUploadInput
+        title={title}
+        rules={rules}
+        current={id ? { url: `/files/${id}`, name: labels.preview } : null}
+        upload={send}
+        onRemove={() => setId("")}
+        {...(testId ? { testId: `${testId}-file` } : {})}
+      />
+      {hint && <span className="gcs-muted gcs-acpHint">{hint}</span>}
     </div>
   );
 }

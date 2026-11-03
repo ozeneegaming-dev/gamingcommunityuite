@@ -16,9 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function ProfileSettingsPage() {
   const actor = await currentActor();
-  const { db, profiles, permissions, profileFields } = services();
+  const { db, profiles, permissions, profileFields, settings } = services();
   const t = await getTranslations("settings.profile");
-  const [user, fields, values, canCover, animated, groups, servers] = await Promise.all([
+  const [user, fields, values, canCover, animated, groups, servers, groupMaxMb, coverMaxMb] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: actor.userId! },
       select: { name: true, bio: true, image: true, coverAttachmentId: true, coverPositionY: true, birthday: true, birthdayVisible: true, birthdayShowYear: true },
@@ -29,6 +29,8 @@ export default async function ProfileSettingsPage() {
     permissions.can(actor, "profile.animated_cover"),
     profileFields.groups(),
     profiles.serverOptions(),
+    permissions.groupValue<number | boolean>(actor, "upload.max_mb"),
+    settings.get<number>("profile.cover_max_mb"),
   ]);
   const labels = {
     bio: t("bio"),
@@ -46,7 +48,8 @@ export default async function ProfileSettingsPage() {
     coverDenied: t("coverDenied"),
   };
   const months = Array.from({ length: 12 }, (_, i) => new Intl.DateTimeFormat(t("locale"), { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, i, 1))));
-  const accept = "image/png,image/jpeg,image/webp,image/gif";
+  // Limitele serverului pentru popupul de încărcare: avatarul = limita grupului (`-1` = fără limită: plafonul rutei).
+  const avatarMaxMb = groupMaxMb === -1 || groupMaxMb === true ? 100 : typeof groupMaxMb === "number" && groupMaxMb > 0 ? groupMaxMb : 1;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <h2 className="gcs-settingsTitle">
@@ -54,14 +57,14 @@ export default async function ProfileSettingsPage() {
         {t("title")}
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-        <GcsImageSetting kind="avatar" name={user.name} url={user.image} positionY={50} allowed accept={accept} labels={labels} />
+        <GcsImageSetting kind="avatar" name={user.name} url={user.image} positionY={50} allowed maxMb={avatarMaxMb} labels={labels} />
         <GcsImageSetting
           kind="cover"
           name={user.name}
           url={user.coverAttachmentId ? `/files/${user.coverAttachmentId}` : null}
           positionY={user.coverPositionY}
           allowed={canCover}
-          accept={accept}
+          maxMb={coverMaxMb}
           labels={labels}
         />
       </div>

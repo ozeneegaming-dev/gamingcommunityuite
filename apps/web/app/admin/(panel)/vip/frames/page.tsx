@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteFrame, saveFrame } from "../actions";
 import { Availability, AVAILABILITY_BADGE_SELECT } from "../Availability";
@@ -15,6 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const SIZES = ["xs", "s", "m", "l", "xl"] as const;
+
+/** Imaginea unei rame: PNG / APNG, WebP sau GIF, trimisă cu formularul (Server Action: cel mult 1 MB). */
+const FRAME_IMAGE_RULES = { ...UPLOAD_RULES.image(1), accept: ["image/png", "image/webp", "image/gif"], typesLabel: "PNG, WebP, GIF" };
 
 /** ACP → VIP → Avatar frames: rame CSS (conic-gradient) sau imagine, cu previzualizare la toate mărimile. */
 export default async function AcpFramesPage() {
@@ -64,10 +69,16 @@ export default async function AcpFramesPage() {
             <input type="checkbox" name="spin" defaultChecked={style?.spin !== false} />
             {t("spin")}
           </label>
-          <label className="gcs-field" style={{ width: 220 }}>
-            {t("imageFile")}
-            <input name="image" type="file" accept="image/png,image/webp,image/gif" />
-          </label>
+          <div className="gcs-field" style={{ flex: "1 1 320px", minWidth: 0 }}>
+            <span>{t("imageFile")}</span>
+            <GcsUploadInput
+              name="image"
+              title={t("imageFile")}
+              rules={FRAME_IMAGE_RULES}
+              current={f?.imageAttachmentId ? { url: `/files/${f.imageAttachmentId}`, name: f.name } : null}
+              testId={`gcs-acp-frame-image-${f?.id ?? "new"}`}
+            />
+          </div>
         </div>
         <Availability value={f ?? { allGroups: false, groupIds: [], badgeIds: [] }} groups={groups} badges={badges} labels={availabilityLabels} />
       </div>

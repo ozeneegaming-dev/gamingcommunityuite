@@ -86,7 +86,7 @@ type Props = {
   landing: string;
   landingName: string;
   canEdit: boolean;
-  uploadLabels: { file: string; hint: string; submit: string; uploading: string; network: string };
+  uploadLabels: { title: string; hint: string };
 };
 
 type Dialog =

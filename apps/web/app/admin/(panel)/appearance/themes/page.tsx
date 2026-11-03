@@ -1,4 +1,4 @@
-import { normalizeThemeTogglePair, THEME_TOGGLE_SETTING, THEMES_ACP_SECTION } from "@gcs/core";
+import { MAX_THEME_PACKAGE_BYTES, normalizeThemeTogglePair, THEME_TOGGLE_SETTING, THEMES_ACP_SECTION } from "@gcs/core";
 import { GcsButton, GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { createTheme, deleteTheme, importTheme, saveThemeToggle, updateTheme } from "../actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
@@ -119,10 +121,11 @@ export default async function AcpThemesPage() {
           {t("importHint")}
         </p>
         <GcsActionForm action={importTheme} submitLabel={t("importSubmit")} submitIcon={<GcsIcon name="fa-solid fa-upload" />}>
-          <label className="gcs-field" style={{ maxWidth: 360 }}>
-            {t("importFile")}
-            <input className="gcs-input" type="file" name="file" accept=".json,application/json" required data-testid="gcs-acp-theme-import-file" />
-          </label>
+          <div className="gcs-field" style={{ maxWidth: 480 }}>
+            <span>{t("importFile")}</span>
+            {/* Pachetul `.gcs-theme.json` (cel mult `MAX_THEME_PACKAGE_BYTES`), trimis cu formularul. */}
+            <GcsUploadInput name="file" title={t("importFile")} rules={UPLOAD_RULES.json(MAX_THEME_PACKAGE_BYTES / (1024 * 1024))} required testId="gcs-acp-theme-import-file" />
+          </div>
         </GcsActionForm>
       </GcsCard>
       <GcsCard as="section" aria-labelledby="gcs-theme-new" style={{ padding: 16 }}>

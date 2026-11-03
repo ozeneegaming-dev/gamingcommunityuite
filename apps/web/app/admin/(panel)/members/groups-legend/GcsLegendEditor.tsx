@@ -26,7 +26,6 @@ import {
   faEyeSlash,
   faFloppyDisk,
   faGripVertical,
-  faIcons,
   faLayerGroup,
   faPlus,
   faRotateLeft,
@@ -53,12 +52,13 @@ import {
   type GcsLegendTarget,
   type GcsLegendTree,
 } from "@gcs/modules/groups-pro-legend";
-import { cx, gcsToast, GcsButton, GcsIconPicker, GcsIconSvg, GcsModal, type GcsIconPickerMatch } from "@gcs/ui";
+import { cx, gcsToast, GcsButton, GcsIconSvg, GcsModal, type GcsIconPickerMatch } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 import { GcsLegendProBlock } from "@/app/(site)/_components/groups-pro/GcsLegendProView";
 import { legendGroupCount, legendProCards } from "@/app/(site)/_components/groups-pro/legend-cards";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { useErrorMessage } from "@/lib/use-error-message";
 import type { GcsAcpIconDef } from "../../_components/types";
 import { saveGroupsLegend } from "./actions";
@@ -122,14 +122,14 @@ export function GcsLegendEditor({ initial, groups, counts }: Props) {
   const tc = useTranslations("groupsPro.category");
   const tl = useTranslations("groupsPro.legend");
   const tp = useTranslations("groups.pill");
-  const tIcons = useTranslations("acp.forums.form");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [tree, setTree] = useState(initial);
   const [savedJson, setSavedJson] = useState(() => JSON.stringify(initial));
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [picking, setPicking] = useState<string | null>(null);
+  // Crește la „Renunță” și la datele noi de pe server: selectoarele de iconițe repornesc cu valoarea din arbore.
+  const [resetKey, setResetKey] = useState(0);
   const [newLabel, setNewLabel] = useState("");
   const [dragging, setDragging] = useState<number | null>(null);
   const [pending, start] = useTransition();
@@ -138,6 +138,7 @@ export function GcsLegendEditor({ initial, groups, counts }: Props) {
   useEffect(() => {
     setTree(initial);
     setSavedJson(JSON.stringify(initial));
+    setResetKey((n) => n + 1);
   }, [initial]);
 
   const byId = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
@@ -286,7 +287,8 @@ export function GcsLegendEditor({ initial, groups, counts }: Props) {
                     onRename={(label) => setTree((tr) => updateCategory(tr, c.key, { label }))}
                     onMove={(d) => setTree((tr) => moveCategory(tr, c.key, i + d))}
                     onHide={() => setTree((tr) => updateCategory(tr, c.key, { hidden: !c.hidden }))}
-                    onIcon={() => setPicking(c.key)}
+                    resetKey={resetKey}
+                    onIcon={(icon) => setTree((tr) => updateCategory(tr, c.key, { icon: icon ?? "" }))}
                     onDelete={() => setConfirmDelete(c.key)}
                   />
                 ))}
@@ -431,21 +433,6 @@ export function GcsLegendEditor({ initial, groups, counts }: Props) {
         </div>
       </aside>
 
-      {picking && (
-        <GcsModal title={t("icon")} icon={<GcsIconSvg icon={faIcons} />} onClose={() => setPicking(null)} closeLabel={t("cancel")} size="md">
-          <GcsIconPicker
-            name="legend-category-icon"
-            value={tree.categories.find((c) => c.key === picking)?.icon ?? null}
-            searchUrl="/api/icons/search"
-            labels={{ search: tIcons("iconSearch"), none: tIcons("iconNone"), noResults: tIcons("iconNoResults") }}
-            onChange={(v) => {
-              setTree((tr) => updateCategory(tr, picking, { icon: v ?? "" }));
-              setPicking(null);
-            }}
-          />
-        </GcsModal>
-      )}
-
       {categoryToDelete && (
         <GcsModal title={t("deleteTitle", { name: labelOf(categoryToDelete) })} icon={<GcsIconSvg icon={faTrash} />} onClose={() => setConfirmDelete(null)} closeLabel={t("cancel")} size="sm">
           <p style={{ marginTop: 0 }}>{t("deleteBody")}</p>
@@ -477,6 +464,7 @@ export function GcsLegendEditor({ initial, groups, counts }: Props) {
               variant="primary"
               onClick={() => {
                 setTree(JSON.parse(savedJson) as GcsLegendTree);
+                setResetKey((n) => n + 1);
                 setConfirmReset(false);
               }}
               data-testid="gcs-legend-reset-confirm"
@@ -506,11 +494,13 @@ type CategoryRowProps = {
   onRename: (label: string) => void;
   onMove: (delta: -1 | 1) => void;
   onHide: () => void;
-  onIcon: () => void;
+  /** Remontează selectorul de iconiță (după „Renunță”), ca să arate iconița din arbore. */
+  resetKey: number;
+  onIcon: (icon: string | null) => void;
   onDelete: () => void;
 };
 
-function CategoryRow({ category, label, placeholder, first, last, onlyOne, groups, onRename, onMove, onHide, onIcon, onDelete }: CategoryRowProps) {
+function CategoryRow({ category, label, placeholder, first, last, onlyOne, groups, onRename, onMove, onHide, resetKey, onIcon, onDelete }: CategoryRowProps) {
   const t = useTranslations("acp.groupsLegend");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.key });
   return (
@@ -531,9 +521,9 @@ function CategoryRow({ category, label, placeholder, first, last, onlyOne, group
           <GcsIconSvg icon={faArrowDown} />
         </button>
       </span>
-      <button type="button" className="gcs-iconBtn gcs-legendEditor__icon" aria-label={`${t("icon")}: ${label}`} title={category.icon ?? t("icon")} onClick={onIcon} data-testid={`gcs-legend-cat-icon-${category.key}`}>
-        <CategoryIcon name={category.icon} />
-      </button>
+      <span className="gcs-legendEditor__icon" role="group" aria-label={`${t("icon")}: ${label}`}>
+        <GcsIconInput key={resetKey} name={`legend-icon-${category.key}`} value={category.icon || null} compact onChange={onIcon} testId={`gcs-legend-cat-icon-${category.key}`} />
+      </span>
       <label className="gcs-field gcs-legendEditor__grow">
         <span className="gcs-srOnly">{t("rename", { name: label })}</span>
         <input className="gcs-input" value={category.label} maxLength={LEGEND_LABEL_MAX} placeholder={placeholder} onChange={(e) => onRename(e.target.value)} data-testid={`gcs-legend-cat-label-${category.key}`} />

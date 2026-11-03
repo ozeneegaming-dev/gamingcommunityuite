@@ -108,6 +108,11 @@ test("Legenda grupurilor: categorie nouă, grup tras în ea, grup legat, număr�
     await page.getByTestId("gcs-legend-cat-add").click();
     await expect(page.getByTestId(`gcs-legend-cat-${key}`)).toBeVisible();
     await expect(page.getByTestId(`gcs-legend-col-${key}`)).toBeVisible();
+    // Iconița categoriei: selectorul din rândul ei (buton + popup cu căutare), fără un dialog separat.
+    await page.getByTestId(`gcs-legend-cat-icon-${key}-open`).click();
+    await page.getByTestId(`gcs-legend-cat-icon-${key}-search`).fill("trophy");
+    await page.getByRole("option", { name: "Trophy", exact: true }).first().click();
+    await expect(page.getByTestId(`gcs-legend-cat-icon-${key}-open`)).toHaveAttribute("title", "Trophy");
     await page.getByTestId("gcs-legend-cat-new").fill("Temporar");
     await page.getByTestId("gcs-legend-cat-add").click();
     await page.getByTestId("gcs-legend-cat-delete-temporar").click();

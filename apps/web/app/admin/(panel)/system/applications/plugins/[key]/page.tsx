@@ -208,9 +208,7 @@ export default async function AcpPluginDetailPage({ params }: Props) {
             <GcsIcon name="fa-solid fa-arrows-rotate" /> {t("update")}
           </h3>
           <p className="gcs-chatAcp__hint">{t("updateHint", { version: row.version })}</p>
-          <GcsPluginUpload
-            labels={{ file: tp("upload.file"), hint: tp("upload.hint"), submit: tp("upload.submit"), uploading: tp("upload.uploading"), network: tp("upload.network") }}
-          />
+          <GcsPluginUpload labels={{ title: tp("upload.file"), hint: tp("upload.hint") }} />
         </section>
       )}
       {canDelete && (

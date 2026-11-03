@@ -10,9 +10,9 @@ const menu: GcsAcpMenuSection[] = [
   // Moderarea: secțiunile aplicației Membri, afișate în zona Comunitate (înregistrate înaintea forumului).
   { app: "members", area: "community", title: "acp.menu.members.moderation", items: [item("members.queue", "/admin/members/moderation/queue")] },
   { app: "members", title: "acp.menu.members.members", items: [item("members.members", "/admin/members"), item("members.groups", "/admin/groups")] },
-  // O scurtătură în zona Aplicații spre o pagină din Sistem.
-  { app: "system", area: "apps", title: "acp.menu.system.apps_manage", items: [item("system.applications_shortcut", "/admin/system/applications", { alias: true })] },
-  { app: "system", title: "acp.menu.system.site_features", items: [item("system.applications", "/admin/system/applications")] },
+  // Pagina aplicației Sistem mutată în zona Aplicații; o scurtătură spre ea din Sistem (doar legătura, nu decide zona).
+  { app: "system", area: "apps", title: "acp.menu.system.apps_manage", items: [item("system.applications", "/admin/system/applications")] },
+  { app: "system", title: "acp.menu.system.site_features", items: [item("system.applications_link", "/admin/system/applications", { alias: true }), item("system.integrations", "/admin/system/integrations")] },
   { app: "community", title: "acp.menu.community.forums_group", items: [item("community.forums", "/admin/community/forums")] },
   // O intrare mutată în altă zonă și sub alt grup decât ale secțiunii ei.
   {
@@ -49,7 +49,9 @@ describe("acpAreas", () => {
 
   test("scurtăturile sunt marcate", () => {
     const apps = areas.find((a) => a.key === "apps")!;
-    expect(apps.groups[0]!.items[0]).toMatchObject({ key: "system.applications_shortcut", alias: true });
+    const system = areas.find((a) => a.key === "system")!;
+    expect(system.groups.find((g) => g.title === "acp.menu.system.site_features")!.items[0]).toMatchObject({ key: "system.applications_link", alias: true });
+    expect(apps.groups[0]!.items[0]).toMatchObject({ key: "system.applications", alias: false });
   });
 });
 
@@ -60,7 +62,7 @@ describe("acpAreaForPath", () => {
     expect(acpAreaForPath(areas, "/admin/groups")).toEqual({ area: "members", item: "members.groups" });
     expect(acpAreaForPath(areas, "/admin/members/12")).toEqual({ area: "members", item: "members.members" });
     expect(acpAreaForPath(areas, "/admin/members/moderation/queue")).toEqual({ area: "community", item: "members.queue" });
-    expect(acpAreaForPath(areas, "/admin/system/applications/plugins/gcs.hello")).toEqual({ area: "system", item: "system.applications" });
+    expect(acpAreaForPath(areas, "/admin/system/applications/plugins/gcs.hello")).toEqual({ area: "apps", item: "system.applications" });
     expect(acpAreaForPath(areas, "/admin/plugins/gcs.hello/settings")).toEqual({ area: "apps", item: "plugin.gcs.hello.acp" });
   });
 

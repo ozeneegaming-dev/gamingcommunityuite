@@ -20,7 +20,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
-import { GcsButton, GcsIconSvg, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, useGcsDrawer, type GcsIconSvgProps } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
@@ -65,13 +65,18 @@ type Props = {
   /** Pentru butoanele de un singur rând (ex. „Scoate grupul”), fără mesaj de succes. */
   compact?: boolean;
   confirm?: string;
+  /** Panoul de editare rămâne deschis după salvare (implicit se închide). */
+  keepOpen?: boolean;
+  className?: string;
 };
 
 export { useErrorMessage } from "@/lib/use-error-message";
 
 /** Un formular ACP legat de o Server Action care întoarce `GcsResult`: afișează „Salvat” sau eroarea. */
-export function GcsActionForm({ action, submitLabel, submitKind, submitIcon, variant = "primary", children, style, redirectTo, compact, confirm }: Props) {
+export function GcsActionForm({ action, submitLabel, submitKind, submitIcon, variant = "primary", children, style, redirectTo, compact, confirm, keepOpen, className }: Props) {
   const router = useRouter();
+  // Într-un panou de editare (listă + panou), o salvare reușită îl închide.
+  const drawer = useGcsDrawer();
   const t = useTranslations("acp");
   const errorMessage = useErrorMessage();
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
@@ -99,12 +104,13 @@ export function GcsActionForm({ action, submitLabel, submitKind, submitIcon, var
     if (!compact) setStatus({ ok: true, text: t("saved") });
     if (redirectTo) router.push(redirectTo);
     else router.refresh();
+    if (drawer && !keepOpen) drawer.close();
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: compact ? "row" : "column", gap: compact ? 8 : 14, ...style }}>
+    <form onSubmit={onSubmit} className={["gcs-actionForm", className].filter(Boolean).join(" ")} style={{ display: "flex", flexDirection: compact ? "row" : "column", gap: compact ? 8 : 14, ...style }}>
       {children}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div className="gcs-actionForm__actions" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <GcsButton
           variant={variant}
           size={compact ? "sm" : "md"}

@@ -58,7 +58,10 @@ test.beforeAll(async ({ browser }) => {
   const id = uid();
   await enterAcpAsRoot(page, `SysRoot${id}`, `sys-root-${id}@example.com`);
   await page.goto("/admin/appearance/themes");
-  await page.getByTestId("gcs-acp-theme-import-file").setInputFiles({ name: `${PACKAGE}.gcs-theme.json`, mimeType: "application/json", buffer: Buffer.from(JSON.stringify(pkg)) });
+  // Pachetul: popupul de încărcare (verificările), apoi „Folosește” îl pune în formular.
+  await page.getByTestId("gcs-acp-theme-import-file-open").click();
+  await page.getByTestId("gcs-acp-theme-import-file-pick").setInputFiles({ name: `${PACKAGE}.gcs-theme.json`, mimeType: "application/json", buffer: Buffer.from(JSON.stringify(pkg)) });
+  await page.getByTestId("gcs-acp-theme-import-file-use").click();
   await page.getByRole("button", { name: "Importă tema" }).click();
   await expect(page.getByTestId("gcs-acp-theme").filter({ has: page.getByRole("heading", { name: "Pachet E2E" }) })).toBeVisible();
   await context.close();

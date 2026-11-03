@@ -422,7 +422,10 @@ test("/bans: căutarea, filtrele, detaliul; staff-ul dă un mute pe toate server
   await page.getByTestId("gcs-sanction-duration").selectOption("1440");
   await page.getByTestId("gcs-sanction-evidence").fill("https://clips.exemplu.ro/demo-1");
   // O captură încărcată (pipeline-ul atașamentelor), legată de sancțiune la creare.
-  await page.getByTestId("gcs-sanction-files").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: await shotPng() });
+  await page.getByTestId("gcs-sanction-files-open").click();
+  await page.getByTestId("gcs-sanction-files-pick").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: await shotPng() });
+  await page.getByTestId("gcs-sanction-files-use").click();
+  await expect(page.getByTestId("gcs-sanction-files-dialog")).toHaveCount(0);
   await expect(page.getByTestId("gcs-sanction-thumbs").locator("img")).toHaveCount(1);
   await shot(page, "sanction-form");
   await page.getByTestId("gcs-sanction-submit").click();

@@ -97,11 +97,16 @@ test("ACP: pornirea, mementoul de vot, bara de anunțuri și emoticoanele; membr
   await newPack.getByRole("button", { name: "Creează pachetul" }).click();
   const pack = page.locator(`section[aria-label="Gaming ${id}"]`);
   await expect(pack).toBeVisible();
-  await pack.getByTestId("gcs-acp-emote-files").setInputFiles([
+  // Popupul de încărcare cu mai multe fișiere: fiecare e verificat, cel care nu e imagine se sare.
+  await pack.getByTestId("gcs-acp-emote-files-open").click();
+  await pack.getByTestId("gcs-acp-emote-files-pick").setInputFiles([
     { name: `gg${id}.png`, mimeType: "image/png", buffer: PNG },
     { name: "nu-e-imagine.png", mimeType: "image/png", buffer: Buffer.from("text") },
   ]);
-  await pack.getByTestId("gcs-acp-emote-upload").click();
+  const list = pack.getByTestId("gcs-acp-emote-files-list");
+  await expect(list.locator('[data-check="ok"]')).toHaveCount(1);
+  await expect(list.locator('[data-check="errReal"]')).toContainText("nu-e-imagine.png");
+  await pack.getByTestId("gcs-acp-emote-files-use").click();
   await expect(page.getByTestId("gcs-acp-emote-status")).toContainText("1 emoticon adăugat");
   await expect(pack.getByTestId("gcs-acp-emote")).toHaveCount(1);
 
@@ -299,7 +304,11 @@ test("vizualizatorul de imagini: galeria topicului, legenda, mărirea, tastatura
   // Imaginile din chat (Chat Pro): „Mărește media” deschide vizualizatorul cu imaginile mesajului.
   await setChatPro(true);
   const c = await chatPage(browser, `ImgC${id}`, `img-c-${id}@example.com`, "100.90.6");
-  await room(c).getByTestId("gcs-chat-file").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  // Imaginea: popupul de încărcare (verificările, apoi „Folosește” o încarcă).
+  await room(c).getByTestId("gcs-chat-file-open").click();
+  await room(c).getByTestId("gcs-chat-file-pick").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  await room(c).getByTestId("gcs-chat-file-use").click();
+  await expect(room(c).getByTestId("gcs-chat-file-dialog")).toHaveCount(0);
   await room(c).getByRole("button", { name: "Trimite" }).click();
   const msg = room(c).getByTestId("gcs-chat-msg").filter({ has: c.getByTestId("gcs-chat-image") }).last();
   await expect(msg).toBeVisible();
@@ -332,7 +341,11 @@ test("capturi Chat Pro", async ({ browser, request }) => {
   await q.hover();
   await q.getByTestId("gcs-chatpro-reply").click();
   await send(a, "Eu intru după 21:00, facem echipă? https://youtu.be/aqz-KE-bpKQ");
-  await room(a).getByTestId("gcs-chat-file").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  // Imaginea: popupul de încărcare (verificările, apoi „Folosește” o încarcă).
+  await room(a).getByTestId("gcs-chat-file-open").click();
+  await room(a).getByTestId("gcs-chat-file-pick").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  await room(a).getByTestId("gcs-chat-file-use").click();
+  await expect(room(a).getByTestId("gcs-chat-file-dialog")).toHaveCount(0);
   await room(a).getByTestId("gcs-chat-input").fill("Captura de aseară 🎮");
   await room(a).getByRole("button", { name: "Trimite" }).click();
   await a.waitForTimeout(1_200);

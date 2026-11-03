@@ -249,7 +249,7 @@ export default async function AcpApplicationsPage() {
   );
 
   const landingName = appRows.find((a) => a.id === landing)?.name ?? label("apps.forums");
-  const uploadLabels = { file: tp("upload.file"), hint: tp("upload.hint"), submit: tp("upload.submit"), uploading: tp("upload.uploading"), network: tp("upload.network") };
+  const uploadLabels = { title: tp("upload.file"), hint: tp("upload.hint") };
 
   return (
     <>

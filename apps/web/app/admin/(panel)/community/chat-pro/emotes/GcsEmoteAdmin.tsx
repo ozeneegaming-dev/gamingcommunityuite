@@ -1,12 +1,14 @@
 "use client";
 
-import { faCloudArrowUp, faPen, faPlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { faPen, faPlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
 import type { GcsChatEmoteView } from "@gcs/modules";
-import { GcsButton, GcsCard, GcsIconSvg, GcsModal } from "@gcs/ui";
+import { GcsButton, GcsCard, GcsIconSvg, GcsModal, type GcsUploadRules } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, useTransition } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { useUploadPost } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { deleteChatEmote, deleteChatEmotePack, renameChatEmote, saveChatEmotePack } from "../actions";
 
@@ -14,11 +16,11 @@ type Pack = { id: number; name: string; enabled: boolean; emotes: GcsChatEmoteVi
 type Confirm = { kind: "pack"; id: number; name: string } | { kind: "emote"; id: number; name: string };
 
 /**
- * Emoticoanele Chat Pro în ACP: un card pe pachet (numele, pornit / oprit, încărcarea în masă prin
- * `/api/acp/chat-pro/emotes`, grila cu codurile editabile și ștergerea), plus un pachet nou. Ștergerile cer confirmare
- * într-un dialog din pagină.
+ * Emoticoanele Chat Pro în ACP: un card pe pachet (numele, pornit / oprit, încărcarea în masă din popupul sistemului,
+ * cu verificări și progres, prin `/api/acp/chat-pro/emotes`, grila cu codurile editabile și ștergerea), plus un pachet
+ * nou. Ștergerile cer confirmare într-un dialog din pagină. `limits` = limitele din setări (KB și latura în px).
  */
-export function GcsEmoteAdmin({ packs, canEdit, canDelete }: { packs: Pack[]; canEdit: boolean; canDelete: boolean }) {
+export function GcsEmoteAdmin({ packs, canEdit, canDelete, limits }: { packs: Pack[]; canEdit: boolean; canDelete: boolean; limits: { kb: number; side: number } }) {
   const t = useTranslations("acp.chatPro.emotes");
   const tErr = useTranslations("errors");
   const router = useRouter();
@@ -27,6 +29,9 @@ export function GcsEmoteAdmin({ packs, canEdit, canDelete }: { packs: Pack[]; ca
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [adding, setAdding] = useState(false);
+  const post = useUploadPost();
+  // Ce primește serverul: PNG, GIF, WebP (animațiile rămân), cel mult `kb` KB și `side` px pe latură.
+  const rules: GcsUploadRules = { accept: ["image/png", "image/gif", "image/webp"], typesLabel: "PNG, GIF, WebP", maxBytes: limits.kb * 1024, image: { maxWidth: limits.side, maxHeight: limits.side } };
 
   const done = (res: GcsResult<unknown>, ok?: string) => {
     if (!res.ok) return setStatus({ ok: false, text: errorMessage(res.error) });
@@ -34,22 +39,17 @@ export function GcsEmoteAdmin({ packs, canEdit, canDelete }: { packs: Pack[]; ca
     router.refresh();
   };
 
-  const upload = (packId: number) => (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const fd = new FormData(form);
+  /** Încărcarea fișierelor bune din popup (cu progres); eroarea cererii rămâne în popup, respingerile apar sub pachete. */
+  const upload = (packId: number) => async (files: File[], onProgress: (fraction: number) => void): Promise<string | null> => {
+    const fd = new FormData();
     fd.set("packId", String(packId));
-    start(async () => {
-      const res = await fetch("/api/acp/chat-pro/emotes", { method: "POST", body: fd })
-        .then((r) => r.json() as Promise<GcsResult<{ added: GcsChatEmoteView[]; rejected: { name: string; reason: string }[] }>>)
-        .catch(() => null);
-      if (!res) return setStatus({ ok: false, text: tErr("internal") });
-      if (!res.ok) return setStatus({ ok: false, text: errorMessage(res.error) });
-      form.reset();
-      const rejected = res.data.rejected.map((r) => `${r.name}: ${tErr.has(`fields.${r.reason}`) ? tErr(`fields.${r.reason}`) : r.reason}`);
-      setStatus({ ok: rejected.length === 0, text: [t("uploaded", { count: res.data.added.length }), ...rejected].join(" · ") });
-      router.refresh();
-    });
+    for (const f of files) fd.append("files", f);
+    const res = await post<{ added: GcsChatEmoteView[]; rejected: { name: string; reason: string }[] }>("/api/acp/chat-pro/emotes", fd, onProgress);
+    if (!res.ok) return res.error;
+    const rejected = res.data.rejected.map((r) => `${r.name}: ${tErr.has(`fields.${r.reason}`) ? tErr(`fields.${r.reason}`) : r.reason}`);
+    setStatus({ ok: rejected.length === 0, text: [t("uploaded", { count: res.data.added.length }), ...rejected].join(" · ") });
+    router.refresh();
+    return null;
   };
 
   const packForm = (pack: Pack | null) => (
@@ -97,14 +97,7 @@ export function GcsEmoteAdmin({ packs, canEdit, canDelete }: { packs: Pack[]; ca
               </GcsButton>
             )}
           </div>
-          {canEdit && (
-            <form onSubmit={upload(pack.id)} style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-              <input type="file" name="files" accept="image/png,image/gif,image/webp" multiple required aria-label={t("files")} data-testid="gcs-acp-emote-files" />
-              <GcsButton type="submit" variant="primary" size="sm" disabled={pending} data-testid="gcs-acp-emote-upload">
-                <GcsIconSvg icon={faCloudArrowUp} /> {t("upload")}
-              </GcsButton>
-            </form>
-          )}
+          {canEdit && <GcsUploadInput key={pack.emotes.length} title={t("files")} rules={rules} multiple uploadMany={upload(pack.id)} className="gcs-emoteAdmin__upload" testId="gcs-acp-emote-files" />}
           {pack.emotes.length === 0 ? (
             <p className="gcs-muted" style={{ margin: 0 }}>
               {t("noEmotes")}

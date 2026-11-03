@@ -53,14 +53,21 @@ test("Root Admin portează un add-on: analiza, confirmarea dreptului, raportul, 
   await expect(page.getByRole("heading", { level: 1, name: "Portare plugin" })).toBeVisible();
   await expect(page.getByTestId("gcs-porting-steps").locator('[data-step="upload"]')).toHaveAttribute("aria-current", "step");
   const upload = page.getByTestId("gcs-porting-upload");
-  await upload.getByTestId("gcs-porting-file").setInputFiles({ name: "notite.txt", mimeType: "text/plain", buffer: Buffer.from("nu e o arhivă") });
-  await upload.getByTestId("gcs-porting-submit").click();
-  await expect(page.getByTestId("gcs-porting-message")).toContainText("Fișierul nu e o arhivă .zip, .tar sau .tar.gz validă");
+  // Popupul de încărcare: un tip neacceptat e oprit înainte de trimitere…
+  await upload.getByTestId("gcs-porting-file-open").click();
+  const dialog = page.getByTestId("gcs-porting-file-dialog");
+  await page.getByTestId("gcs-porting-file-pick").setInputFiles({ name: "notite.txt", mimeType: "text/plain", buffer: Buffer.from("nu e o arhivă") });
+  await expect(dialog.locator('[data-check="errType"]')).toBeVisible();
+  await expect(page.getByTestId("gcs-porting-file-use")).toBeDisabled();
+  // …iar o „arhivă” falsă trece de verificările popupului, dar serverul o refuză (eroarea rămâne în popup).
+  await page.getByTestId("gcs-porting-file-pick").setInputFiles({ name: "notite.zip", mimeType: "application/zip", buffer: Buffer.from("nu e o arhivă") });
+  await page.getByTestId("gcs-porting-file-use").click();
+  await expect(dialog.getByRole("alert")).toContainText("Fișierul nu e o arhivă .zip, .tar sau .tar.gz validă");
   await expect(page).toHaveURL(/\/admin\/system\/porting$/);
 
   // 1. Încărcarea: doar analiza (formatul, metadatele, licența, numerele pe tipuri); nimic convertit.
-  await upload.getByTestId("gcs-porting-file").setInputFiles(ADDON);
-  await upload.getByTestId("gcs-porting-submit").click();
+  await page.getByTestId("gcs-porting-file-pick").setInputFiles(ADDON);
+  await page.getByTestId("gcs-porting-file-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/porting\?id=[a-z0-9]+$/);
   const portId = new URL(page.url()).searchParams.get("id")!;
   const detected = page.getByTestId("gcs-porting-detected");
@@ -180,8 +187,9 @@ test("un plugin cu licență GPL arată avertismentul înaintea conversiei", asy
 
   await page.goto("/admin/system/porting");
   const upload = page.getByTestId("gcs-porting-upload");
-  await upload.getByTestId("gcs-porting-file").setInputFiles(PLUGIN_XML);
-  await upload.getByTestId("gcs-porting-submit").click();
+  await upload.getByTestId("gcs-porting-file-open").click();
+  await page.getByTestId("gcs-porting-file-pick").setInputFiles(PLUGIN_XML);
+  await page.getByTestId("gcs-porting-file-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/porting\?id=[a-z0-9]+$/);
   const detected = page.getByTestId("gcs-porting-detected");
   await expect(detected).toContainText("Format detectat: plugin într-un fișier XML");

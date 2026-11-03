@@ -79,7 +79,11 @@ test("avatarul și numele în culoarea grupului; click pe nume → mențiune; em
   await b.locator("dialog").getByRole("button", { name: "Închide", exact: true }).click();
 
   // Imaginea încărcată ajunge la celălalt membru.
-  await room(a).getByTestId("gcs-chat-file").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  // Imaginea: popupul de încărcare (verificările, apoi „Folosește” o încarcă).
+  await room(a).getByTestId("gcs-chat-file-open").click();
+  await room(a).getByTestId("gcs-chat-file-pick").setInputFiles({ name: "captura.png", mimeType: "image/png", buffer: PNG });
+  await room(a).getByTestId("gcs-chat-file-use").click();
+  await expect(room(a).getByTestId("gcs-chat-file-dialog")).toHaveCount(0);
   await expect(room(a).getByRole("list", { name: "Imagini atașate" }).getByRole("img")).toBeVisible();
   await room(a).getByTestId("gcs-chat-input").fill(`poza ${id}`);
   await room(a).getByRole("button", { name: "Trimite" }).click();

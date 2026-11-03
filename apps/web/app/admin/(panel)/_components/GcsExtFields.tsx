@@ -2,6 +2,7 @@ import type { GcsForumExtField } from "@gcs/core";
 import { GcsIconPicker } from "@gcs/ui";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { iconPickerLabels } from "@/lib/ui-labels";
 import { GcsExtGradientField, GcsExtImageField, type GcsExtImageUpload } from "./GcsExtImageField";
 
 type Translate = Awaited<ReturnType<typeof getTranslations>>;
@@ -22,7 +23,8 @@ export async function GcsExtFields({
   options: Record<string, { value: string; label: string }[]>;
   upload: Omit<GcsExtImageUpload, "field">;
 }) {
-  const [tAll, t, ta] = await Promise.all([getTranslations(), getTranslations("acp.forums"), getTranslations("acp.aspect")]);
+  const [tAll, tui, ta] = await Promise.all([getTranslations(), getTranslations("ui"), getTranslations("acp.aspect")]);
+  const iconLabels = iconPickerLabels(tui);
   const imageLabels = { upload: ta("image.upload"), replace: ta("image.replace"), remove: ta("image.remove"), uploading: ta("image.uploading"), preview: ta("image.preview") };
   const gradientLabels = { from: ta("gradient.from"), to: ta("gradient.to"), angle: ta("gradient.angle"), none: ta("gradient.none") };
 
@@ -97,6 +99,8 @@ export async function GcsExtFields({
               value={typeof value === "string" ? value : ""}
               upload={{ ...upload, field: field.key }}
               labels={imageLabels}
+              title={name}
+              maxKb={field.maxKb}
               hint={ta("image.hint", { kb: field.maxKb, px: field.maxSide })}
               testId={id}
             />
@@ -107,7 +111,7 @@ export async function GcsExtFields({
         return (
           <div className="gcs-field" role="group" aria-label={name}>
             <span>{name}</span>
-            <GcsIconPicker name={field.key} value={typeof value === "string" && value ? value : null} searchUrl="/api/icons/search" labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }} />
+            <GcsIconPicker name={field.key} value={typeof value === "string" && value ? value : null} searchUrl="/api/icons/search" labels={iconLabels} testId={id} />
             {hint}
           </div>
         );

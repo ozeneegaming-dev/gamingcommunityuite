@@ -1,4 +1,4 @@
-import { acpAreas, buildAcpMenu, type GcsAcpRights } from "@gcs/core";
+import { acpAreaForPath, acpAreas, buildAcpMenu, type GcsAcpRights } from "@gcs/core";
 import { describe, expect, test } from "vitest";
 import { createRegistry } from "./registry";
 
@@ -23,7 +23,7 @@ describe("zonele ACP ale aplicației", () => {
     expect(shape(areas)).toEqual({
       system: [
         ["acp.menu.system.overview", ["system.files", "system.status", "system.update", "system.license", "system.cron"]],
-        ["acp.menu.system.site_features", ["system.applications", "system.integrations", "system.api", "system.webhooks", "system.bot"]],
+        ["acp.menu.system.site_features", ["system.integrations", "system.api", "system.webhooks", "system.bot"]],
         [
           "acp.menu.system.settings",
           [
@@ -78,13 +78,13 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans"]],
       ],
       apps: [
-        ["acp.menu.system.apps_manage", ["system.applications_shortcut"]],
+        ["acp.menu.system.apps_manage", ["system.applications"]],
         ["acp.menu.system.apps_dev", ["system.hooks", "system.porting"]],
       ],
     });
   });
 
-  test("fiecare pagină din meniu (în afară de Dashboard) e într-o zonă; doar scurtătura Aplicații apare de două ori", () => {
+  test("fiecare pagină din meniu (în afară de Dashboard) e într-o zonă, o singură dată; nicio scurtătură", () => {
     const { registry, areas } = allAreas();
     const hrefs = registry
       .acpMenu()
@@ -93,8 +93,14 @@ describe("zonele ACP ale aplicației", () => {
       .map((i) => i.href);
     const shown = areas.flatMap((a) => a.groups.flatMap((g) => g.items.filter((i) => !i.alias).map((i) => i.href)));
     expect(new Set(shown)).toEqual(new Set(hrefs));
+    // O singură excepție, voită: setările de postare apar și la Forum („Setări forum”), cu dreptul de forum, pentru
+    // adminii care au doar Comunitate (aceeași pagină, alt drept de acces).
+    const twice = shown.filter((h, i) => shown.indexOf(h) !== i);
+    expect(twice).toEqual(["/admin/settings/posting"]);
     const aliases = areas.flatMap((a) => a.groups.flatMap((g) => g.items.filter((i) => i.alias)));
-    expect(aliases.map((i) => i.href)).toEqual(["/admin/system/applications"]);
+    expect(aliases).toEqual([]);
+    // „Aplicații și pluginuri” stă doar în zona Aplicații (și pagina ei, cu subpaginile, ține de zona asta).
+    expect(acpAreaForPath(areas, "/admin/system/applications/plugins/gcs.hello")).toEqual({ area: "apps", item: "system.applications" });
   });
 
   test("cu drept doar pe Grupuri: doar zona Membri, cu o singură pagină (Grupuri Pro oprită)", () => {

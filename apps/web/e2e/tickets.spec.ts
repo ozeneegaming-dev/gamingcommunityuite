@@ -38,8 +38,9 @@ test("Root Admin instalează Tickete suport din ACP; membrul deschide un ticket,
 
   // 1. Instalarea din ACP (pachet nesemnat: 2FA + cheia tastată).
   await page.goto("/admin/system/applications");
-  await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(ZIP);
-  await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
+  await page.getByTestId("gcs-plugin-upload-open").click();
+  await page.getByTestId("gcs-plugin-upload-pick").setInputFiles(ZIP);
+  await page.getByTestId("gcs-plugin-upload-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
   await expect(page.getByTestId("gcs-plugin-checks").locator('[data-level="error"]')).toHaveCount(0);
   await shot(page, "tickets-1-install");

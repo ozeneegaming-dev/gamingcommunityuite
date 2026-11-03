@@ -92,13 +92,17 @@ test("videoul antetului: încărcat din editor, rulează sub antet, imaginea ră
     const row = page.getByTestId("gcs-studio-image-headerVideo");
     await expect(row).toContainText("Videoul antetului (MP4 / WebM)");
     await expect(row).toContainText("Niciun video");
-    const input = page.getByTestId("gcs-studio-upload-headerVideo");
-    await expect(input).toHaveAttribute("accept", "video/mp4,video/webm");
+    // Popupul de încărcare: tipul se citește din conținut, deci o pagină HTML numită `.mp4` e refuzată înainte de trimitere.
+    await page.getByTestId("gcs-studio-upload-headerVideo-open").click();
+    const pick = page.getByTestId("gcs-studio-upload-headerVideo-pick");
+    await expect(pick).toHaveAttribute("accept", "video/mp4,video/webm");
     const status = page.getByTestId("gcs-studio-status");
-    // Tipul se citește din conținut: o pagină HTML numită `.mp4` e refuzată.
-    await input.setInputFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.from("<html><script>alert(1)</script></html>") });
-    await expect(status).toHaveText("Tip de fișier nepermis");
-    await input.setInputFiles({ name: "clip.webm", mimeType: "video/webm", buffer: clip });
+    await pick.setInputFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.from("<html><script>alert(1)</script></html>") });
+    await expect(page.getByTestId("gcs-studio-upload-headerVideo-dialog").locator('[data-check="errType"]')).toBeVisible();
+    await expect(page.getByTestId("gcs-studio-upload-headerVideo-use")).toBeDisabled();
+    await pick.setInputFiles({ name: "clip.webm", mimeType: "video/webm", buffer: clip });
+    await page.getByTestId("gcs-studio-upload-headerVideo-use").click();
+    await expect(page.getByTestId("gcs-studio-upload-headerVideo-dialog")).toBeHidden();
     await expect(status).toHaveText("Draft salvat. Vizitatorii văd modificările doar după ce salvezi.");
     const thumb = row.locator("video");
     await expect(thumb).toHaveAttribute("src", /^\/files\/[A-Za-z0-9_-]+$/);

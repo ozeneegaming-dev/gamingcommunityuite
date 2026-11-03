@@ -304,7 +304,7 @@ export type GcsServices = {
   conversationQueries: GcsConversationQueries;
   /** Pluginurile încărcate în acest proces (hook-uri, widget-uri, pagini…), etapa 6. */
   plugins: GcsPluginHost;
-  /** Ciclul de viață al pluginurilor (ACP → Sistem → Aplicații și pluginuri). */
+  /** Ciclul de viață al pluginurilor (ACP → Aplicații → Aplicații și pluginuri). */
   pluginAdmin: GcsPluginService;
   /** Aspectul membrilor publicat de pluginuri (numele, rama, banner-ul, profilul), Studio VIP. */
   appearance: GcsMemberAppearanceService;

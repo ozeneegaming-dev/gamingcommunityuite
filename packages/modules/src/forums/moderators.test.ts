@@ -45,6 +45,25 @@ describe("GcsForumModeratorService", () => {
     ]);
   });
 
+  test("editarea schimbă doar puterile, imediat și cu jurnal; puteri goale sau necunoscute → GcsValidationError", async () => {
+    const neo = await w.actorFor(await w.createUser("Neo", "moderator"));
+    const ref = { type: "forum", id: String(tree.forum.id) };
+    await mods.add(w.root, { forumIds: [tree.forum.id], userName: "neo", powers: ["pin"] });
+    const [row] = await mods.list();
+    await expect(w.permissions.canModerate(neo, "lock", ref)).resolves.toBe(false);
+
+    await mods.update(w.root, row!.id, { powers: ["lock", "approve", "lock"] });
+    await expect(w.permissions.canModerate(neo, "lock", ref)).resolves.toBe(true);
+    await expect(w.permissions.canModerate(neo, "pin", ref)).resolves.toBe(false);
+    expect((await mods.list())[0]).toMatchObject({ id: row!.id, forumId: tree.forum.id, userName: "Neo", powers: ["lock", "approve"] });
+    expect(await w.db.auditLog.count({ where: { action: "moderator.update" } })).toBe(1);
+
+    await expect(mods.update(w.root, row!.id, { powers: [] })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(mods.update(w.root, row!.id, { powers: ["root"] })).rejects.toBeInstanceOf(GcsValidationError);
+    await expect(mods.update(w.root, row!.id + 999, { powers: ["pin"] })).rejects.toBeInstanceOf(GcsNotFound);
+    await expect(mods.update(w.member, row!.id, { powers: ["pin"] })).rejects.toBeInstanceOf(GcsForbidden);
+  });
+
   test("validări: putere necunoscută, fără țintă, user inexistent; fără drept ACP → GcsForbidden", async () => {
     await expect(mods.add(w.root, { forumIds: [tree.forum.id], userName: "neo", powers: ["root"] })).rejects.toBeInstanceOf(GcsValidationError);
     await expect(mods.add(w.root, { forumIds: [tree.forum.id], powers: ["pin"] })).rejects.toBeInstanceOf(GcsValidationError);

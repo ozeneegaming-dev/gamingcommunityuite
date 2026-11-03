@@ -103,9 +103,10 @@ const settings: GcsSettingDef[] = [
   setting("i18n.locales", "json", [...GCS_LOCALE_KEYS], "languages", (v) =>
     Array.isArray(v) && v.length > 0 && v.every((l) => GCS_LOCALE_KEYS.includes(l as (typeof GCS_LOCALE_KEYS)[number])) ? null : "invalid_choice",
   ),
-  { ...setting("i18n.translate_provider", "string", "libretranslate", "languages", oneOf(["libretranslate", "deepl", "off"])), options: ["libretranslate", "deepl", "off"] },
+  { ...setting("i18n.translate_provider", "string", "libretranslate", "languages", oneOf(["libretranslate", "deepl", "google", "off"])), options: ["libretranslate", "deepl", "google", "off"] },
   setting("i18n.libretranslate_url", "string", "http://translate:5000", "languages", isUrlOrEmpty),
   setting("i18n.deepl_key", "secret", "", "languages"),
+  setting("i18n.google_key", "secret", "", "languages"),
   // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
   setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
   // Notificări v2: rezumatul săptămânal „Ce ai ratat” (ziua, ora) și curățenia notificărilor vechi.
@@ -258,8 +259,8 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["license", "/admin/system/license", "fa-solid fa-key"],
     ["cron", "/admin/system/cron", "fa-solid fa-clock"],
   ]),
+  // „Integrări”: Aplicații și pluginuri stă doar în zona Aplicații (mai jos), nu și aici.
   menuSection("system", "site_features", "fa-solid fa-puzzle-piece", [
-    ["applications", "/admin/system/applications", "fa-solid fa-cubes"],
     ["integrations", "/admin/system/integrations", "fa-solid fa-plug"],
     ["api", "/admin/system/api", "fa-solid fa-code"],
     ["webhooks", "/admin/system/webhooks", "fa-solid fa-satellite-dish"],
@@ -367,23 +368,9 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["online", "/admin/stats/online", "fa-solid fa-signal"],
   ]),
 
-  // ─── Aplicații: scurtătura spre lista aplicațiilor și uneltele pentru pluginuri; pluginurile își adaugă grupurile ───
-  {
-    app: "system",
-    area: "apps",
-    title: "acp.menu.system.apps_manage",
-    icon: "fa-solid fa-cubes",
-    items: [
-      {
-        key: "system.applications_shortcut",
-        labelKey: "acp.menu.system.applications",
-        href: "/admin/system/applications",
-        section: "system.applications",
-        icon: "fa-solid fa-cubes",
-        alias: true,
-      },
-    ],
-  },
+  // ─── Aplicații: lista aplicațiilor și a pluginurilor (locul ei, o singură dată în meniu) și uneltele pentru pluginuri;
+  // pluginurile își adaugă grupurile. Cheia și dreptul rămân `system.applications`. ───
+  menuSection("system", "apps_manage", "fa-solid fa-cubes", [["applications", "/admin/system/applications", "fa-solid fa-cubes"]], { area: "apps" }),
   menuSection(
     "system",
     "apps_dev",
@@ -399,7 +386,7 @@ const acpMenu: GcsAcpMenuSection[] = [
 /** Modulul „core”: setările, permisiunile de grup și meniul ACP de bază. */
 export const coreModule: GcsModule = {
   key: "core",
-  // Setările aplicațiilor (pornirea și ordinea), schimbate din ACP → Sistem → Aplicații.
+  // Setările aplicațiilor (pornirea și ordinea), schimbate din ACP → Aplicații → Aplicații și pluginuri.
   settings: [...settings, ...APP_SETTING_DEFS],
   permissions,
   acpMenu,

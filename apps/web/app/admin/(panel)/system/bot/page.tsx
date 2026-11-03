@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 import { botAvatarAction, renameBotAction, saveBotWelcomeAction, scheduleBotPostAction, toggleBotFeatureAction, unscheduleBotPostAction } from "./actions";
@@ -65,10 +67,18 @@ export default async function AcpBotPage() {
                 </label>
               </GcsActionForm>
               <GcsActionForm action={botAvatarAction} submitLabel={t("account.avatarSave")} submitKind="save" variant="ghost">
-                <label className="gcs-field">
+                <div className="gcs-field">
                   <span>{t("account.avatar")}</span>
-                  <input className="gcs-input" type="file" name="file" accept="image/png,image/jpeg,image/webp,image/gif" required data-testid="gcs-bot-avatar-input" />
-                </label>
+                  {/* Trimisă cu formularul (Server Action: cel mult 1 MB), ca avatarul unui membru (WebP 512 × 512). */}
+                  <GcsUploadInput
+                    name="file"
+                    title={t("account.avatar")}
+                    rules={UPLOAD_RULES.image(1)}
+                    current={account.image ? { url: account.image, name: account.name } : null}
+                    required
+                    testId="gcs-bot-avatar-input"
+                  />
+                </div>
               </GcsActionForm>
               {botGroup && (
                 <p style={muted}>

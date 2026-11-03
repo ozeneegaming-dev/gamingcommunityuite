@@ -117,7 +117,11 @@ test("un membru obișnuit nu poate crea; VIP-ul creează clanul, care așteaptă
   await form.getByTestId("gcs-clan-field-tag").fill(TAG);
   await typeInEditor(leader, `Clan de test ${id}. Jucăm CS2 seara.`, form.locator(".gcs-richInput"));
   await form.getByTestId("gcs-clan-field-color").fill("#e0592a");
-  await leader.locator("#gcs-clan-logo").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from(LOGO, "base64") });
+  // Logo-ul: popupul de încărcare (verificările, apoi „Folosește” îl încarcă).
+  await form.getByTestId("gcs-clan-logo-open").click();
+  await form.getByTestId("gcs-clan-logo-pick").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from(LOGO, "base64") });
+  await form.getByTestId("gcs-clan-logo-use").click();
+  await expect(form.getByTestId("gcs-clan-logo-dialog")).toHaveCount(0);
   await expect(form.getByRole("img", { name: "Logo-ul curent" })).toBeVisible();
   await form.getByLabel("Discord (link de invitație)").fill("https://discord.gg/gcs-e2e");
   await form.getByTestId("gcs-clan-field-forum").check();

@@ -74,7 +74,11 @@ test("o regulă construită în ACP: topic → badge + notificare + widget-ul li
   await enterAcpAsRoot(page, `AchRoot${id}`, `ach-root-${id}@example.com`);
 
   await page.goto("/admin/members/achievements/rules");
+  // Constructorul stă în panou: se deschide din „Regulă nouă”.
   const builder = page.getByTestId("gcs-rule-builder");
+  await expect(page.getByTestId("gcs-rule-list")).toBeVisible();
+  await expect(builder).toHaveCount(0);
+  await page.getByTestId("gcs-rule-new").click();
   await builder.getByLabel("Evenimentul").selectOption("forums.topic");
   await builder.getByTestId("gcs-rule-reward-actor").getByLabel("Badge").selectOption({ label: `Pionier ${id}` });
   await builder.getByTestId("gcs-rule-reward-actor").getByLabel("Puncte").fill("15");
@@ -83,10 +87,19 @@ test("o regulă construită în ACP: topic → badge + notificare + widget-ul li
   await expect(builder.getByTestId("gcs-rule-preview")).toContainText(`badge „Pionier ${id}”`);
   await shot(page, "acp-rule-builder");
   await builder.getByRole("button", { name: "Adaugă regula" }).click();
+  await expect(builder).toHaveCount(0);
   const row = page.getByTestId("gcs-rule-row").filter({ hasText: `Pionier ${id}` }).first();
   await expect(row).toBeVisible();
   await expect(row).toContainText("a 1-a oară");
   await shot(page, "acp-rule-list");
+
+  // Editarea în același panou: regula se încarcă, salvarea închide panoul și propoziția se actualizează.
+  await row.getByRole("button", { name: `Editează „Pionier ${id}”` }).click();
+  await expect(builder.getByLabel("Numele regulii")).toHaveValue(`Pionier ${id}`);
+  await builder.getByTestId("gcs-rule-reward-actor").getByLabel("Puncte").fill("20");
+  await builder.getByRole("button", { name: "Salvează regula" }).click();
+  await expect(builder).toHaveCount(0);
+  await expect(row).toContainText("20 puncte");
 
   // Copia (oprită) și ștergerea ei, cu confirmarea din pagină.
   await row.getByRole("button", { name: `Copiază „Pionier ${id}”` }).click();
@@ -131,12 +144,17 @@ test("urcarea în rang: toast-ul de sărbătorire și bara de progres pe profil"
   try {
     await page.goto("/admin/members/achievements/ranks");
     await expect(page.getByTestId("gcs-rank-ladder")).toBeVisible();
-    const form = page.locator("section", { has: page.locator("#gcs-rank-new") });
-    await form.getByLabel("Nume").fill(rankName);
+    // Scara e singura listă: „Rang nou” deschide panoul, cu previzualizarea emblemei pe loc.
+    await expect(page.locator('input[name="minPosts"]')).toHaveCount(0);
+    await page.getByTestId("gcs-rank-new-open").click();
+    const form = page.getByTestId("gcs-rank-new");
+    await form.getByLabel("Nume", { exact: true }).fill(rankName);
     await form.getByLabel("Postări (minim)").fill("3");
     await form.getByLabel("Treapta emblemei").selectOption("legend");
+    await expect(form.getByTestId("gcs-rank-preview")).toHaveAttribute("src", /rosette-custom-/);
     await form.getByLabel("Animație discretă").check();
-    await form.getByRole("button", { name: "Adaugă" }).click();
+    await form.getByRole("button", { name: "Adaugă", exact: true }).click();
+    await expect(form).toHaveCount(0);
     const card = page.getByTestId("gcs-rank-card").filter({ hasText: rankName });
     await expect(card).toBeVisible();
     await expect(card.locator("img.gcs-badgeArt")).toHaveAttribute("src", /rosette-custom-/);

@@ -15,6 +15,16 @@ export const MODERATORS_ACP_SECTION = "members.moderators";
 /** Puterile unui moderator pe forum (specul etapei 2, §6). */
 export const MOD_POWERS = ["edit", "hide", "delete", "move", "merge", "split", "pin", "lock", "feature", "approve", "warn"] as const;
 
+/**
+ * Preseturile de puteri din ACP (panoul „Adaugă moderator”): toate, moderarea de bază (editează, ascunde, mută,
+ * fixează, blochează, aprobă; fără ștergere, unire, despărțire sau avertismente) și doar aprobarea postărilor.
+ */
+export const MOD_POWER_PRESETS: Record<"all" | "basic" | "approvals", readonly (typeof MOD_POWERS)[number][]> = {
+  all: MOD_POWERS,
+  basic: ["edit", "hide", "move", "pin", "lock", "approve"],
+  approvals: ["approve"],
+};
+
 export type GcsModeratorInput = { forumIds: number[]; userName?: string; groupId?: number; powers: string[] };
 export type GcsModeratorRow = {
   id: number;
@@ -84,6 +94,21 @@ export class GcsForumModeratorService {
         const row = await tx.moderator.create({ data: { containerType: "forum", containerId: String(f.id), userId, groupId, powers } });
         await writeAudit(tx, { actorId: actor.userId, action: "moderator.add", targetType: "moderator", targetId: String(row.id), after: row, ip: actor.ip });
       }
+    });
+    await permissions.bumpVersion();
+  }
+
+  /** Schimbă puterile unui moderator pe forum (forumul și ținta, user sau grup, rămân aceleași). */
+  async update(actor: GcsActor, id: number, input: { powers: string[] }): Promise<void> {
+    const { db, acp, permissions } = this.deps;
+    await acp.assert(actor, MODERATORS_ACP_SECTION, "edit");
+    const powers = [...new Set(input.powers)];
+    if (powers.length === 0 || powers.some((p) => !(MOD_POWERS as readonly string[]).includes(p))) throw new GcsValidationError({ powers: "invalid_choice" });
+    const row = await db.moderator.findUnique({ where: { id } });
+    if (!row || row.containerType !== "forum") throw new GcsNotFound();
+    await db.$transaction(async (tx) => {
+      const after = await tx.moderator.update({ where: { id }, data: { powers } });
+      await writeAudit(tx, { actorId: actor.userId, action: "moderator.update", targetType: "moderator", targetId: String(id), before: row, after, ip: actor.ip });
     });
     await permissions.bumpVersion();
   }

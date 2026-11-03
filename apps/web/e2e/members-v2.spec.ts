@@ -94,6 +94,13 @@ test("ACP → Membri: membru nou, filtrele rapide, căutarea și un grup secunda
     const secondary = page.locator('[data-testid="gcs-member-secondary"][data-group="vip_silver"]');
     await expect(secondary.getByTestId("gcs-member-secondary-meta")).toContainText("expiră pe");
     await expect(secondary.getByTestId("gcs-member-secondary-meta")).toContainText("manual");
+    // „Gestionează” deschide popupul Grupuri (același ca butonul din bară), cu expirarea și scoaterea grupului.
+    await page.getByTestId("gcs-member-card-groups-manage").click();
+    const groups = page.getByTestId("gcs-member-modal-groups");
+    await expect(groups.locator('[data-testid="gcs-member-secondary-edit"][data-group="vip_silver"]')).toBeVisible();
+    await expect(groups.getByTestId("gcs-member-add-group")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(groups).toHaveCount(0);
   });
 });
 
@@ -167,6 +174,41 @@ test("fișa membrului: taburile, acțiunile contului, cardul clanului apare și 
       await shot(page, "acp-member-dashboard", { fullPage: true });
     });
 
+    await test.step("prezentarea doar arată: niciun formular deschis; acțiunile se deschid în popup", async () => {
+      // Pe pagină (în afara popupurilor) nu stă niciun formular: Ban, Avertisment, Donație, Grupuri sunt în popupuri.
+      await expect(page.locator(".gcs-mpOverview form")).toHaveCount(0);
+      await expect(page.getByTestId("gcs-acp-ban-reason")).toHaveCount(0);
+      await expect(page.getByTestId("gcs-member-add-group")).toHaveCount(0);
+      const bar = page.getByTestId("gcs-member-danger");
+      for (const which of ["groups", "warn", "ban"]) await expect(bar.getByTestId(`gcs-member-act-${which}`)).toBeVisible();
+      await expect(bar.getByTestId("gcs-member-delete")).toBeVisible();
+
+      await bar.getByTestId("gcs-member-act-ban").click();
+      const ban = page.getByRole("dialog", { name: "Banează membrul" });
+      await expect(ban.getByTestId("gcs-acp-ban-reason")).toBeFocused();
+      await ban.getByRole("button", { name: "Închide" }).click();
+      await expect(ban).toHaveCount(0);
+
+      await bar.getByTestId("gcs-member-act-warn").click();
+      await expect(page.getByRole("dialog", { name: "Avertizează membrul" }).getByLabel("Puncte")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+
+      // „Mai multe”: meniul cu acțiunile rare (tastatura: săgeți, Escape închide).
+      await bar.getByTestId("gcs-member-more").click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      await expect(page.getByTestId("gcs-member-gdpr-export")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("menu")).toHaveCount(0);
+      await shot(page, "acp-member-actions");
+
+      // „Ban pe site…” din chat (`?ban=1&reason=…`): popupul Ban se deschide singur, cu motivul completat.
+      await page.goto(`/admin/members/${member}?ban=1&reason=${encodeURIComponent(`din chat ${id}`)}`);
+      await expect(page.getByRole("dialog", { name: "Banează membrul" }).getByTestId("gcs-acp-ban-reason")).toHaveValue(`din chat ${id}`);
+      await page.goto(`/admin/members/${member}`);
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+    });
+
     await test.step("aplicația oprită: cardul dispare; pornită din nou: revine", async () => {
       await setApp("clans", false);
       await page.reload();
@@ -187,9 +229,13 @@ test("fișa membrului: taburile, acțiunile contului, cardul clanului apare și 
     });
 
     await test.step("„Marchează spammer” cu confirmarea din pagină, apoi jurnalul contului", async () => {
-      await page.getByTestId("gcs-member-spammer").locator("summary").click();
-      await page.getByTestId("gcs-member-spammer").getByRole("button", { name: "Marchează ca spammer" }).click();
-      await page.getByTestId("gcs-confirm-ok").click();
+      // Popupul cu opțiunile acțiunii e și pasul de confirmare (textul spune că membrul e și banat).
+      await page.getByTestId("gcs-member-more").click();
+      await page.getByTestId("gcs-member-spammer").click();
+      const spam = page.getByTestId("gcs-member-modal-spammer");
+      await expect(spam).toContainText("banat permanent");
+      await spam.getByRole("button", { name: "Marchează ca spammer" }).click();
+      await expect(spam).toHaveCount(0);
       await expect(page.getByTestId("gcs-member-identity")).toContainText("Spammer");
       expect((await sql<{ isSpammer: boolean }>(`SELECT "isSpammer" FROM users WHERE id = $1`, [member]))[0]!.isSpammer).toBe(true);
       await page.getByTestId("gcs-member-tab-log").click();
@@ -201,6 +247,7 @@ test("fișa membrului: taburile, acțiunile contului, cardul clanului apare și 
       const res = await page.request.get(`/admin/members/${member}/gdpr.zip`);
       expect(res.status(), await res.text().catch(() => "")).toBe(200);
       expect(res.headers()["content-disposition"]).toContain(`gdpr-Dash${id}-`);
+      await page.getByTestId("gcs-member-more").click();
       const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("gcs-member-gdpr-export").click()]);
       expect(download.suggestedFilename()).toMatch(/\.zip$/);
       const bytes = await res.body();

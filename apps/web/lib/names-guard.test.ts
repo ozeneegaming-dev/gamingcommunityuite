@@ -44,6 +44,8 @@ const GROUP_STYLE_FILES = new Set([
   "apps/web/app/admin/(panel)/community/chat-pro/bar/GcsChatProBarEditor.tsx",
   "apps/web/app/admin/(panel)/groups/GroupOrder.tsx",
   "apps/web/app/admin/(panel)/groups/[id]/page.tsx",
+  // Moderatorii globali (grupurile) și grupul-moderator pe forum, pe pastila lui.
+  "apps/web/app/admin/(panel)/members/staff/moderators/page.tsx",
   "apps/web/app/admin/(panel)/permissions/[containerType]/[containerId]/PermissionMatrix.tsx",
   "apps/web/app/admin/(panel)/vip/name-styles/page.tsx",
   "apps/web/app/admin/(panel)/vip/tiers/page.tsx",

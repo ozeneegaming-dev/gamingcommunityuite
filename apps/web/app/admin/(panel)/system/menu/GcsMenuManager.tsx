@@ -22,10 +22,11 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsNavItemEdit, GcsNavItemInput, GcsNavLabel } from "@gcs/core";
-import { GcsButton, GcsDropdown, GcsIconPicker, GcsIconSvg, GcsTooltip } from "@gcs/ui";
+import { GcsButton, GcsDropdown, GcsIconSvg, GcsTooltip } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { GcsConfirmDialog } from "../../_components/GcsConfirmDialog";
 import { discardMenuDraft, publishMenuDraft, restoreMenuDefaults, saveMenuDraft } from "./actions";
@@ -619,7 +620,7 @@ function Editor({
           )}
           <div className="gcs-field" role="group" aria-label={tm("icon")}>
             <span>{tm("icon")}</span>
-            <GcsIconPicker name={`icon-${item.uid}`} value={item.icon} searchUrl="/api/icons/search" labels={{ search: tm("iconSearch"), none: tm("iconNone"), noResults: tm("iconNoResults") }} onChange={(v) => onPatch({ icon: v })} />
+            <GcsIconInput key={item.uid} name={`icon-${item.uid}`} value={item.icon} onChange={(v) => onPatch({ icon: v })} testId="gcs-menu-icon" />
           </div>
           <label className="gcs-checkRow">
             <input type="checkbox" checked={item.newTab} onChange={(e) => onPatch({ newTab: e.target.checked })} />

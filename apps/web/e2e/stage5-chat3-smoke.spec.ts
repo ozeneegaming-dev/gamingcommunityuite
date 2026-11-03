@@ -67,7 +67,11 @@ test("chat v3: avatar și culoarea grupului, mențiune, emoticon, YouTube, imagi
   await expect(room(b).getByTestId("gcs-chat-msg").filter({ hasText: `clip ${run}` }).getByTestId("gcs-chat-youtube")).toBeVisible({ timeout: 10_000 });
   await a.waitForTimeout(1_200);
 
-  await room(a).getByTestId("gcs-chat-file").setInputFiles({ name: "smoke.png", mimeType: "image/png", buffer: PNG });
+  // Imaginea: popupul de încărcare (verificările, apoi „Folosește” o încarcă).
+  await room(a).getByTestId("gcs-chat-file-open").click();
+  await room(a).getByTestId("gcs-chat-file-pick").setInputFiles({ name: "smoke.png", mimeType: "image/png", buffer: PNG });
+  await room(a).getByTestId("gcs-chat-file-use").click();
+  await expect(room(a).getByTestId("gcs-chat-file-dialog")).toHaveCount(0);
   await expect(room(a).getByRole("list", { name: "Imagini atașate" }).getByRole("img")).toBeVisible();
   await room(a).getByTestId("gcs-chat-input").fill(`poza ${run}`);
   await room(a).getByRole("button", { name: "Trimite" }).click();

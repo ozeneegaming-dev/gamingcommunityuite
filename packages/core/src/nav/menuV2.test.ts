@@ -85,7 +85,10 @@ describe("managerul de meniu v2", () => {
     ];
     await nav.save(root, base);
     const ids = (list: Awaited<ReturnType<typeof nav.editable>>) => list.map((i) => [i.id, i.children.map((c) => c.id)] as const);
-    const [[home], [group, [members, sep, staff]], [clans]] = ids(await nav.editable());
+    const before = ids(await nav.editable());
+    const [home] = before[0]!;
+    const [group, [members, sep, staff]] = before[1]!;
+    const [clans] = before[2]!;
     // Ordinea schimbată, „Clanuri” redenumit, un item nou: doar cei neschimbați își păstrează id-ul.
     await nav.save(root, [
       { kind: "dropdown", label: { ro: "Comunitate" }, children: [{ label: { ro: "Staff" }, href: "/staff" }, { kind: "separator", label: {} }, { label: { ro: "Membri" }, href: "/members" }] },

@@ -132,8 +132,11 @@ test("în ACP, o iconiță invalidă e refuzată, iar una aleasă din selector a
   await expect(page.getByRole("alert").first()).toBeVisible();
 
   await page.reload();
-  await page.getByRole("searchbox", { name: "Caută o iconiță (ex. gamepad, shield)" }).fill("gamepad");
-  await page.getByRole("option", { name: "fa-solid fa-gamepad" }).click();
+  // Selectorul de iconițe: butonul deschide popupul (căutare + categorii); alegerea îl închide.
+  await page.getByTestId("gcs-forum-icon-open").click();
+  await page.getByTestId("gcs-forum-icon-search").fill("gamepad");
+  await page.getByRole("option", { name: "Gamepad", exact: true }).click();
+  await expect(page.getByTestId("gcs-forum-icon-open")).toContainText("Gamepad");
   await page.getByRole("button", { name: "Salvează forumul" }).click();
   await expect(page.getByRole("status").first()).toBeVisible();
   await page.goto("/");

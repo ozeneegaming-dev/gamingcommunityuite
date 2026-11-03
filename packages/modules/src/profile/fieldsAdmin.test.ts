@@ -48,6 +48,23 @@ describe("GcsProfileFieldAdmin", () => {
     await w.profileFields.delete(admin, f.id);
     expect(await w.db.auditLog.count({ where: { action: "profile_field.delete" } })).toBe(1);
   });
+
+  test("ordinea prin tragere: exact toate câmpurile, fiecare o dată; pozițiile urmează lista", async () => {
+    await w.profileFields.save(admin, null, input());
+    const ids = (await w.db.profileField.findMany({ select: { id: true }, orderBy: { id: "asc" } })).map((r) => r.id);
+    const reversed = [...ids].reverse();
+    await w.profileFields.reorder(admin, reversed);
+    expect((await w.profiles.fields()).map((f) => f.id)).toEqual(reversed);
+    await expect(w.profileFields.reorder(admin, reversed.slice(1))).rejects.toMatchObject({ fields: { order: "invalid_order" } });
+    await expect(w.profileFields.reorder(admin, [...reversed, reversed[0]!])).rejects.toMatchObject({ fields: { order: "invalid_order" } });
+    await expect(w.profileFields.reorder(w.member, reversed)).rejects.toBeInstanceOf(GcsForbidden);
+    expect(await w.db.auditLog.count({ where: { action: "profile_field.reorder" } })).toBe(1);
+    // Panoul nu trimite poziția: câmpul editat își păstrează locul, iar unul nou vine ultimul.
+    const edited = await w.profileFields.save(admin, reversed[0]!, input({ label: "Discord", position: Number.NaN }));
+    expect(edited.position).toBe(0);
+    const added = await w.profileFields.save(admin, null, input({ key: "kick_tag", position: Number.NaN }));
+    expect(added.position).toBe(reversed.length);
+  });
 });
 
 describe("grupurile câmpurilor (profil gaming v2)", () => {
@@ -62,6 +79,14 @@ describe("grupurile câmpurilor (profil gaming v2)", () => {
     expect((await w.db.profileField.findUniqueOrThrow({ where: { id: f.id } })).groupId).toBeNull();
     await expect(w.profileFields.saveGroup(w.member, null, { key: "x1", label: "X", helper: "", position: 0 })).rejects.toBeInstanceOf(GcsForbidden);
     await expect(w.profileFields.saveGroup(admin, null, { key: "contact", label: "Dublură", helper: "", position: 0 })).rejects.toMatchObject({ fields: { key: "taken" } });
+  });
+
+  test("ordinea grupurilor prin tragere: exact toate grupurile", async () => {
+    const ids = (await w.profileFields.groups()).map((g) => g.id);
+    const reversed = [...ids].reverse();
+    await w.profileFields.reorderGroups(admin, reversed);
+    expect((await w.profileFields.groups()).map((g) => g.id)).toEqual(reversed);
+    await expect(w.profileFields.reorderGroups(admin, [...reversed, 999_999])).rejects.toMatchObject({ fields: { order: "invalid_order" } });
   });
 
   test("șablonul de contact: doar https cu {handle}, doar la „Text”; grupul trebuie să existe", async () => {

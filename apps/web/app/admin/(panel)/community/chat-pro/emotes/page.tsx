@@ -32,7 +32,7 @@ export default async function AcpChatProEmotesPage() {
       <p className="gcs-muted" style={{ margin: 0, maxWidth: 900 }}>
         {t("intro", { kb: maxKb, side: maxSide })}
       </p>
-      <GcsEmoteAdmin packs={packs} canEdit={canEdit} canDelete={canDelete} />
+      <GcsEmoteAdmin packs={packs} canEdit={canEdit} canDelete={canDelete} limits={{ kb: maxKb, side: maxSide }} />
     </>
   );
 }

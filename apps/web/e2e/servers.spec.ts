@@ -77,7 +77,11 @@ test("ACP: „Testează” refuză adresele private, citește serverul fals; ad�
   await expect(result).toContainText("Harta: de_mirage");
   await expect(result).toContainText("3 jucători în listă");
 
-  await page.locator("#gcs-server-banner").setInputFiles({ name: "banner.png", mimeType: "image/png", buffer: Buffer.from(BANNER, "base64") });
+  // Bannerul, din popupul de încărcare: pleacă odată cu formularul la salvare.
+  await page.getByTestId("gcs-server-banner-open").click();
+  await page.getByTestId("gcs-server-banner-pick").setInputFiles({ name: "banner.png", mimeType: "image/png", buffer: Buffer.from(BANNER, "base64") });
+  await page.getByTestId("gcs-server-banner-use").click();
+  await expect(page.getByTestId("gcs-server-banner")).toContainText("banner.png");
   await page.getByLabel("Descriere").fill(`Server competitiv ${id}.\nReguli pe forum.`);
   await page.getByTestId("gcs-server-admin-search").fill(ADMIN.slice(0, 8));
   await page.getByRole("button", { name: ADMIN, exact: true }).click();

@@ -1,69 +1,270 @@
 /*
- * Bara de anunț subțire (deasupra conținutului) și blocul pentru vizitatori: componentele SISTEMULUI, în orice temă,
- * pe tokenurile temei (macheta HomeComplete „ANUNȚ · … · Înscrie echipa”; macheta GuestCta).
+ * Bara de anunț v2 și blocul pentru vizitatori: componentele SISTEMULUI, în orice temă, pe tokenurile temei (macheta
+ * „Bara de anunț v2”; macheta GuestCta). Presetele (Forja, accent, info, succes, avertisment, pericol, discret) vin din
+ * tokenuri; presetul personalizat își pune fundalul și textul în `--gcs-ann-bg` / `--gcs-ann-fg` (din ACP).
  */
 
-/* ─── Bara de anunț ──────────────────────────────────────────────────────────────────────────────── */
-.gcs-annBar {
-  --gcs-ann: var(--gcs-accent);
+/* ─── Locurile barei: sus (deasupra antetului), sub antet, în pagină, jos (fixă) ─────────────────────────── */
+.gcs-annSlot {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
+  flex-direction: column;
+}
+.gcs-annSlot--top[data-sticky],
+.gcs-annSlot--under[data-sticky] {
+  position: sticky;
+  top: 0;
+  z-index: 41;
+}
+.gcs-annSlot--under[data-sticky] {
+  z-index: 39;
+}
+/* Bara lipită deasupra antetului: antetul lipit coboară cu înălțimea ei (măsurată de bară). */
+:root:has(.gcs-annSlot--top[data-sticky]) .gcs-hb[data-sticky],
+:root:has(.gcs-annSlot--top[data-sticky]) .gcs-siteHeader {
+  top: var(--gcs-ann-top-h, 0px);
+}
+.gcs-annSlot--bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  gap: 8px;
+  pointer-events: none;
+}
+.gcs-annSlot--bottom > .gcs-annBar {
+  pointer-events: auto;
+}
+:root body:has(.gcs-mbar) .gcs-annSlot--bottom {
+  bottom: 74px;
+}
+:root body:has(.gcs-annSlot--bottom) .gcs-siteFooter {
+  padding-bottom: 72px;
+}
+:root body:has(.gcs-mbar):has(.gcs-annSlot--bottom) .gcs-siteFooter {
+  padding-bottom: 150px;
+}
+
+/* ─── Bara ──────────────────────────────────────────────────────────────────────────────────────────────── */
+.gcs-annBar {
+  --gcs-ann-bg: var(--gcs-accent-fill, var(--gcs-accent));
+  --gcs-ann-fg: #fff;
+  --gcs-ann-h: 42px;
+  --gcs-ann-fs: 13.5px;
+  position: relative;
   box-sizing: border-box;
-  padding: 9px 12px 9px 16px;
-  border: 1px solid color-mix(in srgb, var(--gcs-ann) 45%, transparent);
-  border-radius: 6px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--gcs-ann) 22%, transparent), color-mix(in srgb, var(--gcs-box-bg, var(--gcs-surface)) 95%, transparent) 40%), var(--gcs-box-bg, var(--gcs-surface));
-  color: var(--gcs-heading, var(--gcs-text));
+  display: block;
+  background: var(--gcs-ann-bg);
+  color: var(--gcs-ann-fg);
+  font: 500 var(--gcs-ann-fs) / 1.4 var(--gcs-font-text);
+}
+.gcs-annBar--thin {
+  --gcs-ann-h: 32px;
+  --gcs-ann-fs: 12.5px;
+}
+.gcs-annBar--large {
+  --gcs-ann-h: 56px;
+  --gcs-ann-fs: 15px;
+}
+.gcs-annBar__inner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--gcs-ann-h);
+  padding: 5px 10px 5px 16px;
+}
+/* Pe toată lățimea: fundalul de la o margine la alta, conținutul cât pagina. */
+.gcs-annBar--full .gcs-annBar__inner {
+  max-width: var(--gcs-page-width, 1320px);
+  margin: 0 auto;
+  padding-inline: 24px 16px;
+}
+.gcs-annBar--boxed {
+  overflow: hidden;
+  border-radius: var(--gcs-radius-sm, 8px);
+}
+.gcs-annSlot--top > .gcs-annBar--boxed,
+.gcs-annSlot--under > .gcs-annBar--boxed {
+  width: calc(100% - 48px);
+  max-width: calc(var(--gcs-page-width, 1320px) - 48px);
+  margin: 10px auto;
+}
+.gcs-annSlot--bottom > .gcs-annBar--boxed {
+  width: calc(100% - 24px);
+  max-width: 980px;
+  margin: 0 auto 12px;
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 0.45);
+}
+.gcs-annSlot--bottom > .gcs-annBar--full {
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.28);
+}
+
+/* Presetele, pe culorile temei. */
+.gcs-annBar--forja {
+  --gcs-ann-bg: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 50%, #000), var(--gcs-accent) 55%, var(--gcs-accentInk, var(--gcs-accent)));
+  --gcs-ann-fg: #fff;
+}
+.gcs-annBar--accent {
+  --gcs-ann-bg: var(--gcs-accent-fill, var(--gcs-accent));
+  --gcs-ann-fg: var(--gcs-btn-primary-text, #fff);
 }
 .gcs-annBar--info {
-  --gcs-ann: #4fa3ff;
+  --gcs-ann-bg: color-mix(in srgb, var(--gcs-info) 78%, #000);
+  --gcs-ann-fg: #fff;
+}
+.gcs-annBar--success {
+  --gcs-ann-bg: color-mix(in srgb, var(--gcs-ok) 66%, #000);
+  --gcs-ann-fg: #fff;
 }
 .gcs-annBar--warning {
-  --gcs-ann: var(--gcs-warn);
+  --gcs-ann-bg: color-mix(in srgb, var(--gcs-warn) 16%, var(--gcs-box-bg, var(--gcs-surface)));
+  --gcs-ann-fg: color-mix(in srgb, var(--gcs-warn) 62%, var(--gcs-text));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-warn) 45%, transparent);
 }
+.gcs-annBar--danger {
+  --gcs-ann-bg: color-mix(in srgb, var(--gcs-danger) 72%, #000);
+  --gcs-ann-fg: #fff;
+}
+.gcs-annBar--subtle {
+  --gcs-ann-bg: var(--gcs-box-bg, var(--gcs-surface));
+  --gcs-ann-fg: var(--gcs-text);
+  box-shadow: inset 0 0 0 1px var(--gcs-box-border, var(--gcs-border));
+}
+
+/* Conținutul. */
 .gcs-annBar__slide {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 6px 12px;
-  animation: gcs-ann-in var(--gcs-motion-base, 0.25s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.gcs-annBar--center .gcs-annBar__slide {
+  justify-content: center;
+}
+.gcs-annBar__slide--fade {
+  animation: gcs-ann-fade var(--gcs-motion-base, 0.3s) ease both;
+}
+.gcs-annBar__slide--slide {
+  animation: gcs-ann-slide var(--gcs-motion-base, 0.35s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.gcs-annBar__icon {
+  flex: none;
+  display: inline-flex;
+  font-size: 1.1em;
 }
 .gcs-annBar__label {
   flex: none;
-  padding: 3px 7px;
-  border-radius: 4px;
-  background: var(--gcs-ann);
-  color: #fff;
-  font: 700 10px/1.2 var(--gcs-font-text);
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 700 10.5px/1.2 var(--gcs-font-text);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
-.gcs-annBar--accent .gcs-annBar__label {
-  background: var(--gcs-accent-fill, var(--gcs-accent));
+.gcs-annBar__label--glass {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
 }
-.gcs-annBar--warning .gcs-annBar__label {
-  color: #111;
+.gcs-annBar__label--solid {
+  background: rgb(0 0 0 / 0.32);
+}
+.gcs-annBar__label--outline {
+  border-color: currentColor;
 }
 .gcs-annBar__text {
-  flex: 1 1 240px;
+  flex: 1 1 auto;
   min-width: 0;
-  font: 600 14px/1.4 var(--gcs-font-text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.gcs-root a.gcs-annBar__link {
-  flex: none;
-  color: var(--gcs-accentInk, var(--gcs-accent));
-  font: 700 13px var(--gcs-font-text);
-  text-decoration: none;
+.gcs-annBar--center .gcs-annBar__text {
+  flex: 0 1 auto;
 }
-.gcs-root a.gcs-annBar__link:hover,
-.gcs-root a.gcs-annBar__link:focus-visible {
-  color: var(--gcs-link-hover, var(--gcs-accent));
+.gcs-annBar__text strong {
+  font-weight: 700;
+}
+.gcs-root a.gcs-annBar__inlineLink,
+a.gcs-annBar__inlineLink {
+  color: inherit;
+  font-weight: 700;
   text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gcs-annBar__short {
+  display: none;
+}
+.gcs-annBar__marquee {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gcs-annBar__track {
+  display: inline-block;
+  padding-left: 100%;
+  animation: gcs-ann-marquee var(--gcs-ann-speed, 18s) linear infinite;
+}
+.gcs-annBar:hover .gcs-annBar__track,
+.gcs-annBar:focus-within .gcs-annBar__track {
+  animation-play-state: paused;
+}
+.gcs-annBar__count {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.25);
+  font: 600 12px var(--gcs-brand-font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gcs-root a.gcs-annBar__link,
+a.gcs-annBar__link {
+  flex: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.gcs-root a.gcs-annBar__cta,
+a.gcs-annBar__cta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--gcs-btn-radius, 6px);
+  font: 700 12.5px/1.2 var(--gcs-font-text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter var(--gcs-motion-fast, 0.2s) ease;
+}
+.gcs-root a.gcs-annBar__cta--white,
+a.gcs-annBar__cta--white {
+  background: #fff;
+  color: color-mix(in srgb, var(--gcs-accent) 72%, #000);
+}
+.gcs-root a.gcs-annBar__cta--filled,
+a.gcs-annBar__cta--filled {
+  background: var(--gcs-btn-primary-bg, var(--gcs-accent-fill, var(--gcs-accent)));
+  color: var(--gcs-btn-primary-text, #fff);
+}
+.gcs-root a.gcs-annBar__cta--outline,
+a.gcs-annBar__cta--outline {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+}
+.gcs-annBar__cta:hover,
+.gcs-annBar__cta:focus-visible {
+  filter: brightness(1.08);
 }
 .gcs-annBar__arrow {
   display: inline-block;
@@ -72,9 +273,6 @@
 a:hover > .gcs-annBar__arrow {
   transform: translateX(3px);
 }
-.gcs-annBar__cta {
-  flex: none;
-}
 .gcs-annBar__tools {
   flex: none;
   display: flex;
@@ -82,16 +280,16 @@ a:hover > .gcs-annBar__arrow {
   gap: 6px;
 }
 .gcs-annBar__dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   padding: 0;
   border: 0;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--gcs-text) 25%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 35%, transparent);
   cursor: pointer;
 }
 .gcs-annBar__dot[aria-current="true"] {
-  background: var(--gcs-ann);
+  background: currentColor;
 }
 .gcs-annBar__close {
   display: inline-flex;
@@ -100,39 +298,133 @@ a:hover > .gcs-annBar__arrow {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border: 0;
+  border-radius: 6px;
   background-color: transparent;
-  color: var(--gcs-muted);
+  color: inherit;
+  opacity: 0.82;
   cursor: pointer;
 }
 .gcs-annBar__close:hover,
 .gcs-annBar__close:focus-visible {
-  border-color: var(--gcs-hover-border, var(--gcs-border));
-  color: var(--gcs-heading, var(--gcs-text));
+  opacity: 1;
+  background-color: color-mix(in srgb, currentColor 16%, transparent);
 }
-@keyframes gcs-ann-in {
+@keyframes gcs-ann-fade {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
 }
-@media (max-width: 640px) {
-  .gcs-annBar {
-    align-items: flex-start;
-    padding: 10px;
+@keyframes gcs-ann-slide {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes gcs-ann-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* Dispozitivele: bara doar pe desktop / doar pe telefon (previzualizarea din ACP le arată oricum). */
+@media (max-width: 767px) {
+  .gcs-annBar--only-desktop {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  .gcs-annBar--only-mobile {
+    display: none;
+  }
+}
+.gcs-annBar.gcs-annBar--device-desktop,
+.gcs-annBar.gcs-annBar--device-mobile {
+  display: block;
+}
+
+/* Pe telefon: textul scurt, fără pastilă și link secundar, textul pe cel mult două rânduri. */
+@media (max-width: 767px) {
+  .gcs-annBar__full {
+    display: none;
+  }
+  .gcs-annBar__short {
+    display: inline;
+  }
+  .gcs-annBar__inner,
+  .gcs-annBar--full .gcs-annBar__inner {
+    gap: 8px;
+    padding: 5px 6px 5px 12px;
+  }
+  .gcs-annBar__label,
+  .gcs-annBar__link {
+    display: none;
   }
   .gcs-annBar__text {
-    flex-basis: 100%;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
     font-size: 13px;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gcs-annBar__slide {
-    animation-name: gcs-tip-fade;
+  .gcs-annBar--marquee .gcs-annBar__text {
+    display: block;
   }
-  .gcs-annBar__arrow {
+  .gcs-root a.gcs-annBar__cta,
+  a.gcs-annBar__cta {
+    padding: 5px 9px;
+  }
+  .gcs-annSlot--top > .gcs-annBar--boxed,
+  .gcs-annSlot--under > .gcs-annBar--boxed {
+    width: calc(100% - 32px);
+  }
+}
+.gcs-annBar--device-mobile .gcs-annBar__full {
+  display: none;
+}
+.gcs-annBar--device-mobile .gcs-annBar__short {
+  display: inline;
+}
+.gcs-annBar--device-mobile .gcs-annBar__label,
+.gcs-annBar--device-mobile .gcs-annBar__link {
+  display: none;
+}
+.gcs-annBar--device-mobile .gcs-annBar__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+.gcs-annBar--device-mobile.gcs-annBar--marquee .gcs-annBar__text {
+  display: block;
+}
+.gcs-annBar--device-desktop .gcs-annBar__full {
+  display: inline;
+}
+.gcs-annBar--device-desktop .gcs-annBar__short {
+  display: none;
+}
+
+/* Mișcare redusă: fără animații de intrare, iar textul care derulează stă pe loc (tăiat cu „…”). */
+@media (prefers-reduced-motion: reduce) {
+  .gcs-annBar__slide--fade,
+  .gcs-annBar__slide--slide {
+    animation: none;
+  }
+  .gcs-annBar__track {
+    display: inline;
+    padding-left: 0;
+    animation: none;
+  }
+  .gcs-annBar__arrow,
+  .gcs-annBar__cta {
     transition: none;
+  }
+  a:hover > .gcs-annBar__arrow {
+    transform: none;
   }
 }
 
