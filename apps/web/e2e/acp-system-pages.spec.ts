@@ -378,3 +378,49 @@ test("Recomandări: setările din ACP, linkul membrului, înregistrarea prin lin
     await resetSetting("referral.config");
   }
 });
+
+test("Statistici: toate rapoartele se deschid cu grafic și plăci, perioada și gruparea se schimbă, CSV-ul și setările", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Stat${id}`, `stat-${id}@example.com`);
+  try {
+    for (const [report, title] of [
+      ["registrations", "Înregistrări"],
+      ["members", "Membri activi"],
+      ["content", "Conținut"],
+      ["online", "Online"],
+      ["clans", "Clanuri"],
+      ["servers", "Servere"],
+      ["vip", "VIP și donații"],
+    ] as const) {
+      await page.goto(`/admin/stats/${report}`);
+      await expect(page.getByRole("heading", { name: title, level: 1 }), report).toBeVisible();
+      await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+      await expect(page.getByTestId("gcs-stats-chart")).toBeVisible();
+      await expect(page.getByTestId("gcs-stats-tiles").locator("[data-series]").first()).toBeVisible();
+    }
+    await shot(page, "stats-vip");
+
+    // Perioada de 7 zile pe zile: 7 intervale; înregistrarea adminului apare în total.
+    await page.goto("/admin/stats/registrations?days=7&group=day");
+    await expect(page.locator('[data-series="registrations"] .gcs-acpTile__value')).not.toHaveText("0");
+    await page.getByTestId("gcs-stats-group").selectOption("week");
+    await page.getByRole("button", { name: "Aplică" }).click();
+    await expect(page).toHaveURL(/group=week/);
+    await shot(page, "stats-registrations-week");
+
+    const csv = await page.request.get("/admin/stats/registrations/export.csv?days=7&group=day");
+    expect(csv.ok()).toBe(true);
+    const lines = (await csv.text()).trim().split("\n");
+    expect(lines[0]).toBe("period,registrations");
+    expect(lines.length).toBe(8);
+
+    await page.getByTestId("gcs-stats-settings-open").click();
+    const cfg = page.getByTestId("gcs-stats-settings");
+    await cfg.getByLabel("Exclude staff-ul din rapoartele de activitate").check();
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(cfg).toHaveCount(0);
+    expect((await sql<{ value: { excludeStaff: boolean } }>(`SELECT value FROM settings WHERE key = 'stats.config'`))[0]?.value.excludeStaff).toBe(true);
+  } finally {
+    await resetSetting("stats.config");
+  }
+});

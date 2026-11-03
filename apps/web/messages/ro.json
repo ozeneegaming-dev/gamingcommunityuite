@@ -5833,6 +5833,134 @@
         "badgesHint": "Badge-uri pentru invitații: o regulă cu evenimentul „Recomandări calificate” în",
         "badgesLink": "Realizări › Reguli"
       }
+    },
+    "statsReports": {
+      "csv": "Export CSV",
+      "settings": "Setări",
+      "save": "Salvează",
+      "range": "Perioada",
+      "rangeDays": "{days, plural, one {# zi} few {# zile} other {# de zile}}",
+      "from": "De la",
+      "to": "Până la",
+      "group": "Grupare",
+      "groups": {
+        "day": "Pe zile",
+        "week": "Pe săptămâni",
+        "month": "Pe luni"
+      },
+      "apply": "Aplică",
+      "previous": "Perioada anterioară: {value}",
+      "chartTitle": "{report}, {from} – {to}",
+      "noData": "Nicio dată în perioada aleasă.",
+      "unitHours": "{n} h",
+      "cfg": {
+        "title": "Rapoartele",
+        "excludeStaff": "Exclude staff-ul din rapoartele de activitate",
+        "excludeStaffHint": "Adminii și moderatorii nu se numără la membri activi, postări, reacții și timp online.",
+        "weekStart": "Săptămâna începe",
+        "monday": "Luni",
+        "sunday": "Duminică",
+        "defaultDays": "Perioada implicită"
+      },
+      "registrations": {
+        "title": "Înregistrări",
+        "description": "Conturile noi pe zile, săptămâni sau luni și metoda de înregistrare."
+      },
+      "members": {
+        "title": "Membri activi",
+        "description": "Câți membri au postat și câți au fost online, comparat cu perioada anterioară, plus cei mai activi."
+      },
+      "content": {
+        "title": "Conținut",
+        "description": "Topicurile, postările și reacțiile noi, cu forumurile și topicurile cele mai active."
+      },
+      "online": {
+        "title": "Online",
+        "description": "Membrii online în fiecare zi și orele petrecute pe site, cu recordul de prezență."
+      },
+      "clans": {
+        "title": "Clanuri",
+        "description": "Clanurile noi și intrările în clanuri, cu cele mai mari clanuri."
+      },
+      "servers": {
+        "title": "Servere",
+        "description": "Jucătorii la vârf pe toate serverele și meciurile jucate, cu serverele și hărțile de top."
+      },
+      "vip": {
+        "title": "VIP și donații",
+        "description": "Abonamentele VIP noi și donațiile confirmate, cu cei mai generoși donatori."
+      },
+      "series": {
+        "registrations": {
+          "registrations": "Înregistrări"
+        },
+        "members": {
+          "posters": "Au postat",
+          "online": "Au fost online"
+        },
+        "content": {
+          "topics": "Topicuri",
+          "posts": "Postări",
+          "reactions": "Reacții"
+        },
+        "online": {
+          "members": "Membri online",
+          "hours": "Ore online"
+        },
+        "clans": {
+          "clans": "Clanuri noi",
+          "joins": "Intrări în clanuri"
+        },
+        "servers": {
+          "players": "Jucători la vârf",
+          "matches": "Meciuri"
+        },
+        "vip": {
+          "subscriptions": "Abonamente VIP noi",
+          "donations": "Donații (sumă)"
+        }
+      },
+      "tiles": {
+        "members": "membri în total",
+        "active30": "activi în 30 de zile",
+        "inactive90": "inactivi de 90+ zile",
+        "record": "record online",
+        "clans": "clanuri active",
+        "servers": "servere pornite",
+        "active": "abonamente VIP active",
+        "expiring": "VIP care expiră în 7 zile"
+      },
+      "tops": {
+        "registrations": {
+          "methods": "Metoda de înregistrare"
+        },
+        "members": {
+          "posters": "Cei mai activi"
+        },
+        "content": {
+          "forums": "Forumuri active",
+          "topics": "Topicuri active"
+        },
+        "online": {
+          "online": "Cel mai mult online"
+        },
+        "clans": {
+          "clans": "Cele mai mari clanuri"
+        },
+        "servers": {
+          "servers": "Servere (vârf de jucători)",
+          "maps": "Hărți jucate"
+        },
+        "vip": {
+          "donors": "Donatori"
+        }
+      },
+      "methods": {
+        "credential": "Email și parolă",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam"
+      }
     }
   },
   "settings": {
@@ -6626,6 +6754,9 @@
       "deleted": "cont șters",
       "statusQualified": "Calificat",
       "statusPending": "În așteptare"
+    },
+    "stats": {
+      "config": "Statisticile"
     }
   },
   "permissions": {

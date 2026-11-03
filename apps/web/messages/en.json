@@ -5833,6 +5833,134 @@
         "badgesHint": "Badges for invitations: a rule with the “Qualified referrals” event in",
         "badgesLink": "Achievements › Rules"
       }
+    },
+    "statsReports": {
+      "csv": "Export CSV",
+      "settings": "Settings",
+      "save": "Save",
+      "range": "Period",
+      "rangeDays": "{days, plural, one {# day} other {# days}}",
+      "from": "From",
+      "to": "To",
+      "group": "Grouping",
+      "groups": {
+        "day": "By day",
+        "week": "By week",
+        "month": "By month"
+      },
+      "apply": "Apply",
+      "previous": "Previous period: {value}",
+      "chartTitle": "{report}, {from} – {to}",
+      "noData": "No data in the chosen period.",
+      "unitHours": "{n} h",
+      "cfg": {
+        "title": "Reports",
+        "excludeStaff": "Exclude staff from activity reports",
+        "excludeStaffHint": "Admins and moderators are not counted in active members, posts, reactions and online time.",
+        "weekStart": "Week starts on",
+        "monday": "Monday",
+        "sunday": "Sunday",
+        "defaultDays": "Default period"
+      },
+      "registrations": {
+        "title": "Registrations",
+        "description": "New accounts by day, week or month and the sign-up method."
+      },
+      "members": {
+        "title": "Active members",
+        "description": "How many members posted and how many were online, compared with the previous period, plus the most active."
+      },
+      "content": {
+        "title": "Content",
+        "description": "New topics, posts and reactions, with the most active forums and topics."
+      },
+      "online": {
+        "title": "Online",
+        "description": "Members online each day and the hours spent on the site, with the presence record."
+      },
+      "clans": {
+        "title": "Clans",
+        "description": "New clans and clan joins, with the biggest clans."
+      },
+      "servers": {
+        "title": "Servers",
+        "description": "Peak players across all servers and matches played, with the top servers and maps."
+      },
+      "vip": {
+        "title": "VIP and donations",
+        "description": "New VIP subscriptions and confirmed donations, with the most generous donors."
+      },
+      "series": {
+        "registrations": {
+          "registrations": "Registrations"
+        },
+        "members": {
+          "posters": "Posted",
+          "online": "Were online"
+        },
+        "content": {
+          "topics": "Topics",
+          "posts": "Posts",
+          "reactions": "Reactions"
+        },
+        "online": {
+          "members": "Members online",
+          "hours": "Hours online"
+        },
+        "clans": {
+          "clans": "New clans",
+          "joins": "Clan joins"
+        },
+        "servers": {
+          "players": "Peak players",
+          "matches": "Matches"
+        },
+        "vip": {
+          "subscriptions": "New VIP subscriptions",
+          "donations": "Donations (amount)"
+        }
+      },
+      "tiles": {
+        "members": "members in total",
+        "active30": "active in 30 days",
+        "inactive90": "inactive for 90+ days",
+        "record": "online record",
+        "clans": "active clans",
+        "servers": "servers on",
+        "active": "active VIP subscriptions",
+        "expiring": "VIP expiring in 7 days"
+      },
+      "tops": {
+        "registrations": {
+          "methods": "Sign-up method"
+        },
+        "members": {
+          "posters": "Most active"
+        },
+        "content": {
+          "forums": "Active forums",
+          "topics": "Active topics"
+        },
+        "online": {
+          "online": "Most time online"
+        },
+        "clans": {
+          "clans": "Biggest clans"
+        },
+        "servers": {
+          "servers": "Servers (peak players)",
+          "maps": "Maps played"
+        },
+        "vip": {
+          "donors": "Donors"
+        }
+      },
+      "methods": {
+        "credential": "Email and password",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam"
+      }
     }
   },
   "settings": {
@@ -6626,6 +6754,9 @@
       "deleted": "deleted account",
       "statusQualified": "Qualified",
       "statusPending": "Pending"
+    },
+    "stats": {
+      "config": "Statistics"
     }
   },
   "permissions": {

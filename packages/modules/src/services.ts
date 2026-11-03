@@ -181,6 +181,7 @@ import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
 import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
 import { GcsBulkMailService } from "./notifications/bulkMail";
 import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
+import { GcsStatsReportService } from "./stats/reports";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -275,6 +276,8 @@ export type GcsServices = {
   bulkMail: GcsBulkMailService;
   /** Recomandările (linkul de invitație, calificarea și recompensa). */
   referrals: GcsReferralService;
+  /** ACP › Statistici: rapoartele pe perioade (înregistrări, membri, conținut, online, clanuri, servere, VIP). */
+  statsReports: GcsStatsReportService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -1028,6 +1031,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
     contact,
     referrals,
+    statsReports: new GcsStatsReportService({ db, acp, settings }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,
