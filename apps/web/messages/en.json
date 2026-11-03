@@ -346,7 +346,9 @@
       "license_bad_signature": "The licence’s signature isn’t valid (the licence was changed).",
       "license_expired": "The licence has expired.",
       "license_domain": "The licence isn’t valid for this site’s domain.",
-      "license_revoked": "The licence has been revoked."
+      "license_revoked": "The licence has been revoked.",
+      "tag_exists": "A tag with this name already exists.",
+      "login_required": "You need to sign in."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -502,7 +504,12 @@
       "unknown_extension": "The list contains an extension the platform does not accept.",
       "invalid_domain": "Only domains (e.g. example.com), one per line.",
       "page_placeholder": "The format must contain '{page}' exactly once, without angle brackets.",
-      "invalid_token": "Invalid code: only the value from content=\"…\" or the whole meta tag."
+      "invalid_token": "Invalid code: only the value from content=\"…\" or the whole meta tag.",
+      "length": "Length not allowed",
+      "empty": "No recipients for the chosen audience",
+      "tag_not_allowed": "The tag is not on the list allowed by the admins",
+      "unknown_job": "This job cannot be run manually",
+      "invalid_area": "Invalid cache area"
     }
   },
   "acp": {
@@ -5961,6 +5968,52 @@
         "google": "Google",
         "steam": "Steam"
       }
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "Topic tags: how many topics each one has, renaming, merging duplicates and the allowed list.",
+      "settings": "Settings",
+      "save": "Save",
+      "add": "New tag",
+      "create": "Add the tag",
+      "name": "Name",
+      "nameHint": "The address is made from the name: lowercase letters, digits and dashes (e.g. “CS2 Config” → cs2-config).",
+      "stateOpen": "Tags are on; members can create new tags",
+      "stateClosed": "Tags are on; only the listed ones",
+      "stateOff": "Tags are off on the whole site",
+      "counts": "{total, plural, one {# tag} other {# tags}} · {unused} unused",
+      "prune": "Delete unused ({count})",
+      "pruneConfirm": "Delete {count, plural, one {the unused tag} other {the # unused tags}}?",
+      "sort": "Order",
+      "sorts": {
+        "used": "Most used",
+        "name": "By name"
+      },
+      "search": "Search a tag",
+      "empty": "No tags.",
+      "topics": "{count, plural, =0 {no topics} one {# topic} other {# topics}}",
+      "delete": "Delete the tag",
+      "confirmDelete": "Delete the tag? {count, plural, =0 {It is not used.} one {It disappears from one topic.} other {It disappears from # topics.}}",
+      "renameTitle": "Name",
+      "mergeTitle": "Merge into another tag",
+      "mergeInto": "Target",
+      "pick": "Choose the tag",
+      "mergeHint": "This tag's topics get the chosen one, then this tag disappears.",
+      "merge": "Merge",
+      "mergeConfirm": "Merge the tag? {count, plural, =0 {It has no topics.} one {One topic moves to the chosen target.} other {# topics move to the chosen target.}}",
+      "pages": "Pages",
+      "page": "Page {page} of {pages} · {total}",
+      "prev": "Previous",
+      "next": "Next",
+      "cfg": {
+        "title": "Tags",
+        "enabled": "Tags on for the whole site",
+        "enabledHint": "Each forum can still turn them off in its options.",
+        "mode": "Who creates tags",
+        "open": "Members, when writing a topic",
+        "closed": "Only admins (the list below)",
+        "modeHint": "Closed list: members only choose existing tags."
+      }
     }
   },
   "settings": {
@@ -6757,6 +6810,9 @@
     },
     "stats": {
       "config": "Statistics"
+    },
+    "tags": {
+      "config": "Tags"
     }
   },
   "permissions": {

@@ -346,7 +346,9 @@
       "license_bad_signature": "Semnătura licenței nu e validă (licența a fost modificată).",
       "license_expired": "Licența a expirat.",
       "license_domain": "Licența nu e valabilă pentru domeniul acestui site.",
-      "license_revoked": "Licența a fost revocată."
+      "license_revoked": "Licența a fost revocată.",
+      "tag_exists": "Există deja o etichetă cu acest nume.",
+      "login_required": "Trebuie să intri în cont."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -502,7 +504,12 @@
       "unknown_extension": "Lista conține o extensie pe care platforma nu o acceptă.",
       "invalid_domain": "Doar domenii (ex. exemplu.ro), câte unul pe rând.",
       "page_placeholder": "Formatul trebuie să conțină '{page}' o singură dată, fără paranteze unghiulare.",
-      "invalid_token": "Cod invalid: doar valoarea din content=\"…\" sau tot tag-ul meta."
+      "invalid_token": "Cod invalid: doar valoarea din content=\"…\" sau tot tag-ul meta.",
+      "length": "Lungime nepermisă",
+      "empty": "Niciun destinatar pentru publicul ales",
+      "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
+      "unknown_job": "Jobul nu se poate rula manual",
+      "invalid_area": "Zonă de cache invalidă"
     }
   },
   "acp": {
@@ -5961,6 +5968,52 @@
         "google": "Google",
         "steam": "Steam"
       }
+    },
+    "tags": {
+      "title": "Etichete",
+      "description": "Etichetele topicurilor: câte topicuri are fiecare, redenumirea, unirea dublurilor și lista permisă.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "add": "Etichetă nouă",
+      "create": "Adaugă eticheta",
+      "name": "Numele",
+      "nameHint": "Adresa se face din nume: litere mici, cifre și cratime (ex. „Config CS2” → config-cs2).",
+      "stateOpen": "Etichetele sunt pornite; membrii pot crea etichete noi",
+      "stateClosed": "Etichetele sunt pornite; doar cele din listă",
+      "stateOff": "Etichetele sunt oprite pe tot site-ul",
+      "counts": "{total, plural, one {# etichetă} few {# etichete} other {# de etichete}} · {unused} nefolosite",
+      "prune": "Șterge nefolositele ({count})",
+      "pruneConfirm": "Ștergi {count, plural, one {eticheta nefolosită} few {cele # etichete nefolosite} other {cele # de etichete nefolosite}}?",
+      "sort": "Ordine",
+      "sorts": {
+        "used": "Cele mai folosite",
+        "name": "După nume"
+      },
+      "search": "Caută o etichetă",
+      "empty": "Nicio etichetă.",
+      "topics": "{count, plural, =0 {niciun topic} one {# topic} few {# topicuri} other {# de topicuri}}",
+      "delete": "Șterge eticheta",
+      "confirmDelete": "Ștergi eticheta? {count, plural, =0 {Nu e folosită.} one {Dispare de pe un topic.} few {Dispare de pe # topicuri.} other {Dispare de pe # de topicuri.}}",
+      "renameTitle": "Numele",
+      "mergeTitle": "Unește în altă etichetă",
+      "mergeInto": "Ținta",
+      "pick": "Alege eticheta",
+      "mergeHint": "Topicurile acestei etichete o primesc pe cea aleasă, apoi aceasta dispare.",
+      "merge": "Unește",
+      "mergeConfirm": "Unești eticheta? {count, plural, =0 {Nu are topicuri.} one {Un topic trece pe ținta aleasă.} few {# topicuri trec pe ținta aleasă.} other {# de topicuri trec pe ținta aleasă.}}",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages} · {total}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "title": "Etichetele",
+        "enabled": "Etichete pornite pe tot site-ul",
+        "enabledHint": "Fiecare forum le mai poate opri în opțiunile lui.",
+        "mode": "Cine creează etichete",
+        "open": "Membrii, la scrierea unui topic",
+        "closed": "Doar adminii (lista de mai jos)",
+        "modeHint": "Lista închisă: membrii aleg doar etichetele existente."
+      }
     }
   },
   "settings": {
@@ -6757,6 +6810,9 @@
     },
     "stats": {
       "config": "Statisticile"
+    },
+    "tags": {
+      "config": "Etichetele"
     }
   },
   "permissions": {

@@ -4,6 +4,7 @@ import { GcsPollService, validatePoll, type GcsPollInput } from "./polls";
 import { GcsForumPosting, POST_CONTENT_TYPE, WRITE_TX } from "./posting";
 import type { GcsPrefixService } from "./prefixes";
 import { slugify } from "./slug";
+import { loadTagsConfig } from "./tagsAdmin";
 
 export type GcsNewTopicInput = {
   forumId: number;
@@ -41,6 +42,9 @@ export class GcsTopicService {
     if (input.prefixId != null && !(await this.extras.prefixes.allowedFor(forum.id)).some((p) => p.id === input.prefixId)) {
       throw new GcsValidationError({ prefixId: "invalid_choice" });
     }
+    // ACP › Etichete: oprite pe tot site-ul sau lista închisă (doar etichetele create din ACP).
+    const tagsConfig = await loadTagsConfig(posting.deps.settings);
+    if (!tagsConfig.enabled && (input.tags?.length ?? 0) > 0) throw new GcsValidationError({ tags: "disabled" });
     const tagsValue = await permissions.groupValue<number | boolean>(actor, "forums.tags_max");
     const maxTags = tagsValue === -1 ? Number.POSITIVE_INFINITY : typeof tagsValue === "number" ? tagsValue : 0;
     // Validat înainte de flood control: o eroare de validare nu trebuie să consume pauza dintre postări.
@@ -57,7 +61,7 @@ export class GcsTopicService {
     const authorId = actor.userId;
 
     const result = await db.$transaction(async (tx) => {
-      const tags = await this.tags.ensure(tx, input.tags ?? [], maxTags);
+      const tags = await this.tags.ensure(tx, input.tags ?? [], maxTags, { allowCreate: tagsConfig.mode === "open" });
       const topic = await tx.topic.create({
         data: {
           forumId: forum.id,

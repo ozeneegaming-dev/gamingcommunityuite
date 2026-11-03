@@ -377,7 +377,8 @@ export class GcsStatsReportService {
     const length = q.to.getTime() - q.from.getTime();
     const ctx: Ctx = { db: this.deps.db, from: q.from, to: q.to, staff, settings: this.deps.settings };
     const prev: Ctx = { ...ctx, from: new Date(q.from.getTime() - length), to: q.from };
-    const [points, before, extra] = await Promise.all([def.points(ctx), def.points(prev), def.extra?.(ctx) ?? Promise.resolve({})]);
+    const none: { tiles?: GcsStatsTile[]; tops?: GcsStatsTop[] } = {};
+    const [points, before, extra] = await Promise.all([def.points(ctx), def.points(prev), def.extra ? def.extra(ctx) : Promise.resolve(none)]);
     const keys = bucketKeys(q.from, q.to, q.group, q.timeZone, cfg.weekStart);
     const values = aggregate(points, def.series, keys, (at) => bucketKey(at, q.group, q.timeZone, cfg.weekStart));
     return {

@@ -424,3 +424,40 @@ test("Statistici: toate rapoartele se deschid cu grafic și plăci, perioada și
     await resetSetting("stats.config");
   }
 });
+
+test("Etichete: lista cu topicuri, redenumirea, unirea și setările", async ({ page }) => {
+  const id = uid().toLowerCase();
+  await enterAcpAsRoot(page, `Tag${id}`, `tag-${id}@example.com`);
+  const [a, b] = [`eta-${id}`, `etb-${id}`];
+  await sql(`INSERT INTO tags (name, slug) VALUES ($1, $1), ($2, $2)`, [a, b]);
+  try {
+    await page.goto(`/admin/system/tags?q=${id}`);
+    await expect(page.getByRole("heading", { name: "Etichete", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-tag-row")).toHaveCount(2);
+
+    // Redenumirea primei etichete.
+    const rowA = page.locator(`[data-testid="gcs-tag-row"][data-slug="${a}"]`);
+    await rowA.getByTestId("gcs-tag-panel-open").click();
+    await page.getByTestId("gcs-tag-panel").getByLabel("Numele").fill(`Eta ${id} nou`);
+    await page.getByTestId("gcs-tag-panel").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.locator(`[data-testid="gcs-tag-row"][data-slug="eta-${id}-nou"]`)).toBeVisible();
+
+    // Unirea celei de-a doua în prima.
+    await page.locator(`[data-testid="gcs-tag-row"][data-slug="${b}"]`).getByTestId("gcs-tag-panel-open").click();
+    const panel = page.getByTestId("gcs-tag-panel");
+    await panel.getByLabel("Ținta").selectOption({ label: `#eta-${id}-nou` });
+    await panel.getByRole("button", { name: "Unește" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(page.getByTestId("gcs-tag-row")).toHaveCount(1);
+    await shot(page, "tags-acp");
+
+    await page.getByTestId("gcs-tags-settings-open").click();
+    await page.getByTestId("gcs-tags-settings").getByLabel("Cine creează etichete").selectOption("closed");
+    await page.getByTestId("gcs-tags-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-tags-summary")).toContainText("doar cele din listă");
+  } finally {
+    await sql(`DELETE FROM tags WHERE slug LIKE $1`, [`%${id}%`]);
+    await resetSetting("tags.config");
+  }
+});

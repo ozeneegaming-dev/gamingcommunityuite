@@ -1,4 +1,4 @@
-import { allowedBlocks, parseRef } from "@gcs/modules";
+import { allowedBlocks, loadTagsConfig, parseRef } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -32,11 +32,12 @@ export default async function NewTopicPage({ params }: Props) {
   if (data === "forbidden" || !data.canCreate) notFound();
   // Forum v2: forumul cu parolă trebuie deblocat întâi (pe pagina forumului).
   if (data.options.hasPassword && (await forumLocked(actor, data.forum.id))) redirect(forumHref(data.forum));
-  const [allowed, tagsMax, canPoll, blocks] = await Promise.all([
+  const [allowed, tagsMax, canPoll, blocks, tagsConfig] = await Promise.all([
     prefixes.allowedFor(data.forum.id),
     permissions.groupValue<number | boolean>(actor, "forums.tags_max"),
     permissions.groupValue<boolean>(actor, "forums.poll_create"),
     allowedBlocks(services(), actor),
+    loadTagsConfig(services().settings),
   ]);
 
   return (
@@ -53,7 +54,7 @@ export default async function NewTopicPage({ params }: Props) {
         <GcsNewTopicForm
           forum={{ id: data.forum.id, href: forumHref(data.forum) }}
           prefixes={allowed.map((p) => ({ id: p.id, name: p.name, color: p.color }))}
-          tagsMax={!data.options.tagsEnabled ? 0 : tagsMax === -1 ? 20 : typeof tagsMax === "number" ? tagsMax : 0}
+          tagsMax={!data.options.tagsEnabled || !tagsConfig.enabled ? 0 : tagsMax === -1 ? 20 : typeof tagsMax === "number" ? tagsMax : 0}
           blocks={blocks}
           canPoll={canPoll === true && data.options.pollsEnabled}
           maxLength={await services().settings.get<number>("forums.post_max_chars")}

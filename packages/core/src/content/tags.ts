@@ -16,8 +16,11 @@ export function normalizeTag(raw: string): string | null {
 
 /** Tag-urile (spec §5, `GcsTagService`): normalizate, comune tuturor modulelor. Legătura cu conținutul o face modulul. */
 export class GcsTagService {
-  /** Tag-urile cu numele date (create dacă lipsesc), în ordinea primită și fără dubluri. */
-  async ensure(tx: Prisma.TransactionClient, names: string[], max: number): Promise<Tag[]> {
+  /**
+   * Tag-urile cu numele date (create dacă lipsesc), în ordinea primită și fără dubluri. Cu `allowCreate: false` (lista
+   * închisă din ACP › Etichete) un tag care nu există încă e refuzat (`tag_not_allowed`).
+   */
+  async ensure(tx: Prisma.TransactionClient, names: string[], max: number, opts: { allowCreate?: boolean } = {}): Promise<Tag[]> {
     const slugs: string[] = [];
     for (const name of names) {
       const slug = normalizeTag(name);
@@ -26,6 +29,12 @@ export class GcsTagService {
     }
     if (slugs.length > max) throw new GcsValidationError({ tags: "too_many" }, { max: String(max) });
     if (slugs.length === 0) return [];
+    if (opts.allowCreate === false) {
+      const known = await tx.tag.findMany({ where: { slug: { in: slugs } } });
+      const missing = slugs.find((slug) => !known.some((k) => k.slug === slug));
+      if (missing) throw new GcsValidationError({ tags: "tag_not_allowed" }, { tag: missing });
+      return slugs.map((slug) => known.find((r) => r.slug === slug)!);
+    }
     await tx.tag.createMany({ data: slugs.map((slug) => ({ name: slug, slug })), skipDuplicates: true });
     const rows = await tx.tag.findMany({ where: { slug: { in: slugs } } });
     return slugs.map((slug) => rows.find((r) => r.slug === slug)!);

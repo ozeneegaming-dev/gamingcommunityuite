@@ -5,6 +5,7 @@ import { CONTACT_NOTIFICATION, contactSetting } from "../community/contact";
 import { bulkMailRateSetting } from "../notifications/bulkMail";
 import { REFERRAL_NOTIFICATION, referralSetting } from "../profile/referrals";
 import { statsSetting } from "../stats/reports";
+import { tagsSetting } from "../forums/tagsAdmin";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -126,6 +127,8 @@ const settings: GcsSettingDef[] = [
   referralSetting,
   // Statistici: staff-ul exclus din rapoarte, începutul săptămânii și perioada implicită.
   statsSetting,
+  // Etichetele (ACP › Descoperire › Etichete): pornite pe tot site-ul, lista deschisă sau închisă.
+  tagsSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),

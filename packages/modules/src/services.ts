@@ -182,6 +182,7 @@ import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./
 import { GcsBulkMailService } from "./notifications/bulkMail";
 import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
 import { GcsStatsReportService } from "./stats/reports";
+import { GcsTagsAdmin } from "./forums/tagsAdmin";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -278,6 +279,8 @@ export type GcsServices = {
   referrals: GcsReferralService;
   /** ACP › Statistici: rapoartele pe perioade (înregistrări, membri, conținut, online, clanuri, servere, VIP). */
   statsReports: GcsStatsReportService;
+  /** ACP › Descoperire › Etichete: lista, redenumirea, unirea, ștergerea și setările etichetelor. */
+  tagsAdmin: GcsTagsAdmin;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -1032,6 +1035,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     contact,
     referrals,
     statsReports: new GcsStatsReportService({ db, acp, settings }),
+    tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,
