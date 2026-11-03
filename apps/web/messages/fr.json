@@ -2272,6 +2272,11 @@
         "languages": "Langues",
         "labelIn": "Libellé ({lang})",
         "descriptionIn": "Description du méga-menu ({lang})",
+        "descriptionHint": "Une ligne sous le titre, dans le sous-menu de l’en-tête et dans le menu du téléphone (100 caractères au plus).",
+        "descriptionAuto": "Vide = la description automatique : « {text} »",
+        "shortLink": "Lien court (colonne de droite)",
+        "shortLinkHint": "Dans le sous-menu de l’en-tête, l’élément s’affiche en tuile dans la colonne de droite (icône et titre, sans description).",
+        "shortChip": "court",
         "hrefOptional": "Lien (facultatif pour un groupe)",
         "badgeTitle": "Badge et mise en avant",
         "badgeText": "Badge fixe",
@@ -10145,7 +10150,8 @@
       "cta": {
         "online": "Voir qui est en ligne",
         "vip": "Devenir VIP"
-      }
+      },
+      "quick": "Liens rapides"
     },
     "live": {
       "servers": "{count, plural, one {# serveur en ligne} many {# serveurs en ligne} other {# serveurs en ligne}}",

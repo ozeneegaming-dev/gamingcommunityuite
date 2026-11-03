@@ -269,8 +269,14 @@ describe("constructorul de antet: CSS-ul temei", () => {
   test("fără iconițe în meniu: ascunse și în bara constructorului, nu doar în antetul clasic", () => {
     const off = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "header.navIcons", false), "");
     expect(off).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret)");
+    // Pătratul de 40 px al iconiței (submeniurile din antet) dispare și el.
+    expect(off).toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-hb__navIcon");
     const on = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "header.navIcons", true), "");
     expect(on).not.toContain(".gcs-hb__navBar .gcs-hb__nav > .gcs-icon");
+    expect(on).not.toContain(".gcs-hb__navIcon");
+    // La fel în sertar (`mobileNav.icons`): și căsuța iconiței subitemilor cu descriere.
+    const drawerOff = compileThemeCss(withThemePath(clone(NOVA_THEME_SETTINGS), "mobileNav.icons", false), "");
+    expect(drawerOff).toContain(".gcs-drawer__link > .gcs-drawer__icon");
   });
 });
 

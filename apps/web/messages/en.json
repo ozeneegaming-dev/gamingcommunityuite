@@ -2272,6 +2272,11 @@
         "languages": "Languages",
         "labelIn": "Label ({lang})",
         "descriptionIn": "Mega-menu description ({lang})",
+        "descriptionHint": "One line under the title, in the header submenu and in the phone menu (up to 100 characters).",
+        "descriptionAuto": "Empty = the automatic description: “{text}”",
+        "shortLink": "Short link (right column)",
+        "shortLinkHint": "In the header submenu, the item shows as a tile in the right column (icon and title, no description).",
+        "shortChip": "short",
         "hrefOptional": "Link (optional for a group)",
         "badgeTitle": "Badge and highlight",
         "badgeText": "Fixed badge",
@@ -10145,7 +10150,8 @@
       "cta": {
         "online": "See who's online",
         "vip": "Become VIP"
-      }
+      },
+      "quick": "Quick links"
     },
     "live": {
       "servers": "{count, plural, one {# server online} other {# servers online}}",

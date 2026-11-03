@@ -1916,6 +1916,8 @@ model NavItem {
   counter     String? @db.LongText
   /// Stilul de evidențiere (`accent`, `glow`); `null` = normal.
   highlight   String? @db.LongText
+  /// „Link scurt” (doar subitemii): în mega meniu stă în coloana din dreapta, ca plăcuță (iconiță + titlu, fără descriere).
+  shortLink   Boolean @default(false)
 
   parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
   children NavItem[] @relation("NavTree")

@@ -78,13 +78,22 @@ test("antetul Esports: rândurile, crestătura, starea compactă la derulare, me
     await expect(header).not.toHaveAttribute("data-compact", "");
   });
 
-  await test.step("mega meniul: 2 coloane, descrierea, insigna live, rândul de jos cu „Joacă acum”", async () => {
+  await test.step("mega meniul: grila cu descrieri, insigna live, rândul de jos cu „Joacă acum”, săgeata deasupra butonului", async () => {
     const servers = header.getByTestId("gcs-hb-nav").getByRole("button", { name: "Servere" }).or(header.getByTestId("gcs-hb-nav-right").getByRole("button", { name: "Servere" }));
     await servers.first().click();
     const panel = page.getByRole("menu", { name: "Servere" });
     await expect(panel).toBeVisible();
     await expect(panel.getByTestId("gcs-mega-item").first()).toContainText("Toate serverele");
-    await expect(panel).toContainText("Status live, jucători, conectare dintr-un click");
+    await expect(panel.getByTestId("gcs-mega-item").first().getByTestId("gcs-mega-desc")).toHaveText("Status live, jucători, conectare dintr-un click");
+    // Meniul împărțit (Esports): și din jumătatea dreaptă, panoul rămâne în ecran, cu săgeata deasupra butonului.
+    await panel.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
+    const panelBox = (await panel.boundingBox())!;
+    expect(panelBox.x).toBeGreaterThanOrEqual(0);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(1440);
+    const arrowBox = (await panel.getByTestId("gcs-mega-arrow").boundingBox())!;
+    const triggerBox = (await servers.first().boundingBox())!;
+    expect(arrowBox.x + arrowBox.width / 2).toBeGreaterThanOrEqual(triggerBox.x);
+    expect(arrowBox.x + arrowBox.width / 2).toBeLessThanOrEqual(triggerBox.x + triggerBox.width);
     await expect(panel.getByTestId("gcs-mega-badge").first()).toHaveText("3 ONLINE");
     await expect(panel.getByTestId("gcs-mega-cta")).toHaveText("Joacă acum");
     await expect(panel.getByTestId("gcs-mega-cta")).toHaveAttribute("href", /^steam:\/\/connect\//);

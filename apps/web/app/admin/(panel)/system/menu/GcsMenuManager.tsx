@@ -50,6 +50,8 @@ type Item = {
   newTab: boolean;
   enabled: boolean;
   audience: Audience;
+  /** „Link scurt” (doar subitemii): coloana din dreapta a mega meniului. */
+  shortLink: boolean;
   children: Item[];
 };
 
@@ -58,6 +60,8 @@ type Flat = { item: Item; depth: 0 | 1 };
 export type GcsMenuAppPage = { appKey: string; label: string; href: string; icon: string | null; labelKey: string };
 
 const INDENT = 28;
+/** Descrierea de un rând: aceeași limită ca validarea serverului (`NAV_DESCRIPTION_MAX`). */
+const DESCRIPTION_MAX = 100;
 let counter = 0;
 const uid = () => `n${++counter}`;
 
@@ -80,6 +84,7 @@ function fromEdit(it: GcsNavItemEdit): Item {
     newTab: it.newTab ?? false,
     enabled: it.enabled ?? true,
     audience: (it.audience ?? "all") as Audience,
+    shortLink: it.shortLink ?? false,
     children: it.children.map(fromEdit),
   };
 }
@@ -103,6 +108,7 @@ function toInput(it: Item): GcsNavItemInput {
     newTab: it.newTab,
     enabled: it.enabled,
     audience: it.audience,
+    shortLink: it.shortLink,
     children: it.children.map(toInput),
   };
 }
@@ -130,6 +136,7 @@ export function GcsMenuManager({
   hasDraft,
   locales,
   autoLabels,
+  autoDescriptions,
   groups,
   appPages,
   counters,
@@ -138,6 +145,8 @@ export function GcsMenuManager({
   hasDraft: boolean;
   locales: { code: string; label: string }[];
   autoLabels: Record<string, string>;
+  /** Descrierile automate (după cheia etichetei), traduse în limba adminului: rezerva unei descrieri goale. */
+  autoDescriptions: Record<string, string>;
   groups: { id: number; name: string }[];
   appPages: GcsMenuAppPage[];
   counters: { key: string; label: string }[];
@@ -201,6 +210,7 @@ export function GcsMenuManager({
     newTab: false,
     enabled: true,
     audience: "all",
+    shortLink: false,
     children: [],
   });
   const addTop = () => {
@@ -385,6 +395,7 @@ export function GcsMenuManager({
               setLang={setLang}
               locales={locales}
               autoLabels={autoLabels}
+              autoDescriptions={autoDescriptions}
               groups={groups}
               appPages={appPages}
               counters={counters}
@@ -458,6 +469,11 @@ function Row({ flat, label, selected, first, last, onSelect, onToggle, actions }
         <span className="gcs-menuMgr__kind">{t(`kinds.${it.kind}`)}</span>
         {it.badge && <span className="gcs-menuMgr__badge">{it.badge}</span>}
         {it.counter && <span className="gcs-menuMgr__badge">#{it.counter}</span>}
+        {flat.depth === 1 && it.shortLink && it.kind !== "separator" && (
+          <span className="gcs-menuMgr__kind" data-testid="gcs-menu-row-short">
+            {t("shortChip")}
+          </span>
+        )}
         {it.audience !== "all" && <span className="gcs-menuMgr__kind">{t(`audiences.${it.audience}`)}</span>}
       </button>
       <label className="gcs-menuMgr__switch">
@@ -492,6 +508,7 @@ function Editor({
   setLang,
   locales,
   autoLabels,
+  autoDescriptions,
   groups,
   appPages,
   counters,
@@ -504,6 +521,7 @@ function Editor({
   setLang: (l: string) => void;
   locales: { code: string; label: string }[];
   autoLabels: Record<string, string>;
+  autoDescriptions: Record<string, string>;
   groups: { id: number; name: string }[];
   appPages: GcsMenuAppPage[];
   counters: { key: string; label: string }[];
@@ -513,6 +531,8 @@ function Editor({
   const t = useTranslations("acp.menuManager.v2");
   const tm = useTranslations("acp.menuManager");
   const kinds: Kind[] = depth === 0 ? ["app", "link", "dropdown"] : ["app", "link", "separator"];
+  // Descrierea automată (itemii impliciți): rămâne până când adminul scrie una proprie.
+  const autoDescription = item.labelKey ? autoDescriptions[item.labelKey] : undefined;
   return (
     <div className="gcs-menuMgr__editor" data-testid="gcs-menu-editor-panel">
       <div className="gcs-menuMgr__editorHead">
@@ -579,8 +599,17 @@ function Editor({
             </label>
             <label className="gcs-field">
               {t("descriptionIn", { lang: locales.find((l) => l.code === lang)?.label ?? lang })}
-              <input className="gcs-input" value={item.descTexts[lang] ?? ""} maxLength={100} onChange={(e) => onPatch({ descTexts: { ...item.descTexts, [lang]: e.target.value } })} />
+              <input
+                className="gcs-input"
+                value={item.descTexts[lang] ?? ""}
+                maxLength={DESCRIPTION_MAX}
+                placeholder={autoDescription}
+                // Un singur rând (câmpul nu primește rânduri noi); tab-urile lipite devin spații (serverul le refuză).
+                onChange={(e) => onPatch({ descTexts: { ...item.descTexts, [lang]: e.target.value.replace(/\t/g, " ") } })}
+                data-testid="gcs-menu-desc-input"
+              />
             </label>
+            <p className="gcs-menuMgr__hint">{autoDescription ? t("descriptionAuto", { text: autoDescription }) : t("descriptionHint")}</p>
           </fieldset>
           {item.kind !== "app" && (
             <label className="gcs-field">
@@ -596,6 +625,15 @@ function Editor({
             <input type="checkbox" checked={item.newTab} onChange={(e) => onPatch({ newTab: e.target.checked })} />
             {tm("newTab")}
           </label>
+          {depth === 1 && (
+            <div className="gcs-field">
+              <label className="gcs-checkRow">
+                <input type="checkbox" className="gcs-switch" role="switch" checked={item.shortLink} onChange={(e) => onPatch({ shortLink: e.target.checked })} data-testid="gcs-menu-short" />
+                {t("shortLink")}
+              </label>
+              <p className="gcs-menuMgr__hint">{t("shortLinkHint")}</p>
+            </div>
+          )}
           <fieldset className="gcs-menuMgr__fieldset">
             <legend>{t("badgeTitle")}</legend>
             <div className="gcs-menuMgr__row2">

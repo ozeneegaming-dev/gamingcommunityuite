@@ -2272,6 +2272,11 @@
         "languages": "Idiomas",
         "labelIn": "Etiqueta ({lang})",
         "descriptionIn": "Descripción del megamenú ({lang})",
+        "descriptionHint": "Una línea bajo el título, en el submenú de la cabecera y en el menú del móvil (hasta 100 caracteres).",
+        "descriptionAuto": "Vacío = la descripción automática: «{text}»",
+        "shortLink": "Enlace corto (columna derecha)",
+        "shortLinkHint": "En el submenú de la cabecera, el elemento aparece como una tarjeta en la columna derecha (icono y título, sin descripción).",
+        "shortChip": "corto",
         "hrefOptional": "Enlace (opcional para un grupo)",
         "badgeTitle": "Insignia y resaltado",
         "badgeText": "Insignia fija",
@@ -10145,7 +10150,8 @@
       "cta": {
         "online": "Ver quién está en línea",
         "vip": "Hazte VIP"
-      }
+      },
+      "quick": "Enlaces rápidos"
     },
     "live": {
       "servers": "{count, plural, one {# servidor en línea} many {# servidores en línea} other {# servidores en línea}}",
