@@ -124,6 +124,57 @@ try {
 }
 for (const dir of [env.GCS_UPLOADS_DIR, env.GCS_PLUGINS_DIR, env.GCS_APPLICATIONS_DIR]) fs.mkdirSync(dir, { recursive: true });
 
+// Motoarele Prisma: arhiva are un singur exemplar din fiecare motor distinct (`server/prisma-engines.json`, scris de
+// release), dar Prisma caută motorul după numele sistemului (ex. `debian-openssl-1.1.x` pe CloudLinux cu CageFS), în
+// folderul fiecărui client. Celelalte nume se fac aici, înainte de pornirea serverului: legături fizice (fără spațiu în
+// plus) sau, unde gazda nu le permite, copii. Marcajul `server/.prisma-engines` le sare la pornirile următoare.
+let enginesManifest = null;
+try {
+  enginesManifest = fs.readFileSync(path.join(server, "prisma-engines.json"), "utf8");
+} catch (error) {
+  // Pachet fără motoare comune (ex. o copie de dezvoltare).
+}
+if (enginesManifest) {
+  try {
+    const links = JSON.parse(enginesManifest).links || {};
+    const marker = path.join(server, ".prisma-engines");
+    const id = crypto.createHash("sha256").update(enginesManifest).digest("hex");
+    let done = "";
+    try {
+      done = fs.readFileSync(marker, "utf8");
+    } catch (error) {
+      // Prima pornire.
+    }
+    if (done !== id || !Object.keys(links).every((rel) => fs.existsSync(path.join(server, rel)))) {
+      for (const rel of Object.keys(links)) {
+        const from = path.join(server, links[rel]);
+        const to = path.join(server, rel);
+        try {
+          if (fs.statSync(to).ino === fs.statSync(from).ino) continue;
+        } catch (error) {
+          // Lipsește.
+        }
+        // Un nume temporar, apoi redenumirea peste cel final: alt proces pornit în paralel nu vede un motor pe jumătate.
+        const tmp = `${to}.${process.pid}.tmp`;
+        try {
+          fs.linkSync(from, tmp);
+        } catch (error) {
+          fs.copyFileSync(from, tmp);
+        }
+        fs.renameSync(tmp, to);
+        try {
+          fs.unlinkSync(tmp); // Rămâne doar dacă `to` era deja aceeași legătură (redenumirea nu face nimic atunci).
+        } catch (error) {
+          // Redenumit.
+        }
+      }
+      fs.writeFileSync(marker, id);
+    }
+  } catch (error) {
+    process.stderr.write(`[GCS] Motoarele Prisma nu au putut fi pregătite în server/ (verifică drepturile de scriere): ${error && error.message}\n`);
+  }
+}
+
 // Secretul aplicației (sesiuni, tokenuri, cron): generat la prima pornire și păstrat în config/.env.runtime (0600).
 const runtimeFile = path.join(configDir, ".env.runtime");
 let runtime = "";

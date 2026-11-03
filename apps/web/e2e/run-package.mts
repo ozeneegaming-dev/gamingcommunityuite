@@ -11,7 +11,7 @@
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
@@ -187,6 +187,20 @@ async function main(): Promise<number> {
     console.error(`[gcs package e2e] structura instalării nu e cea așteptată: ${wrong.join("; ")}`);
     return 1;
   }
+  // Motoarele Prisma identice sunt o singură dată în arhivă: `app.js` face celelalte nume la pornire (legături fizice).
+  const enginesFile = path.join(root, "server", "prisma-engines.json");
+  if (!existsSync(enginesFile)) {
+    console.error("[gcs package e2e] pachetul nu are server/prisma-engines.json (motoarele Prisma nu sunt deduplicate)");
+    return 1;
+  }
+  const { links } = JSON.parse(readFileSync(enginesFile, "utf8")) as { links: Record<string, string> };
+  const at = (rel: string) => path.join(root, "server", rel);
+  const unlinked = Object.entries(links).filter(([to, from]) => !existsSync(at(to)) || statSync(at(to)).ino !== statSync(at(from)).ino);
+  if (unlinked.length > 0) {
+    console.error(`[gcs package e2e] app.js nu a legat motoarele Prisma: ${unlinked.map(([to]) => to).join(", ")}`);
+    return 1;
+  }
+  console.log(`[gcs package e2e] ${Object.keys(links).length} motoare Prisma legate de app.js`);
 
   const playwright = spawn(process.execPath, [playwrightBin, "test", "--project=install", "--project=smoke", ...argv], {
     cwd: webDir,
