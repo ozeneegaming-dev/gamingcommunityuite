@@ -35,7 +35,8 @@ async function clearNavCache(): Promise<void> {
 /** Animațiile și tranzițiile în curs din element (și din copiii lui) s-au terminat. */
 const settle = (el: Locator) => el.evaluate((node) => Promise.all(node.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
 
-const DESKTOP = { width: 1440, height: 900 };
+// Lat cât să apară pătratele iconițelor pe bară (de la 1600 px; mai îngust, bara arată doar etichetele).
+const DESKTOP = { width: 1600, height: 900 };
 /** Subitemii Servere marcați „Link scurt” în ACP și subitemul cu descrierea scrisă acolo (refăcuți după test). */
 const SHORT = ["Banuri", "Contestații"];
 const DESCRIBED = "Toate serverele";
