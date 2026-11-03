@@ -2,6 +2,7 @@ import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community
 import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
 import { CONTACT_NOTIFICATION, contactSetting } from "../community/contact";
+import { bulkMailRateSetting } from "../notifications/bulkMail";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -117,6 +118,8 @@ const settings: GcsSettingDef[] = [
   communityRulesSetting,
   // Formularul de contact (ACP › Setări › Contact): pagina, cine îl folosește, subiectele, copiile pe email, păstrarea.
   contactSetting,
+  // Email în masă (ACP › Membri › Comunicare): câte emailuri pleacă pe minut.
+  bulkMailRateSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),

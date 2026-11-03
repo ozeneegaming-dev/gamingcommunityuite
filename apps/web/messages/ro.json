@@ -5731,6 +5731,54 @@
         "emailsHint": "Cel mult 10 adrese, câte una pe rând sau separate prin virgulă.",
         "keepDays": "Păstrează mesajele (zile)"
       }
+    },
+    "bulkMail": {
+      "title": "Email în masă",
+      "description": "Trimite un email tuturor membrilor sau doar anumitor grupuri. Pleacă pe loturi, în ritmul ales; fiecare email are link de dezabonare.",
+      "new": "Email nou",
+      "rate": "Ritm",
+      "perMinute": "Emailuri pe minut",
+      "perMinuteHint": "Gazdele de email limitează des trimiterea; un ritm mic evită blocarea.",
+      "save": "Salvează",
+      "create": "Salvează ciorna",
+      "secMessage": "Mesajul",
+      "secAudience": "Cui se trimite",
+      "subject": "Subiectul",
+      "body": "Conținutul",
+      "bodyHint": "{name} devine numele membrului, {site} numele site-ului.",
+      "groupsHint": "Niciun grup bifat = toți membrii.",
+      "primaryOnly": "Doar grupul principal (nu și grupurile secundare)",
+      "activeDays": "Doar activi în ultimele (zile)",
+      "activeAny": "oricând",
+      "countLoading": "Se numără destinatarii…",
+      "count": "{count, plural, =0 {Niciun destinatar} one {# destinatar} few {# destinatari} other {# de destinatari}}",
+      "excludedHint": "Nu primesc: membrii dezabonați, cei banați, spammerii și conturile fără email confirmat.",
+      "empty": "Niciun email încă. Începe cu „Email nou”.",
+      "allMembers": "Toți membrii",
+      "primaryChip": "doar grupul principal",
+      "activeChip": "activi în ultimele {days} zile",
+      "progress": "{sent} din {total} trimise",
+      "failed": "{count, plural, one {# eșuat} few {# eșuate} other {# de eșuate}}",
+      "status": {
+        "draft": "Ciornă",
+        "sending": "Se trimite",
+        "sent": "Trimis",
+        "cancelled": "Oprit"
+      },
+      "edit": "Editează",
+      "open": "Deschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi emailul din listă? Cele deja trimise rămân în căsuțele membrilor.",
+      "sendTest": "Trimite-mi un test",
+      "sendTestHint": "Doar la adresa ta, cu numele tău în locul {name}.",
+      "start": "Trimite acum",
+      "startConfirm": "Pornești trimiterea către toți destinatarii aleși? Nu se mai poate edita după.",
+      "cancel": "Oprește trimiterea",
+      "cancelConfirm": "Oprești trimiterea? Cei care l-au primit deja rămân cu el.",
+      "duplicate": "Duplică ca ciornă",
+      "audience": "Publicul",
+      "sentLabel": "Trimise",
+      "startedAt": "Pornit"
     }
   },
   "settings": {
@@ -5749,7 +5797,10 @@
       "smtp_pass": "Parolă SMTP",
       "from": "Adresa expeditorului",
       "title": "Email",
-      "hint": "Îți trimitem un link de confirmare pe adresa nouă; adresa veche rămâne până confirmi."
+      "hint": "Îți trimitem un link de confirmare pe adresa nouă; adresa veche rămâne până confirmi.",
+      "adminMail": "Emailuri de la administratori",
+      "adminMailHint": "Anunțurile trimise de echipă tuturor membrilor (evenimente, noutăți). Notificările contului tău nu depind de asta.",
+      "adminMailSaved": "Salvat"
     },
     "auth": {
       "registration_open": "Înregistrări deschise",
@@ -6499,6 +6550,9 @@
     },
     "contact": {
       "config": "Formularul de contact"
+    },
+    "bulk_mail": {
+      "per_minute": "Email în masă: emailuri pe minut"
     }
   },
   "permissions": {
@@ -11544,5 +11598,13 @@
     "sentBody": "Mulțumim! Echipa îți răspunde pe email.",
     "loginRequired": "Formularul de contact e doar pentru membri.",
     "login": "Intră în cont"
+  },
+  "unsubscribe": {
+    "title": "Dezabonare",
+    "done": "Te-ai dezabonat",
+    "doneBody": "Nu mai primești emailurile trimise de administratori. Le poți porni din nou oricând din setările contului.",
+    "invalid": "Link invalid",
+    "invalidBody": "Linkul de dezabonare nu e valid sau contul nu mai există.",
+    "settings": "Setările emailului"
   }
 }

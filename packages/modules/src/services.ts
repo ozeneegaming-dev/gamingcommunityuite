@@ -179,6 +179,7 @@ import { GcsFileAdminService } from "./uploads/admin";
 import { GcsCacheAdminService } from "./system/cache";
 import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
 import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
+import { GcsBulkMailService } from "./notifications/bulkMail";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -269,6 +270,8 @@ export type GcsServices = {
   cacheAdmin: GcsCacheAdminService;
   /** Formularul de contact (`/contact`) și mesajele lui din ACP › Setări › Contact. */
   contact: GcsContactService;
+  /** Email în masă (ACP › Membri › Comunicare) și dezabonarea membrilor de la emailurile adminilor. */
+  bulkMail: GcsBulkMailService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -1011,6 +1014,14 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     systemStatus,
     cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
     contact,
+    bulkMail: new GcsBulkMailService({
+      db,
+      acp,
+      settings,
+      mailer,
+      secret: () => process.env.GCS_SECRET ?? "gcs-dev-secret-not-for-production-use",
+      baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+    }),
     files,
     attachments,
     forums,

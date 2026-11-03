@@ -5731,6 +5731,54 @@
         "emailsHint": "Up to 10 addresses, one per line or separated by commas.",
         "keepDays": "Keep messages (days)"
       }
+    },
+    "bulkMail": {
+      "title": "Bulk mail",
+      "description": "Send an email to every member or only to some groups. It goes out in batches at the chosen pace; every email has an unsubscribe link.",
+      "new": "New email",
+      "rate": "Pace",
+      "perMinute": "Emails per minute",
+      "perMinuteHint": "Email hosts often limit sending; a low pace avoids being blocked.",
+      "save": "Save",
+      "create": "Save draft",
+      "secMessage": "Message",
+      "secAudience": "Who receives it",
+      "subject": "Subject",
+      "body": "Content",
+      "bodyHint": "{name} becomes the member's name, {site} the site's name.",
+      "groupsHint": "No group selected = every member.",
+      "primaryOnly": "Primary group only (not secondary groups)",
+      "activeDays": "Only active in the last (days)",
+      "activeAny": "any time",
+      "countLoading": "Counting recipients…",
+      "count": "{count, plural, =0 {No recipients} one {# recipient} other {# recipients}}",
+      "excludedHint": "Not included: unsubscribed members, banned members, spammers and accounts without a confirmed email.",
+      "empty": "No emails yet. Start with “New email”.",
+      "allMembers": "Every member",
+      "primaryChip": "primary group only",
+      "activeChip": "active in the last {days} days",
+      "progress": "{sent} of {total} sent",
+      "failed": "{count, plural, one {# failed} other {# failed}}",
+      "status": {
+        "draft": "Draft",
+        "sending": "Sending",
+        "sent": "Sent",
+        "cancelled": "Stopped"
+      },
+      "edit": "Edit",
+      "open": "Open",
+      "delete": "Delete",
+      "confirmDelete": "Remove the email from the list? Emails already sent stay in members' inboxes.",
+      "sendTest": "Send me a test",
+      "sendTestHint": "Only to your address, with your name instead of {name}.",
+      "start": "Send now",
+      "startConfirm": "Start sending to every chosen recipient? It can no longer be edited after this.",
+      "cancel": "Stop sending",
+      "cancelConfirm": "Stop sending? Members who already received it keep it.",
+      "duplicate": "Duplicate as draft",
+      "audience": "Audience",
+      "sentLabel": "Sent",
+      "startedAt": "Started"
     }
   },
   "settings": {
@@ -5749,7 +5797,10 @@
       "smtp_pass": "SMTP password",
       "from": "Sender address",
       "title": "Email",
-      "hint": "We send a confirmation link to the new address; the old one stays until you confirm."
+      "hint": "We send a confirmation link to the new address; the old one stays until you confirm.",
+      "adminMail": "Emails from administrators",
+      "adminMailHint": "Announcements the team sends to all members (events, news). Your account notifications do not depend on this.",
+      "adminMailSaved": "Saved"
     },
     "auth": {
       "registration_open": "Registration open",
@@ -6499,6 +6550,9 @@
     },
     "contact": {
       "config": "Contact form"
+    },
+    "bulk_mail": {
+      "per_minute": "Bulk mail: emails per minute"
     }
   },
   "permissions": {
@@ -11544,5 +11598,13 @@
     "sentBody": "Thank you! The team will reply by email.",
     "loginRequired": "The contact form is for members only.",
     "login": "Sign in"
+  },
+  "unsubscribe": {
+    "title": "Unsubscribe",
+    "done": "You are unsubscribed",
+    "doneBody": "You no longer receive emails sent by administrators. You can turn them back on anytime from your account settings.",
+    "invalid": "Invalid link",
+    "invalidBody": "The unsubscribe link is not valid or the account no longer exists.",
+    "settings": "Email settings"
   }
 }

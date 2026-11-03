@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { uid } from "./forum-fixtures";
-import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, groupId, resetSetting, sql, userId, useFreshIp } from "./helpers";
 import { e2eKv } from "./kv";
 
 /**
@@ -275,5 +275,63 @@ test("Contact: setările din ACP, un vizitator scrie pe /contact, adminul răspu
   } finally {
     await sql(`DELETE FROM contact_messages WHERE email = $1`, [email]);
     await resetSetting("contact.config");
+  }
+});
+
+test("Email în masă: ciorna, testul, trimiterea pe loturi de job și dezabonarea din link", async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const id = uid();
+  const email = `bulk-${id}@example.com`;
+  await enterAcpAsRoot(page, `Bulk${id}`, email);
+  await sql(`UPDATE users SET "emailVerified" = true WHERE email = $1`, [email]);
+  // Publicul testului: grupul VIP Legend, în care adminul intră ca grup secundar.
+  const legend = await groupId("vip_legend");
+  const me = await userId(email);
+  await sql(`INSERT INTO user_groups ("userId", "groupId", source) VALUES ($1, $2, 'manual')`, [me, legend]);
+  const subject = `Turneu E2E ${id}`;
+  type Mail = { to: string; subject: string; html: string };
+  const outbox = async () => (await (await request.post("/api/_test/profile", { data: { action: "outbox" } })).json()) as Mail[];
+  try {
+    await page.goto("/admin/members/bulk-mail");
+    await expect(page.getByRole("heading", { name: "Email în masă", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-bulk-new-open").click();
+    const add = page.getByTestId("gcs-bulk-new");
+    await add.getByTestId("gcs-bulk-subject").fill(subject);
+    await add.getByTestId("gcs-bulk-body").locator('[contenteditable="true"]').fill("Salut, {name}! Turneul începe sâmbătă.");
+    await add.locator(`input[name="groupId"][value="${legend}"]`).check();
+    await expect(add.getByTestId("gcs-bulk-count")).toContainText("destinatar");
+    await add.getByRole("button", { name: "Salvează ciorna" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-bulk-row"][data-subject="${subject}"]`);
+    await expect(row).toHaveAttribute("data-status", "draft");
+
+    // Testul pleacă doar la admin, cu numele lui.
+    await row.getByTestId("gcs-bulk-panel-open").click();
+    const panel = page.getByTestId("gcs-bulk-panel");
+    await panel.getByRole("button", { name: "Trimite-mi un test" }).click();
+    await expect.poll(async () => (await outbox()).some((m) => m.to === email && m.subject === `[Test] ${subject}` && m.html.includes(`Salut, Bulk${id}!`))).toBe(true);
+    await shot(page, "bulk-mail-draft");
+
+    // Trimiterea către VIP Legend; jobul (la minut) o termină.
+    await panel.getByRole("button", { name: "Trimite acum" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(row).not.toHaveAttribute("data-status", "draft");
+    await expect.poll(async () => (await sql<{ status: string }>(`SELECT status FROM bulk_mails WHERE subject = $1`, [subject]))[0]?.status, { timeout: 150_000 }).toBe("sent");
+    const mail = (await outbox()).find((m) => m.to === email && m.subject === subject);
+    expect(mail, "emailul a ajuns la admin").toBeTruthy();
+
+    // Linkul de dezabonare din email.
+    const link = /href="([^"]*\/unsubscribe\?[^"]+)"/.exec(mail!.html)![1]!.replace(/&(?:#38|amp);/g, "&");
+    const url = new URL(link);
+    await page.goto(url.pathname + url.search);
+    await expect(page.getByTestId("gcs-unsubscribe")).toHaveAttribute("data-ok", "1");
+    await page.goto("/settings/email");
+    await expect(page.getByTestId("gcs-admin-mail-toggle")).not.toBeChecked();
+    await page.getByTestId("gcs-admin-mail-toggle").check();
+    await expect(page.getByTestId("gcs-admin-mail").getByRole("status")).toHaveText("Salvat");
+  } finally {
+    await sql(`DELETE FROM bulk_mails WHERE subject = $1`, [subject]);
+    await sql(`DELETE FROM user_groups WHERE "userId" = $1 AND "groupId" = $2`, [me, legend]);
   }
 });

@@ -557,3 +557,45 @@
     padding: 20px 16px;
   }
 }
+
+/* ── Email în masă ── */
+.gcs-bulkCount {
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+.gcs-bulkProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 360px;
+  margin-top: 4px;
+}
+.gcs-bulkDraft {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gcs-bulkDraft .gcs-sysFacts {
+  padding: 0;
+}
+.gcs-bulkDraft__send {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-bulkPreview {
+  padding: 14px 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-adminMail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+}
