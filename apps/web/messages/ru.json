@@ -346,7 +346,9 @@
       "license_bad_signature": "Подпись лицензии недействительна (лицензия была изменена).",
       "license_expired": "Срок лицензии истёк.",
       "license_domain": "Лицензия недействительна для домена этого сайта.",
-      "license_revoked": "Лицензия отозвана."
+      "license_revoked": "Лицензия отозвана.",
+      "tag_exists": "Există deja o etichetă cu acest nume.",
+      "login_required": "Trebuie să intri în cont."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -502,7 +504,12 @@
       "unknown_extension": "В списке есть расширение, которое платформа не принимает.",
       "invalid_domain": "Только домены (например, example.ru), по одному в строке.",
       "page_placeholder": "Формат должен содержать '{page}' ровно один раз, без угловых скобок.",
-      "invalid_token": "Неверный код: только значение из content=\"…\" или весь мета-тег."
+      "invalid_token": "Неверный код: только значение из content=\"…\" или весь мета-тег.",
+      "length": "Lungime nepermisă",
+      "empty": "Niciun destinatar pentru publicul ales",
+      "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
+      "unknown_job": "Jobul nu se poate rula manual",
+      "invalid_area": "Zonă de cache invalidă"
     }
   },
   "acp": {
@@ -5833,6 +5840,315 @@
         "badgesHint": "Badge-uri pentru invitații: o regulă cu evenimentul „Recomandări calificate” în",
         "badgesLink": "Realizări › Reguli"
       }
+    },
+    "statsReports": {
+      "csv": "Export CSV",
+      "settings": "Setări",
+      "save": "Salvează",
+      "range": "Perioada",
+      "rangeDays": "{days, plural, one {# zi} few {# zile} many {# de zile} other {# de zile}}",
+      "from": "De la",
+      "to": "Până la",
+      "group": "Grupare",
+      "groups": {
+        "day": "Pe zile",
+        "week": "Pe săptămâni",
+        "month": "Pe luni"
+      },
+      "apply": "Aplică",
+      "previous": "Perioada anterioară: {value}",
+      "chartTitle": "{report}, {from} – {to}",
+      "noData": "Nicio dată în perioada aleasă.",
+      "unitHours": "{n} h",
+      "cfg": {
+        "title": "Rapoartele",
+        "excludeStaff": "Exclude staff-ul din rapoartele de activitate",
+        "excludeStaffHint": "Adminii și moderatorii nu se numără la membri activi, postări, reacții și timp online.",
+        "weekStart": "Săptămâna începe",
+        "monday": "Luni",
+        "sunday": "Duminică",
+        "defaultDays": "Perioada implicită"
+      },
+      "registrations": {
+        "title": "Înregistrări",
+        "description": "Conturile noi pe zile, săptămâni sau luni și metoda de înregistrare."
+      },
+      "members": {
+        "title": "Membri activi",
+        "description": "Câți membri au postat și câți au fost online, comparat cu perioada anterioară, plus cei mai activi."
+      },
+      "content": {
+        "title": "Conținut",
+        "description": "Topicurile, postările și reacțiile noi, cu forumurile și topicurile cele mai active."
+      },
+      "online": {
+        "title": "Online",
+        "description": "Membrii online în fiecare zi și orele petrecute pe site, cu recordul de prezență."
+      },
+      "clans": {
+        "title": "Clanuri",
+        "description": "Clanurile noi și intrările în clanuri, cu cele mai mari clanuri."
+      },
+      "servers": {
+        "title": "Servere",
+        "description": "Jucătorii la vârf pe toate serverele și meciurile jucate, cu serverele și hărțile de top."
+      },
+      "vip": {
+        "title": "VIP și donații",
+        "description": "Abonamentele VIP noi și donațiile confirmate, cu cei mai generoși donatori."
+      },
+      "series": {
+        "registrations": {
+          "registrations": "Înregistrări"
+        },
+        "members": {
+          "posters": "Au postat",
+          "online": "Au fost online"
+        },
+        "content": {
+          "topics": "Topicuri",
+          "posts": "Postări",
+          "reactions": "Reacții"
+        },
+        "online": {
+          "members": "Membri online",
+          "hours": "Ore online"
+        },
+        "clans": {
+          "clans": "Clanuri noi",
+          "joins": "Intrări în clanuri"
+        },
+        "servers": {
+          "players": "Jucători la vârf",
+          "matches": "Meciuri"
+        },
+        "vip": {
+          "subscriptions": "Abonamente VIP noi",
+          "donations": "Donații (sumă)"
+        }
+      },
+      "tiles": {
+        "members": "membri în total",
+        "active30": "activi în 30 de zile",
+        "inactive90": "inactivi de 90+ zile",
+        "record": "record online",
+        "clans": "clanuri active",
+        "servers": "servere pornite",
+        "active": "abonamente VIP active",
+        "expiring": "VIP care expiră în 7 zile"
+      },
+      "tops": {
+        "registrations": {
+          "methods": "Metoda de înregistrare"
+        },
+        "members": {
+          "posters": "Cei mai activi"
+        },
+        "content": {
+          "forums": "Forumuri active",
+          "topics": "Topicuri active"
+        },
+        "online": {
+          "online": "Cel mai mult online"
+        },
+        "clans": {
+          "clans": "Cele mai mari clanuri"
+        },
+        "servers": {
+          "servers": "Servere (vârf de jucători)",
+          "maps": "Hărți jucate"
+        },
+        "vip": {
+          "donors": "Donatori"
+        }
+      },
+      "methods": {
+        "credential": "Email și parolă",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam"
+      }
+    },
+    "tags": {
+      "title": "Etichete",
+      "description": "Etichetele topicurilor: câte topicuri are fiecare, redenumirea, unirea dublurilor și lista permisă.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "add": "Etichetă nouă",
+      "create": "Adaugă eticheta",
+      "name": "Numele",
+      "nameHint": "Adresa se face din nume: litere mici, cifre și cratime (ex. „Config CS2” → config-cs2).",
+      "stateOpen": "Etichetele sunt pornite; membrii pot crea etichete noi",
+      "stateClosed": "Etichetele sunt pornite; doar cele din listă",
+      "stateOff": "Etichetele sunt oprite pe tot site-ul",
+      "counts": "{total, plural, one {# etichetă} few {# etichete} many {# de etichete} other {# de etichete}} · {unused} nefolosite",
+      "prune": "Șterge nefolositele ({count})",
+      "pruneConfirm": "Ștergi {count, plural, one {eticheta nefolosită} few {cele # etichete nefolosite} many {cele # de etichete nefolosite} other {cele # de etichete nefolosite}}?",
+      "sort": "Ordine",
+      "sorts": {
+        "used": "Cele mai folosite",
+        "name": "După nume"
+      },
+      "search": "Caută o etichetă",
+      "empty": "Nicio etichetă.",
+      "topics": "{count, plural, =0 {niciun topic} one {# topic} few {# topicuri} many {# de topicuri} other {# de topicuri}}",
+      "delete": "Șterge eticheta",
+      "confirmDelete": "Ștergi eticheta? {count, plural, =0 {Nu e folosită.} one {Dispare de pe un topic.} few {Dispare de pe # topicuri.} many {Dispare de pe # de topicuri.} other {Dispare de pe # de topicuri.}}",
+      "renameTitle": "Numele",
+      "mergeTitle": "Unește în altă etichetă",
+      "mergeInto": "Ținta",
+      "pick": "Alege eticheta",
+      "mergeHint": "Topicurile acestei etichete o primesc pe cea aleasă, apoi aceasta dispare.",
+      "merge": "Unește",
+      "mergeConfirm": "Unești eticheta? {count, plural, =0 {Nu are topicuri.} one {Un topic trece pe ținta aleasă.} few {# topicuri trec pe ținta aleasă.} many {# de topicuri trec pe ținta aleasă.} other {# de topicuri trec pe ținta aleasă.}}",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages} · {total}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "title": "Etichetele",
+        "enabled": "Etichete pornite pe tot site-ul",
+        "enabledHint": "Fiecare forum le mai poate opri în opțiunile lui.",
+        "mode": "Cine creează etichete",
+        "open": "Membrii, la scrierea unui topic",
+        "closed": "Doar adminii (lista de mai jos)",
+        "modeHint": "Lista închisă: membrii aleg doar etichetele existente."
+      }
+    },
+    "search": {
+      "title": "Căutare",
+      "description": "Cum caută membrii și ce caută: termenii cei mai căutați și cei fără rezultate, adică ce conținut lipsește.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateAll": "Căutarea e deschisă tuturor",
+      "stateMembers": "Căutarea e doar pentru membri",
+      "chipMin": "minim {n} caractere",
+      "chipRate": "{n} căutări pe minut",
+      "chipAge": "doar ultimele {n} zile",
+      "chipLog": "termenii se notează anonim",
+      "chipNoLog": "termenii nu se notează",
+      "period": "Perioada",
+      "lastDays": "Ultimele {days} zile",
+      "searches": "{count, plural, one {# căutare} few {# căutări} many {# de căutări} other {# de căutări}}",
+      "zeroShare": "{count, plural, =0 {toate cu rezultate} one {# fără rezultate} few {# fără rezultate} many {# fără rezultate} other {# fără rezultate}}",
+      "clear": "Golește jurnalul",
+      "clearConfirm": "Golești jurnalul termenilor căutați?",
+      "topTitle": "Cele mai căutate",
+      "zeroTitle": "Fără rezultate",
+      "zeroHint": "Membrii au căutat asta și n-au găsit nimic: idei de topicuri, ghiduri sau etichete.",
+      "noTerms": "Nicio căutare în perioada aleasă.",
+      "cfg": {
+        "secWho": "Cine caută",
+        "secResults": "Rezultatele",
+        "secLog": "Jurnalul",
+        "guests": "Și vizitatorii pot căuta",
+        "guestsHint": "Altfel căutarea cere cont.",
+        "minLength": "Lungimea minimă a termenului",
+        "perMinute": "Căutări pe minut (pe membru sau IP)",
+        "defaultType": "Ce caută implicit",
+        "topics": "Topicuri",
+        "posts": "Postări",
+        "perPage": "Rezultate pe pagină",
+        "perPageHint": "0 = ca listele de topicuri.",
+        "maxAgeDays": "Doar conținutul din ultimele (zile)",
+        "maxAgeHint": "0 = tot conținutul. Pe forumuri foarte mari, o limită face căutarea mai rapidă.",
+        "logTerms": "Notează termenii căutați",
+        "logHint": "Doar termenul, numărul de rezultate și momentul (fără cine a căutat); ultimele 1000 de căutări."
+      }
+    },
+    "rss": {
+      "title": "RSS",
+      "description": "Fluxurile RSS ale site-ului (cel general și câte unul pe forumurile publice) și importul de fluxuri ca topicuri.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "{count, plural, =0 {Niciun flux public} one {# flux public} few {# fluxuri publice} many {# de fluxuri publice} other {# de fluxuri publice}}",
+      "stateOff": "Fluxurile RSS sunt oprite",
+      "chipItems": "{n} topicuri pe flux",
+      "chipSnippets": "cu rezumat",
+      "chipCache": "cache {n} min",
+      "feeds": "Fluxurile site-ului",
+      "noFeeds": "Niciun forum public încă.",
+      "siteFeed": "Fluxul general (tot site-ul)",
+      "open": "Deschide",
+      "importTitle": "Import RSS",
+      "importBody": "Știrile din alte site-uri (RSS, actualizări Steam) devin topicuri ale botului comunității, prin pluginul Bot de știri.",
+      "importOpen": "Deschide Bot de știri",
+      "importDisabled": "Bot de știri (oprit)",
+      "importInstall": "Instalează Bot de știri din Aplicații",
+      "cfg": {
+        "secFeeds": "Fluxurile",
+        "secItems": "Conținutul",
+        "enabled": "Fluxuri RSS pornite",
+        "siteFeed": "Fluxul general /rss.xml",
+        "siteFeedHint": "Topicurile cu activitate recentă din toate forumurile publice.",
+        "items": "Topicuri pe flux",
+        "cacheMinutes": "Cache (minute)",
+        "snippets": "Rezumatul primei postări",
+        "snippetsHint": "Cititoarele RSS arată începutul topicului."
+      }
+    },
+    "share": {
+      "title": "Distribuire",
+      "description": "Meniul „Distribuie” al topicurilor: rețelele afișate, foaia de distribuire a telefonului și hashtag-urile pentru X.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "{count, plural, =0 {Doar copierea linkului} one {Meniul e pornit, cu # rețea} few {Meniul e pornit, cu # rețele} many {Meniul e pornit, cu # de rețele} other {Meniul e pornit, cu # de rețele}}",
+      "stateOff": "Meniul „Distribuie” e oprit",
+      "chipNative": "foaia nativă pe telefon",
+      "chipTags": "hashtag-uri: {tags}",
+      "chipNone": "fără opțiuni în plus",
+      "networksTitle": "Rețelele",
+      "copy": "Copiază linkul",
+      "copyHint": "Copiază adresa topicului.",
+      "copyNative": "Pe telefon deschide foaia de distribuire a sistemului.",
+      "always": "Mereu",
+      "on": "Pornită",
+      "off": "Oprită",
+      "networks": {
+        "x": "X (Twitter)",
+        "facebook": "Facebook",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "reddit": "Reddit",
+        "linkedin": "LinkedIn",
+        "email": "Email"
+      },
+      "cfg": {
+        "secMenu": "Meniul",
+        "secNetworks": "Rețelele afișate",
+        "enabled": "Meniul „Distribuie” pe topicuri",
+        "nativeShare": "Foaia de distribuire a telefonului",
+        "nativeHint": "Pe telefon, „Copiază linkul” deschide lista aplicațiilor (Discord, Messenger…).",
+        "hashtags": "Hashtag-uri pentru X",
+        "hashtagsHint": "Separate prin virgulă, fără #."
+      }
+    },
+    "pwa": {
+      "title": "Web App (PWA)",
+      "description": "Site-ul se poate instala ca aplicație pe telefon sau desktop. Alege numele, iconița, culorile și pagina de pornire.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "preview": "Cum arată instalată",
+      "icon": "Iconița aplicației",
+      "iconHint": "O imagine pătrată (PNG, WebP sau JPG, cel mult 2 MB); devine PNG 512 × 512 pe fundal transparent.",
+      "displays": {
+        "standalone": "Ca aplicație (fără bara browserului)",
+        "minimal-ui": "Cu bara minimă a browserului",
+        "browser": "În browser"
+      },
+      "cfg": {
+        "secName": "Numele",
+        "secLook": "Aspectul",
+        "name": "Numele aplicației",
+        "shortName": "Numele scurt",
+        "shortHint": "Sub iconița de pe ecran; cel mult 12 caractere.",
+        "description": "Descrierea",
+        "themeColor": "Culoarea barei",
+        "backgroundColor": "Culoarea fundalului la pornire",
+        "display": "Cum se deschide",
+        "startUrl": "Pagina de pornire",
+        "startHint": "O adresă din site, ex. / sau /forum."
+      }
     }
   },
   "settings": {
@@ -6626,6 +6942,24 @@
       "deleted": "cont șters",
       "statusQualified": "Calificat",
       "statusPending": "În așteptare"
+    },
+    "stats": {
+      "config": "Statisticile"
+    },
+    "tags": {
+      "config": "Etichetele"
+    },
+    "search": {
+      "config": "Căutarea"
+    },
+    "rss": {
+      "config": "Fluxurile RSS"
+    },
+    "share": {
+      "config": "Distribuirea"
+    },
+    "pwa": {
+      "config": "Aplicația web"
     }
   },
   "permissions": {
@@ -7714,7 +8048,8 @@
     "none": "Нет результатов по «{q}».",
     "tooShort": "Введите не менее {min} символов.",
     "rateLimited": "Слишком много поисков. Попробуй еще раз через минуту.",
-    "in": "в {forum}"
+    "in": "в {forum}",
+    "loginRequired": "Căutarea e doar pentru membri: intră în cont ca să cauți."
   },
   "tags": {
     "title": "Исполнитель: #{tag}",
