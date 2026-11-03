@@ -152,4 +152,4 @@ deja în destinație rămâne pe loc și apare în jurnal. După ce verifici sit
 | Pagina dă 503 după instalare | Repornește aplicația din panou (*Restart*); verifică jurnalul. |
 | „Utilizatorul bazei nu poate crea tabele” | Dă utilizatorului **ALL PRIVILEGES** pe bază (pasul 1). |
 | Cron-ul „nu a rulat încă” | Verifică folderul din comandă și calea spre `node`; rulează comanda o dată în *Terminal* (dacă există). |
-| Erori „Prisma … engine” la pornire | Gazda nu e Linux x64 cu glibc (ex. Alpine / ARM): ediția Lite nu e suportată acolo. |
+| Erori „Prisma … engine” la pornire | Gazda nu e Linux x64 cu glibc (ex. Alpine / ARM): ediția Lite nu e suportată acolo. Dacă în jurnal scrie „Motoarele Prisma nu au putut fi pregătite în server/”, aplicația nu poate scrie în folderul `server/` (la prima pornire face acolo câteva copii ale motorului bazei de date): verifică drepturile folderului, apoi *Restart*. |

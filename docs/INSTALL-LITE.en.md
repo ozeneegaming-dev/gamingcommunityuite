@@ -153,4 +153,4 @@ the site, you can delete `old-version/`.
 | The page returns 503 after installing | Restart the application from the panel (*Restart*); check the log. |
 | “The database user can’t create tables” | Grant the user **ALL PRIVILEGES** on the database (step 1). |
 | The cron “hasn’t run yet” | Check the folder in the command and the path to `node`; run the command once in *Terminal* (if available). |
-| “Prisma … engine” errors on start | The host isn’t Linux x64 with glibc (e.g. Alpine / ARM): the Lite edition isn’t supported there. |
+| “Prisma … engine” errors on start | The host isn’t Linux x64 with glibc (e.g. Alpine / ARM): the Lite edition isn’t supported there. If the log says “Motoarele Prisma nu au putut fi pregătite în server/”, the application can’t write to the `server/` folder (on first start it adds a few copies of the database engine there): check the folder permissions, then *Restart*. |
