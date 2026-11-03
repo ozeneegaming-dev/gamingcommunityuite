@@ -225,37 +225,16 @@
   text-decoration: none;
 }
 
-/* Acțiunile: Mesaj / Urmărește / Conținutul lui / Ignoră (iconiță) și slotul de extensie (ex. moderarea din chat). */
+/*
+ * Acțiunile: Mesaj cu eticheta, apoi Urmărește / Conținutul lui / Ignoră ca iconițe cu tooltip, pe un rând; sub el,
+ * rândul extensiilor (ex. moderarea din chat). Așezarea comună e în `profile.css` (`.gcs-hoverCard__actionRow`).
+ */
 .gcs-hoverCard--v2 .gcs-hoverCard__actions {
-  flex-wrap: wrap;
-  gap: 6px;
   padding-top: 10px;
   border-top: 1px solid var(--gcs-border);
 }
-.gcs-hoverCard--v2 .gcs-hoverCard__actions > * {
-  flex: 1 1 auto;
-}
-/* Butoanele compacte (ca în machetă): Mesaj, Urmărește și Conținutul lui încap pe un rând lângă Ignoră. */
-.gcs-hoverCard--v2 .gcs-hoverCard__actions > .gcs-btn {
-  min-height: 30px;
-  padding-inline: 8px;
-  gap: 5px;
-  font-size: 12px;
-}
-.gcs-hoverCard--v2 .gcs-hoverCard__actions > .gcs-tooltipWrap {
-  flex: none;
-}
 .gcs-hoverCard__actions:empty {
   display: none;
-}
-.gcs-hoverCard__iconBtn {
-  min-width: 32px;
-  padding-inline: 8px;
-  justify-content: center;
-}
-.gcs-hoverCard__iconBtn[aria-pressed="true"] {
-  color: var(--gcs-accentInk, var(--gcs-accent));
-  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
 }
 
 /* ─── Utilitare comune ─────────────────────────────────────────────────────────────────────────── */

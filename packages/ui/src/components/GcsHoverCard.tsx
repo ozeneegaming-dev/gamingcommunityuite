@@ -1,8 +1,10 @@
 import { GCS_BRAND } from "@gcs/core/themes";
 import { GcsClanTag, type GcsClanTagData } from "./GcsClanTag";
-import type { CSSProperties, ReactNode } from "react";
+import { Children, type CSSProperties, type ReactNode } from "react";
+import { cx } from "../cx";
 import { GcsAvatar } from "./GcsAvatar";
 import { GcsBadgeArt } from "./GcsBadgeArt";
+import { GcsButton, type GcsButtonProps } from "./GcsButton";
 import { GcsMemberName } from "./GcsMemberName";
 import { GcsGroupPill } from "./GcsGroupPill";
 
@@ -92,7 +94,8 @@ function rankSymbol(icon: string | null | undefined): string | null {
  * (imaginea cu poziția salvată sau degradeul accentului) cu cusătura de accent; sub ea avatarul cu inelul în culoarea
  * grupului (și punctul online în v2), numele stilizat, grupurile, rangul — niciodată peste imagine; apoi (v2) linia de
  * status, cipurile aplicațiilor (clan, ELO, VIP), nivelul cu bara de XP; bio-ul, câmpurile „pe card”, cele 4 contoare,
- * ultimele insigne și acțiunile (`actions`). Fără `v2`, markup-ul e cel al șablonului implicit `members.hover_card`.
+ * ultimele insigne și acțiunile (`actions`, așezate cu `GcsHoverCardActions`). Fără `v2`, markup-ul e cel al șablonului
+ * implicit `members.hover_card`.
  */
 export function GcsHoverCard({
   data,
@@ -301,4 +304,34 @@ function HoverStatus({ status, labels, relative }: { status: GcsHoverCardV2["sta
       {status.kind === "lastVisit" && labels.lastVisit(relative ? relative(status.at) : new Date(status.at).toLocaleDateString())}
     </p>
   );
+}
+
+/**
+ * Acțiunile cardului (slotul `actions`), așezate să încapă în lățimea lui la orice lățime: pe primul rând acțiunea
+ * principală (`primary`, ex. Mesaj, cu eticheta întreagă, care se strânge cu „…” doar dacă nu mai are loc) și
+ * butoanele-iconiță ale membrului (`tools`: Urmărește, Conținutul lui, Ignoră); sub el rândurile extensiilor (`extra`,
+ * ex. moderarea din chat), fiecare pe rândul lui. Niciun buton nu rămâne singur pe un rând și nu iese din card.
+ */
+export function GcsHoverCardActions({ primary, tools, extra }: { primary?: ReactNode; tools?: ReactNode; extra?: ReactNode }) {
+  const list = Children.toArray(tools);
+  return (
+    <>
+      {(primary || list.length > 0) && (
+        <div className="gcs-hoverCard__actionRow" data-testid="gcs-hover-actions">
+          {primary}
+          {list}
+        </div>
+      )}
+      {extra}
+    </>
+  );
+}
+
+/**
+ * Un buton-iconiță din acțiunile cardului (Urmărește, Conținutul lui, Ignoră, moderarea din chat…): eticheta e numele
+ * accesibil (`aria-label`) și tooltip-ul sistemului (`data-tip`, la hover și la focus din tastatură). Cu `asChild`,
+ * copilul (ex. un link `next/link`) primește stilul și iconița.
+ */
+export function GcsHoverCardIconAction({ label, icon, className, ...props }: Omit<GcsButtonProps, "variant" | "size" | "icon"> & { label: string; icon: ReactNode }) {
+  return <GcsButton variant="ghost" size="sm" icon={icon} className={cx("gcs-hoverCard__iconBtn", className)} aria-label={label} data-tip={label} {...props} />;
 }
