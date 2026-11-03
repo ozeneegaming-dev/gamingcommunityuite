@@ -5,8 +5,9 @@ import {
   GcsButton,
   GcsGroupCard,
   GcsHoverCard,
+  GcsHoverCardActions,
+  GcsHoverCardIconAction,
   GcsIconSvg,
-  GcsTooltip,
   placeHoverCard,
   type GcsGroupCardData,
   type GcsGroupCardLabels,
@@ -366,54 +367,55 @@ function MemberCard({
   };
   const ctx = { userId, name: data.user.name, anchor, isSelf: data.viewer.isSelf, close: onClose };
   const extensions = hoverCardActionProviders().map(({ key, Provider }) => <Provider key={key} ctx={ctx} />);
-  const contentHref = data.contentHref ?? null;
-  const actions = (
-    <>
-      {data.viewer.canMessage && (
-        <GcsButton variant="primary" size="sm" asChild icon={<GcsIconSvg icon={faEnvelope} />}>
-          <Link href={`/messages/new?to=${encodeURIComponent(userId)}`} data-testid="gcs-hover-message">
-            {labels.message}
-          </Link>
-        </GcsButton>
-      )}
-      {data.viewer.canFollow && (
-        <GcsButton
-          variant="ghost"
-          size="sm"
-          icon={<GcsIconSvg icon={data.viewer.isFollowing ? faUserMinus : faUserPlus} />}
-          onClick={toggleFollow}
-          disabled={pending}
-          aria-pressed={data.viewer.isFollowing}
-          data-testid="gcs-hover-follow"
-        >
-          {data.viewer.isFollowing ? labels.unfollow : labels.follow}
-        </GcsButton>
-      )}
-      {v2 && contentHref && (
-        <GcsButton variant="ghost" size="sm" asChild icon={<GcsIconSvg icon={faFileLines} />}>
-          <Link href={contentHref} data-testid="gcs-hover-content">
-            {t("v2.content")}
-          </Link>
-        </GcsButton>
-      )}
-      {v2 && data.viewer.canIgnore && (
-        <GcsTooltip content={data.viewer.isIgnored ? t("v2.unignore") : t("v2.ignore")}>
-          <button
-            type="button"
-            className="gcs-btn gcs-btn--ghost gcs-btn--sm gcs-hoverCard__iconBtn"
-            onClick={toggleIgnore}
-            disabled={pending}
-            aria-pressed={data.viewer.isIgnored === true}
-            aria-label={data.viewer.isIgnored ? t("v2.unignore") : t("v2.ignore")}
-            data-testid="gcs-hover-ignore"
-          >
-            <GcsIconSvg icon={faBan} />
-          </button>
-        </GcsTooltip>
-      )}
-      {extensions}
-    </>
-  );
+  const contentHref = v2 ? (data.contentHref ?? null) : null;
+  // Acțiunea principală, cu eticheta: Mesaj; fără el (vizitatorul, propriul card), „Conținutul lui”. Restul sunt
+  // butoane-iconiță cu tooltip, pe același rând, ca să încapă în card la orice lățime.
+  const contentLabel = t("v2.content");
+  const primary = data.viewer.canMessage ? (
+    <GcsButton variant="primary" size="sm" asChild className="gcs-hoverCard__primary" icon={<GcsIconSvg icon={faEnvelope} />}>
+      <Link href={`/messages/new?to=${encodeURIComponent(userId)}`} data-testid="gcs-hover-message">
+        <span className="gcs-hoverCard__label">{labels.message}</span>
+      </Link>
+    </GcsButton>
+  ) : contentHref ? (
+    <GcsButton variant="ghost" size="sm" asChild className="gcs-hoverCard__primary" icon={<GcsIconSvg icon={faFileLines} />}>
+      <Link href={contentHref} data-testid="gcs-hover-content">
+        <span className="gcs-hoverCard__label">{contentLabel}</span>
+      </Link>
+    </GcsButton>
+  ) : null;
+  const followLabel = data.viewer.isFollowing ? labels.unfollow : labels.follow;
+  const ignoreLabel = data.viewer.isIgnored ? t("v2.unignore") : t("v2.ignore");
+  const tools = [
+    data.viewer.canFollow && (
+      <GcsHoverCardIconAction
+        key="follow"
+        label={followLabel}
+        icon={<GcsIconSvg icon={data.viewer.isFollowing ? faUserMinus : faUserPlus} />}
+        onClick={toggleFollow}
+        disabled={pending}
+        aria-pressed={data.viewer.isFollowing}
+        data-testid="gcs-hover-follow"
+      />
+    ),
+    data.viewer.canMessage && contentHref !== null && (
+      <GcsHoverCardIconAction key="content" label={contentLabel} icon={<GcsIconSvg icon={faFileLines} />} asChild>
+        <Link href={contentHref} data-testid="gcs-hover-content" />
+      </GcsHoverCardIconAction>
+    ),
+    v2 && data.viewer.canIgnore && (
+      <GcsHoverCardIconAction
+        key="ignore"
+        label={ignoreLabel}
+        icon={<GcsIconSvg icon={faBan} />}
+        onClick={toggleIgnore}
+        disabled={pending}
+        aria-pressed={data.viewer.isIgnored === true}
+        data-testid="gcs-hover-ignore"
+      />
+    ),
+  ];
+  const actions = <GcsHoverCardActions primary={primary} tools={tools} extra={extensions} />;
   const hasActions = data.viewer.canFollow || data.viewer.canMessage || (v2 !== null && contentHref !== null) || hoverCardActionProviders().length > 0;
   return data.html ? (
     <TemplatedCard html={data.html} actions={hasActions ? actions : null} />
