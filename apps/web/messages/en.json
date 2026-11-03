@@ -6189,6 +6189,42 @@
       "resetConfirm": "Start impressions and clicks from zero?",
       "delete": "Delete",
       "confirmDelete": "Delete the ad? Widgets that showed it stay empty."
+    },
+    "streams": {
+      "title": "Streams",
+      "description": "The Activity page: what appears in the “All” stream, forums left out of activity and custom streams as tabs (e.g. “News”, “Servers”).",
+      "settings": "The “All” stream",
+      "save": "Save",
+      "add": "New stream",
+      "create": "Add the stream",
+      "allStream": "All (main stream)",
+      "builtIn": "Built-in",
+      "kindsTitle": "What appears",
+      "kinds": {
+        "topic": "New topics",
+        "reply": "Replies",
+        "status": "Status updates",
+        "member": "New members"
+      },
+      "secPage": "Page",
+      "perPage": "Items per page",
+      "perPageChip": "{n} per page",
+      "exclude": "Forums left out of activity",
+      "excludeHint": "Their topics and replies appear in no stream.",
+      "excluded": "Without: {forums}",
+      "noExcluded": "All forums",
+      "secStream": "Stream",
+      "name": "Name (the tab)",
+      "icon": "Icon",
+      "forums": "From the forums",
+      "forumsHint": "No forum selected = all of them (except those left out of activity).",
+      "allForums": "From every forum",
+      "inForums": "From: {forums}",
+      "up": "Move up",
+      "down": "Move down",
+      "delete": "Delete the stream",
+      "confirmDelete": "Delete the stream? Its tab disappears from the Activity page.",
+      "emptyCustom": "No custom streams yet. Add one for an important section (e.g. news or servers)."
     }
   },
   "settings": {
@@ -7000,6 +7036,9 @@
     },
     "pwa": {
       "config": "Web app"
+    },
+    "streams": {
+      "config": "Activity streams"
     }
   },
   "permissions": {

@@ -912,3 +912,9 @@
   font-family: var(--gcs-font-mono, ui-monospace, monospace);
   font-size: 12.5px;
 }
+
+/* ── Fluxuri: ordinea fluxurilor proprii ── */
+.gcs-streamMove {
+  display: inline-flex;
+  gap: 2px;
+}

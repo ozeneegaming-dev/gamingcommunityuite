@@ -6189,6 +6189,42 @@
       "resetConfirm": "Pornești afișările și click-urile de la zero?",
       "delete": "Șterge",
       "confirmDelete": "Ștergi reclama? Widget-urile care o arătau rămân goale."
+    },
+    "streams": {
+      "title": "Fluxuri",
+      "description": "Pagina Activitate: ce apare în fluxul „Tot”, forumurile scoase din activitate și fluxurile proprii, ca tab-uri (ex. „Știri”, „Servere”).",
+      "settings": "Fluxul „Tot”",
+      "save": "Salvează",
+      "add": "Flux nou",
+      "create": "Adaugă fluxul",
+      "allStream": "Tot (fluxul principal)",
+      "builtIn": "Implicit",
+      "kindsTitle": "Ce apare",
+      "kinds": {
+        "topic": "Topicuri noi",
+        "reply": "Răspunsuri",
+        "status": "Statusuri",
+        "member": "Membri noi"
+      },
+      "secPage": "Pagina",
+      "perPage": "Elemente pe pagină",
+      "perPageChip": "{n} pe pagină",
+      "exclude": "Forumuri scoase din activitate",
+      "excludeHint": "Topicurile și răspunsurile lor nu apar în niciun flux.",
+      "excluded": "Fără: {forums}",
+      "noExcluded": "Toate forumurile",
+      "secStream": "Fluxul",
+      "name": "Numele (tab-ul)",
+      "icon": "Iconița",
+      "forums": "Din forumurile",
+      "forumsHint": "Niciun forum bifat = toate (în afară de cele scoase din activitate).",
+      "allForums": "Din toate forumurile",
+      "inForums": "Din: {forums}",
+      "up": "Mută mai sus",
+      "down": "Mută mai jos",
+      "delete": "Șterge fluxul",
+      "confirmDelete": "Ștergi fluxul? Tab-ul dispare de pe pagina Activitate.",
+      "emptyCustom": "Niciun flux propriu încă. Adaugă unul pentru o secțiune importantă (ex. știrile sau serverele)."
     }
   },
   "settings": {
@@ -7000,6 +7036,9 @@
     },
     "pwa": {
       "config": "Aplicația web"
+    },
+    "streams": {
+      "config": "Fluxurile de activitate"
     }
   },
   "permissions": {

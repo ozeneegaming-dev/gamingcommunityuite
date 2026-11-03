@@ -28,6 +28,7 @@ export * from "./forums/rssConfig";
 export * from "./forums/shareConfig";
 export * from "./community/pwa";
 export * from "./community/ads";
+export * from "./community/streams";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch, type GcsForumPreviewInput } from "./forums/forums";

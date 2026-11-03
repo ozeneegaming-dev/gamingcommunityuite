@@ -596,3 +596,32 @@ test("Reclame: o reclamă din ACP apare prin widget pe prima pagină, se ascunde
     await clearLayout();
   }
 });
+
+test("Fluxuri: un flux propriu devine tab pe pagina Activitate", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Flx${id}`, `flx-${id}@example.com`);
+  await forumTree(request);
+  const name = `Noutăți ${id}`;
+  try {
+    await page.goto("/admin/system/streams");
+    await expect(page.getByRole("heading", { name: "Fluxuri", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-stream-new-open").click();
+    const add = page.getByTestId("gcs-stream-new");
+    await add.getByLabel("Numele (tab-ul)").fill(name);
+    await add.getByRole("button", { name: "Adaugă fluxul" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.getByTestId("gcs-stream-row").filter({ hasText: name });
+    await expect(row).toBeVisible();
+    const key = await row.getAttribute("data-stream");
+    await shot(page, "streams-acp");
+    await page.goto("/activity");
+    const tab = page.getByTestId(`gcs-activity-stream-${key}`);
+    await expect(tab).toHaveText(name);
+    await tab.click();
+    await expect(page).toHaveURL(new RegExp(`stream=${key}`));
+    await expect(tab).toHaveAttribute("aria-current", "page");
+  } finally {
+    await resetSetting("streams.config");
+  }
+});

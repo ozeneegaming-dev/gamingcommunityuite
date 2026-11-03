@@ -1005,7 +1005,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     postbit: new GcsPostbitService({ db, cache, permissions, settings, groups: groupDirectory }),
     memberList,
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
-    activity: new GcsActivityStream({ db, cache, permissions, social }),
+    activity: new GcsActivityStream({ db, cache, permissions, social, settings }),
     leaderboard: new GcsLeaderboard({ db, cache, permissions, settings, onlineTime }),
     onlineTime,
     // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
