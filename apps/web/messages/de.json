@@ -7721,7 +7721,7 @@
       },
       "header_imageFade": {
         "label": "Unten ausblenden",
-        "help": "Der untere Bildrand geht weich in den Seitenhintergrund über (ganzer Header)."
+        "help": "Der untere Bildrand blendet weich in die Header-Farbe aus (ganzer Header)."
       },
       "header_imageMobile": {
         "label": "Auch auf dem Handy",

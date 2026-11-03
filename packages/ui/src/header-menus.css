@@ -34,9 +34,9 @@
 }
 /*
  * Imaginea antetului (setarea temei, în orice temă și orice aspect): cea încărcată sau cea inclusă în GCS, în spatele
- * întregului antet sau doar al primului rând (cel cu logo-ul). Straturile, de sus în jos: estomparea în fundalul
- * paginii (doar pe tot antetul), acoperirea în culoarea antetului (meniul rămâne lizibil; pe un antet luminos imaginea
- * se deschide), nuanța accentului (`background-blend-mode: color`), apoi imaginea, decupată pe mijloc și lipită sus.
+ * întregului antet sau doar al primului rând (cel cu logo-ul). Straturile, de sus în jos: estomparea jos în culoarea
+ * antetului (doar pe tot antetul; nu în fundalul paginii, care pe o temă luminoasă ar lăsa textul alb al antetului pe
+ * deschis), acoperirea în culoarea antetului (meniul rămâne lizibil; pe un antet luminos imaginea se deschide), nuanța accentului (`background-blend-mode: color`), apoi imaginea, decupată pe mijloc și lipită sus.
  * Doar fundaluri, fără pseudo-elemente: antetul rămâne fără context de suprapunere propriu. Bara compactă își păstrează
  * fundalul; pe telefon imaginea apare doar dacă tema o lasă (`data-gcs-header-image-mobile`).
  */
@@ -44,7 +44,7 @@
 :root[data-gcs-header-image="all"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact]) {
   background-color: var(--gcs-header-bg, var(--gcs-chrome));
   background-image:
-    linear-gradient(to bottom, transparent 55%, color-mix(in srgb, var(--gcs-body-bg, var(--gcs-bg)) var(--gcs-header-image-fade, 85%), transparent)),
+    linear-gradient(to bottom, transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)),
     linear-gradient(color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent), color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent)),
     linear-gradient(color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent), color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent)),
     var(--gcs-header-image);

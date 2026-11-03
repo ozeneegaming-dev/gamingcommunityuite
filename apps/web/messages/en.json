@@ -7721,7 +7721,7 @@
       },
       "header_imageFade": {
         "label": "Fade at the bottom",
-        "help": "The bottom edge of the image blends into the page background (whole header)."
+        "help": "The bottom edge of the image fades smoothly into the header colour (whole header)."
       },
       "header_imageMobile": {
         "label": "Also on phones",

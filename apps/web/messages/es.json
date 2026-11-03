@@ -7721,7 +7721,7 @@
       },
       "header_imageFade": {
         "label": "Difuminar abajo",
-        "help": "El borde inferior de la imagen se funde con el fondo de la página (toda la cabecera)."
+        "help": "El borde inferior de la imagen se funde con el color de la cabecera (toda la cabecera)."
       },
       "header_imageMobile": {
         "label": "También en el móvil",
