@@ -15,8 +15,11 @@ export { GcsTable, type GcsTableColumn, type GcsTableProps } from "./components/
 export { GcsMemberName, GcsNamedText, GcsNameFxProvider, useNameLetters, type GcsMemberNameProps } from "./components/GcsMemberName";
 export { GcsGroupPill, type GcsGroupPillData, type GcsGroupPillProps } from "./components/GcsGroupPill";
 export { GcsDropdown, type GcsDropdownItem, type GcsDropdownProps } from "./components/GcsDropdown";
-export { GcsIconPicker, type GcsIconPickerMatch, type GcsIconPickerProps } from "./components/GcsIconPicker";
+export { GcsIconPicker, iconLabel, type GcsIconPickerMatch, type GcsIconPickerProps } from "./components/GcsIconPicker";
 export { GcsModal, type GcsModalProps } from "./components/GcsModal";
+export { GcsDrawer, useGcsDrawer, type GcsDrawerProps } from "./components/GcsDrawer";
+export { GcsUploadDialog, GcsUploadField, uploadRulesText, type GcsUploadFieldProps, type GcsUploadLabels } from "./components/GcsUploadField";
+export { checkUploadFile, formatBytes, sniffType, typeAccepted, type GcsUploadCheck, type GcsUploadRules } from "./components/uploadChecks";
 export { GcsImageViewer, type GcsImageViewerLabels, type GcsImageViewerProps } from "./components/GcsImageViewer";
 export type { GcsViewerImage } from "./components/imageViewer";
 export { dismissToast, gcsToast, GcsToastHost, playNotificationSound, type GcsToastInput } from "./components/GcsToast";

@@ -10712,5 +10712,61 @@
     "text": "This site uses cookies needed for signing in and for remembering your preferences (language, theme).",
     "accept": "Got it",
     "privacy": "Privacy policy"
+  },
+  "ui": {
+    "upload": {
+      "upload": "Upload",
+      "replace": "Replace",
+      "remove": "Remove",
+      "noImage": "No image",
+      "noFile": "No file",
+      "dropHere": "Drag the file here",
+      "dropRelease": "Drop the file",
+      "or": "or",
+      "browse": "Choose from computer",
+      "paste": "You can also paste an image with Ctrl + V.",
+      "use": "Use this file",
+      "chooseOther": "Choose another",
+      "cancel": "Cancel",
+      "close": "Close",
+      "uploading": "Uploading",
+      "rulesTypes": "{types}",
+      "rulesMax": "up to {max}",
+      "rulesMin": "at least {w} × {h} px",
+      "rulesSquare": "square",
+      "okType": "Accepted type",
+      "okSize": "{size} of {max}",
+      "okDims": "{w} × {h} px",
+      "okReal": "File checked by its content",
+      "errType": "This file type isn't accepted. Accepted: {types}.",
+      "errSize": "The file is {size} and the limit is {max}.",
+      "errMin": "The image is {w} × {h} px. The minimum is {min} px.",
+      "errMax": "The image is {w} × {h} px, which is too large.",
+      "errSquare": "The image is {w} × {h} px and must be square.",
+      "errReal": "The file isn't a valid image.",
+      "errUpload": "The upload failed. Try again."
+    },
+    "iconPicker": {
+      "search": "Search for an icon",
+      "none": "No icon",
+      "noResults": "No icons found.",
+      "choose": "Choose an icon",
+      "categories": {
+        "popular": "Popular",
+        "gaming": "Gaming",
+        "community": "Community",
+        "staff": "Staff",
+        "tech": "Tech",
+        "rewards": "Rewards",
+        "arrows": "Arrows",
+        "brands": "Brands"
+      }
+    },
+    "panel": {
+      "close": "Close the panel",
+      "edit": "Edit",
+      "add": "Add",
+      "saved": "Saved"
+    }
   }
 }

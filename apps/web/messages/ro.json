@@ -10712,5 +10712,61 @@
     "text": "Acest site folosește cookie-uri necesare pentru autentificare și pentru a-ți păstra preferințele (limba, tema).",
     "accept": "Am înțeles",
     "privacy": "Politica de confidențialitate"
+  },
+  "ui": {
+    "upload": {
+      "upload": "Încarcă",
+      "replace": "Înlocuiește",
+      "remove": "Scoate",
+      "noImage": "Nicio imagine",
+      "noFile": "Niciun fișier",
+      "dropHere": "Trage fișierul aici",
+      "dropRelease": "Dă drumul fișierului",
+      "or": "sau",
+      "browse": "Alege din calculator",
+      "paste": "Poți și lipi o imagine cu Ctrl + V.",
+      "use": "Folosește fișierul",
+      "chooseOther": "Alege altul",
+      "cancel": "Renunță",
+      "close": "Închide",
+      "uploading": "Se încarcă",
+      "rulesTypes": "{types}",
+      "rulesMax": "până la {max}",
+      "rulesMin": "minimum {w} × {h} px",
+      "rulesSquare": "pătrată",
+      "okType": "Tip acceptat",
+      "okSize": "{size} din {max}",
+      "okDims": "{w} × {h} px",
+      "okReal": "Fișier verificat după conținut",
+      "errType": "Tipul fișierului nu e acceptat. Sunt acceptate: {types}.",
+      "errSize": "Fișierul are {size}, iar limita e {max}.",
+      "errMin": "Imaginea are {w} × {h} px. Minimul e {min} px.",
+      "errMax": "Imaginea are {w} × {h} px și e prea mare.",
+      "errSquare": "Imaginea are {w} × {h} px și trebuie să fie pătrată.",
+      "errReal": "Fișierul nu e o imagine validă.",
+      "errUpload": "Încărcarea n-a reușit. Încearcă din nou."
+    },
+    "iconPicker": {
+      "search": "Caută o iconiță",
+      "none": "Fără iconiță",
+      "noResults": "Nicio iconiță găsită.",
+      "choose": "Alege o iconiță",
+      "categories": {
+        "popular": "Populare",
+        "gaming": "Gaming",
+        "community": "Comunitate",
+        "staff": "Staff",
+        "tech": "Tehnic",
+        "rewards": "Recompense",
+        "arrows": "Săgeți",
+        "brands": "Mărci"
+      }
+    },
+    "panel": {
+      "close": "Închide panoul",
+      "edit": "Editează",
+      "add": "Adaugă",
+      "saved": "Salvat"
+    }
   }
 }
