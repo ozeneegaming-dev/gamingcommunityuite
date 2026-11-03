@@ -108,5 +108,5 @@ async function WidgetPreview({ id, ext, draft, plugins }: { id: number; ext: str
   const def = (await widgets.activeExtensions({ plugins })).find((e) => e.def.key === ext)?.def;
   const stored = widgetExtValues(placement.config);
   const config = def ? { ...placement.config, [WIDGET_EXT_KEY]: { ...stored, [def.key]: applyExtensionDraft(extensionFields(def), stored[def.key], draft) } } : placement.config;
-  return <aside className="gcs-forumSidebar gcs-aspectPreviewPage__widget">{await render({ id: String(placement.id), config, actor: panel.actor })}</aside>;
+  return <aside className="gcs-forumSidebar gcs-aspectPreviewPage__widget">{await render({ id: String(placement.id), config, actor: panel.actor, page: placement.page, zone: placement.zone })}</aside>;
 }

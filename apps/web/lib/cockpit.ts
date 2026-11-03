@@ -2,7 +2,7 @@
  * Consola Hero Cockpit de sub antet (specul 2026-10-10-hero-cockpit §4–5): tipurile datelor trimise browserului
  * (randarea și actualizările live se fac în client) și regulile pure (pagina pe care apare). Fără dependențe de server.
  */
-import type { GcsCockpitPanel } from "@gcs/core/themes";
+import type { GcsCockpitPanel, GcsThemeSettings } from "@gcs/core/themes";
 import type { GcsLevelProgress, GcsServerLive } from "@gcs/modules";
 import type { GcsLiveSummary } from "./live-summary";
 import type { GcsRankingMetric, GcsRankingResult } from "./ranking";
@@ -44,13 +44,24 @@ export type GcsCockpitFeatured = { id: number; title: string; href: string; foru
 
 export type GcsCockpitServer = { id: number; name: string; href: string; connectHref: string | null; address: string; game: string };
 
+/** Un meci mix în desfășurare din lista scurtă (widget-ul „Meciuri live”): serverul, harta, runda, scorul. */
+export type GcsLiveMatchRow = { id: number; server: string; map: string | null; round: number; teams: GcsCockpitMatch["teams"]; href: string };
+
+export type GcsCockpitLayout = GcsThemeSettings["cockpit"]["layout"];
+
 export type GcsCockpitData = {
+  /** Aspectul consolei (setarea `cockpit.layout` a temei): complet (cu panourile) sau compact (un rând + serverele). */
+  layout: GcsCockpitLayout;
   welcome: {
     user: GcsCockpitUser;
     unread: number;
     friends: { online: number; playing: number; server: string | null } | null;
     level: GcsLevelProgress;
+    /** „Topic nou” din aspectul compact: primul forum în care membrul poate porni topicuri (`null` = niciunul). */
+    newTopic: string | null;
   } | null;
+  /** Vizitatorii: înregistrarea e deschisă (butonul „Înregistrează-te” din aspectul compact). */
+  registration: boolean;
   panels: [GcsCockpitPanel, GcsCockpitPanel, GcsCockpitPanel];
   feed: GcsFeedItem[];
   live: { match: GcsCockpitMatch | null; matches: number; featured: GcsCockpitFeatured[] };

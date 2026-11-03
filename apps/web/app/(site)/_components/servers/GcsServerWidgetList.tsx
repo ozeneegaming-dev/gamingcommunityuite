@@ -4,6 +4,7 @@ import { faChartSimple, faGamepad, faPlay } from "@fortawesome/free-solid-svg-ic
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { playersOnline, serverFill } from "@/lib/home-widgets";
 import { GcsCopyAddressButton } from "./GcsServerAddress";
 import { GcsServerBar } from "./GcsServerGrid";
 import { serverState, useServerStatus, useServerStatuses } from "./GcsServerLive";
@@ -71,6 +72,39 @@ function Row({ server }: { server: GcsServerCardData }) {
   );
 }
 
+/**
+ * Rândul compact (coloana îngustă a primei pagini): numele, jucătorii (roșu când e plin), harta dedesubt și bara
+ * subțire de ocupare; offline = estompat. Click pe nume = pagina serverului.
+ */
+function CompactRow({ server }: { server: GcsServerCardData }) {
+  const t = useTranslations("servers");
+  const status = useServerStatus(server.id, server.status);
+  const state = serverState(status);
+  const detail = server.hasMap ? status?.map : status?.version;
+  const fill = serverFill(status);
+  return (
+    <li className="gcs-serverRow gcs-serverRow--compact" data-state={state} data-fill={fill} data-testid="gcs-widget-server" data-server={server.id}>
+      <Link href={server.href} className="gcs-serverRow__title" title={server.name}>
+        {server.name}
+      </Link>
+      <span className="gcs-serverRow__count" data-testid="gcs-widget-server-players">
+        {status?.online ? `${status.players}/${status.maxPlayers}` : t(`status.${state}`)}
+      </span>
+      {status?.online && detail && <span className="gcs-serverRow__detail">{detail}</span>}
+      <div className="gcs-serverRow__bar">
+        <GcsServerBar status={status} thin />
+      </div>
+    </li>
+  );
+}
+
+/** Jucătorii de pe toate serverele listei, live (în dreapta titlului widget-ului „Servere” compact). */
+export function GcsServerPlayersTotal({ ids }: { ids: number[] }) {
+  const t = useTranslations("widgets.home");
+  const statuses = useServerStatuses();
+  return <span data-testid="gcs-widget-server-total">{t("players", { count: playersOnline(ids.map((id) => statuses[id])) })}</span>;
+}
+
 /** Totalurile listei (live): serverele, jucătorii (din sloturi) și ocuparea. */
 function Totals({ servers }: { servers: GcsServerCardData[] }) {
   const t = useTranslations("servers");
@@ -108,9 +142,21 @@ function Totals({ servers }: { servers: GcsServerCardData[] }) {
 /**
  * Lista din widget-ul „Servere”: statusul, iconița jocului, numele, „Conectează-te”, adresa, inelul de ocupare,
  * jucătorii și butoanele rapide (copiere, pagina serverului), apoi rândul cu totalurile. Pe o coloană îngustă
- * (bara laterală) rândul se strânge pe două linii.
+ * (bara laterală) rândul se strânge pe două linii. Aspectul `compact`: doar numele, jucătorii și bara de ocupare
+ * (totalul jucătorilor stă în dreapta titlului, vezi `GcsServerPlayersTotal`).
  */
-export function GcsServerWidgetList({ servers }: { servers: GcsServerCardData[] }) {
+export function GcsServerWidgetList({ servers, variant = "full" }: { servers: GcsServerCardData[]; variant?: "full" | "compact" }) {
+  if (variant === "compact") {
+    return (
+      <div className="gcs-serverWidget gcs-serverWidget--compact">
+        <ul className="gcs-serverList">
+          {servers.map((s) => (
+            <CompactRow key={s.id} server={s} />
+          ))}
+        </ul>
+      </div>
+    );
+  }
   return (
     <div className="gcs-serverWidget">
       <ul className="gcs-serverList">

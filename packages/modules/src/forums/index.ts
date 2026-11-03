@@ -201,14 +201,20 @@ export const forumsModule: GcsModule = {
   ],
   widgets: forumWidgets,
   stats: forumStatTiles,
-  // Pagina principală implicită (specul etapei 5): anunțul sus, shoutbox-ul și topicurile recente în dreapta,
-  // panoul de statistici (cu „Cine e online”) jos.
-  // Tipurile aplicațiilor lipsă (ex. fără Chat) se sar la seed.
+  // Pagina principală implicită a instalărilor noi (prima pagină nouă, varianta A, 2026-11-03): anunțul sus; în coloana
+  // din dreapta serverele (compact), cine e online, topul săptămânii (postatori / jucători / clanuri), ultimele postări,
+  // meciurile live și, la final, shoutbox-ul; panoul de statistici jos. Toată ordinea stă aici (și pentru widget-urile
+  // altor aplicații), ca modulele înregistrate după forum să nu o schimbe. Tipurile aplicațiilor lipsă (ex. fără Chat
+  // sau fără Servere) se sar la seed, iar paginile aranjate deja de admin nu se ating.
   widgetLayout: {
     index: [
       { zone: "top", type: "core.announcement" },
+      { zone: "sidebar", type: "servers.list", config: { limit: 5, game: "", layout: "compact" } },
+      { zone: "sidebar", type: "core.online" },
+      { zone: "sidebar", type: "core.ranking", config: { metric: "posts", period: "week", tabs: "community" } },
+      { zone: "sidebar", type: "forums.recentPosts", config: { limit: 5 } },
+      { zone: "sidebar", type: "servers.liveMatches", config: { limit: 3 } },
       { zone: "sidebar", type: "chat.shoutbox" },
-      { zone: "sidebar", type: "forums.recentTopics" },
       { zone: "bottom", type: "core.statsPanel" },
     ],
   },

@@ -18,7 +18,19 @@ import {
   type GcsHeaderBuilder,
 } from "./headerBuilder";
 import { compileThemeCss } from "./css";
-import { DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS, THEME_PRESETS, normalizeThemeSettings, themeDefaults, themeSettingsErrors, withThemePath } from "./settings";
+import {
+  DEFAULT_THEME_SETTINGS,
+  GCS_DARK_THEME_SETTINGS,
+  GCS_WHITE_THEME_SETTINGS,
+  NOVA_THEME_SETTINGS,
+  THEME_COCKPIT_LAYOUTS,
+  THEME_FIELDS,
+  THEME_PRESETS,
+  normalizeThemeSettings,
+  themeDefaults,
+  themeSettingsErrors,
+  withThemePath,
+} from "./settings";
 
 const clone = <T>(v: T): T => structuredClone(v);
 
@@ -243,6 +255,30 @@ describe("setările temei: antetul, bara de jos și consola", () => {
     expect(themeSettingsErrors({ cockpit: { enabled: true, pages: "all", left: "top", center: "featured", right: "none", image: null } })).toEqual({});
     expect(themeSettingsErrors({ cockpit: { left: "chess" } })).toEqual({ "cockpit.left": "invalid_choice" });
     expect(themeSettingsErrors({ header: { customHtml: "x".repeat(2001) } })).toEqual({ "header.customHtml": "too_long" });
+  });
+
+  test("aspectul consolei: complet implicit (temele salvate rămân cum erau), compact în GCS Dark / GCS White", () => {
+    expect(THEME_COCKPIT_LAYOUTS).toEqual(["full", "compact"]);
+    expect(THEME_FIELDS["cockpit.layout"]).toEqual({ kind: "enum", options: ["full", "compact"] });
+    expect(DEFAULT_THEME_SETTINGS.cockpit.layout).toBe("full");
+    expect(NOVA_THEME_SETTINGS.cockpit.layout).toBe("full");
+    for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
+      expect(s.cockpit.layout).toBe("compact");
+      // Restul consolei e cel al designului: pornirea rămâne alegerea adminului.
+      expect({ ...s.cockpit, layout: "full" }).toEqual(NOVA_THEME_SETTINGS.cockpit);
+    }
+    // O temă salvată înainte de setare (fără `layout`) primește aspectul complet; una cu `compact` îl păstrează.
+    expect(normalizeThemeSettings({ preset: "nova", cockpit: { enabled: true, pages: "home" } }).cockpit.layout).toBe("full");
+    expect(normalizeThemeSettings({ preset: "classic", cockpit: { enabled: true } }).cockpit.layout).toBe("full");
+    expect(normalizeThemeSettings({ preset: "nova", cockpit: { enabled: true, layout: "compact" } }).cockpit).toEqual({ ...NOVA_THEME_SETTINGS.cockpit, enabled: true, layout: "compact" });
+    // O valoare stricată revine la cea implicită; validarea strictă o respinge.
+    expect(normalizeThemeSettings({ preset: "nova", cockpit: { layout: "mini" } }).cockpit.layout).toBe("full");
+    expect(themeSettingsErrors({ cockpit: { layout: "compact" } })).toEqual({});
+    expect(themeSettingsErrors({ cockpit: { layout: "full" } })).toEqual({});
+    expect(themeSettingsErrors({ cockpit: { layout: "mini" } })).toEqual({ "cockpit.layout": "invalid_choice" });
+    expect(themeSettingsErrors({ cockpit: { layout: true } })).toEqual({ "cockpit.layout": "invalid_choice" });
+    expect(themeSettingsErrors(GCS_DARK_THEME_SETTINGS)).toEqual({});
+    expect(themeSettingsErrors(GCS_WHITE_THEME_SETTINGS)).toEqual({});
   });
 });
 

@@ -10,6 +10,8 @@ export type GcsRankingMetric = (typeof RANKING_METRICS)[number];
 /** Tab-urile panoului „Top” din consolă și ale widget-ului din coloana laterală. */
 export const COCKPIT_METRICS: readonly GcsRankingMetric[] = ["posts", "players", "clans", "online"];
 export const WIDGET_METRICS: readonly GcsRankingMetric[] = ["posts", "topics", "reputation", "online"];
+/** Tab-urile „Comunitate” ale widget-ului („Topul săptămânii” din coloana îngustă a primei pagini). */
+export const COMMUNITY_METRICS: readonly GcsRankingMetric[] = ["posts", "players", "clans"];
 
 export type GcsRankingRow = {
   rank: number;

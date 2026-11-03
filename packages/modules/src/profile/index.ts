@@ -72,9 +72,9 @@ const settings: GcsSettingDef[] = [
 export const profileModule: GcsModule = {
   key: "profile",
   achievementEvents: coreAchievementEvents,
+  // „Ultimele realizări” nu mai stă implicit pe prima pagină (varianta A, 2026-11-03: coloana din dreapta e aranjată de
+  // modulul forumurilor); adminul îl pune din „Editează pagina”.
   widgets: profileWidgets,
-  // Coloana din dreapta a paginii de start (macheta HomeComplete): „Ultimele realizări”.
-  widgetLayout: { index: [{ zone: "sidebar", type: "profile.recentBadges" }] },
   // Profil gaming v2: conturile externe legate (apar doar cu datele aduse și cu tabul lăsat vizibil de membru).
   profileTabs: [
     { key: "steam", labelKey: "profile.tabs.steam", icon: "fa-brands fa-steam", position: 30 },
