@@ -372,6 +372,7 @@
       "not_vip": "The chosen group is not a VIP tier.",
       "permanent": "A permanent VIP cannot be extended.",
       "image": "Upload an image for an image frame.",
+      "preview_image": "Upload an image for “My image”.",
       "signature_media": "The signature cannot contain images or video.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Search for an icon (e.g. gamepad, shield)",
         "iconNone": "No icon",
         "iconNoResults": "No icons found.",
-        "subforumColumns": "Subforum columns"
+        "subforumColumns": "Subforum columns",
+        "preview": {
+          "legend": "Preview image",
+          "hint": "The image at the top of the card in the grid layout. Upload an image and crop it to the card's shape (16:7). Without an image, the card builds its own preview.",
+          "modes": {
+            "auto": {
+              "label": "Automatic from the latest post (recommended)",
+              "help": "The first image of the latest post visible to visitors; otherwise the title, first lines and author over the forum colour. Updates with every new post, from cache."
+            },
+            "image": {
+              "label": "My image",
+              "help": "The image uploaded below, always the same."
+            },
+            "color": {
+              "label": "Forum colour only",
+              "help": "The gradient with the large icon, like a forum with no posts."
+            }
+          },
+          "upload": "Upload an image",
+          "replace": "Change image",
+          "remove": "Remove image",
+          "uploading": "Uploading…",
+          "empty": "No image uploaded",
+          "crop": "Visible part on the card",
+          "cropHint": "Drag the frame (or move it with the arrow keys) to choose the part shown on the card; the rest is cropped.",
+          "result": "How it looks on the card",
+          "autoNote": "With an image uploaded, the card uses it in automatic mode too; remove it to go back to the preview from the latest post."
+        }
       },
       "icons": {
         "chat": "Discussions",
@@ -6328,6 +6356,8 @@
     "statsOf": "Statistics of the forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} other {<b>#</b> topics}}",
     "statsPosts": "{count, plural, one {<b>#</b> reply} other {<b>#</b> replies}}",
+    "cardStats": "{topics, plural, one {<b>#</b> topic} other {<b>#</b> topics}} / {posts, plural, one {<b>#</b> post} other {<b>#</b> posts}}",
+    "cardLastBy": "Last reply by <name></name>, <when></when>",
     "pageHint": "Page",
     "archived": "Archived",
     "popularNow": "Popular now",

@@ -372,6 +372,7 @@
       "not_vip": "Die gewählte Gruppe ist keine VIP-Stufe.",
       "permanent": "Ein permanenter VIP kann nicht verlängert werden.",
       "image": "Laden Sie ein Bild für ein Bildframe hoch.",
+      "preview_image": "Laden Sie ein Bild für „Mein Bild“ hoch.",
       "signature_media": "Die Signatur kann keine Bilder oder Videos enthalten.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Suche nach einem Icon (z.B. Gamepad, Shield)",
         "iconNone": "Kein Icon",
         "iconNoResults": "Keine Icons gefunden.",
-        "subforumColumns": "Spalten des Unterforums"
+        "subforumColumns": "Spalten des Unterforums",
+        "preview": {
+          "legend": "Vorschaubild",
+          "hint": "Das Bild oben auf der Karte in der Rasteransicht. Laden Sie ein Bild hoch und schneiden Sie es auf die Kartenform zu (16:7). Ohne Bild erstellt die Karte ihre Vorschau selbst.",
+          "modes": {
+            "auto": {
+              "label": "Automatisch aus dem neuesten Beitrag (empfohlen)",
+              "help": "Das erste Bild des neuesten für Besucher sichtbaren Beitrags; sonst Titel, erste Zeilen und Autor über der Forumfarbe. Aktualisiert sich bei jedem neuen Beitrag, aus dem Cache."
+            },
+            "image": {
+              "label": "Mein Bild",
+              "help": "Das unten hochgeladene Bild, immer dasselbe."
+            },
+            "color": {
+              "label": "Nur die Forumfarbe",
+              "help": "Der Verlauf mit dem großen Symbol, wie bei einem Forum ohne Beiträge."
+            }
+          },
+          "upload": "Bild hochladen",
+          "replace": "Bild ändern",
+          "remove": "Bild entfernen",
+          "uploading": "Wird hochgeladen…",
+          "empty": "Kein Bild hochgeladen",
+          "crop": "Sichtbarer Teil auf der Karte",
+          "cropHint": "Ziehen Sie den Rahmen (oder verschieben Sie ihn mit den Pfeiltasten), um den sichtbaren Teil zu wählen; der Rest wird abgeschnitten.",
+          "result": "So sieht es auf der Karte aus",
+          "autoNote": "Mit einem hochgeladenen Bild verwendet die Karte es auch im automatischen Modus; entfernen Sie es, um zur Vorschau aus dem neuesten Beitrag zurückzukehren."
+        }
       },
       "icons": {
         "chat": "Diskussionen",
@@ -6328,6 +6356,8 @@
     "statsOf": "Statistik des Forums {name}",
     "statsTopics": "{count, plural, one {<b>#</b> Thema} other {<b>#</b> Themen}}",
     "statsPosts": "{count, plural, one {<b>#</b> Antwort} other {<b>#</b> Antworten}}",
+    "cardStats": "{topics, plural, one {<b>#</b> Thema} other {<b>#</b> Themen}} / {posts, plural, one {<b>#</b> Beitrag} other {<b>#</b> Beiträge}}",
+    "cardLastBy": "Letzte Antwort von <name></name>, <when></when>",
     "pageHint": "Seite",
     "archived": "Archiviert",
     "popularNow": "Gerade beliebt",

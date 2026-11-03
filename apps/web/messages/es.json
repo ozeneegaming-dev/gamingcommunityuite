@@ -372,6 +372,7 @@
       "not_vip": "El grupo elegido no es un nivel VIP.",
       "permanent": "Un VIP permanente no puede ser extendido.",
       "image": "Sube una imagen para un marco de imagen.",
+      "preview_image": "Sube una imagen para «Mi imagen».",
       "signature_media": "La firma no puede contener imágenes o vídeos.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Buscar un icono (por ejemplo, gamepad, escudo)",
         "iconNone": "No hay icono",
         "iconNoResults": "No hay iconos encontrados.",
-        "subforumColumns": "Columnas de subforo"
+        "subforumColumns": "Columnas de subforo",
+        "preview": {
+          "legend": "Imagen de vista previa",
+          "hint": "La imagen superior de la tarjeta en la vista de cuadrícula. Sube una imagen y recórtala a la forma de la tarjeta (16:7). Sin imagen, la tarjeta crea su propia vista previa.",
+          "modes": {
+            "auto": {
+              "label": "Automática desde el último mensaje (recomendado)",
+              "help": "La primera imagen del último mensaje visible para los visitantes; si no, el título, las primeras líneas y el autor sobre el color del foro. Se actualiza con cada mensaje nuevo, desde la caché."
+            },
+            "image": {
+              "label": "Mi imagen",
+              "help": "La imagen subida abajo, siempre la misma."
+            },
+            "color": {
+              "label": "Solo el color del foro",
+              "help": "El degradado con el icono grande, como en un foro sin mensajes."
+            }
+          },
+          "upload": "Subir una imagen",
+          "replace": "Cambiar imagen",
+          "remove": "Quitar imagen",
+          "uploading": "Subiendo…",
+          "empty": "Ninguna imagen subida",
+          "crop": "Parte visible en la tarjeta",
+          "cropHint": "Arrastra el marco (o muévelo con las flechas) para elegir la parte visible en la tarjeta; el resto se recorta.",
+          "result": "Cómo se ve en la tarjeta",
+          "autoNote": "Con una imagen subida, la tarjeta también la usa en modo automático; quítala para volver a la vista previa del último mensaje."
+        }
       },
       "icons": {
         "chat": "Debates",
@@ -6328,6 +6356,8 @@
     "statsOf": "Estadísticas del foro {name}",
     "statsTopics": "{count, plural, one {<b>#</b> tema} many {<b>#</b> temas} other {<b>#</b> temas}}",
     "statsPosts": "{count, plural, one {<b>#</b> respuesta} many {<b>#</b> respuestas} other {<b>#</b> respuestas}}",
+    "cardStats": "{topics, plural, one {<b>#</b> tema} many {<b>#</b> temas} other {<b>#</b> temas}} / {posts, plural, one {<b>#</b> mensaje} many {<b>#</b> mensajes} other {<b>#</b> mensajes}}",
+    "cardLastBy": "Última respuesta de <name></name>, <when></when>",
     "pageHint": "Página",
     "archived": "Archivado",
     "popularNow": "Popular ahora",

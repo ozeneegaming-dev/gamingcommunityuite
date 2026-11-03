@@ -690,6 +690,13 @@ model Forum {
   autoCloseDays   Int       @default(0)
   /// Forum v2: nota cu stele pe topicuri (serviciul `contentRating`).
   ratingEnabled   Boolean   @default(false)
+  /// Cardurile de forum (vederea în grilă): zona de imagine: auto (din ultima postare) | image (imaginea din ACP) | color.
+  previewMode     String    @default("auto")
+  /// Imaginea de previzualizare încărcată din ACP (fișierul decorativ `forum:{id}:preview`); null = fără imagine.
+  previewImageId  String?
+  /// Punctul de focalizare al decupajului 16 : 7 (procente, 0–100), aplicat cu `object-position`.
+  previewFocusX   Int       @default(50)
+  previewFocusY   Int       @default(50)
 
   parent      Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
   children    Forum[]       @relation("ForumTree")

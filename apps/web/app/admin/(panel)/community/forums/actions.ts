@@ -56,6 +56,10 @@ export async function updateForum(id: number, fd: FormData): Promise<GcsResult<n
         ...(fd.has("subforumColumns") ? { subforumColumns: Number(field(fd, "subforumColumns")) } : {}),
         ...(type ? { type: forumType(type) } : {}),
         ...(fd.has("linkUrl") ? { linkUrl: field(fd, "linkUrl") } : {}),
+        // Cardurile din grilă: imaginea de previzualizare (validată de serviciu: modul, fișierul forumului, focalizarea).
+        ...(fd.has("previewMode")
+          ? { preview: { mode: field(fd, "previewMode"), imageId: field(fd, "previewImageId") || null, focusX: intOr(fd, "previewFocusX", 50), focusY: intOr(fd, "previewFocusY", 50) } }
+          : {}),
       },
       actor,
     );

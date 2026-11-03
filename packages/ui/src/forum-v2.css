@@ -1364,8 +1364,10 @@
 }
 
 /*
- * Vederea forumurilor (Forum v2): rânduri (implicit) sau grilă, alegerea membrului. În grilă, fiecare forum e o plăcuță
- * pe coloane (cel puțin 260 px, una singură pe telefon); stilul rândurilor (lista sau cardurile temei) rămâne.
+ * Vederea forumurilor (Forum v2): rânduri (implicit) sau grilă, alegerea membrului. În grilă (macheta „Carduri de
+ * forum”), fiecare forum e un card (`GcsForumCard`): trei pe rând când încap (cel puțin 240 px fiecare), apoi două, apoi
+ * unul pe telefon, toate de aceeași înălțime pe rând. Un șablon `forum.row` modificat de temă rămâne o plăcuță (regulile
+ * cu `:not(.gcs-forumCard)`).
  */
 .gcs-forumIndex__tools {
   display: flex;
@@ -1373,12 +1375,15 @@
   margin-bottom: 12px;
 }
 .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+  --gcs-grid-gap: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: 10px;
-  padding: 10px;
+  /* Coloana are cel puțin o treime din lățime (deci cel mult trei pe rând); 1 px lăsat pentru rotunjiri. */
+  grid-template-columns: repeat(auto-fill, minmax(max(min(100%, 240px), calc((100% - 2 * var(--gcs-grid-gap)) / 3 - 1px)), 1fr));
+  gap: var(--gcs-grid-gap);
+  padding: var(--gcs-grid-gap);
+  background: var(--gcs-list-well);
 }
-.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow {
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow:not(.gcs-forumCard) {
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
@@ -1387,7 +1392,7 @@
   border-radius: 8px;
 }
 /* În coloană, baza flex a rândului (ex. 260 px) ar deveni înălțime: părțile plăcuței au înălțimea conținutului. */
-.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow > * {
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow:not(.gcs-forumCard) > * {
   flex: 0 0 auto;
 }
 .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__main,
@@ -1407,13 +1412,332 @@
   align-self: flex-start;
 }
 /* Bara în culoarea forumului (cardurile temei): sus, în dreptul iconiței, nu la mijlocul plăcuței. */
-.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow::before {
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumRow:not(.gcs-forumCard)::before {
   top: 22px;
   transform: none;
 }
 /* Subforumurile, pe o coloană în plăcuță (coloanele alese de admin sunt pentru vederea pe rânduri). */
 .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-forumRow__subs {
   grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* ─── Cardul de forum (vederea în grilă), în orice temă, pe tokenurile ei ────────────────────────────────── */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard {
+  --gcs-card-color: var(--gcs-forum-color, var(--gcs-accent));
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  /* Fundalul și chenarul din stilul extensiilor (Forum v2), dacă forumul le are. */
+  border: 1px solid var(--gcs-forum-row-border, var(--gcs-border));
+  border-radius: 10px;
+  background-color: var(--gcs-forum-row-bg, var(--gcs-list-row-bg, var(--gcs-surface)));
+  transition: background-color var(--gcs-ease, 0.2s), border-color var(--gcs-ease, 0.2s);
+}
+/* Hover: fundalul puțin mai deschis și chenarul spre culoarea forumului (fără ridicare, fără mărire). */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, var(--gcs-forum-row-bg, var(--gcs-list-row-bg, var(--gcs-surface))));
+  border-color: color-mix(in srgb, var(--gcs-card-color) 55%, var(--gcs-forum-row-border, var(--gcs-border)));
+}
+/* Bara mică a „Cardurilor separate” nu mai e nevoie (zona de imagine are culoarea forumului); bara de accent a extensiilor stă sus. */
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:not(.gcs-forumRow--accentBar)::before {
+  content: none;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard.gcs-forumRow--accentBar::before {
+  inset: 0 0 auto;
+  z-index: 2;
+  width: auto;
+  height: 3px;
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* Zona de imagine: 16 : 7, imaginea din ACP sau din ultima postare (decupată), previzualizarea generată sau gradientul. */
+.gcs-forumCard__media {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  border-bottom: 1px solid var(--gcs-border);
+  border-radius: 9px 9px 0 0;
+  background-color: var(--gcs-surface2);
+}
+/* Decorativă: un click oriunde pe ea ajunge la linkul cardului (forumul). */
+.gcs-forumCard__media,
+.gcs-forumCard__media * {
+  pointer-events: none;
+}
+.gcs-forumCard__img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/*
+ * Previzualizarea generată din ultima postare (fără poză): titlul, primele rânduri și autorul peste un gradient din
+ * culoarea forumului, cu modelul diagonal și ghilimeaua mare. Fundalul închis e fix (textul alb rămâne lizibil în orice temă).
+ */
+.gcs-forumCard__gen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 14px 16px;
+  color: #fff;
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gcs-card-color) 70%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--gcs-card-color) 38%, #0b0f17), #0b0f17 78%);
+}
+.gcs-forumCard__gen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 9px);
+}
+.gcs-forumCard__quote {
+  position: absolute;
+  top: 2px;
+  right: 14px;
+  font-size: 92px;
+  font-weight: 800;
+  line-height: 1;
+  color: rgb(255 255 255 / 0.08);
+}
+.gcs-forumCard__quote::before {
+  content: "\201C";
+}
+.gcs-forumCard__genTitle,
+.gcs-forumCard__genText {
+  position: relative;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.gcs-forumCard__genTitle {
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #fff;
+  text-wrap: balance;
+}
+.gcs-forumCard__genText {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.72);
+}
+.gcs-forumCard__genBy {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.75);
+}
+/* Forum fără postări (sau „Doar culoarea forumului”): gradientul cu iconița mare. */
+.gcs-forumCard__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--gcs-card-color) 70%, #fff);
+  background:
+    radial-gradient(90% 120% at 50% 0%, color-mix(in srgb, var(--gcs-card-color) 45%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--gcs-card-color) 22%, #0b0f17), #0b0f17);
+}
+.gcs-forumCard__empty .gcs-forumIcon {
+  opacity: 0.9;
+  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--gcs-card-color) 50%, transparent));
+}
+
+/* Corpul: iconița în culoarea forumului, titlul cu contoarele pe același bloc, descrierea, subforumurile. */
+.gcs-forumCard__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px 12px;
+}
+.gcs-forumCard__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+.gcs-forumCard__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-top: 1px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-card-color) 16%, var(--gcs-surface2));
+  color: var(--gcs-card-color);
+}
+/* Aspect forumuri: iconița ca imagine, și pe card. */
+.gcs-forumRow--iconImage .gcs-forumCard__icon {
+  background: var(--gcs-forum-icon-image) center / cover no-repeat;
+}
+.gcs-forumRow--iconImage .gcs-forumCard__icon > * {
+  visibility: hidden;
+}
+.gcs-forumCard__heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-forumCard .gcs-forumCard__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--gcs-heading, var(--gcs-text));
+  overflow-wrap: anywhere;
+}
+.gcs-forumIndex[data-view="grid"] .gcs-forumCard .gcs-forumCard__title > a {
+  font-size: inherit;
+  font-weight: inherit;
+}
+.gcs-forumCard__stats {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.gcs-forumCard__stats b {
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+.gcs-forumCard__desc {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* Subforumurile: un rând fiecare, cu dosarul plin (accent) când au mesaje noi pentru vizitator, altfel conturul. */
+.gcs-forumCard__subs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.gcs-forumCard__subs li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-root .gcs-forumCard .gcs-forumCard__sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 2px;
+  color: var(--gcs-heading, var(--gcs-text));
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.gcs-root .gcs-forumCard .gcs-forumCard__sub:hover {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-forumCard__subName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-forumCard__folder {
+  flex: none;
+  font-size: 15px;
+  color: var(--gcs-muted);
+}
+.gcs-forumCard__subs li[data-unread] .gcs-forumCard__folder {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+
+/* Ultimul mesaj, sub o linie: avatarul cu rama, titlul (cel mult 2 rânduri), „Ultimul răspuns de <nume>, <când>”. */
+.gcs-forumCard__last {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-top: auto;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-forumCard__lastText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.gcs-root .gcs-forumCard .gcs-forumCard__lastTitle {
+  /* Linkul cât textul: clicul în gol de lângă el deschide forumul. */
+  justify-self: start;
+  max-width: 100%;
+  color: var(--gcs-heading, var(--gcs-text));
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.gcs-root .gcs-forumCard .gcs-forumCard__lastTitle:hover {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-forumCard__lastBy {
+  min-width: 0;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.gcs-forumCard__none {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+    --gcs-grid-gap: 10px;
+  }
+  .gcs-forumCard__body {
+    padding: 12px 14px 10px;
+  }
+  .gcs-forumCard__last {
+    padding: 10px 14px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard {
+    transition: none;
+  }
 }
 
 /* Pagina previzualizării de aspect (în `iframe` din ACP): doar rândul / banda sau widget-ul, pe fundalul site-ului. */
