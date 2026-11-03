@@ -93,7 +93,10 @@ describe("zonele ACP ale aplicației", () => {
       .map((i) => i.href);
     const shown = areas.flatMap((a) => a.groups.flatMap((g) => g.items.filter((i) => !i.alias).map((i) => i.href)));
     expect(new Set(shown)).toEqual(new Set(hrefs));
-    expect(shown.length).toBe(new Set(shown).size);
+    // O singură excepție, voită: setările de postare apar și la Forum („Setări forum”), cu dreptul de forum, pentru
+    // adminii care au doar Comunitate (aceeași pagină, alt drept de acces).
+    const twice = shown.filter((h, i) => shown.indexOf(h) !== i);
+    expect(twice).toEqual(["/admin/settings/posting"]);
     const aliases = areas.flatMap((a) => a.groups.flatMap((g) => g.items.filter((i) => i.alias)));
     expect(aliases).toEqual([]);
     // „Aplicații și pluginuri” stă doar în zona Aplicații (și pagina ei, cu subpaginile, ține de zona asta).

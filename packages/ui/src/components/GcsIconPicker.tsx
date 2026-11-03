@@ -1,7 +1,7 @@
 "use client";
 
 import { faBan, faChevronDown, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { cx } from "../cx";
 import { GcsIconSvg } from "../icons/svg";
 
@@ -121,7 +121,7 @@ export function GcsIconPicker({ name, value, searchUrl, labels, onChange, compac
     trigger.current?.focus();
   };
 
-  function onGridKey(e: KeyboardEvent<HTMLDivElement>) {
+  function onGridKey(e: ReactKeyboardEvent<HTMLDivElement>) {
     const items = [...(grid.current?.querySelectorAll<HTMLButtonElement>("button") ?? [])];
     const at = items.indexOf(document.activeElement as HTMLButtonElement);
     if (at < 0) return;
