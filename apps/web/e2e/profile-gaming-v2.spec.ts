@@ -329,6 +329,12 @@ test("Setări: prezentarea generală, dispozitivele (cu autentificarea automată
     await page.goto(`/forum/${forum.id}-${forum.slug}`);
     await page.getByRole("link", { name: `Topic lung ${id}` }).first().click();
     await expect(page).toHaveURL(new RegExp(`#post-${topic.ids.at(-1)}$`));
+    // Fragmentul rămâne și după o actualizare a routerului (în suita completă se pierdea la una ulterioară).
+    const refreshed = page.waitForResponse((r) => r.request().headers()["rsc"] === "1");
+    await page.evaluate(() => (window as unknown as { next: { router: { refresh(): void } } }).next.router.refresh());
+    await refreshed;
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(new RegExp(`#post-${topic.ids.at(-1)}$`));
     // „La început”: rămâne pe topic, fără salt.
     await page.goto("/settings/content");
     await page.getByTestId("gcs-topic-open-start").check();
