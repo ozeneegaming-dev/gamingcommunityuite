@@ -185,9 +185,15 @@ test("videoul antetului: încărcat din editor, rulează sub antet, imaginea ră
     expect(await header.evaluate((h) => getComputedStyle(h).backgroundImage)).toContain("header-forja");
     expect(seen).toEqual([]);
 
-    // Telefonul: tot imaginea.
+    // Animațiile pornite la loc în sistem: videoul apare fără reîncărcare.
     await page.emulateMedia({ reducedMotion: "no-preference" });
+    await expect(layer).toHaveAttribute("data-playing", "", { timeout: 20_000 });
+
+    // Telefonul: tot imaginea.
     await page.setViewportSize({ width: 390, height: 844 });
+    await expect(header).toHaveAttribute("data-device", "mobile");
+    await expect(page.locator(".gcs-hb video")).toHaveCount(0);
+    seen.length = 0;
     await page.goto("/");
     await expect(header).toHaveAttribute("data-device", "mobile");
     await expect(page.locator(".gcs-hb video")).toHaveCount(0);
