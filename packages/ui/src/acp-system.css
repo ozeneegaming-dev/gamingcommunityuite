@@ -380,3 +380,53 @@
     padding: 10px 14px;
   }
 }
+
+/* ── Selectorul de forumuri grupat pe categorii (Acțiuni salvate și altele) ── */
+.gcs-forumChecks__tools {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.gcs-forumChecks__hint {
+  margin: 0 0 6px;
+}
+.gcs-forumChecks__group {
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+}
+.gcs-forumChecks__group + .gcs-forumChecks__group {
+  margin-top: 8px;
+}
+.gcs-forumChecks__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+.gcs-forumChecks__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 0 14px;
+}
+.gcs-linkBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gcs-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gcs-linkBtn:hover {
+  text-decoration: underline;
+}
+.gcs-savedSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px;
+}

@@ -1753,9 +1753,20 @@
       "moveTo": "Mută în",
       "noMove": "(nu muta)",
       "reply": "Răspuns predefinit (opțional)",
-      "save": "Salvează acțiunea",
+      "save": "Adaugă acțiunea",
       "delete": "Șterge",
-      "steps": "Pași"
+      "steps": "Pași",
+      "description": "Pașii de moderare aplicați dintr-un singur click pe topicuri: blocare, fixare, evidențiere, mutare și un răspuns predefinit.",
+      "add": "Acțiune nouă",
+      "saveChanges": "Salvează",
+      "secBasics": "Acțiunea",
+      "forumsTitle": "Unde se poate folosi",
+      "forumsHint": "Niciun forum bifat = în toate forumurile.",
+      "noCategory": "Fără categorie",
+      "replyChip": "Răspuns predefinit",
+      "allForums": "În toate forumurile",
+      "inForums": "În: {forums}",
+      "confirmDelete": "Ștergi acțiunea salvată? Topicurile deja moderate cu ea rămân cum sunt."
     },
     "achievements": {
       "ranksTitle": "Ranguri",
@@ -5646,6 +5657,12 @@
         "confirm": "{count, plural, one {Ștergi definitiv fișierul bifat?} few {Ștergi definitiv cele # fișiere bifate?} other {Ștergi definitiv cele # de fișiere bifate?}}",
         "done": "{count, plural, one {# fișier șters} few {# fișiere șterse} other {# de fișiere șterse}}"
       }
+    },
+    "forumChecks": {
+      "all": "Bifează tot",
+      "none": "Debifează tot",
+      "groupAll": "Toate din categorie",
+      "noCategory": "Fără categorie"
     }
   },
   "settings": {

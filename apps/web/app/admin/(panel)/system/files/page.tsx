@@ -90,7 +90,6 @@ export default async function AcpFilesPage({ searchParams }: Props) {
       <div className="gcs-fileDetail">
         <div className="gcs-fileDetail__preview">
           {f.kind === "image" ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={preview(f, false)} alt={f.filename} />
           ) : f.kind === "video" ? (
             <video src={preview(f, false)} controls preload="metadata" />
@@ -292,7 +291,6 @@ export default async function AcpFilesPage({ searchParams }: Props) {
                     <span className="gcs-fileCell">
                       <span className="gcs-fileCell__thumb" aria-hidden="true">
                         {f.kind === "image" ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={preview(f, true)} alt="" loading="lazy" />
                         ) : (
                           <GcsIcon name={KIND_ICONS[f.kind]} />

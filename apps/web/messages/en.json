@@ -1753,9 +1753,20 @@
       "moveTo": "Move to",
       "noMove": "(don't move)",
       "reply": "Canned reply (optional)",
-      "save": "Save action",
+      "save": "Add the action",
       "delete": "Delete",
-      "steps": "Steps"
+      "steps": "Steps",
+      "description": "Moderation steps applied to topics in one click: lock, pin, feature, move and a canned reply.",
+      "add": "New action",
+      "saveChanges": "Save",
+      "secBasics": "Action",
+      "forumsTitle": "Where it can be used",
+      "forumsHint": "No forum selected = in every forum.",
+      "noCategory": "No category",
+      "replyChip": "Canned reply",
+      "allForums": "In every forum",
+      "inForums": "In: {forums}",
+      "confirmDelete": "Delete the saved action? Topics already moderated with it stay as they are."
     },
     "achievements": {
       "ranksTitle": "Ranks",
@@ -5646,6 +5657,12 @@
         "confirm": "{count, plural, one {Delete the selected file permanently?} other {Delete the # selected files permanently?}}",
         "done": "{count, plural, one {# file deleted} other {# files deleted}}"
       }
+    },
+    "forumChecks": {
+      "all": "Select all",
+      "none": "Clear all",
+      "groupAll": "All in category",
+      "noCategory": "No category"
     }
   },
   "settings": {

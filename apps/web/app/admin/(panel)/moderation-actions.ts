@@ -83,7 +83,8 @@ export async function removeModerator(id: number): Promise<GcsResult<null>> {
   });
 }
 
-export async function saveSavedAction(fd: FormData): Promise<GcsResult<null>> {
+/** Adaugă (`id` = `null`) sau editează o acțiune salvată. */
+export async function saveSavedAction(id: number | null, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(SAVED_ACTIONS_ACP_SECTION, "edit", async (actor) => {
     const steps: GcsSavedActionSteps = {};
     if (fd.get("lock") === "on") steps.lock = true;
@@ -93,7 +94,7 @@ export async function saveSavedAction(fd: FormData): Promise<GcsResult<null>> {
     if (!Number.isNaN(moveTo)) steps.moveTo = moveTo;
     const reply = field(fd, "reply").trim();
     if (reply) steps.reply = reply;
-    await services().moderation.saveAction(actor, { name: field(fd, "name"), forumIds: ids(fd, "forumId"), actions: steps });
+    await services().moderation.saveAction(actor, { ...(id !== null ? { id } : {}), name: field(fd, "name"), forumIds: ids(fd, "forumId"), actions: steps });
     return null;
   });
 }

@@ -1,112 +1,160 @@
+import { faPlus, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { SAVED_ACTIONS_ACP_SECTION, type GcsSavedActionSteps } from "@gcs/modules";
-import { GcsCard } from "@gcs/ui";
+import { GcsCard, GcsIconSvg } from "@gcs/ui";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsAcpEditPanel } from "../../_components/GcsAcpEditPanel";
 import { GcsActionForm } from "../../_components/GcsActionForm";
+import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
+import { GcsForumChecks } from "../../_components/GcsForumChecks";
+import { forumGroups } from "../../_components/forum-groups";
 import { deleteSavedAction, saveSavedAction } from "../../moderation-actions";
-import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.savedActions"))("title") };
 }
 
-/** ACP → Comunitate → Acțiuni salvate: macro-urile de moderare (blochează, fixează, mută, răspuns predefinit). */
+/**
+ * ACP → Comunitate → Acțiuni salvate: macro-urile de moderare (blochează, fixează, evidențiază, mută, răspuns
+ * predefinit), ca listă cu pașii și forumurile fiecăreia; „Editează” și „Acțiune nouă” deschid panoul cu formularul
+ * (forumurile grupate pe categorii), „Șterge” stă jos în panou.
+ */
 export default async function AcpSavedActionsPage() {
-  await requireAcpSection(SAVED_ACTIONS_ACP_SECTION);
+  const panel = await requireAcpSection(SAVED_ACTIONS_ACP_SECTION);
   const t = await getTranslations("acp.savedActions");
-  const { moderation, db } = services();
-  const [actions, forums] = await Promise.all([
+  const { moderation, db, acp } = services();
+  const [actions, groups, canEdit, canDelete] = await Promise.all([
     moderation.listActions(),
-    db.forum.findMany({ where: { type: { in: ["FORUM", "QA"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    forumGroups(db),
+    acp.can(panel.actor, SAVED_ACTIONS_ACP_SECTION, "edit"),
+    acp.can(panel.actor, SAVED_ACTIONS_ACP_SECTION, "delete"),
   ]);
-  const forumName = new Map(forums.map((f) => [f.id, f.name]));
-  const describe = (s: GcsSavedActionSteps) =>
+  const forumName = new Map(groups.flatMap((g) => g.forums).map((f) => [f.id, f.name]));
+  const steps = (s: GcsSavedActionSteps) =>
     [
-      s.lock && t("lock"),
-      s.pin && t("pin"),
-      s.feature && t("feature"),
-      s.moveTo !== undefined && `${t("moveTo")} ${forumName.get(s.moveTo) ?? `#${s.moveTo}`}`,
-      s.reply && `${t("reply")}: „${s.reply.slice(0, 60)}”`,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+      s.lock && { icon: "fa-solid fa-lock", text: t("lock") },
+      s.pin && { icon: "fa-solid fa-thumbtack", text: t("pin") },
+      s.feature && { icon: "fa-solid fa-star", text: t("feature") },
+      s.moveTo !== undefined && { icon: "fa-solid fa-right-to-bracket", text: `${t("moveTo")} ${forumName.get(s.moveTo) ?? `#${s.moveTo}`}` },
+      s.reply && { icon: "fa-solid fa-reply", text: t("replyChip") },
+    ].filter((x): x is { icon: string; text: string } => Boolean(x));
+
+  const form = (a?: (typeof actions)[number]) => {
+    const s = (a?.actions ?? {}) as GcsSavedActionSteps;
+    return (
+      <GcsActionForm action={saveSavedAction.bind(null, a?.id ?? null)} submitLabel={a ? t("saveChanges") : t("save")} submitKind={a ? "save" : "create"}>
+        <fieldset className="gcs-formSec">
+          <legend>{t("secBasics")}</legend>
+          <label className="gcs-field">
+            {t("name")}
+            <input className="gcs-input" name="name" required maxLength={60} defaultValue={a?.name ?? ""} />
+          </label>
+        </fieldset>
+        <fieldset className="gcs-formSec">
+          <legend>{t("steps")}</legend>
+          <label className="gcs-toggleRow">
+            <span>{t("lock")}</span>
+            <input type="checkbox" name="lock" defaultChecked={s.lock === true} />
+          </label>
+          <label className="gcs-toggleRow">
+            <span>{t("pin")}</span>
+            <input type="checkbox" name="pin" defaultChecked={s.pin === true} />
+          </label>
+          <label className="gcs-toggleRow">
+            <span>{t("feature")}</span>
+            <input type="checkbox" name="feature" defaultChecked={s.feature === true} />
+          </label>
+          <label className="gcs-field">
+            {t("moveTo")}
+            <select className="gcs-input" name="moveTo" defaultValue={s.moveTo !== undefined ? String(s.moveTo) : ""}>
+              <option value="">{t("noMove")}</option>
+              {groups.map((g, i) => (
+                <optgroup key={i} label={g.category ?? t("noCategory")}>
+                  {g.forums.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label className="gcs-field">
+            {t("reply")}
+            <textarea className="gcs-input" name="reply" rows={4} maxLength={2000} defaultValue={s.reply ?? ""} />
+          </label>
+        </fieldset>
+        <GcsForumChecks name="forumId" groups={groups} selected={(a?.forumIds as number[] | undefined) ?? []} legend={t("forumsTitle")} hint={t("forumsHint")} />
+      </GcsActionForm>
+    );
+  };
 
   return (
     <>
-      <GcsAcpTitle icon="fa-solid fa-wand-magic-sparkles">
+      <GcsAcpTitle
+        icon="fa-solid fa-wand-magic-sparkles"
+        description={t("description")}
+        actions={
+          canEdit && (
+            <GcsAcpEditPanel label={t("add")} variant="primary" buttonIcon={<GcsIconSvg icon={faPlus} />} title={t("add")} titleIcon={<GcsIconSvg icon={faPlus} />} size="lg" testId="gcs-saved-new">
+              {form()}
+            </GcsAcpEditPanel>
+          )
+        }
+      >
         {t("title")}
       </GcsAcpTitle>
-      {actions.length === 0 ? (
-        <GcsCard style={{ padding: 16 }}>
-          <p className="gcs-muted" style={{ margin: 0 }}>
-            {t("empty")}
+      <GcsCard className="gcs-acpPanel">
+        {actions.length === 0 ? (
+          <p className="gcs-acpList__empty gcs-sysEmpty">
+            <GcsIcon name="fa-solid fa-wand-magic-sparkles" /> {t("empty")}
           </p>
-        </GcsCard>
-      ) : (
-        actions.map((a) => (
-          <GcsCard key={a.id} as="article" style={{ padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <strong>{a.name}</strong>
-              <p className="gcs-muted" style={{ margin: "4px 0 0", fontSize: 13 }}>
-                {describe(a.actions as GcsSavedActionSteps)}
-              </p>
-            </div>
-            <GcsActionForm action={deleteSavedAction.bind(null, a.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact />
-          </GcsCard>
-        ))
-      )}
-      <GcsCard as="section" aria-labelledby="gcs-saved-new" style={{ padding: 16, maxWidth: 720 }}>
-        <h2 id="gcs-saved-new" className="gcs-acpWidget__title" style={{ marginBottom: 12 }}>
-          <GcsAcpTitleIcon name="fa-solid fa-plus" />
-          {t("save")}
-        </h2>
-        <GcsActionForm action={saveSavedAction} submitLabel={t("save")} submitKind="save">
-          <label className="gcs-field">
-            {t("name")}
-            <input className="gcs-input" name="name" required maxLength={60} />
-          </label>
-          <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-            <legend style={{ marginBottom: 6 }}>{t("forums")}</legend>
-            {forums.map((f) => (
-              <label key={f.id} className="gcs-check">
-                <input type="checkbox" name="forumId" value={f.id} />
-                {f.name}
-              </label>
-            ))}
-          </fieldset>
-          <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-            <legend style={{ marginBottom: 6 }}>{t("steps")}</legend>
-            <label className="gcs-check">
-              <input type="checkbox" name="lock" />
-              {t("lock")}
-            </label>
-            <label className="gcs-check">
-              <input type="checkbox" name="pin" />
-              {t("pin")}
-            </label>
-            <label className="gcs-check">
-              <input type="checkbox" name="feature" />
-              {t("feature")}
-            </label>
-          </fieldset>
-          <div className="gcs-field">
-            <label htmlFor="gcs-saved-move">{t("moveTo")}</label>
-            <select id="gcs-saved-move" className="gcs-input" name="moveTo" defaultValue="">
-              <option value="">{t("noMove")}</option>
-              {forums.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <label className="gcs-field">
-            {t("reply")}
-            <textarea className="gcs-input" name="reply" rows={3} maxLength={2000} />
-          </label>
-        </GcsActionForm>
+        ) : (
+          <ul className="gcs-sysList" data-testid="gcs-saved-list">
+            {actions.map((a) => {
+              const forums = (a.forumIds as number[]).map((id) => forumName.get(id) ?? `#${id}`);
+              return (
+                <li key={a.id} className="gcs-sysList__row" data-testid="gcs-saved-row" data-name={a.name}>
+                  <span className="gcs-sysList__icon" aria-hidden="true">
+                    <GcsIcon name="fa-solid fa-wand-magic-sparkles" />
+                  </span>
+                  <span className="gcs-sysList__body">
+                    <strong>{a.name}</strong>
+                    <span className="gcs-savedSteps">
+                      {steps(a.actions as GcsSavedActionSteps).map((st, i) => (
+                        <span key={i} className="gcs-sysChip">
+                          <GcsIcon name={st.icon} />
+                          {st.text}
+                        </span>
+                      ))}
+                    </span>
+                    <small>{forums.length === 0 ? t("allForums") : t("inForums", { forums: forums.join(", ") })}</small>
+                  </span>
+                  {canEdit && (
+                    <GcsAcpEditPanel
+                      title={a.name}
+                      titleIcon={<GcsIconSvg icon={faWandMagicSparkles} />}
+                      size="lg"
+                      testId="gcs-saved-edit"
+                      footer={
+                        canDelete ? (
+                          <GcsActionForm action={deleteSavedAction.bind(null, a.id)} submitLabel={t("delete")} submitKind="delete" variant="ghost" compact confirm={t("confirmDelete")}>
+                            {null}
+                          </GcsActionForm>
+                        ) : undefined
+                      }
+                    >
+                      {form(a)}
+                    </GcsAcpEditPanel>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </GcsCard>
     </>
   );
