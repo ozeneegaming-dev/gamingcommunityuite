@@ -10,6 +10,7 @@ import {
   installDomain,
   resolveAppSelection,
   normalizeEmail,
+  normalizeLicenseKey,
   runChecks,
   testDatabase,
   validateUsername,
@@ -23,7 +24,18 @@ import { getTranslations } from "next-intl/server";
 import { clientIp } from "@/lib/actor";
 import { isSameOrigin } from "@/lib/actions";
 import { gcsConfigDir } from "@/lib/config";
-import { hasInstallSession, INSTALL_COOKIE, includedConnection, installState, rememberLiteBaseUrl, savedLicense, stepIndex, stepPath, verifyInstallLicense } from "@/lib/install";
+import {
+  hasInstallSession,
+  INSTALL_COOKIE,
+  includedConnection,
+  installLicenseOnline,
+  installState,
+  rememberLiteBaseUrl,
+  savedLicense,
+  stepIndex,
+  stepPath,
+  verifyInstallLicense,
+} from "@/lib/install";
 import { services } from "@/lib/services";
 
 export type GcsInstallActionResult = { ok: true; next: string } | { ok: false; errors: Record<string, string> };
@@ -93,23 +105,43 @@ export async function continueFromChecks(): Promise<GcsInstallActionResult> {
 }
 
 /**
- * Pasul „Licență”: tokenul semnat (verificat OFFLINE: semnătura, expirarea, domeniul), apoi, dacă e configurată,
- * verificarea online la platforma-mamă (doar o licență revocată blochează) și acceptarea EULA. Tokenul se ține doar
- * pe server (secretele instalării); în progres rămâne doar numele licențiatului.
+ * Pasul „Licență”: de obicei cheia scurtă (`GCS-XXXX-XXXX-XXXX`), schimbată la Data Center pe tokenul semnat (cheia și
+ * domeniul site-ului; Data Center-ul verifică statusul și domeniul), sau direct tokenul semnat `GCS1.…` (licențele
+ * offline). Tokenul se verifică OFFLINE (semnătura, expirarea, domeniul); un token lung trece și prin verificarea
+ * online (doar o licență revocată blochează). Apoi acceptarea EULA. Tokenul și cheia se țin doar pe server (secretele
+ * instalării, `license.key`); în progres rămâne doar numele licențiatului.
  */
 export async function saveLicense(fd: FormData): Promise<GcsInstallActionResult> {
   const denied = await guard();
   if (denied) return { ok: false, errors: denied };
   // Domeniul licenței vine din adresa site-ului (o sesiune începută înaintea ei o primește aici).
-  await rememberLiteBaseUrl(await headers());
+  const h = await headers();
+  await rememberLiteBaseUrl(h);
   const t = await getTranslations("install.steps.license.errors");
-  const token = field(fd, "token");
+  const input = field(fd, "token");
+  const key = normalizeLicenseKey(input);
+  let token = input;
+  if (key) {
+    // EULA înaintea Data Center-ului: o activare nu se consumă pe un formular care oricum e refuzat.
+    if (fd.get("eula") !== "on") return { ok: false, errors: { eula: t("eula") } };
+    const reasons = await getTranslations("errors.reasons");
+    const limiter = gcsEdition() === "lite" ? licenseKeyLimiter : services().rateLimiter;
+    if (!(await limiter.consume(`install-license:${clientIp(h)}`, LICENSE_KEY_RULE)).allowed) return { ok: false, errors: { token: reasons("license_key_rate_limited") } };
+    const activated = await installLicenseOnline().activate(key);
+    if (!activated.ok) return { ok: false, errors: { token: reasons(`license_key_${activated.error}`) } };
+    token = activated.token;
+  }
   const result = verifyInstallLicense(token);
   if (!result.ok) return { ok: false, errors: { token: t(result.error, { domain: installDomain() }) } };
-  if (!result.license.dev && (await checkLicenseOnline(token, { domain: installDomain() })).status === "revoked") return { ok: false, errors: { token: t("revoked") } };
+  if (!key && !result.license.dev && (await checkLicenseOnline(token, { domain: installDomain() })).status === "revoked") return { ok: false, errors: { token: t("revoked") } };
   if (fd.get("eula") !== "on") return { ok: false, errors: { eula: t("eula") } };
+  await installState().saveLicenseKey(key);
   return complete("license", "apps", { token, licensee: result.license.licensee });
 }
+
+/** Activările cheii scurte din installer: Data Center-ul are limita lui, aceasta oprește un formular trimis în buclă. */
+const LICENSE_KEY_RULE = { window: 15 * 60, max: 10 };
+const licenseKeyLimiter = new GcsMemoryRateLimiter();
 
 /** Pasul „Aplicații”: aplicațiile bifate (cele premium doar dacă licența le include) și aplicația de pornire. */
 export async function saveApps(fd: FormData): Promise<GcsInstallActionResult> {

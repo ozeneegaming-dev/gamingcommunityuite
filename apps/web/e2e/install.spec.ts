@@ -6,6 +6,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const CODE = process.env.GCS_E2E_INSTALL_CODE ?? "";
 const LICENSE_KEY = process.env.GCS_E2E_LICENSE_KEY ?? "";
+/** Cheia scurtă de test, activată la Data Center-ul fals al rulării (`e2e/fake-datacenter.mts`). */
+const SHORT_KEY = process.env.GCS_E2E_LICENSE_SHORT_KEY ?? "";
 
 test.skip(!process.env.GCS_E2E_INSTALL_URL || !CODE || !LICENSE_KEY, "Instanța de instalare rulează doar cu build de producție (e2e/run.mts).");
 
@@ -133,7 +135,17 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     await page.getByRole("button", { name: "Înapoi" }).click();
     await expect(page).toHaveURL(/\/install\/license$/);
     await expect(page.getByText("Licență verificată: Comunitatea E2E SRL")).toBeVisible();
-    await page.getByLabel("Cheia de licență").fill(license({ apps: ["servers", "chat_pro"] }));
+    const field = page.getByLabel("Cheia de licență");
+    if (SHORT_KEY) {
+      // Cheia scurtă (cum o primește clientul), schimbată la Data Center pe licența cu Servere și Chat Pro: una care nu
+      // există e refuzată; cea bună merge și cu litere mici și fără cratime.
+      await field.fill("GCS-AAAA-BBBB-CCCC");
+      await next(page);
+      await expect(page.getByText("Cheia de licență nu există.")).toBeVisible();
+      await field.fill(SHORT_KEY.toLowerCase().replaceAll("-", " "));
+    } else {
+      await field.fill(license({ apps: ["servers", "chat_pro"] }));
+    }
     await next(page);
     await expect(page).toHaveURL(/\/install\/apps$/);
     const premium = page.getByTestId("gcs-install-apps-premium");

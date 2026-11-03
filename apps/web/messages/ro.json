@@ -325,7 +325,26 @@
       "new_member_pm_limit": "Ai atins limita zilnică de mesaje private pentru membrii noi.",
       "captcha_failed": "Verificarea anti-spam a eșuat. Încearcă din nou.",
       "qa_failed": "Răspunsul la întrebare nu e corect.",
-      "spam_source": "Oprit de filtrul anti-spam."
+      "spam_source": "Oprit de filtrul anti-spam.",
+      "license_key_format": "Cheia nu are formatul corect (ex. GCS-7KQ4-M2XD-9PRH).",
+      "license_key_invalid_key": "Cheia de licență nu există. Verifică literele și cifrele (cheile nu conțin 0, O, 1 sau I).",
+      "license_key_revoked": "Licența acestei chei a fost revocată.",
+      "license_key_suspended": "Licența acestei chei e suspendată. Contactează-ne.",
+      "license_key_expired": "Licența acestei chei a expirat.",
+      "license_key_blocked": "Licența e blocată pentru acest site. Contactează-ne.",
+      "license_key_domain": "Cheia e deja folosită pe alt domeniu. Cere eliberarea domeniului și încearcă din nou.",
+      "license_key_bad_domain": "Licența are nevoie de domeniul real al forumului (nu o adresă IP sau localhost). Deschide site-ul pe domeniul lui și încearcă din nou.",
+      "license_key_rate_limited": "Prea multe încercări de activare. Încearcă din nou peste 15 minute.",
+      "license_key_unreachable": "Serverul de licențe nu răspunde. Încearcă din nou peste câteva minute sau cere un token de licență offline.",
+      "license_key_disabled": "Activarea online e oprită pe acest server (GCS_LICENSE_SERVER=off): folosește tokenul lung al licenței.",
+      "license_key_invalid_token": "Licența primită de la Data Center nu a trecut verificarea pe acest site. Actualizează GCS sau contactează-ne.",
+      "license_missing": "Introdu cheia de licență.",
+      "license_malformed": "Cheia nu are formatul corect.",
+      "license_unknown_key": "Licența a fost semnată cu o cheie pe care această versiune nu o cunoaște.",
+      "license_bad_signature": "Semnătura licenței nu e validă (licența a fost modificată).",
+      "license_expired": "Licența a expirat.",
+      "license_domain": "Licența nu e valabilă pentru domeniul acestui site.",
+      "license_revoked": "Licența a fost revocată."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -573,7 +592,8 @@
         "update": "Actualizare",
         "cron": "Cron",
         "bot": "Botul comunității",
-        "settings_uploads": "Încărcări și imagini"
+        "settings_uploads": "Încărcări și imagini",
+        "license": "Licență"
       },
       "members": {
         "members": "Membri",
@@ -4555,7 +4575,8 @@
           "unknown": "necunoscută la Data Center",
           "invalid": "invalidă"
         }
-      }
+      },
+      "manageLicense": "Detalii și schimbarea licenței →"
     },
     "bot": {
       "title": "Botul comunității",
@@ -4979,6 +5000,24 @@
       "mb": "{mb} MB",
       "none": "nu poate încărca",
       "unattached": "Fișiere încărcate și încă nelegate de conținut: {count}."
+    },
+    "license": {
+      "title": "Licență",
+      "description": "Licența GamingCommunitySuite a acestui site: ce include, verificarea online și schimbarea cheii.",
+      "key": "Cheia de licență",
+      "tokenOnly": "Token lung (licență offline sau emisă înainte de cheile scurte)",
+      "domains": "Domenii",
+      "expiry": "Expiră",
+      "graceActive": "Data Center-ul a declarat licența invalidă. Aplicațiile premium rămân pornite până pe {date}, apoi se opresc (forumul merge mai departe). Activează mai jos o cheie validă sau contactează-ne.",
+      "graceEnded": "Licența e invalidă de mai mult de 30 de zile: aplicațiile premium sunt oprite (forumul merge mai departe). Activează mai jos o cheie validă.",
+      "change": {
+        "title": "Schimbă licența",
+        "titleFirst": "Activează licența",
+        "field": "Cheia de licență",
+        "hint": "Cheia de forma GCS-XXXX-XXXX-XXXX primită la cumpărare: o verificăm la Data Center, iar licența nouă o înlocuiește pe cea de acum. Merge și tokenul lung (GCS1.…) al unei licențe offline. Licența trebuie să fie pentru domeniul {domain}.",
+        "submit": "Schimbă licența",
+        "submitFirst": "Activează licența"
+      }
     }
   },
   "settings": {
@@ -6194,7 +6233,7 @@
         "title": "Licența GCS",
         "body": "Introdu cheia de licență primită la cumpărare și acceptă termenii de utilizare.",
         "field": "Cheia de licență",
-        "fieldHint": "Începe cu „GCS1.” și o găsești în contul tău de client.",
+        "fieldHint": "Cheia de forma GCS-XXXX-XXXX-XXXX, primită la cumpărare. Pentru o instalare fără internet merge și tokenul lung (GCS1.…).",
         "eula": "Termenii de utilizare (EULA)",
         "eulaMissing": "Textul EULA lipsește din pachet (fișierul EULA.md).",
         "accept": "Am citit și accept termenii de utilizare",

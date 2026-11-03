@@ -100,6 +100,17 @@ describe("sesiunea wizard-ului și tokenul de final", () => {
     await state.advance("email");
     await expect(state.progress()).resolves.toEqual({ step: "email", data: { site: { siteName: "X" } } });
   });
+
+  test("cheia scurtă a licenței: lângă token, 0600; null o șterge", async () => {
+    const state = new GcsInstallState(dir);
+    await expect(state.readLicenseKey()).resolves.toBeNull();
+    await state.saveLicenseKey("GCS-7KQ4-M2XD-9PRH");
+    await expect(new GcsInstallState(dir).readLicenseKey()).resolves.toBe("GCS-7KQ4-M2XD-9PRH");
+    if (process.platform !== "win32") expect(statSync(path.join(dir, "license.key")).mode & 0o777).toBe(0o600);
+    await state.saveLicenseKey(null);
+    await expect(state.readLicenseKey()).resolves.toBeNull();
+    await state.saveLicenseKey(null);
+  });
 });
 
 describe("codul de instalare", () => {

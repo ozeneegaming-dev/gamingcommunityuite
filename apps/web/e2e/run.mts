@@ -18,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { ensureInstallCode, GCS_DARK_THEME_KEY, GCS_WHITE_THEME_KEY, NOVA_THEME_SETTINGS, seedDefaults } from "@gcs/core";
 import { createRegistry } from "@gcs/modules";
 import { createPrismaClient } from "@gcs/db";
+import { E2E_LICENSE_SHORT_KEY, startFakeDataCenter } from "./fake-datacenter.mts";
 import { migrateDatabase } from "@gcs/db/migrate";
 import pg from "pg";
 
@@ -422,11 +423,15 @@ async function main(): Promise<number> {
     const installConfigDir = path.join(webDir, ".e2e", `install-config-${process.pid}`);
     mkdirSync(installConfigDir, { recursive: true });
     const code = await ensureInstallCode(installConfigDir);
+    // Cheia scurtă a licenței: un Data Center fals, doar pentru instanța de instalare (cea principală are `off`).
+    const dataCenter = await startFakeDataCenter(e2eKey.privateKeyPem);
+    cleanups.push(dataCenter.close);
     const installInstanceEnv: NodeJS.ProcessEnv = {
       ...env,
       DATABASE_URL: await emptyDatabase(pgUrl, "redline_e2e_install"),
       GCS_CONFIG_DIR: installConfigDir,
       GCS_BASE_URL: INSTALL_URL,
+      GCS_LICENSE_SERVER: dataCenter.url,
     };
     if (!LITE) {
       const installRedis = new URL(redisUrl);
@@ -441,6 +446,7 @@ async function main(): Promise<number> {
     Object.assign(installEnv, {
       GCS_E2E_INSTALL_URL: INSTALL_URL,
       GCS_E2E_INSTALL_CODE: code ?? "",
+      GCS_E2E_LICENSE_SHORT_KEY: E2E_LICENSE_SHORT_KEY,
       // Pentru install.spec: readuce aplicația de pornire implicită după ce verifică alegerea (smoke-urile continuă pe instanță).
       GCS_E2E_INSTALL_DATABASE_URL: installInstanceEnv.DATABASE_URL ?? "",
       GCS_E2E_INSTALL_REDIS_URL: installInstanceEnv.REDIS_URL ?? "",

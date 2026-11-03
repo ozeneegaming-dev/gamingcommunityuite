@@ -1,12 +1,16 @@
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, test, vi } from "vitest";
 import {
+  activateLicenseKey,
   checkLicenseOnline,
   GCS_DEV_LICENSE_TOKEN,
   installDomain,
   licenseDomainMatches,
+  licenseActivationServer,
   licenseIncludesApp,
   licenseServerFor,
+  maskLicenseKey,
+  normalizeLicenseKey,
   GCS_LICENSE_SERVER_DEFAULT,
   licenseTrustedKeys,
   signLicense,
@@ -140,5 +144,77 @@ describe("Data Center-ul (licențele emise de el)", () => {
     expect(await checkLicenseOnline(dcToken, { domain: "x.ro", server, fetch: reply({ valid: false, status: "suspended" }) })).toEqual({ status: "revoked", reason: "suspended" });
     // Un „token” care nu e o licență GCS e ignorat.
     expect(await checkLicenseOnline(dcToken, { domain: "x.ro", server, fetch: reply({ valid: true, token: "<html>" }) })).toEqual({ status: "valid" });
+  });
+});
+
+describe("cheia scurtă (GCS-XXXX-XXXX-XXXX) și activarea la Data Center", () => {
+  test("forma canonică: litere mici, spații, fără cratime, fără prefix; formatul vechi de 20 de caractere", () => {
+    for (const input of ["GCS-7KQ4-M2XD-9PRH", "gcs-7kq4-m2xd-9prh", " GCS 7KQ4 M2XD 9PRH ", "GCS7KQ4M2XD9PRH", "7KQ4-M2XD-9PRH", "7kq4m2xd9prh"]) {
+      expect(normalizeLicenseKey(input)).toBe("GCS-7KQ4-M2XD-9PRH");
+    }
+    expect(normalizeLicenseKey("GCS-AB2CD-EF3GH-JK4LM-NP5QR")).toBe("GCS-AB2CD-EF3GH-JK4LM-NP5QR");
+    // O cheie care începe cu literele GCS, cu sau fără prefix.
+    expect(normalizeLicenseKey("GCSA-BCDE-FGHJ")).toBe("GCS-GCSA-BCDE-FGHJ");
+    expect(normalizeLicenseKey("GCS-GCSA-BCDE-FGHJ")).toBe("GCS-GCSA-BCDE-FGHJ");
+  });
+
+  test("nu e o cheie: 0 / O / 1 / I, altă lungime, tokenul lung, cel de test, gol", () => {
+    for (const input of ["GCS-7KQ4-M2XD-9PR0", "GCS-7KQ4-M2XD-9PRO", "GCS-7KQ4-M2XD-9PR1", "GCS-7KQ4-M2XD-9PRI", "GCS-7KQ4-M2XD", "GCS-7KQ4-M2XD-9PRH-AB", "GCS1.e30.c2ln", GCS_DEV_LICENSE_TOKEN, "", null, undefined]) {
+      expect(normalizeLicenseKey(input)).toBeNull();
+    }
+  });
+
+  test("mascarea, ca în panoul Data Center-ului", () => {
+    expect(maskLicenseKey("GCS-7KQ4-M2XD-9PRH")).toBe("GCS-7KQ4-****-****");
+    expect(maskLicenseKey("GCS-AB2CD-EF3GH-JK4LM-NP5QR")).toBe("GCS-AB2CD-*****-*****-*****");
+  });
+
+  test("serverul activării: Data Center-ul implicit, GCS_LICENSE_SERVER îl schimbă sau îl oprește (off)", () => {
+    expect(licenseActivationServer({})).toBe(GCS_LICENSE_SERVER_DEFAULT);
+    expect(licenseActivationServer({ GCS_LICENSE_SERVER: "https://alt.test" })).toBe("https://alt.test");
+    expect(licenseActivationServer({ GCS_LICENSE_SERVER: "off" })).toBe("");
+  });
+
+  test("cererea: cheia canonică, domeniul, instanța; răspunsul: tokenul sau motivul refuzului", async () => {
+    const server = "https://dc.exemplu.test";
+    const reply = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
+    const token = signLicense(payload({ kid: "gcs-lic-dc-2026", id: "dc-7" }), privateKey);
+    const ok = reply({ ok: true, token, licensee: "Comunitatea Test" });
+    const sums = "a".repeat(64);
+    expect(
+      await activateLicenseKey("gcs 7kq4 m2xd 9prh", { domain: "https://Forum.Exemplu.ro:3000", server, fetch: ok, instanceUuid: "inst-1", version: "1.2.0", edition: "vps", filesSha256: sums }),
+    ).toEqual({ ok: true, token });
+    expect(ok).toHaveBeenCalledWith(
+      new URL("/api/license/activate", server),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ key: "GCS-7KQ4-M2XD-9PRH", domain: "forum.exemplu.ro", instance_uuid: "inst-1", version: "1.2.0", edition: "vps", files_sha256: sums }),
+      }),
+    );
+    for (const error of ["invalid_key", "revoked", "suspended", "expired", "blocked", "domain", "rate_limited"]) {
+      expect(await activateLicenseKey("GCS-7KQ4-M2XD-9PRH", { domain: "x.ro", server, fetch: reply({ ok: false, error }) })).toEqual({ ok: false, error });
+    }
+    // Domeniul refuzat de Data Center ca format (o adresă IP, localhost): 400.
+    expect(await activateLicenseKey("GCS-7KQ4-M2XD-9PRH", { domain: "203.0.113.7", server, fetch: reply({ error: "bad_request" }, 400) })).toEqual({ ok: false, error: "bad_domain" });
+  });
+
+  test("format greșit și activare oprită: fără cerere; răspunsuri ciudate sau server căzut → unreachable", async () => {
+    const never = vi.fn(async () => new Response("{}"));
+    expect(await activateLicenseKey("GCS1.abc.def", { domain: "x.ro", server: "https://dc.test", fetch: never })).toEqual({ ok: false, error: "format" });
+    expect(await activateLicenseKey("GCS-7KQ4-M2XD-9PRH", { domain: "x.ro", server: "", fetch: never })).toEqual({ ok: false, error: "disabled" });
+    expect(never).not.toHaveBeenCalled();
+    const server = "https://dc.exemplu.test";
+    const reply = (body: string, status = 200) => vi.fn(async () => new Response(body, { status }));
+    for (const fetch of [
+      reply(JSON.stringify({ error: "unavailable" }), 503),
+      reply("<html>"),
+      reply(JSON.stringify({ ok: true, token: "<html>" })),
+      reply(JSON.stringify({ ok: false, error: "something_else" })),
+      vi.fn(async () => {
+        throw new Error("ECONNREFUSED");
+      }),
+    ]) {
+      expect(await activateLicenseKey("GCS-7KQ4-M2XD-9PRH", { domain: "x.ro", server, fetch })).toEqual({ ok: false, error: "unreachable" });
+    }
   });
 });

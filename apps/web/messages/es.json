@@ -325,7 +325,26 @@
       "new_member_pm_limit": "Has alcanzado el límite diario de mensajes privados para miembros nuevos.",
       "captcha_failed": "La verificación antispam falló. Inténtalo de nuevo.",
       "qa_failed": "La respuesta a la pregunta no es correcta.",
-      "spam_source": "Detenido por el filtro antispam."
+      "spam_source": "Detenido por el filtro antispam.",
+      "license_key_format": "La clave no tiene el formato correcto (p. ej. GCS-7KQ4-M2XD-9PRH).",
+      "license_key_invalid_key": "Esta clave de licencia no existe. Revisa las letras y los números (las claves nunca contienen 0, O, 1 ni I).",
+      "license_key_revoked": "La licencia de esta clave ha sido revocada.",
+      "license_key_suspended": "La licencia de esta clave está suspendida. Contáctanos.",
+      "license_key_expired": "La licencia de esta clave ha caducado.",
+      "license_key_blocked": "La licencia está bloqueada para este sitio. Contáctanos.",
+      "license_key_domain": "La clave ya se usa en otro dominio. Pide que se libere el dominio e inténtalo de nuevo.",
+      "license_key_bad_domain": "La licencia necesita el dominio real del foro (no una dirección IP ni localhost). Abre el sitio desde su dominio e inténtalo de nuevo.",
+      "license_key_rate_limited": "Demasiados intentos de activación. Inténtalo de nuevo dentro de 15 minutos.",
+      "license_key_unreachable": "El servidor de licencias no responde. Inténtalo de nuevo en unos minutos o pide un token de licencia sin conexión.",
+      "license_key_disabled": "La activación en línea está desactivada en este servidor (GCS_LICENSE_SERVER=off): usa el token largo de la licencia.",
+      "license_key_invalid_token": "La licencia enviada por el Data Center no ha superado la verificación en este sitio. Actualiza GCS o contáctanos.",
+      "license_missing": "Introduce la clave de licencia.",
+      "license_malformed": "La clave no tiene el formato correcto.",
+      "license_unknown_key": "La licencia se firmó con una clave que esta versión no conoce.",
+      "license_bad_signature": "La firma de la licencia no es válida (la licencia ha sido modificada).",
+      "license_expired": "La licencia ha caducado.",
+      "license_domain": "La licencia no es válida para el dominio de este sitio.",
+      "license_revoked": "La licencia ha sido revocada."
     },
     "fields": {
       "invalid_color": "Color inválido (#RRGGBB)",
@@ -573,7 +592,8 @@
         "update": "Actualización",
         "cron": "Cron",
         "bot": "Bot de la comunidad",
-        "settings_uploads": "Subidas e imágenes"
+        "settings_uploads": "Subidas e imágenes",
+        "license": "Licencia"
       },
       "members": {
         "members": "Miembros",
@@ -4555,7 +4575,8 @@
           "unknown": "desconocida para el Data Center",
           "invalid": "no válida"
         }
-      }
+      },
+      "manageLicense": "Detalles y cambio de licencia →"
     },
     "bot": {
       "title": "Bot de la comunidad",
@@ -4979,6 +5000,24 @@
       "mb": "{mb} MB",
       "none": "no puede subir",
       "unattached": "Archivos subidos y aún no adjuntados a ningún contenido: {count}."
+    },
+    "license": {
+      "title": "Licencia",
+      "description": "La licencia de GamingCommunitySuite de este sitio: qué incluye, la verificación en línea y el cambio de clave.",
+      "key": "Clave de licencia",
+      "tokenOnly": "Token largo (licencia sin conexión o emitida antes de las claves cortas)",
+      "domains": "Dominios",
+      "expiry": "Caduca",
+      "graceActive": "El Data Center ha declarado la licencia no válida. Las aplicaciones premium siguen activas hasta el {date} y después se desactivan (el foro sigue funcionando). Activa abajo una clave válida o contáctanos.",
+      "graceEnded": "La licencia no es válida desde hace más de 30 días: las aplicaciones premium están desactivadas (el foro sigue funcionando). Activa abajo una clave válida.",
+      "change": {
+        "title": "Cambiar la licencia",
+        "titleFirst": "Activar la licencia",
+        "field": "Clave de licencia",
+        "hint": "La clave con formato GCS-XXXX-XXXX-XXXX que recibiste con la compra: la verificamos en el Data Center y la nueva licencia sustituye a la actual. También sirve el token largo (GCS1.…) de una licencia sin conexión. La licencia debe ser para el dominio {domain}.",
+        "submit": "Cambiar la licencia",
+        "submitFirst": "Activar la licencia"
+      }
     }
   },
   "settings": {
@@ -6194,7 +6233,7 @@
         "title": "Licencia de GCS",
         "body": "Introduce la clave de licencia que recibiste con la compra y acepta los términos de uso.",
         "field": "Clave de licencia",
-        "fieldHint": "Empieza por «GCS1.» y la encuentras en tu cuenta de cliente.",
+        "fieldHint": "La clave con formato GCS-XXXX-XXXX-XXXX que recibiste con la compra. Para una instalación sin internet también sirve el token largo (GCS1.…).",
         "eula": "Términos de uso (EULA)",
         "eulaMissing": "Falta el texto del EULA en el paquete (EULA.md).",
         "accept": "He leído y acepto los términos de uso",
