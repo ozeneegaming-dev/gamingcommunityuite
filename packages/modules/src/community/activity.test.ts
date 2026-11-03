@@ -227,14 +227,12 @@ describe("fluxul de activitate", () => {
       { ...DEFAULT_STREAMS, kinds: ["topic"], excludeForumIds: [offtopic.id], custom: [{ key: "stiri", name: "Știri", icon: "", kinds: ["topic", "reply"], forumIds: [news.id] }] },
       w.root,
     );
-    const all = (await withSettings.page(w.member)).items.map(describeItem).join("
-");
+    const all = (await withSettings.page(w.member)).items.map(describeItem).join("\n");
     expect(all).toContain("Turneu anunțat");
     expect(all).toContain("Config nou");
     expect(all).not.toContain("Ce mâncați azi");
     expect(all).not.toContain("abia aștept");
-    const stiri = (await withSettings.page(w.member, { stream: "stiri" })).items.map(describeItem).join("
-");
+    const stiri = (await withSettings.page(w.member, { stream: "stiri" })).items.map(describeItem).join("\n");
     expect(stiri).toContain("Turneu anunțat");
     expect(stiri).toContain("abia aștept");
     expect(stiri).not.toContain("Config nou");
