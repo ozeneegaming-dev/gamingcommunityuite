@@ -164,6 +164,23 @@ export class GcsAcpRoleService {
     });
   }
 
+  /** Schimbă numele unui rol (rolul Root nu se redenumește; numele rămân unice). */
+  async renameRole(roleId: number, name: string, actor: GcsActor): Promise<AcpRole> {
+    await this.assert(actor, ROLES_SECTION, "edit");
+    const role = await this.editableRole(roleId);
+    const clean = name.trim();
+    if (clean.length < 1 || clean.length > 64) throw new GcsValidationError({ name: "invalid_length" });
+    if (clean === role.name) return role;
+    const { db } = this.deps;
+    const other = await db.acpRole.findUnique({ where: { name: clean } });
+    if (other && other.id !== roleId) throw new GcsConflict({ reason: "role_exists" });
+    return db.$transaction(async (tx) => {
+      const renamed = await tx.acpRole.update({ where: { id: roleId }, data: { name: clean } });
+      await writeAudit(tx, { actorId: actor.userId, action: "acp.role.rename", targetType: "acp_role", targetId: String(roleId), before: { name: role.name }, after: { name: clean }, ip: actor.ip });
+      return renamed;
+    });
+  }
+
   /** Înlocuiește matricea secțiune × {view, edit, delete} a unui rol. `edit`/`delete` implică `view`. */
   async setRolePermissions(roleId: number, matrix: GcsAcpRights, actor: GcsActor): Promise<void> {
     await this.assert(actor, ROLES_SECTION, "edit");

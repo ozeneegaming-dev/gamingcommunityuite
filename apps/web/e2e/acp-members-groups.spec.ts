@@ -118,6 +118,13 @@ test("un Admin cu rolul „Manager VIP” nu vede aplicația Membri; /admin/memb
   await expect(apps.getByRole("link", { name: "Dashboard" })).toBeVisible();
   await expect(apps.getByRole("button", { name: "Membri" })).toHaveCount(0);
   expect((await adminPage.goto("/admin/members"))?.status()).toBe(404);
+
+  // Rolul se poate redenumi; atribuirea și drepturile rămân.
+  await role.getByLabel("Redenumește rolul").fill("Echipa VIP");
+  await role.getByRole("button", { name: "Salvează numele" }).click();
+  const renamed = page.getByRole("region", { name: "Echipa VIP" });
+  await expect(renamed).toBeVisible();
+  await expect(renamed.getByText("AdminVIP", { exact: true })).toBeVisible();
 });
 
 test("Grupuri: rânduri compacte cu etichete și filtre; ordinea schimbată cu ↑/↓ sau prin tragere rămâne salvată", async ({ page }) => {

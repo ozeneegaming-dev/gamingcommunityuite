@@ -966,3 +966,20 @@
   margin: 4px 0 12px;
   font-family: var(--gcs-font-mono, ui-monospace, monospace);
 }
+
+/* ── Banuri: filtrul listei și paginarea ── */
+.gcs-bansFilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  margin-bottom: 14px;
+}
+.gcs-bansFilter .gcs-field {
+  flex: 1 1 180px;
+}
+.gcs-bansPager {
+  display: flex;
+  gap: 12px;
+  margin: 14px 0 0;
+}

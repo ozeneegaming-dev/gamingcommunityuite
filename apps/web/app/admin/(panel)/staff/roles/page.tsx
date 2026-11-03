@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
-import { assignRoleToGroup, assignRoleToUser, createRole, deleteRole, saveRolePermissions, unassignRole } from "./actions";
+import { assignRoleToGroup, assignRoleToUser, createRole, deleteRole, renameRole, saveRolePermissions, unassignRole } from "./actions";
 import { GcsAcpTitle, GcsAcpTitleIcon } from "../../_components/GcsAcpTitle";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,6 +57,14 @@ export default async function AcpRolesPage() {
             {role.isRoot ? (
               <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 14 }}>{t("root")}</p>
             ) : (
+              <GcsActionForm action={renameRole.bind(null, role.id)} submitLabel={t("rename.submit")} submitKind="save" variant="ghost" style={{ maxWidth: 520 }}>
+                <label className="gcs-field">
+                  {t("rename.name")}
+                  <input className="gcs-input" name="name" required maxLength={64} defaultValue={role.name} data-testid="gcs-acp-role-name" />
+                </label>
+              </GcsActionForm>
+            )}
+            {!role.isRoot && (
               <details>
                 <summary style={{ cursor: "pointer", fontWeight: 600, minHeight: 32 }}>{t("matrix.title")}</summary>
                 <GcsActionForm action={saveRolePermissions.bind(null, role.id)} submitLabel={t("matrix.save")} submitKind="save" style={{ marginTop: 12 }}>

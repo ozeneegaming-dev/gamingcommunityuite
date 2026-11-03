@@ -511,7 +511,8 @@
       "unknown_job": "Jobul nu se poate rula manual",
       "invalid_area": "Zonă de cache invalidă",
       "invalid_ga4": "ID-ul Google Analytics arată ca G-XXXXXXXXXX",
-      "invalid_uuid": "ID-ul arată ca xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      "invalid_uuid": "ID-ul arată ca xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "unresolvable": "Adresa nu poate fi găsită (domeniul nu răspunde). Verific-o și încearcă din nou."
     }
   },
   "acp": {
@@ -1446,7 +1447,11 @@
         "remove": "Retrage de la {target}"
       },
       "delete": "Șterge rolul",
-      "userNotFound": "Nu există un utilizator cu acest nume"
+      "userNotFound": "Nu există un utilizator cu acest nume",
+      "rename": {
+        "name": "Redenumește rolul",
+        "submit": "Salvează numele"
+      }
     },
     "logs": {
       "title": "Jurnal ACP",
@@ -5057,7 +5062,9 @@
         "valuePlaceholder": "nume, IP / interval sau email / @domeniu",
         "duration": "Durata",
         "reason": "Motivul",
-        "submit": "Banează"
+        "submit": "Banează",
+        "what": "Ce se banează",
+        "details": "Durata și motivul"
       },
       "types": {
         "ACCOUNT": "Cont",
@@ -5093,7 +5100,12 @@
       "liftConfirm": "Banul se ridică imediat; persoana își recapătă accesul.",
       "prev": "‹ Înapoi",
       "next": "Înainte ›",
-      "page": "Pagina {page} din {pages}"
+      "page": "Pagina {page} din {pages}",
+      "save": "Salvează",
+      "keepUntil": "Neschimbată (până la {date})",
+      "keepPermanent": "Neschimbată (permanent)",
+      "fromNow": "{duration} de acum",
+      "liftedAt": "ridicat {date}"
     },
     "warnings": {
       "title": "Avertismente",

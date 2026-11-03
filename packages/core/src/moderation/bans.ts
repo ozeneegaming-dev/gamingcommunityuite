@@ -218,6 +218,36 @@ export class GcsBanService {
     return ban;
   }
 
+  /**
+   * Schimbă motivul și, opțional, expirarea unui ban (`expiresAt`: `undefined` = neschimbată, `null` = permanent).
+   * Un ban ridicat nu se mai poate prelungi. Protecția Root Admin se aplică și aici.
+   */
+  async update(banId: string, input: { reason: string; expiresAt?: Date | null }, actor: GcsActor, section = ACP_SECTION): Promise<Ban> {
+    await this.deps.acp.assert(actor, section, "edit");
+    const { db } = this.deps;
+    const reason = input.reason.trim();
+    if (reason.length === 0 || reason.length > 500) throw new GcsValidationError({ reason: "invalid_length" });
+    const ban = await db.ban.findUnique({ where: { id: banId } });
+    if (!ban) throw new GcsNotFound({ entity: "ban" });
+    if (ban.userId) await assertCanManageUser(db, actor, ban.userId, { removesRoot: true });
+    const expiresAt = input.expiresAt === undefined || ban.liftedAt ? ban.expiresAt : input.expiresAt;
+    const updated = await db.$transaction(async (tx) => {
+      const row = await tx.ban.update({ where: { id: banId }, data: { reason, expiresAt } });
+      await writeAudit(tx, {
+        actorId: actor.userId,
+        action: "user.ban_edit",
+        targetType: ban.userId ? "user" : "ban",
+        targetId: ban.userId ?? ban.id,
+        before: { reason: ban.reason, expiresAt: ban.expiresAt?.toISOString() ?? null },
+        after: { reason: row.reason, expiresAt: row.expiresAt?.toISOString() ?? null },
+        ip: actor.ip,
+      });
+      return row;
+    });
+    if (ban.type === "IP") clearIpRangeCache(db);
+    return updated;
+  }
+
   /** Ridică un ban; `section` = secțiunea ACP de unde vine cererea (pagina membrului sau lista Banuri). */
   async lift(banId: string, actor: GcsActor, section = ACP_SECTION): Promise<void> {
     await this.deps.acp.assert(actor, section, "edit");

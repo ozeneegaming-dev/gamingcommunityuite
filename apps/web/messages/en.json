@@ -511,7 +511,8 @@
       "unknown_job": "This job cannot be run manually",
       "invalid_area": "Invalid cache area",
       "invalid_ga4": "The Google Analytics ID looks like G-XXXXXXXXXX",
-      "invalid_uuid": "The ID looks like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      "invalid_uuid": "The ID looks like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "unresolvable": "The address can't be found (the domain doesn't respond). Check it and try again."
     }
   },
   "acp": {
@@ -1446,7 +1447,11 @@
         "remove": "Remove from {target}"
       },
       "delete": "Delete role",
-      "userNotFound": "No user with this name"
+      "userNotFound": "No user with this name",
+      "rename": {
+        "name": "Rename the role",
+        "submit": "Save the name"
+      }
     },
     "logs": {
       "title": "ACP log",
@@ -5057,7 +5062,9 @@
         "valuePlaceholder": "name, IP / range or email / @domain",
         "duration": "Duration",
         "reason": "Reason",
-        "submit": "Ban"
+        "submit": "Ban",
+        "what": "What to ban",
+        "details": "Duration and reason"
       },
       "types": {
         "ACCOUNT": "Account",
@@ -5093,7 +5100,12 @@
       "liftConfirm": "The ban is lifted at once; the person gets access back.",
       "prev": "‹ Previous",
       "next": "Next ›",
-      "page": "Page {page} of {pages}"
+      "page": "Page {page} of {pages}",
+      "save": "Save",
+      "keepUntil": "Unchanged (until {date})",
+      "keepPermanent": "Unchanged (permanent)",
+      "fromNow": "{duration} from now",
+      "liftedAt": "lifted {date}"
     },
     "warnings": {
       "title": "Warnings",
