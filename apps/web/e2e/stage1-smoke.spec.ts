@@ -68,7 +68,7 @@ test("etapa 1: instalare → 2FA → grup VIP cu gradient → membru → ban →
     // Grupurile se schimbă din popupul „Grupuri” al barei de acțiuni; după salvare popupul se închide.
     await page.getByTestId("gcs-member-act-groups").click();
     const groups = page.getByTestId("gcs-member-modal-groups");
-    await groups.getByLabel("Grup principal").selectOption({ label: "VIP Test" });
+    await groups.getByTestId("gcs-member-primary-group").selectOption({ label: "VIP Test" });
     await groups.getByRole("button", { name: "Salvează grupul principal" }).click();
     await expect(groups).toHaveCount(0);
 

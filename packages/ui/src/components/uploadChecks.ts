@@ -75,7 +75,9 @@ async function imageSize(file: File, type: string): Promise<{ width: number; hei
 export async function checkUploadFile(file: File, rules: GcsUploadRules): Promise<GcsUploadCheck[]> {
   const head = new Uint8Array(await file.slice(0, 64).arrayBuffer());
   const sniffed = sniffType(head);
-  const type = sniffed ?? file.type;
+  // Imaginile, videourile și arhivele au semnătură: fără ea, tipul declarat (numele, `.mp4`) nu ajunge.
+  const needsSignature = rules.accept.every((a) => /^(image|video)\//.test(a) || a === "application/zip" || a === "application/x-zip-compressed");
+  const type = sniffed ?? (needsSignature ? "" : file.type);
   const checks: GcsUploadCheck[] = [];
   const typeOk = typeAccepted(type, file.name, rules.accept);
   checks.push({ key: typeOk ? "okType" : "errType", ok: typeOk });

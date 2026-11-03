@@ -94,7 +94,7 @@ test("o regulă nouă „3 postări → badge” se aplică automat de worker du
   await newRule.getByLabel("Nume", { exact: true }).fill(`3 postări ${id}`);
   await newRule.locator('select[name="trigger"]').selectOption("POSTS_COUNT");
   await newRule.getByLabel("Prag", { exact: true }).fill("3");
-  await newRule.getByLabel("Badge", { exact: true }).selectOption({ label: `Activ ${id}` });
+  await newRule.locator('select[name="badgeId"]').selectOption({ label: `Activ ${id}` });
   await newRule.getByRole("button", { name: "Adaugă", exact: true }).click();
   await expect(newRule).toHaveCount(0);
   const ruleRow = page.getByTestId("gcs-acp-rule").filter({ hasText: `3 postări ${id}` });
