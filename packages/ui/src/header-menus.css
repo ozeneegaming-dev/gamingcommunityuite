@@ -391,6 +391,15 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-btn-primary-text, #fff) 14%, transparent);
   color: var(--gcs-btn-primary-text, #fff);
 }
+/*
+ * Pătratele iconițelor doar unde e loc (de la 1600 px): sub, bara arată doar etichetele, ca itemii să rămână pe bară în
+ * loc să treacă în „Mai mult” (meniul împărțit Esports și antetul Standard, pe ecranele de 1366–1512 px).
+ */
+@media (max-width: 1599px) {
+  :root .gcs-hb__navBar .gcs-hb__nav > .gcs-hb__navIcon {
+    display: none;
+  }
+}
 :root .gcs-hb__navLabel {
   min-width: 0;
 }
