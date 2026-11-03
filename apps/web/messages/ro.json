@@ -509,7 +509,9 @@
       "empty": "Niciun destinatar pentru publicul ales",
       "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
       "unknown_job": "Jobul nu se poate rula manual",
-      "invalid_area": "Zonă de cache invalidă"
+      "invalid_area": "Zonă de cache invalidă",
+      "invalid_ga4": "ID-ul Google Analytics arată ca G-XXXXXXXXXX",
+      "invalid_uuid": "ID-ul arată ca xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     }
   },
   "acp": {
@@ -6272,6 +6274,144 @@
       "noDeliveries": "Nicio livrare încă.",
       "delete": "Șterge",
       "confirmDelete": "Ștergi webhook-ul? Livrările în așteptare nu mai pleacă."
+    },
+    "api": {
+      "title": "API",
+      "description": "Chei pentru alte aplicații (bot Discord, site de prezentare, panou de servere) care citesc datele publice ale comunității. Fiecare cheie are doar drepturile alese și maximum {rate} de cereri pe minut.",
+      "add": "Cheie nouă",
+      "create": "Creează cheia",
+      "save": "Salvează",
+      "empty": "Nicio cheie încă. Creează una pentru botul tău de Discord sau pentru site-ul de prezentare.",
+      "name": "Numele",
+      "namePlaceholder": "ex. Bot Discord",
+      "nameHint": "Ca să știi pe unde e folosită.",
+      "scopes": "Ce poate citi",
+      "scopeNames": {
+        "stats_read": "Statistici",
+        "forums_read": "Topicuri recente",
+        "members_read": "Profiluri publice",
+        "servers_read": "Servere"
+      },
+      "createdHint": "Copiază cheia acum: din motive de siguranță nu se mai afișează. Dacă o pierzi, creează alta și o revoci pe cea veche.",
+      "copy": "Copiază cheia",
+      "copied": "Copiată",
+      "another": "Încă o cheie",
+      "lastUsed": "folosită {when}",
+      "neverUsed": "nefolosită încă",
+      "active": "Activă",
+      "unused": "Nefolosită",
+      "revoked": "Revocată",
+      "created": "Creată {when}",
+      "revokedAt": "revocată {when}",
+      "revoke": "Revocă cheia",
+      "revokeHint": "Cererile cu această cheie sunt refuzate imediat. Cheia rămâne în listă, cu jurnalul ei.",
+      "confirmRevoke": "Revoci cheia? Aplicațiile care o folosesc nu mai primesc date.",
+      "calls": "Ultimele cereri",
+      "noCalls": "Nicio cerere încă.",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi cheia și jurnalul ei?",
+      "docsTitle": "Cum se folosește",
+      "docsIntro": "Trimite cheia în antetul Authorization. Răspunsul e JSON, cu datele în câmpul data (sau codul în câmpul error). Datele sunt cele pe care le vede un vizitator.",
+      "endpoints": {
+        "stats_read": "Numărul de topicuri, postări și membri, plus cel mai nou membru.",
+        "forums_read": "Ultimele topicuri active din forumurile publice (limit până la 50).",
+        "members_read": "Profilul public al unui membru, după nume: grupul, postările, reputația, dacă e online.",
+        "servers_read": "Serverele publice cu jucătorii, harta și uptime-ul (aplicația Servere)."
+      },
+      "docsErrors": "Coduri: 403 = cheie greșită, revocată sau fără dreptul cerut; 404 = nu există; 429 = peste {rate} de cereri pe minut (vezi antetul Retry-After)."
+    },
+    "integrations": {
+      "title": "Integrări",
+      "description": "Serviciile externe ale comunității într-un singur loc: ce e conectat, ce lipsește și unde se configurează fiecare.",
+      "summary": "{on} din {all} integrări pornite",
+      "summaryHint": "Apasă „Configurează” ca să conectezi un serviciu.",
+      "summaryWarn": "Lipsește ceva la: {names}",
+      "configure": "Configurează",
+      "save": "Salvează",
+      "levels": {
+        "ok": "Conectat",
+        "warn": "Incomplet",
+        "off": "Neconectat"
+      },
+      "groups": {
+        "login": "Login cu alte conturi",
+        "security": "Protecție anti-spam",
+        "email": "Email",
+        "search": "Motoare de căutare",
+        "translate": "Traduceri automate",
+        "developers": "Dezvoltatori"
+      },
+      "items": {
+        "discord": {
+          "name": "Login cu Discord",
+          "hint": "Client ID și secretul aplicației Discord."
+        },
+        "google": {
+          "name": "Login cu Google",
+          "hint": "Client ID și secretul din Google Cloud."
+        },
+        "steam": {
+          "name": "Login cu Steam",
+          "hint": "Cheia Steam Web API."
+        },
+        "turnstile": {
+          "name": "Cloudflare Turnstile",
+          "hint": "Captcha invizibil la înregistrare și formulare."
+        },
+        "sfs": {
+          "name": "StopForumSpam",
+          "hint": "Verifică emailul și IP-ul conturilor noi în baza de spammeri."
+        },
+        "smtp": {
+          "name": "Server SMTP",
+          "hint": "Trimiterea emailurilor (confirmări, notificări, newsletter)."
+        },
+        "verification": {
+          "name": "Verificarea site-ului",
+          "hint": "Google Search Console, Bing, Yandex.",
+          "detail": "{detail}"
+        },
+        "indexnow": {
+          "name": "IndexNow",
+          "hint": "Anunță imediat motoarele de căutare despre paginile noi."
+        },
+        "translate": {
+          "name": "Traducerea postărilor",
+          "hint": "Furnizorul folosit pentru „Traduce”.",
+          "detail": "furnizor: {detail}"
+        },
+        "webhooks": {
+          "name": "Webhooks",
+          "hint": "Evenimentele site-ului trimise spre Discord sau alte servere.",
+          "detail": "{detail} pornite"
+        },
+        "api": {
+          "name": "Chei API",
+          "hint": "Aplicații care citesc datele publice.",
+          "detail": "{detail} active"
+        }
+      },
+      "analytics": {
+        "title": "Analiza traficului",
+        "hint": "Vizitatorii, paginile și sursele lor, în serviciul tău de statistici.",
+        "provider": "Serviciul",
+        "providers": {
+          "none": "Oprită",
+          "ga4": "Google Analytics 4",
+          "plausible": "Plausible",
+          "umami": "Umami"
+        },
+        "ga4Id": "ID-ul fluxului (Measurement ID)",
+        "ga4Hint": "Google Analytics › Administrare › Fluxuri de date › ID-ul care începe cu G-.",
+        "domain": "Domeniul",
+        "script": "Adresa scriptului",
+        "scriptHint": "Lasă-o pe cea implicită pentru varianta cloud; schimb-o dacă ai instalarea proprie.",
+        "websiteId": "ID-ul site-ului (Website ID)",
+        "who": "Cui se încarcă",
+        "skipStaff": "Nu număra staff-ul (cine are acces în ACP)",
+        "afterCookieNotice": "Pornește doar după „Am înțeles” pe banda de cookie-uri",
+        "cookieHint": "Google Analytics pune cookie-uri; Plausible și Umami nu. Banda de cookie-uri se pornește din Setări › Termeni și confidențialitate."
+      }
     }
   },
   "settings": {
@@ -7086,6 +7226,9 @@
     },
     "streams": {
       "config": "Fluxurile de activitate"
+    },
+    "integrations": {
+      "analytics": "Analiza traficului"
     }
   },
   "permissions": {

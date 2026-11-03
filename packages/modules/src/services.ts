@@ -185,6 +185,8 @@ import { GcsStatsReportService } from "./stats/reports";
 import { GcsTagsAdmin } from "./forums/tagsAdmin";
 import { GcsAdService } from "./community/ads";
 import { GcsWebhookService } from "./system/webhooks";
+import { GcsApiKeyService } from "./system/apiKeys";
+import { GcsPublicApi } from "./system/publicApi";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -287,6 +289,10 @@ export type GcsServices = {
   ads: GcsAdService;
   /** Webhook-urile (ACP › Funcții site › Webhooks): endpointurile, livrările prin coadă și jurnalul. */
   webhooks: GcsWebhookService;
+  /** Cheile API (ACP › Funcții site › API) și verificarea cererilor `/api/v1`. */
+  apiKeys: GcsApiKeyService;
+  /** Datele rutelor `/api/v1` (doar ce vede un vizitator). */
+  publicApi: GcsPublicApi;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -1049,6 +1055,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
     ads: new GcsAdService({ db, kv, acp }),
     webhooks,
+    apiKeys: new GcsApiKeyService({ db, kv, acp, rateLimiter }),
+    publicApi: new GcsPublicApi({ db, forumQueries, profileQueries, serverQueries, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,

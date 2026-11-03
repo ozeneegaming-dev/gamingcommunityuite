@@ -658,3 +658,76 @@ test("Webhooks: o adresă internă e refuzată; un webhook Discord se adaugă, s
     await sql(`DELETE FROM webhook_endpoints WHERE name = $1`, [name]);
   }
 });
+
+test("API: cheia creată se vede o dată, citește statisticile, e refuzată pe alt drept și după revocare", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Api${id}`, `api-${id}@example.com`);
+  const name = `Bot ${id}`;
+  try {
+    await page.goto("/admin/system/api");
+    await expect(page.getByRole("heading", { name: "API", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-api-endpoints")).toContainText("/api/v1/stats");
+    await page.getByTestId("gcs-api-new-open").click();
+    const add = page.getByTestId("gcs-api-new");
+    await add.getByLabel("Numele").fill(name);
+    await add.getByRole("button", { name: "Creează cheia" }).click();
+    const key = (await add.getByTestId("gcs-api-key-value").textContent())?.trim() ?? "";
+    expect(key).toMatch(/^gcs_[a-f0-9]{12}_/);
+    await shot(page, "api-key-created");
+
+    const auth = { Authorization: `Bearer ${key}` };
+    const stats = await request.get("/api/v1/stats", { headers: auth });
+    expect(stats.status()).toBe(200);
+    expect((await stats.json()).data).toHaveProperty("members");
+    expect((await request.get("/api/v1/topics", { headers: auth })).status()).toBe(403);
+    expect((await request.get("/api/v1/stats")).status()).toBe(403);
+
+    await page.goto("/admin/system/api");
+    const row = page.locator(`[data-testid="gcs-api-row"][data-name="${name}"]`);
+    await expect(row.locator("[data-level]")).toHaveAttribute("data-level", "ok");
+    await row.getByTestId("gcs-api-edit-open").click();
+    const edit = page.getByTestId("gcs-api-edit");
+    await expect(edit.getByTestId("gcs-api-log")).toContainText("/api/v1/stats");
+    await edit.getByRole("button", { name: "Revocă cheia" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(row.locator("[data-level]")).toHaveAttribute("data-level", "down");
+    expect((await request.get("/api/v1/stats", { headers: auth })).status()).toBe(403);
+    await shot(page, "api-acp");
+  } finally {
+    await sql(`DELETE FROM api_keys WHERE name = $1`, [name]);
+  }
+});
+
+test("Integrări: starea serviciilor cu linkurile lor; Plausible pornit apare în pagina site-ului", async ({ page, browser }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Integr${id}`, `integr-${id}@example.com`);
+  try {
+    await page.goto("/admin/system/integrations");
+    await expect(page.getByRole("heading", { name: "Integrări", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="smtp"] [data-testid="gcs-integration-link"]')).toHaveAttribute("href", "/admin/settings/email");
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="api"]')).toBeVisible();
+
+    await page.locator('[data-testid="gcs-integration-row"][data-key="analytics"]').getByTestId("gcs-analytics-edit-open").click();
+    const edit = page.getByTestId("gcs-analytics-edit");
+    await edit.getByLabel("Serviciul").selectOption("plausible");
+    await edit.getByLabel("Domeniul").fill("forum.exemplu.ro");
+    await edit.getByLabel("Pornește doar după").uncheck();
+    await edit.getByRole("button", { name: "Salvează" }).click();
+    await expect(edit).toHaveCount(0);
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="analytics"] [data-level]')).toHaveAttribute("data-level", "ok");
+    await shot(page, "integrations-acp");
+
+    // Un vizitator primește scriptul; staff-ul (adminul) nu.
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto("/");
+    await expect(guest.locator('script[data-domain="forum.exemplu.ro"]')).toHaveCount(1);
+    await ctx.close();
+    await page.goto("/");
+    await expect(page.locator('script[data-domain="forum.exemplu.ro"]')).toHaveCount(0);
+  } finally {
+    await resetSetting("integrations.analytics");
+  }
+});

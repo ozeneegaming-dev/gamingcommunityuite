@@ -44,6 +44,9 @@
 .gcs-sysSummary--down {
   --gcs-sum: var(--gcs-acp-bad);
 }
+.gcs-sysSummary--warn {
+  --gcs-sum: var(--gcs-warn);
+}
 .gcs-sysSummary > .gcs-icon {
   color: var(--gcs-sum);
   font-size: 22px;
@@ -929,4 +932,37 @@
   font-size: 12.5px;
   overflow-wrap: anywhere;
   user-select: all;
+}
+
+/* ── API: cheia nouă (arătată o dată), drepturile și exemplele ── */
+.gcs-apiKeyNew {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcs-apiKeyNew__warn {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--gcs-warn) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-warn) 12%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-apiKeyNew__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gcs-apiScope {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.gcs-apiDocs__curl {
+  margin: 4px 0 12px;
+  font-family: var(--gcs-font-mono, ui-monospace, monospace);
 }

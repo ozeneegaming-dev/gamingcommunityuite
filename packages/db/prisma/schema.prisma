@@ -614,6 +614,22 @@ model WebhookEndpoint {
   @@map("webhook_endpoints")
 }
 
+/// Cheile API (ACP › Sistem › Funcții site › API): `gcs_<prefix>_<secret>`, afișată o singură dată; se păstrează doar
+/// prefixul și hash-ul SHA-256. `scopes` = ce poate citi cheia. Jurnalul cererilor stă în stocarea cheilor.
+model ApiKey {
+  id          Int       @id @default(autoincrement())
+  name        String
+  prefix      String    @unique
+  hash        String
+  scopes      Json      @default("[]")
+  createdById String?
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  @@map("api_keys")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

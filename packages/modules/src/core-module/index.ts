@@ -10,6 +10,7 @@ import { searchSetting } from "../forums/searchConfig";
 import { rssSetting } from "../forums/rssConfig";
 import { shareSetting } from "../forums/shareConfig";
 import { pwaSetting } from "../community/pwa";
+import { analyticsSetting } from "../system/integrations";
 import { streamsSetting } from "../community/streams";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
@@ -142,6 +143,8 @@ const settings: GcsSettingDef[] = [
   shareSetting,
   // Web App (ACP › Setări › Web App): numele, culorile, deschiderea, pagina de pornire și iconița din manifest.
   pwaSetting,
+  // Analiza traficului (ACP › Funcții site › Integrări): Google Analytics 4, Plausible sau Umami.
+  analyticsSetting,
   // Fluxurile de activitate (ACP › Descoperire › Fluxuri): tipurile, forumurile excluse, pagina, fluxurile proprii.
   streamsSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
