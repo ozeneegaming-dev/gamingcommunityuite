@@ -325,7 +325,26 @@
       "new_member_pm_limit": "Du hast das tägliche Limit für private Nachrichten neuer Mitglieder erreicht.",
       "captcha_failed": "Die Anti-Spam-Prüfung ist fehlgeschlagen. Versuche es erneut.",
       "qa_failed": "Die Antwort auf die Frage ist nicht richtig.",
-      "spam_source": "Vom Spamfilter gestoppt."
+      "spam_source": "Vom Spamfilter gestoppt.",
+      "license_key_format": "Der Schlüssel hat nicht das richtige Format (z. B. GCS-7KQ4-M2XD-9PRH).",
+      "license_key_invalid_key": "Diesen Lizenzschlüssel gibt es nicht. Prüfe Buchstaben und Ziffern (Schlüssel enthalten nie 0, O, 1 oder I).",
+      "license_key_revoked": "Die Lizenz dieses Schlüssels wurde widerrufen.",
+      "license_key_suspended": "Die Lizenz dieses Schlüssels ist gesperrt. Kontaktiere uns.",
+      "license_key_expired": "Die Lizenz dieses Schlüssels ist abgelaufen.",
+      "license_key_blocked": "Die Lizenz ist für diese Seite blockiert. Kontaktiere uns.",
+      "license_key_domain": "Der Schlüssel wird bereits auf einer anderen Domain verwendet. Bitte um die Freigabe der Domain und versuche es erneut.",
+      "license_key_bad_domain": "Die Lizenz braucht die echte Domain des Forums (keine IP-Adresse und nicht localhost). Öffne die Seite über ihre Domain und versuche es erneut.",
+      "license_key_rate_limited": "Zu viele Aktivierungsversuche. Versuche es in 15 Minuten erneut.",
+      "license_key_unreachable": "Der Lizenzserver antwortet nicht. Versuche es in ein paar Minuten erneut oder fordere ein Offline-Lizenztoken an.",
+      "license_key_disabled": "Die Online-Aktivierung ist auf diesem Server ausgeschaltet (GCS_LICENSE_SERVER=off): Verwende das lange Token der Lizenz.",
+      "license_key_invalid_token": "Die vom Data Center gesendete Lizenz hat die Prüfung auf dieser Seite nicht bestanden. Aktualisiere GCS oder kontaktiere uns.",
+      "license_missing": "Gib den Lizenzschlüssel ein.",
+      "license_malformed": "Der Schlüssel hat nicht das richtige Format.",
+      "license_unknown_key": "Die Lizenz wurde mit einem dieser Version unbekannten Schlüssel signiert.",
+      "license_bad_signature": "Die Signatur der Lizenz ist ungültig (die Lizenz wurde verändert).",
+      "license_expired": "Die Lizenz ist abgelaufen.",
+      "license_domain": "Die Lizenz gilt nicht für die Domain dieser Seite.",
+      "license_revoked": "Die Lizenz wurde widerrufen."
     },
     "fields": {
       "invalid_color": "Ungültige Farbe (#RRGGBB)",
@@ -574,7 +593,8 @@
         "update": "Aktualisierung",
         "cron": "Cron",
         "bot": "Community-Bot",
-        "settings_uploads": "Uploads & Bilder"
+        "settings_uploads": "Uploads & Bilder",
+        "license": "Lizenz"
       },
       "members": {
         "members": "Mitglieder",
@@ -4556,7 +4576,8 @@
           "unknown": "dem Data Center unbekannt",
           "invalid": "ungültig"
         }
-      }
+      },
+      "manageLicense": "Lizenzdetails und Wechsel →"
     },
     "bot": {
       "title": "Community-Bot",
@@ -4980,6 +5001,24 @@
       "mb": "{mb} MB",
       "none": "kann nicht hochladen",
       "unattached": "Hochgeladene, noch nicht angehängte Dateien: {count}."
+    },
+    "license": {
+      "title": "Lizenz",
+      "description": "Die GamingCommunitySuite-Lizenz dieser Seite: was sie enthält, die Online-Prüfung und der Wechsel des Schlüssels.",
+      "key": "Lizenzschlüssel",
+      "tokenOnly": "Langes Token (Offline-Lizenz oder vor den kurzen Schlüsseln ausgestellt)",
+      "domains": "Domains",
+      "expiry": "Läuft ab",
+      "graceActive": "Das Data Center hat die Lizenz für ungültig erklärt. Premium-Apps bleiben bis {date} aktiv und werden danach abgeschaltet (das Forum läuft weiter). Aktiviere unten einen gültigen Schlüssel oder kontaktiere uns.",
+      "graceEnded": "Die Lizenz ist seit mehr als 30 Tagen ungültig: Premium-Apps sind abgeschaltet (das Forum läuft weiter). Aktiviere unten einen gültigen Schlüssel.",
+      "change": {
+        "title": "Lizenz wechseln",
+        "titleFirst": "Lizenz aktivieren",
+        "field": "Lizenzschlüssel",
+        "hint": "Der Schlüssel der Form GCS-XXXX-XXXX-XXXX aus deinem Kauf: Wir prüfen ihn beim Data Center, und die neue Lizenz ersetzt die aktuelle. Auch das lange Token (GCS1.…) einer Offline-Lizenz funktioniert. Die Lizenz muss für die Domain {domain} gelten.",
+        "submit": "Lizenz wechseln",
+        "submitFirst": "Lizenz aktivieren"
+      }
     }
   },
   "settings": {
@@ -6195,7 +6234,7 @@
         "title": "GCS-Lizenz",
         "body": "Gib den Lizenzschlüssel aus deinem Kauf ein und akzeptiere die Nutzungsbedingungen.",
         "field": "Lizenzschlüssel",
-        "fieldHint": "Er beginnt mit „GCS1.“ und steht in deinem Kundenkonto.",
+        "fieldHint": "Der Schlüssel der Form GCS-XXXX-XXXX-XXXX aus deinem Kauf. Für eine Installation ohne Internet funktioniert auch das lange Token (GCS1.…).",
         "eula": "Nutzungsbedingungen (EULA)",
         "eulaMissing": "Der EULA-Text fehlt im Paket (EULA.md).",
         "accept": "Ich habe die Nutzungsbedingungen gelesen und akzeptiere sie",

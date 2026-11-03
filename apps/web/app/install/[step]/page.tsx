@@ -89,10 +89,10 @@ export default async function InstallStepPage({ params }: { params: Promise<{ st
     }
 
     case "license": {
-      const [eula, current] = await Promise.all([eulaText(), savedLicense()]);
+      const [eula, current, currentKey] = await Promise.all([eulaText(), savedLicense(), state.readLicenseKey()]);
       content = (
         <InstallStepForm action={saveLicense} backHref={back("checks")} labels={nav}>
-          <InstallField name="token" label={t("steps.license.field")} defaultValue={current?.token ?? ""} autoComplete="off" />
+          <InstallField name="token" label={t("steps.license.field")} defaultValue={current ? (currentKey ?? current.token) : ""} autoComplete="off" />
           <p style={{ margin: "-12px 0 0", fontSize: 13, color: "var(--gcs-muted)" }}>
             {current ? t("steps.license.saved", { licensee: current.license.licensee }) : t("steps.license.fieldHint")}
             {process.env.NODE_ENV !== "production" && <> · {t("steps.license.devHint", { token: GCS_DEV_LICENSE_TOKEN })}</>}

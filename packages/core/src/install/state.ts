@@ -24,6 +24,7 @@ const FILES = {
   session: "install_session.hash",
   finish: "install_finish.json",
   license: "license.token",
+  licenseKey: "license.key",
 } as const;
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -208,6 +209,24 @@ export class GcsInstallState {
   async readLicense(): Promise<string | null> {
     try {
       return (await readFile(this.file(FILES.license), "utf8")).trim() || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Cheia scurtă a licenței (`GCS-XXXX-XXXX-XXXX`), lângă token și tot 0600: pentru reactivare și afișarea mascată în
+   * ACP. `null` o șterge (licența a venit ca token lung).
+   */
+  async saveLicenseKey(key: string | null): Promise<void> {
+    await mkdir(this.configDir, { recursive: true });
+    if (key) await writeAtomic(this.file(FILES.licenseKey), `${key.trim()}\n`, 0o600);
+    else await rm(this.file(FILES.licenseKey), { force: true });
+  }
+
+  async readLicenseKey(): Promise<string | null> {
+    try {
+      return (await readFile(this.file(FILES.licenseKey), "utf8")).trim() || null;
     } catch {
       return null;
     }

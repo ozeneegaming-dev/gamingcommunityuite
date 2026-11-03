@@ -86,8 +86,9 @@ Without it, the installer uses the address from the browser (after the install c
 
    The code is shown only once (only a fingerprint of it is kept on disk). If you can’t find it, see “Common problems”.
 3. **Checks**: the Node.js version, disk, the `config` folder.
-4. **Licence**, **Applications**, then **Database**: choose **MySQL / MariaDB** (or PostgreSQL), fill in the details from
-   step 1 and press *Test connection*.
+4. **Licence**: the `GCS-XXXX-XXXX-XXXX` key from your purchase (the installer activates it with the licence server,
+   over HTTPS; the first activation locks the domain). Then **Applications** and **Database**: choose **MySQL / MariaDB**
+   (or PostgreSQL), fill in the details from step 1 and press *Test connection*.
 5. Site, email, administrator, starting data → **Install**.
 6. **Final step: Cron** — see below. Then *Enter the ACP*.
 

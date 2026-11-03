@@ -8,6 +8,7 @@ import {
   GCS_PREMIUM_APPS,
   gcsEdition,
   GcsInstallState,
+  GcsLicenseOnline,
   installDomain,
   resolveAppSelection,
   verifyLicense,
@@ -35,6 +36,10 @@ export const WIZARD_STEPS = GCS_INSTALL_STEPS.filter((s) => s !== "done");
 export function verifyInstallLicense(token: string | null | undefined): GcsLicenseResult {
   return verifyLicense(token, { domain: installDomain(), premiumApps: GCS_PREMIUM_APPS });
 }
+
+/** Verificarea online / activarea cheilor scurte, înainte de instalare (fără baza de date): doar folderul de configurare. */
+export const installLicenseOnline = () =>
+  new GcsLicenseOnline({ configDir: gcsConfigDir(), state: installState(), version: INSTALL_VERSION, edition: gcsEdition() });
 
 /** Licența salvată la pasul „Licență” (doar pe server, în `.env.runtime`), verificată din nou; `null` dacă lipsește sau nu mai e validă. */
 export async function savedLicense(): Promise<{ token: string; license: GcsLicense } | null> {

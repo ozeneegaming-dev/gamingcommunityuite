@@ -4,6 +4,7 @@ import {
   hashPassword,
   installAppChoices,
   normalizeEmail,
+  normalizeLicenseKey,
   resolveAppSelection,
   resetRootPassword,
   validateUsername,
@@ -11,7 +12,7 @@ import {
   type GcsInstallInput,
 } from "@gcs/core";
 import { CLI_TOKEN_HEADER, isValidCliToken } from "@/lib/cli-token";
-import { INSTALL_VERSION, installState, verifyInstallLicense } from "@/lib/install";
+import { INSTALL_VERSION, installLicenseOnline, installState, verifyInstallLicense } from "@/lib/install";
 import { performInstall } from "@/lib/install-run";
 import { services } from "@/lib/services";
 
@@ -28,7 +29,7 @@ const fail = (status: number, error: string, extra: Record<string, unknown> = {}
 /** Datele instalării din CLI (`gcs install`), validate ca în wizard. */
 async function cliInstallInput(
   args: Record<string, unknown>,
-): Promise<{ ok: true; input: GcsInstallInput } | { ok: false; fields: Record<string, string> }> {
+): Promise<{ ok: true; input: GcsInstallInput; key: string | null } | { ok: false; fields: Record<string, string> }> {
   const errors: Record<string, string> = {};
   const siteName = str(args.siteName);
   const siteUrl = str(args.siteUrl);
@@ -41,8 +42,16 @@ async function cliInstallInput(
   if (nameError) errors.adminName = nameError;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) errors.adminEmail = "email_invalid";
   if (adminPassword.length < 8) errors.adminPassword = "password_too_short";
-  // Licența, ca la pasul „Licență” din wizard; aplicațiile: toate cele permise (sau lista dată), Forumul ca pornire implicită.
-  const licenseToken = str(args.license);
+  // Licența, ca la pasul „Licență” din wizard: cheia scurtă se activează la Data Center (doar cu restul datelor valide,
+  // ca o activare să nu se consume degeaba); aplicațiile: toate cele permise (sau lista dată), Forumul ca pornire implicită.
+  const key = normalizeLicenseKey(str(args.license));
+  if (key && Object.keys(errors).length > 0) return { ok: false, fields: errors };
+  let licenseToken = str(args.license);
+  if (key) {
+    const activated = await installLicenseOnline().activate(key);
+    if (!activated.ok) return { ok: false, fields: { license: `license_key_${activated.error}` } };
+    licenseToken = activated.token;
+  }
   const licensed = verifyInstallLicense(licenseToken);
   if (!licensed.ok) errors.license = `license_${licensed.error}`;
   if (Object.keys(errors).length > 0 || !licensed.ok) return { ok: false, fields: errors };
@@ -68,7 +77,7 @@ async function cliInstallInput(
       from: str(args.smtpFrom),
     };
   }
-  return { ok: true, input };
+  return { ok: true, input, key };
 }
 
 /**
@@ -94,13 +103,14 @@ export async function POST(request: Request): Promise<Response> {
         if (await state.isInstalled()) return fail(409, "installed");
         const parsed = await cliInstallInput(args);
         if (!parsed.ok) return fail(422, "validation", { fields: parsed.fields });
-        const { input } = parsed;
+        const { input, key } = parsed;
         const databaseUrl = str(args.databaseUrl) || process.env.DATABASE_URL;
         if (!databaseUrl) return fail(422, "validation", { fields: { databaseUrl: "required" } });
         if (!(await state.acquireRunLock())) return fail(409, "busy");
         try {
           const steps: string[] = [];
           await performInstall({ input, databaseUrl, external: Boolean(str(args.databaseUrl)), onProgress: (e) => steps.push(e.stepKey) });
+          await state.saveLicenseKey(key);
           return Response.json({ installed: true, steps });
         } finally {
           await state.releaseRunLock();

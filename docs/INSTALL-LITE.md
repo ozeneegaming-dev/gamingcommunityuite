@@ -85,8 +85,9 @@ deschide installer-ul la adresa finală a comunității (domeniul din licență,
 
    Codul apare o singură dată (pe disc stă doar o amprentă a lui). Dacă nu-l mai găsești, vezi „Probleme frecvente”.
 3. **Verificări**: versiunea Node.js, discul, folderul `config`.
-4. **Licență**, **Aplicații**, apoi **Baza de date**: alege **MySQL / MariaDB** (sau PostgreSQL), completează datele de la
-   pasul 1 și apasă *Testează conexiunea*.
+4. **Licență**: cheia `GCS-XXXX-XXXX-XXXX` primită la cumpărare (installerul o activează la serverul de licențe, prin
+   HTTPS; prima activare fixează domeniul). Apoi **Aplicații** și **Baza de date**: alege **MySQL / MariaDB** (sau
+   PostgreSQL), completează datele de la pasul 1 și apasă *Testează conexiunea*.
 5. Site, email, administrator, date de pornire → **Instalează**.
 6. **Pasul final: Cron** — vezi mai jos. Apoi *Intră în ACP*.
 
