@@ -32,6 +32,39 @@
 :root .gcs-hb[data-hidden] {
   transform: translateY(-100%);
 }
+/*
+ * Imaginea antetului (setarea temei, în orice temă și orice aspect): cea încărcată sau cea inclusă în GCS, în spatele
+ * întregului antet sau doar al primului rând (cel cu logo-ul). Straturile, de sus în jos: estomparea în fundalul
+ * paginii (doar pe tot antetul), acoperirea în culoarea antetului (meniul rămâne lizibil; pe un antet luminos imaginea
+ * se deschide), nuanța accentului (`background-blend-mode: color`), apoi imaginea, decupată pe mijloc și lipită sus.
+ * Doar fundaluri, fără pseudo-elemente: antetul rămâne fără context de suprapunere propriu. Bara compactă își păstrează
+ * fundalul; pe telefon imaginea apare doar dacă tema o lasă (`data-gcs-header-image-mobile`).
+ */
+:root[data-gcs-header-image="all"] .gcs-hb:not([data-compact], [data-device="mobile"]),
+:root[data-gcs-header-image="all"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact]) {
+  background-color: var(--gcs-header-bg, var(--gcs-chrome));
+  background-image:
+    linear-gradient(to bottom, transparent 55%, color-mix(in srgb, var(--gcs-body-bg, var(--gcs-bg)) var(--gcs-header-image-fade, 85%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent), color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent), color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent)),
+    var(--gcs-header-image);
+  background-size: auto, auto, auto, cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-blend-mode: normal, normal, color, normal;
+}
+:root[data-gcs-header-image="top"] .gcs-hb:not([data-compact], [data-device="mobile"]) > .gcs-hb__row:first-child,
+:root[data-gcs-header-image="top"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact]) > .gcs-hb__row:first-child {
+  background-color: var(--gcs-header-bg, var(--gcs-chrome));
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent), color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent), color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent)),
+    var(--gcs-header-image);
+  background-size: auto, auto, cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-blend-mode: normal, color, normal;
+}
 :root .gcs-hb__row {
   transition:
     height var(--gcs-dur-slow) var(--gcs-ease-out),

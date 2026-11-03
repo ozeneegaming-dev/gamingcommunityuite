@@ -7,13 +7,21 @@ import { themeHtmlAttrs } from "@gcs/core/themes";
 import { GcsNameFxProvider, GcsTooltipHost } from "@gcs/ui";
 import { themeMode, viewerTheme } from "@/lib/appearance";
 import { nameLetterUsers } from "@/lib/member-names";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { services } from "@/lib/services";
 import { titleTemplate, verificationMetadata } from "@gcs/modules";
 import { seoMeta, siteBaseUrl } from "@/lib/seo";
 import { designClass, SITE_AREA_HEADER } from "@/lib/theme-preview";
 import { GcsThemePreviewBridge } from "./(site)/_components/edit/GcsThemePreviewBridge";
+import headerArena from "./_art/header-arena.jpg";
+import headerForja from "./_art/header-forja.jpg";
 import "./globals.css";
+
+/**
+ * Imaginile antetului incluse în GCS (`header.art`): fișiere ale aplicației (în `.next/static`, ca fonturile), deci
+ * adresa lor vine din build. CSS-ul temei se referă la ele prin variabilele de pe `<html>`.
+ */
+const HEADER_ART_VARS = { "--gcs-art-forja": `url("${headerForja.src}")`, "--gcs-art-arena": `url("${headerArena.src}")` } as CSSProperties;
 
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700"], variable: "--font-gcs-display" });
 const text = Manrope({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700"], variable: "--font-gcs-text" });
@@ -72,7 +80,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Setările de sistem ale temei care schimbă aspectul componentelor (listele, loaderul, banda de derulare…).
   const attrs = site ? themeHtmlAttrs(theme.shown.settings) : {};
   return (
-    <html lang={locale} data-theme={await themeMode()} className={[display.variable, text.variable, nova.variable, design].filter(Boolean).join(" ")} {...attrs}>
+    <html
+      lang={locale}
+      data-theme={await themeMode()}
+      className={[display.variable, text.variable, nova.variable, design].filter(Boolean).join(" ")}
+      style={HEADER_ART_VARS}
+      {...attrs}
+    >
       <head>
         {/* Stilurile de nume și ramele de avatar, generate din ACP (spec §9). */}
         <link rel="stylesheet" href={`/gcs-names.css?v=${version}`} />

@@ -7448,7 +7448,7 @@
       "none": "Aucune image",
       "upload": "Envoi",
       "remove": "Retirer",
-      "headerImage": "Header background",
+      "headerImage": "Votre image (prioritaire)",
       "cockpitImage": "Fond de la console"
     },
     "tokens": {
@@ -7684,8 +7684,8 @@
         "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
       },
       "header_overlay": {
-        "label": "Image darkening",
-        "help": "How dark the layer over the header image is, so the text stays readable."
+        "label": "Assombrir l'illustration GCS",
+        "help": "L'opacité du calque sur l'illustration par défaut de l'en-tête Standard."
       },
       "header_pattern": {
         "label": "Tech pattern",
@@ -7694,6 +7694,38 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_art": {
+        "label": "Image incluse",
+        "help": "Dessinée pour GCS aux couleurs du thème. Une image envoyée est prioritaire.",
+        "options": {
+          "none": "Aucune",
+          "forja": "Forge",
+          "arena": "Arène"
+        }
+      },
+      "header_imageArea": {
+        "label": "Zone de l'image",
+        "options": {
+          "all": "Tout l'en-tête",
+          "top": "Rangée du haut seulement"
+        }
+      },
+      "header_imageDim": {
+        "label": "Assombrir l'image",
+        "help": "À quel point la couleur de l'en-tête couvre l'image, pour que le menu reste lisible."
+      },
+      "header_imageTint": {
+        "label": "Teinte d'accent",
+        "help": "Teinte l'image dans la couleur d'accent du thème."
+      },
+      "header_imageFade": {
+        "label": "Fondu en bas",
+        "help": "Le bord inférieur de l'image se fond dans le fond de la page (tout l'en-tête)."
+      },
+      "header_imageMobile": {
+        "label": "Aussi sur mobile",
+        "help": "L'image apparaît aussi dans l'en-tête sur mobile."
       },
       "header_rowTop": {
         "label": "Hauteur de la barre du haut"

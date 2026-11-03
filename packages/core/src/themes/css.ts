@@ -173,6 +173,15 @@ const SHADOWS: Record<GcsThemeSettings["boxes"]["shadow"], string> = {
   strong: GCS_BRAND.shadow.dialog,
 };
 
+/**
+ * Imaginea din spatele antetului: cea încărcată are prioritate, apoi imaginea inclusă aleasă (`--gcs-art-<nume>`, pe
+ * `<html>`), altfel niciuna.
+ */
+function headerImageCss(h: Pick<GcsThemeSettings["header"], "image" | "art">): string {
+  if (h.image) return `url("${h.image}")`;
+  return h.art === "none" ? "none" : `var(--gcs-art-${h.art})`;
+}
+
 /** Variabilele care nu depind de mod (dimensiuni, fonturi, umbre). */
 function sizes(s: GcsThemeSettings): string {
   const fonts = themeFonts(s);
@@ -197,8 +206,13 @@ function sizes(s: GcsThemeSettings): string {
     `  --gcs-sidebar-w: ${s.sidebar.width}px;`,
     `  --gcs-avatar-radius: ${s.avatars.rounded ? "50%" : "18%"};`,
     `  --gcs-btn-radius: ${s.buttons.radius}px;`,
-    // Nova: imaginea antetului (un fișier al site-ului, deja validat) și stratul închis de peste ea.
-    `  --gcs-header-image: ${s.header.image ? `url("${s.header.image}")` : "none"};`,
+    // Imaginea antetului: cea încărcată (un fișier al site-ului, deja validat) sau cea inclusă în GCS (adresa ei vine
+    // din `<html>`, pusă de layout-ul rădăcină), apoi cât se acoperă, cât se colorează și dacă se estompează jos.
+    `  --gcs-header-image: ${headerImageCss(s.header)};`,
+    `  --gcs-header-image-dim: ${s.header.imageDim}%;`,
+    `  --gcs-header-image-tint: ${s.header.imageTint}%;`,
+    `  --gcs-header-image-fade: ${s.header.imageFade ? 85 : 0}%;`,
+    // Nova: stratul închis de peste grafica GCS a antetului Standard.
     `  --gcs-header-overlay: ${s.header.overlay / 100};`,
   ].join("\n");
 }

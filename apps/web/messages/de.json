@@ -7448,7 +7448,7 @@
       "none": "Kein Bild",
       "upload": "Upload",
       "remove": "Entfernen",
-      "headerImage": "Header background",
+      "headerImage": "Eigenes Bild (hat Vorrang)",
       "cockpitImage": "Hintergrund der Konsole"
     },
     "tokens": {
@@ -7684,8 +7684,8 @@
         "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
       },
       "header_overlay": {
-        "label": "Image darkening",
-        "help": "How dark the layer over the header image is, so the text stays readable."
+        "label": "GCS-Grafik abdunkeln",
+        "help": "Wie dunkel die Ebene über der Standardgrafik des Standard-Headers ist."
       },
       "header_pattern": {
         "label": "Tech pattern",
@@ -7694,6 +7694,38 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_art": {
+        "label": "Mitgeliefertes Bild",
+        "help": "Für GCS gezeichnet, in den Farben des Themes. Ein hochgeladenes Bild hat Vorrang.",
+        "options": {
+          "none": "Keins",
+          "forja": "Schmiede",
+          "arena": "Arena"
+        }
+      },
+      "header_imageArea": {
+        "label": "Bildbereich",
+        "options": {
+          "all": "Ganzer Header",
+          "top": "Nur obere Zeile"
+        }
+      },
+      "header_imageDim": {
+        "label": "Bild abdunkeln",
+        "help": "Wie stark die Header-Farbe das Bild abdeckt, damit das Menü lesbar bleibt."
+      },
+      "header_imageTint": {
+        "label": "Akzent-Tönung",
+        "help": "Färbt das Bild in der Akzentfarbe des Themes."
+      },
+      "header_imageFade": {
+        "label": "Unten ausblenden",
+        "help": "Der untere Bildrand geht weich in den Seitenhintergrund über (ganzer Header)."
+      },
+      "header_imageMobile": {
+        "label": "Auch auf dem Handy",
+        "help": "Das Bild erscheint auch im Header auf dem Handy."
       },
       "header_rowTop": {
         "label": "Höhe der oberen Leiste"

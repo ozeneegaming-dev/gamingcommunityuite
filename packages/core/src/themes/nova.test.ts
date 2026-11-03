@@ -101,8 +101,8 @@ describe("designul Nova: setările", () => {
   });
 
   test("doar decorul e al designului GCS; funcțiile (antetul, consola, bara de jos, efectele) sunt ale sistemului", () => {
-    expect([...NOVA_ONLY_FIELDS].sort()).toEqual(["bands.icon", "bands.style", "header.crumbs", "header.image", "header.overlay", "header.pattern"]);
-    for (const path of ["header.layout", "header.dropdowns", "header.mega", "cockpit.enabled", "cockpit.layout", "mobileNav.placement", "mobileNav.items", "effects.hover"]) {
+    expect([...NOVA_ONLY_FIELDS].sort()).toEqual(["bands.icon", "bands.style", "header.crumbs", "header.overlay", "header.pattern"]);
+    for (const path of ["header.image", "header.art", "header.imageArea", "header.layout", "header.dropdowns", "header.mega", "cockpit.enabled", "cockpit.layout", "mobileNav.placement", "mobileNav.items", "effects.hover"]) {
       expect(NOVA_ONLY_FIELDS, path).not.toContain(path);
     }
     expect(themeHasDesignDecor("nova")).toBe(true);

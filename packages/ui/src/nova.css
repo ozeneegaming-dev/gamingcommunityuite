@@ -1726,7 +1726,10 @@ html.gcs-nova[data-theme="light"] .gcs-ckWrap {
     linear-gradient(180deg, #141821, #1b2130 60%, var(--gcs-body-bg, var(--gcs-bg)));
 }
 
-/* Antetul „Standard” (fostul antet al designului): imaginea sau grafica GCS, cu stratul închis. */
+/*
+ * Antetul „Standard” (fostul antet al designului): grafica GCS, cu stratul închis. Imaginea antetului (încărcată sau
+ * inclusă) e a sistemului (`header-menus.css`) și o înlocuiește pe tot antetul sau stă pe primul rând.
+ */
 .gcs-nova .gcs-hb--classic {
   background-color: var(--gcs-header-bg, var(--gcs-chrome));
   background-image:
@@ -1734,11 +1737,10 @@ html.gcs-nova[data-theme="light"] .gcs-ckWrap {
     var(--gcs-hero-pattern),
     radial-gradient(ellipse 55% 140% at 88% -20%, color-mix(in srgb, var(--gcs-accent) 38%, transparent), transparent 62%),
     radial-gradient(ellipse 40% 110% at 8% -30%, color-mix(in srgb, var(--gcs-accent) 18%, transparent), transparent 60%),
-    var(--gcs-header-image, none),
     linear-gradient(160deg, #141a26 0%, #0d1119 55%, #0b0f17 100%);
-  background-size: auto, 160px 160px, auto, auto, cover, auto;
-  background-position: center, center top, center, center, center, center;
-  background-repeat: no-repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: auto, 160px 160px, auto, auto, auto;
+  background-position: center, center top, center, center, center;
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat, no-repeat;
   border-bottom: 0;
 }
 .gcs-nova .gcs-hb--classic .gcs-hb__row--bottom {

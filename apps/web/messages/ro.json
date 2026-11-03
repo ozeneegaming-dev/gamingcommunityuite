@@ -7448,7 +7448,7 @@
       "none": "Nicio imagine",
       "upload": "Încarcă",
       "remove": "Șterge",
-      "headerImage": "Fundalul antetului",
+      "headerImage": "Imaginea ta (are prioritate)",
       "cockpitImage": "Fundalul consolei"
     },
     "tokens": {
@@ -7684,8 +7684,8 @@
         "help": "Tranzițiile și mărirea ușoară a butoanelor-pastilă. Fără ele rămân doar schimbările de culoare."
       },
       "header_overlay": {
-        "label": "Întunecarea imaginii",
-        "help": "Cât de închis e stratul peste imaginea antetului, ca textul să se citească."
+        "label": "Întunecarea graficii GCS",
+        "help": "Cât de închis e stratul peste grafica implicită a antetului Standard."
       },
       "header_pattern": {
         "label": "Model tehnic",
@@ -7694,6 +7694,38 @@
       "header_crumbs": {
         "label": "Rândul cu breadcrumb și căutare",
         "help": "Sub meniu: unde te afli pe site și câmpul de căutare."
+      },
+      "header_art": {
+        "label": "Imaginea inclusă",
+        "help": "Desenată pentru GCS, în culorile temei. O imagine încărcată are prioritate.",
+        "options": {
+          "none": "Fără",
+          "forja": "Forja",
+          "arena": "Arenă"
+        }
+      },
+      "header_imageArea": {
+        "label": "Unde stă imaginea",
+        "options": {
+          "all": "Tot antetul",
+          "top": "Doar rândul de sus"
+        }
+      },
+      "header_imageDim": {
+        "label": "Întunecarea imaginii",
+        "help": "Cât se acoperă imaginea cu culoarea antetului, ca meniul să se citească."
+      },
+      "header_imageTint": {
+        "label": "Nuanța accentului",
+        "help": "Colorează imaginea în culoarea accentului temei."
+      },
+      "header_imageFade": {
+        "label": "Estompare jos",
+        "help": "Marginea de jos a imaginii trece lin în fundalul paginii (pe tot antetul)."
+      },
+      "header_imageMobile": {
+        "label": "Și pe telefon",
+        "help": "Imaginea apare și în antetul de pe telefon."
       },
       "header_rowTop": {
         "label": "Înălțimea barei de sus"

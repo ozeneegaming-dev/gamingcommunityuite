@@ -394,6 +394,24 @@ input[type="checkbox"].gcs-themeStudio__switch:checked::after {
   background: var(--gcs-st-accent);
   color: #fff;
 }
+/* Alegerea cu miniaturi (imaginea antetului): o coloană pe variantă, miniatura deasupra numelui. */
+.gcs-themeStudio__choices--thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+}
+.gcs-themeStudio__choices--thumbs .gcs-themeStudio__choice {
+  display: grid;
+  gap: 5px;
+  padding: 6px 6px 7px;
+}
+.gcs-themeStudio__choiceThumb {
+  display: block;
+  aspect-ratio: 1920 / 260;
+  overflow: hidden;
+  border: 1px solid var(--gcs-st-line);
+  border-radius: 5px;
+  background: var(--gcs-st-rail) center / cover no-repeat;
+}
 .gcs-themeStudio__input {
   width: 100%;
   height: 38px;

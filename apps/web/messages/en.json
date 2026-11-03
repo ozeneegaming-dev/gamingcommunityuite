@@ -7448,7 +7448,7 @@
       "none": "No image",
       "upload": "Upload",
       "remove": "Remove",
-      "headerImage": "Header background",
+      "headerImage": "Your image (takes priority)",
       "cockpitImage": "Console background"
     },
     "tokens": {
@@ -7684,8 +7684,8 @@
         "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
       },
       "header_overlay": {
-        "label": "Image darkening",
-        "help": "How dark the layer over the header image is, so the text stays readable."
+        "label": "GCS artwork darkening",
+        "help": "How dark the layer over the default artwork of the Standard header is."
       },
       "header_pattern": {
         "label": "Tech pattern",
@@ -7694,6 +7694,38 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_art": {
+        "label": "Built-in image",
+        "help": "Drawn for GCS in the theme colours. An uploaded image takes priority.",
+        "options": {
+          "none": "None",
+          "forja": "Forge",
+          "arena": "Arena"
+        }
+      },
+      "header_imageArea": {
+        "label": "Image area",
+        "options": {
+          "all": "Whole header",
+          "top": "Top row only"
+        }
+      },
+      "header_imageDim": {
+        "label": "Image darkening",
+        "help": "How much the header colour covers the image, so the menu stays readable."
+      },
+      "header_imageTint": {
+        "label": "Accent tint",
+        "help": "Tints the image in the theme's accent colour."
+      },
+      "header_imageFade": {
+        "label": "Fade at the bottom",
+        "help": "The bottom edge of the image blends into the page background (whole header)."
+      },
+      "header_imageMobile": {
+        "label": "Also on phones",
+        "help": "The image also shows in the phone header."
       },
       "header_rowTop": {
         "label": "Top bar height"
