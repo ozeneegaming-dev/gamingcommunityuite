@@ -11,7 +11,7 @@ Docker, root access or Redis. Data lives in a **MySQL / MariaDB** or **PostgreSQ
 |---|---|
 | Node.js | 20.9 or newer (22 or 24 recommended) |
 | Database | MySQL 8.0.13+ / MariaDB 10.6+ **or** PostgreSQL 14+ with the `unaccent` and `pg_trgm` extensions |
-| Disk space | 2 GB free (the app takes ~600 MB unpacked; the rest is for uploads) |
+| Disk space | 2 GB free (the app takes ~200 MB unpacked; the rest is for uploads) |
 | Memory | 1 GB for the Node.js process (the “LVE” / “Memory” limit in the panel) |
 | Cron | one scheduled task every 5 minutes |
 | System | Linux x64 (glibc) — regular cPanel / Plesk hosts |
@@ -153,4 +153,4 @@ the site, you can delete `old-version/`.
 | The page returns 503 after installing | Restart the application from the panel (*Restart*); check the log. |
 | “The database user can’t create tables” | Grant the user **ALL PRIVILEGES** on the database (step 1). |
 | The cron “hasn’t run yet” | Check the folder in the command and the path to `node`; run the command once in *Terminal* (if available). |
-| “Prisma … engine” errors on start | The host isn’t Linux x64 with glibc (e.g. Alpine / ARM): the Lite edition isn’t supported there. |
+| “Prisma … engine” errors on start | The host isn’t Linux x64 with glibc (e.g. Alpine / ARM): the Lite edition isn’t supported there. If the log says “Motoarele Prisma nu au putut fi pregătite în server/”, the application can’t write to the `server/` folder (on first start it adds a few copies of the database engine there): check the folder permissions, then *Restart*. |

@@ -11,7 +11,7 @@ Docker, fără acces root și fără Redis. Datele stau într-o bază **MySQL / 
 |---|---|
 | Node.js | 20.9 sau mai nou (recomandat 22 sau 24) |
 | Baza de date | MySQL 8.0.13+ / MariaDB 10.6+ **sau** PostgreSQL 14+ cu extensiile `unaccent` și `pg_trgm` |
-| Spațiu pe disc | 2 GB liberi (aplicația ocupă ~600 MB după dezarhivare; restul pentru fișierele încărcate) |
+| Spațiu pe disc | 2 GB liberi (aplicația ocupă ~200 MB după dezarhivare; restul pentru fișierele încărcate) |
 | Memorie | 1 GB pentru procesul Node.js (limita „LVE” / „Memory” din panou) |
 | Cron | o sarcină programată la 5 minute |
 | Sistem | Linux x64 (glibc) — gazdele cu cPanel / Plesk obișnuite |
@@ -152,4 +152,4 @@ deja în destinație rămâne pe loc și apare în jurnal. După ce verifici sit
 | Pagina dă 503 după instalare | Repornește aplicația din panou (*Restart*); verifică jurnalul. |
 | „Utilizatorul bazei nu poate crea tabele” | Dă utilizatorului **ALL PRIVILEGES** pe bază (pasul 1). |
 | Cron-ul „nu a rulat încă” | Verifică folderul din comandă și calea spre `node`; rulează comanda o dată în *Terminal* (dacă există). |
-| Erori „Prisma … engine” la pornire | Gazda nu e Linux x64 cu glibc (ex. Alpine / ARM): ediția Lite nu e suportată acolo. |
+| Erori „Prisma … engine” la pornire | Gazda nu e Linux x64 cu glibc (ex. Alpine / ARM): ediția Lite nu e suportată acolo. Dacă în jurnal scrie „Motoarele Prisma nu au putut fi pregătite în server/”, aplicația nu poate scrie în folderul `server/` (la prima pornire face acolo câteva copii ale motorului bazei de date): verifică drepturile folderului, apoi *Restart*. |
