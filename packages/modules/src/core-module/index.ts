@@ -307,6 +307,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["settings_terms", "/admin/settings/terms", "fa-solid fa-file-contract"],
     ["settings_rules", "/admin/settings/rules", "fa-solid fa-scale-balanced"],
     ["settings_posting", "/admin/settings/posting", "fa-solid fa-pen-to-square"],
+    ["settings_messages", "/admin/settings/messages", "fa-solid fa-envelope-open-text"],
     ["settings_uploads", "/admin/settings/uploads", "fa-solid fa-images"],
     ["settings_email", "/admin/settings/email", "fa-solid fa-envelope"],
     ["settings_languages", "/admin/settings/languages", "fa-solid fa-language"],

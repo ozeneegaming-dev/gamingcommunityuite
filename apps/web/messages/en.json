@@ -605,7 +605,8 @@
         "cron": "Cron",
         "bot": "Community bot",
         "settings_uploads": "Uploads & images",
-        "license": "Licence"
+        "license": "Licence",
+        "settings_messages": "Private messages"
       },
       "members": {
         "members": "Members",
@@ -1493,7 +1494,8 @@
         "2fa": "Security",
         "terms": "Terms and privacy",
         "uploads": "Uploads & images",
-        "seo": "SEO"
+        "seo": "SEO",
+        "messages": "Private messages"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -2164,8 +2166,12 @@
       "settings": {
         "profile": "Profile",
         "faceit": "FACEIT",
-        "elsewhere": "Elsewhere"
-      }
+        "elsewhere": "Elsewhere",
+        "signature": "Signature"
+      },
+      "signatureMaxChars": "Maximum length (characters)",
+      "signatureMaxCharsHint": "0 turns signatures off site-wide. Groups can have their own limit too, in Permissions.",
+      "signatureMaxImages": "Images in the signature (0–5)"
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -6550,7 +6556,8 @@
       "sponsor_min_amount": "“Sponsor” badge threshold (confirmed donations, in the main currency; 0 = off)"
     },
     "pm": {
-      "messages_per_page": "Messages per page in a conversation"
+      "messages_per_page": "Messages per page in a conversation",
+      "messages_per_page_hint": "How many messages load at once in a private conversation (5–100)."
     },
     "vip": {
       "warn_days": "Days before expiry the member is warned",

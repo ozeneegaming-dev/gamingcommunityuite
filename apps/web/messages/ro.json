@@ -605,7 +605,8 @@
         "cron": "Cron",
         "bot": "Botul comunității",
         "settings_uploads": "Încărcări și imagini",
-        "license": "Licență"
+        "license": "Licență",
+        "settings_messages": "Mesaje private"
       },
       "members": {
         "members": "Membri",
@@ -1493,7 +1494,8 @@
         "2fa": "Securitate",
         "terms": "Termeni și confidențialitate",
         "uploads": "Încărcări și imagini",
-        "seo": "SEO"
+        "seo": "SEO",
+        "messages": "Mesaje private"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -2164,8 +2166,12 @@
       "settings": {
         "profile": "Profilul",
         "faceit": "FACEIT",
-        "elsewhere": "În altă parte"
-      }
+        "elsewhere": "În altă parte",
+        "signature": "Semnătura"
+      },
+      "signatureMaxChars": "Lungimea maximă (caractere)",
+      "signatureMaxCharsHint": "0 oprește semnăturile pe tot site-ul. Grupurile pot avea și ele o limită, din Permisiuni.",
+      "signatureMaxImages": "Imagini în semnătură (0–5)"
     },
     "memberProfile": {
       "profileTitle": "Profil",
@@ -6550,7 +6556,8 @@
       "sponsor_min_amount": "Pragul insignei „Sponsor” (donațiile confirmate, în moneda principală; 0 = oprită)"
     },
     "pm": {
-      "messages_per_page": "Mesaje pe pagină într-o conversație"
+      "messages_per_page": "Mesaje pe pagină într-o conversație",
+      "messages_per_page_hint": "Câte mesaje se încarcă odată într-o conversație privată (5–100)."
     },
     "vip": {
       "warn_days": "Cu câte zile înainte de expirare e anunțat membrul",
