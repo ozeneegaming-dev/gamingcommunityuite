@@ -1,11 +1,14 @@
 import { GcsValidationError, type GcsActor } from "@gcs/core";
 import type { ForumType } from "@gcs/db";
+import { forumPreviewTarget } from "@gcs/modules";
 import { services } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
 type Body =
-  | { action: "forum"; parentId: number | null; type: ForumType; name: string; icon?: string; subforumColumns?: number }
+  | { action: "forum"; parentId: number | null; type: ForumType; name: string; icon?: string; subforumColumns?: number; color?: string }
+  /** Cardurile din grilă: imaginea de previzualizare din ACP (`image`: încarcă PNG-ul testului ca fișier decorativ). */
+  | { action: "forumPreview"; forumId: number; mode: "auto" | "image" | "color"; image?: boolean; focusX?: number; focusY?: number }
   /** `images`: câte imagini (încărcate ca atașamente ale autorului) urmează după text (vizualizatorul de imagini). */
   /** `content`: documentul editorului ca atare (Forum v2: blocurile); o eroare de validare întoarce 422 cu câmpurile. */
   | { action: "topic"; forumId: number; title: string; text: string; authorEmail: string; tags?: string[]; images?: number; content?: { type: string; content: unknown[] } }
@@ -68,10 +71,19 @@ export async function POST(req: Request): Promise<Response> {
           name: body.name,
           ...(body.icon ? { icon: body.icon } : {}),
           ...(body.subforumColumns ? { subforumColumns: body.subforumColumns } : {}),
+          ...(body.color ? { color: body.color } : {}),
         },
         await rootActor(),
       );
       return Response.json({ id: forum.id, slug: forum.slug });
+    }
+    case "forumPreview": {
+      // Prin serviciile reale (fișierul decorativ al forumului, validarea și invalidarea cache-ului de la salvare).
+      const file = body.image
+        ? await s.attachments.storeDecorImage(null, { name: "card.png", bytes: PNG }, { maxBytes: 1024 * 1024, maxSide: 1600, animated: false, target: forumPreviewTarget(body.forumId) })
+        : null;
+      await s.forums.update(body.forumId, { preview: { mode: body.mode, imageId: file?.id ?? null, focusX: body.focusX ?? 50, focusY: body.focusY ?? 50 } }, await rootActor());
+      return Response.json({ imageId: file?.id ?? null, url: file?.url ?? null });
     }
     case "topic": {
       const actor = await actorFor(body.authorEmail);
