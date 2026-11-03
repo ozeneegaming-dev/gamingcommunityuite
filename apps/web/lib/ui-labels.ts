@@ -38,6 +38,10 @@ const UPLOAD_KEYS = [
   "errSquare",
   "errReal",
   "errUpload",
+  "dropHereMany",
+  "useMany",
+  "many",
+  "manyBad",
 ] as const satisfies readonly (keyof GcsUploadLabels)[];
 
 export function uploadLabels(t: T): GcsUploadLabels {

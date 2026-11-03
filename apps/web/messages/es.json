@@ -1005,9 +1005,6 @@
         "email": "Correo electrónico",
         "joined": "Registrado",
         "lastActive": "Última actividad",
-        "twoFactor": "2FA",
-        "yes": "on",
-        "no": "apagado",
         "viewProfile": "Ver perfil"
       },
       "groups": {
@@ -1128,18 +1125,9 @@
         "passwordReset": "Cambio de contraseña solicitado",
         "posts": "Mensajes",
         "ip": "Última IP",
-        "logins": "Métodos de acceso",
-        "loginMethods": {
-          "credential": "Contraseña",
-          "steam": "Steam",
-          "discord": "Discord",
-          "google": "Google",
-          "other": "Otro"
-        },
         "loginLocked": "Acceso bloqueado hasta las {time}"
       },
       "actions": {
-        "title": "Acciones de la cuenta",
         "validate": "Validar",
         "validateConfirm": "¿Marcar el correo como confirmado por el equipo?",
         "spammer": "Marcar como spammer",
@@ -1152,9 +1140,7 @@
         "resetPasswordConfirm": "¿Cerrar todas las sesiones del miembro y pedirle una contraseña nueva en la próxima visita?",
         "disable2fa": "Desactivar 2FA",
         "disable2faConfirm": "¿Desactivar el acceso en dos pasos de este miembro? Solo si perdió el acceso a su aplicación de códigos.",
-        "ban": "Banear",
         "gdpr": "Exportación RGPD",
-        "hint": "Cada acción queda en el registro. Fusionar y eliminar tienen sus propias páginas de confirmación.",
         "unlockLogin": "Desbloquear el acceso",
         "unlockLoginConfirm": "¿Quitar el bloqueo por contraseñas incorrectas? El miembro puede volver a intentarlo enseguida."
       },
@@ -1253,11 +1239,6 @@
         "name": "Nombre del grupo",
         "submit": "Crear grupo"
       },
-      "columns": {
-        "name": "Grupo",
-        "members": "Miembros",
-        "type": "Tipo"
-      },
       "protected": "Predeterminado",
       "vip": "VIP",
       "custom": "Personalizado",
@@ -1302,9 +1283,6 @@
       "look": {
         "title": "Postbit y leyenda",
         "icon": "Icono de grupo",
-        "iconSearch": "Buscar un icono",
-        "iconNone": "No hay icono",
-        "iconNoResults": "No hay iconos encontrados.",
         "banner": "Banner postal",
         "bannerHint": "Un color (#D62839) o un gradiente entre dos colores.",
         "inLegend": "Mostrado en la leyenda del grupo",
@@ -1494,9 +1472,6 @@
         "moveContentTo": "Mover temas a",
         "noMove": "(el foro no tiene temas)",
         "confirmDelete": "¿Supir el foro?",
-        "iconSearch": "Buscar un icono (por ejemplo, gamepad, escudo)",
-        "iconNone": "No hay icono",
-        "iconNoResults": "No hay iconos encontrados.",
         "subforumColumns": "Columnas de subforo",
         "preview": {
           "legend": "Imagen de vista previa",
@@ -1515,10 +1490,6 @@
               "help": "El degradado con el icono grande, como en un foro sin mensajes."
             }
           },
-          "upload": "Subir una imagen",
-          "replace": "Cambiar imagen",
-          "remove": "Quitar imagen",
-          "uploading": "Subiendo…",
           "empty": "Ninguna imagen subida",
           "crop": "Parte visible en la tarjeta",
           "cropHint": "Arrastra el marco (o muévelo con las flechas) para elegir la parte visible en la tarjeta; el resto se recorta.",
@@ -1638,15 +1609,11 @@
     "moderators": {
       "title": "Moderadores",
       "empty": "No hay moderadores de foro. Los moderadores globales son los grupos con “Moderador en todos los foros”.",
-      "forum": "Foro",
-      "who": "Moderador",
       "powers": "Potencias",
       "remove": "Quitar",
       "add": "Añadir moderadores",
       "forums": "Foros",
-      "user": "Nombre de usuario",
       "group": "o grupo",
-      "noGroup": "—",
       "submit": "Añadir",
       "power": {
         "edit": "Editar",
@@ -1712,7 +1679,6 @@
       "add": "Añadir",
       "addRank": "Nuevo rango",
       "addBadge": "Nueva placa",
-      "addRule": "Nueva regla",
       "confirmDelete": "Eliminar permanentemente?",
       "moveUp": "Mover {name} hacia arriba",
       "moveDown": "Mueva {name} hacia abajo",
@@ -1751,13 +1717,7 @@
         "colorHint": "The emblem's enamel and ribbon",
         "colorPicker": "Pick the colour",
         "icon": "Icon",
-        "iconSearch": "Search icons",
-        "iconNone": "No icon (use the text)",
-        "iconNoResults": "No icons found",
-        "symbolHint": "1–3 characters, used when no icon is chosen",
-        "image": "Custom image (optional)",
-        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
-        "removeImage": "Remove the custom image"
+        "symbolHint": "1–3 characters, used when no icon is chosen"
       },
       "v2": {
         "help": "Crea reglas como frases: Cuando ocurre algo (los eventos vienen de las aplicaciones activas) → Y las condiciones → Entonces las recompensas. Una aplicación desactivada se lleva sus eventos.",
@@ -1863,9 +1823,6 @@
         "thrPosts": "{n} publicaciones",
         "thrRep": "{n} de reputación",
         "or": "o",
-        "match": "Umbrales",
-        "matchAll": "todos",
-        "matchAny": "cualquiera",
         "criteria": "Criterios de las aplicaciones",
         "criterionMetric": "Criterio {n}",
         "criterionMin": "Mínimo del criterio {n}",
@@ -1883,10 +1840,6 @@
         },
         "animated": "Animación sutil",
         "emblemImage": "Emblema propio (opcional)",
-        "removeImage": "Quitar el emblema propio",
-        "perkGroup": "Ventaja: grupo",
-        "perkBadge": "Ventaja: insignia",
-        "perkNameStyle": "Ventaja: estilo de nombre",
         "ranksHelp": "Un miembro obtiene el rango más alto cuyos umbrales alcanza (todos o cualquiera). Los criterios de las aplicaciones (horas jugadas, ELO, días como miembro…) se suman a los umbrales. Las ventajas se dan al subir y se retiran al perder el rango.",
         "preset": {
           "community": "Comunidad (XP)",
@@ -1916,20 +1869,11 @@
     },
     "profiles": {
       "title": "Perfiles",
-      "settingsTitle": "Ajustes del perfil",
       "coverMaxMb": "Tamaño máximo de cubierta (MB)",
       "wallEnabled": "Muro de perfil habilitado",
-      "key": "Clave",
-      "label": "Etiqueta",
-      "type": "Tipo",
-      "section": "Tab",
       "visibility": "¿Quién puede verlo",
       "maxLength": "Longitud máxima",
-      "position": "Orden",
-      "options": "Opciones (para listas)",
-      "optionsHint": "Comma separado: PC, PlayStation, Xbox",
       "required": "Necesario",
-      "showOnCard": "Mostrada en la tarjeta de hover",
       "save": "Guardar",
       "delete": "Eliminar",
       "add": "Nuevo campo",
@@ -1952,39 +1896,24 @@
         "MEMBERS": "Solo miembros",
         "STAFF": "Personal únicamente"
       },
-      "optionImages": "Imágenes de opción (Seleccionar con imágenes)",
-      "optionImagesHint": "One line each: Option = image address (https://... or /files/...)",
-      "icon": "Icono",
-      "iconSearch": "Buscar un icono",
-      "iconNone": "No hay icono",
-      "iconNoResults": "No hay iconos encontrados.",
-      "showInPostbit": "Mostrar en postbit",
-      "postbitTitle": "Postbit",
       "postbitHint": "Los campos marcados “Mostrar en postbit” aparecen en la tarjeta de autor en temas, en el orden siguiente.",
       "postbitSave": "Guardar el orden",
-      "postbitPosition": "Posición para {field}",
       "groups": {
-        "title": "Grupos de campos",
         "hint": "Los grupos de «Editar perfil» y de la columna del perfil, con el texto de ayuda para los miembros. Los campos sin grupo aparecen en su sección.",
         "helper": "Texto de ayuda",
         "helperHint": "Qué debe completar el miembro aquí",
         "add": "Añadir un grupo",
         "confirmDelete": "¿Eliminar el grupo? Sus campos se mantienen, sin grupo.",
-        "group": "Grupo",
         "none": "Sin grupo"
       },
-      "fieldHelper": "Texto de ayuda del campo",
       "fieldHelperHint": "Aparece bajo el campo, en el formulario",
-      "linkTemplate": "Enlace de contacto (opcional)",
-      "linkTemplateHint": "Solo en campos «Texto»: el miembro escribe el nombre de usuario y el enlace se construye con la plantilla (https, con '{handle}').",
       "faceitKey": "Clave de FACEIT Data API",
       "faceitKeySet": "Configurada (escribe otra para cambiarla)",
       "faceitKeyEmpty": "Falta: la pestaña FACEIT está oculta",
       "faceitClear": "Eliminar la clave de FACEIT",
       "faceitHint": "Crea la clave en el portal de desarrolladores de FACEIT (clave de servidor). Sin ella, la pestaña FACEIT no aparece.",
       "sponsorMoved": "El umbral de la insignia «Sponsor» (y su periodo) se configura en",
-      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes",
-      "sponsorMin": "Insignia «Patrocinador» desde (total de donaciones)"
+      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes"
     },
     "memberProfile": {
       "profileTitle": "Perfil",
@@ -2556,9 +2485,6 @@
         "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Elija el archivo plugin (.zip)",
         "hint": "Máximo 8 MB. Para una actualización, suba la nueva versión del mismo plugin.",
-        "submit": "Subir y comprobar",
-        "uploading": "Comprobando…",
-        "network": "La carga falló. Comprueba tu conexión e intenta de nuevo.",
         "trusted": "Trusted certification keys: {keys}.",
         "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
@@ -3524,11 +3450,7 @@
         "game": "Game",
         "files": "Images",
         "hint": "The file name gives the map name (de_dust2.jpg → de_dust2). Max 5 MB per image, max 100 files at once.",
-        "submit": "Upload",
-        "uploading": "Uploading…",
-        "none": "Choose at least one image.",
         "tooMany": "Max {max} files at once.",
-        "failed": "The upload failed.",
         "saved": "{count, plural, one {# image saved.} many {# images saved.} other {# images saved.}}"
       },
       "template": {
@@ -4123,7 +4045,6 @@
         "createPack": "Create pack",
         "deletePack": "Delete pack",
         "files": "Emote files",
-        "upload": "Upload",
         "uploaded": "{count, plural, one {# emote added} many {# emotes added} other {# emotes added}}",
         "noEmotes": "This pack has no emotes yet.",
         "code": "Code",
@@ -8468,8 +8389,6 @@
       "file": "Choose the plugin archive (.zip, .tar, .tar.gz or .xml)",
       "limits": "Up to {size} MB, at most {files} files.",
       "formats": "Recognized formats",
-      "submit": "Upload and analyze",
-      "uploading": "Analyzing…",
       "network": "The upload failed. Check your connection and try again."
     },
     "formats": {
@@ -9092,10 +9011,6 @@
       "banner": "Banner",
       "logoCurrent": "Current logo",
       "bannerCurrent": "Current banner",
-      "uploading": "Uploading…",
-      "replace": "Change",
-      "upload": "Upload",
-      "removeImage": "Remove",
       "logoHint": "PNG, JPG, WebP or GIF, max {kb} KB; cropped square (256 × 256 px).",
       "bannerHint": "PNG, JPG, WebP or GIF, max {kb} KB; 1600 × 400 px recommended. Without a banner the colour gradient is used.",
       "description": "Description",
@@ -9514,7 +9429,6 @@
       "lift": "Lift the sanction",
       "images": "Images (screenshots)",
       "imagesHint": "PNG, JPEG, WebP or GIF, up to 5 MB each; up to 10 pieces of evidence in total.",
-      "uploading": "Uploading…",
       "removeImage": "Remove"
     },
     "picker": {

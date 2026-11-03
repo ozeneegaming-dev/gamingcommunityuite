@@ -1005,9 +1005,6 @@
         "email": "Эл. почта",
         "joined": "Зарегистрирован",
         "lastActive": "Последняя активность",
-        "twoFactor": "2FA",
-        "yes": "на",
-        "no": "выключать",
         "viewProfile": "Просмотр профиля"
       },
       "groups": {
@@ -1128,18 +1125,9 @@
         "passwordReset": "Запрошена смена пароля",
         "posts": "Сообщения",
         "ip": "Последний IP",
-        "logins": "Способы входа",
-        "loginMethods": {
-          "credential": "Пароль",
-          "steam": "Steam",
-          "discord": "Discord",
-          "google": "Google",
-          "other": "Другое"
-        },
         "loginLocked": "Вход заблокирован до {time}"
       },
       "actions": {
-        "title": "Действия с аккаунтом",
         "validate": "Подтвердить",
         "validateConfirm": "Отметить email как подтверждённый командой?",
         "spammer": "Отметить как спамера",
@@ -1152,9 +1140,7 @@
         "resetPasswordConfirm": "Завершить все сеансы участника и потребовать новый пароль при следующем визите?",
         "disable2fa": "Отключить 2FA",
         "disable2faConfirm": "Отключить двухфакторный вход этому участнику? Только если он потерял доступ к приложению с кодами.",
-        "ban": "Бан",
         "gdpr": "Экспорт GDPR",
-        "hint": "Каждое действие попадает в журнал. Объединение и удаление открывают свои страницы подтверждения.",
         "unlockLogin": "Разблокировать вход",
         "unlockLoginConfirm": "Снять блокировку после неверных паролей? Участник сможет сразу попробовать снова."
       },
@@ -1253,11 +1239,6 @@
         "name": "Название группы",
         "submit": "Создайте группу"
       },
-      "columns": {
-        "name": "Группа",
-        "members": "Участники",
-        "type": "Тип"
-      },
       "protected": "По умолчанию",
       "vip": "VIP",
       "custom": "Свой",
@@ -1302,9 +1283,6 @@
       "look": {
         "title": "Postbit и легенда",
         "icon": "Икона группы",
-        "iconSearch": "Поиск по иконе",
-        "iconNone": "Нет иконы",
-        "iconNoResults": "Иконы не найдены.",
         "banner": "Постбитный баннер",
         "bannerHint": "Цвет (#D62839) или градиент между двумя цветами.",
         "inLegend": "Показано в легенде группы",
@@ -1494,9 +1472,6 @@
         "moveContentTo": "Переместить темы в",
         "noMove": "(у форума нет тем)",
         "confirmDelete": "Удалить форум?",
-        "iconSearch": "Поиск значка (например, геймпад, щит)",
-        "iconNone": "Нет иконы",
-        "iconNoResults": "Иконы не найдены.",
         "subforumColumns": "Колонки субфорума",
         "preview": {
           "legend": "Изображение превью",
@@ -1515,10 +1490,6 @@
               "help": "Градиент с большой иконкой, как у форума без сообщений."
             }
           },
-          "upload": "Загрузить изображение",
-          "replace": "Заменить изображение",
-          "remove": "Убрать изображение",
-          "uploading": "Загрузка…",
           "empty": "Изображение не загружено",
           "crop": "Видимая часть на карточке",
           "cropHint": "Перетащите рамку (или двигайте её стрелками), чтобы выбрать видимую часть карточки; остальное обрезается.",
@@ -1638,15 +1609,11 @@
     "moderators": {
       "title": "Модераторы",
       "empty": "Нет модераторов форумов. Глобальные модераторы — это группы с «Модератором на всех форумах».",
-      "forum": "Форум",
-      "who": "Модератор",
       "powers": "Силы",
       "remove": "Убрать",
       "add": "Добавить модераторы",
       "forums": "Форумы",
-      "user": "Имя пользователя",
       "group": "или группа",
-      "noGroup": "—",
       "submit": "Добавить",
       "power": {
         "edit": "Изменить",
@@ -1712,7 +1679,6 @@
       "add": "Добавить",
       "addRank": "Новый ранг",
       "addBadge": "Новый значок",
-      "addRule": "Новое правило",
       "confirmDelete": "Удалить навсегда?",
       "moveUp": "Скачать {name} Up",
       "moveDown": "Скачать {name} Down",
@@ -1751,13 +1717,7 @@
         "colorHint": "The emblem's enamel and ribbon",
         "colorPicker": "Pick the colour",
         "icon": "Icon",
-        "iconSearch": "Search icons",
-        "iconNone": "No icon (use the text)",
-        "iconNoResults": "No icons found",
-        "symbolHint": "1–3 characters, used when no icon is chosen",
-        "image": "Custom image (optional)",
-        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
-        "removeImage": "Remove the custom image"
+        "symbolHint": "1–3 characters, used when no icon is chosen"
       },
       "v2": {
         "help": "Создавайте правила как предложения: Когда что-то происходит (события приходят от включённых приложений) → И условия → Тогда награды. Отключённое приложение забирает свои события.",
@@ -1863,9 +1823,6 @@
         "thrPosts": "сообщений: {n}",
         "thrRep": "репутация: {n}",
         "or": "или",
-        "match": "Пороги",
-        "matchAll": "все",
-        "matchAny": "любой",
         "criteria": "Критерии приложений",
         "criterionMetric": "Критерий {n}",
         "criterionMin": "Минимум критерия {n}",
@@ -1883,10 +1840,6 @@
         },
         "animated": "Лёгкая анимация",
         "emblemImage": "Своя эмблема (необязательно)",
-        "removeImage": "Убрать свою эмблему",
-        "perkGroup": "Бонус: группа",
-        "perkBadge": "Бонус: значок",
-        "perkNameStyle": "Бонус: стиль имени",
         "ranksHelp": "Участник получает самый высокий ранг, пороги которого достигнуты (все или любой). Критерии приложений (часы игры, ELO, дни в сообществе…) добавляются к порогам. Бонусы выдаются при повышении и снимаются при потере ранга.",
         "preset": {
           "community": "Сообщество (XP)",
@@ -1916,20 +1869,11 @@
     },
     "profiles": {
       "title": "Профили",
-      "settingsTitle": "Настройки профиля",
       "coverMaxMb": "Максимальный размер покрытия (MB)",
       "wallEnabled": "Профильная стена включена",
-      "key": "Ключ",
-      "label": "Подпись",
-      "type": "Тип",
-      "section": "Вкладка",
       "visibility": "Кто может видеть",
       "maxLength": "Макс длина",
-      "position": "Приказ",
-      "options": "Варианты (для списков)",
-      "optionsHint": "Разделенная Comma: PC, PlayStation, Xbox",
       "required": "Требуемый",
-      "showOnCard": "Показано на карте наведения",
       "save": "Сохранить",
       "delete": "Удалить",
       "add": "Новое поле",
@@ -1952,39 +1896,24 @@
         "MEMBERS": "Только участники",
         "STAFF": "Только персонал"
       },
-      "optionImages": "Изображения опции (Выберите изображения)",
-      "optionImagesHint": "Каждая строка: Option = адрес изображения (https://... или /files/...)",
-      "icon": "Иконка",
-      "iconSearch": "Поиск по иконе",
-      "iconNone": "Нет иконы",
-      "iconNoResults": "Иконы не найдены.",
-      "showInPostbit": "Показать в PostBit",
-      "postbitTitle": "Постбайт",
       "postbitHint": "Поля с пометкой «Показать в постбите» появляются на авторской карточке по темам, в порядке ниже.",
       "postbitSave": "Сохранить заказ",
-      "postbitPosition": "Позиция для {field}",
       "groups": {
-        "title": "Группы полей",
         "hint": "Группы в «Редактировать профиль» и в колонке профиля, с текстом подсказки для участников. Поля без группы показываются в своём разделе.",
         "helper": "Текст подсказки",
         "helperHint": "Что участник должен здесь заполнить",
         "add": "Добавить группу",
         "confirmDelete": "Удалить группу? Её поля останутся без группы.",
-        "group": "Группа",
         "none": "Без группы"
       },
-      "fieldHelper": "Подсказка поля",
       "fieldHelperHint": "Показывается под полем в форме",
-      "linkTemplate": "Контактная ссылка (необязательно)",
-      "linkTemplateHint": "Только для полей «Текст»: участник вводит имя пользователя, а ссылка строится по шаблону (https, с '{handle}').",
       "faceitKey": "Ключ FACEIT Data API",
       "faceitKeySet": "Задан (введите другой, чтобы сменить)",
       "faceitKeyEmpty": "Нет: вкладка FACEIT скрыта",
       "faceitClear": "Удалить ключ FACEIT",
       "faceitHint": "Создайте ключ на портале разработчиков FACEIT (серверный ключ). Без него вкладка FACEIT не показывается.",
       "sponsorMoved": "Порог значка «Спонсор» (и его период) задаётся в разделе",
-      "sponsorLink": "VIP и магазин › Пожертвования › Настройки",
-      "sponsorMin": "Значок «Спонсор» от (сумма пожертвований)"
+      "sponsorLink": "VIP и магазин › Пожертвования › Настройки"
     },
     "memberProfile": {
       "profileTitle": "Профиль",
@@ -2556,9 +2485,6 @@
         "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Выберите файл плагина (.zip)",
         "hint": "Максимум 8 Мб. Для обновления загрузите новую версию того же плагина.",
-        "submit": "Загрузить и проверить",
-        "uploading": "Проверить…",
-        "network": "Загрузка не удалась. Проверьте свою связь и попробуйте еще раз.",
         "trusted": "Trusted certification keys: {keys}.",
         "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
@@ -3524,11 +3450,7 @@
         "game": "Game",
         "files": "Images",
         "hint": "The file name gives the map name (de_dust2.jpg → de_dust2). Max 5 MB per image, max 100 files at once.",
-        "submit": "Upload",
-        "uploading": "Uploading…",
-        "none": "Choose at least one image.",
         "tooMany": "Max {max} files at once.",
-        "failed": "The upload failed.",
         "saved": "{count, plural, one {# image saved.} few {# images saved.} many {# images saved.} other {# images saved.}}"
       },
       "template": {
@@ -4123,7 +4045,6 @@
         "createPack": "Create pack",
         "deletePack": "Delete pack",
         "files": "Emote files",
-        "upload": "Upload",
         "uploaded": "{count, plural, one {# emote added} few {# emotes added} many {# emotes added} other {# emotes added}}",
         "noEmotes": "This pack has no emotes yet.",
         "code": "Code",
@@ -8468,8 +8389,6 @@
       "file": "Choose the plugin archive (.zip, .tar, .tar.gz or .xml)",
       "limits": "Up to {size} MB, at most {files} files.",
       "formats": "Recognized formats",
-      "submit": "Upload and analyze",
-      "uploading": "Analyzing…",
       "network": "The upload failed. Check your connection and try again."
     },
     "formats": {
@@ -9092,10 +9011,6 @@
       "banner": "Banner",
       "logoCurrent": "Current logo",
       "bannerCurrent": "Current banner",
-      "uploading": "Uploading…",
-      "replace": "Change",
-      "upload": "Upload",
-      "removeImage": "Remove",
       "logoHint": "PNG, JPG, WebP or GIF, max {kb} KB; cropped square (256 × 256 px).",
       "bannerHint": "PNG, JPG, WebP or GIF, max {kb} KB; 1600 × 400 px recommended. Without a banner the colour gradient is used.",
       "description": "Description",
@@ -9514,7 +9429,6 @@
       "lift": "Lift the sanction",
       "images": "Images (screenshots)",
       "imagesHint": "PNG, JPEG, WebP or GIF, up to 5 MB each; up to 10 pieces of evidence in total.",
-      "uploading": "Uploading…",
       "removeImage": "Remove"
     },
     "picker": {

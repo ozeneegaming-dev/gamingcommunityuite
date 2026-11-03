@@ -44,8 +44,9 @@ test("Root Admin instalează pluginul din ACP; widget-ul, pagina și postbit-ul 
   // 1. Încărcarea: raportul verificărilor, capabilitățile și avertismentul pentru pachetul nesemnat.
   await page.goto("/admin/system/applications");
   await expect(page.getByTestId("gcs-app-chat")).toBeVisible();
-  await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(ZIP);
-  await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
+  await page.getByTestId("gcs-plugin-upload-open").click();
+  await page.getByTestId("gcs-plugin-upload-pick").setInputFiles(ZIP);
+  await page.getByTestId("gcs-plugin-upload-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
   await expect(page.getByTestId("gcs-plugin-checks")).toContainText("Arhiva e validă");
   await expect(page.getByTestId("gcs-plugin-checks").locator('[data-level="error"]')).toHaveCount(0);

@@ -123,10 +123,15 @@ test("avertisment → confirmare → contestație acceptată din ACP (avertismen
 
   await enterAcpAsRoot(page, `RootW${id}`, `root-w${id}@example.com`);
   await page.goto(`/admin/members/${memberId}`);
+  // Cardul Avertismente doar arată; „Avertizează” din titlul lui deschide popupul cu formularul.
   const card = page.getByTestId("gcs-member-card-warnings");
-  await card.getByLabel("Puncte").fill("1");
-  await card.getByLabel("Motiv").fill(`Limbaj ${id}`);
-  await card.getByRole("button", { name: "Avertizează" }).click();
+  await expect(card.locator("form")).toHaveCount(0);
+  await card.getByTestId("gcs-member-card-warn").click();
+  const dialog = page.getByRole("dialog", { name: "Avertizează membrul" });
+  await dialog.getByLabel("Puncte").fill("1");
+  await dialog.getByLabel("Motiv", { exact: true }).fill(`Limbaj ${id}`);
+  await dialog.getByRole("button", { name: "Avertizează" }).click();
+  await expect(dialog).toHaveCount(0);
   await expect(card).toContainText(`Limbaj ${id}`);
 
   await memberPage.goto("/");
@@ -173,9 +178,10 @@ test("„Marchează ca spammer” din fișa membrului: ban, IP, conținut ascuns
   await expect(page.getByTestId("gcs-iptools-member-ip").filter({ hasText: "100.72.0.9" })).toContainText("înregistrare");
 
   await page.goto(`/admin/members/spam${id}`);
-  await page.getByTestId("gcs-member-spammer").locator("summary").click();
-  await page.getByTestId("gcs-member-spammer").getByRole("button", { name: "Marchează ca spammer" }).click();
-  await page.getByTestId("gcs-confirm-ok").click();
+  // „Mai multe” → „Marchează spammer”: popupul cu opțiunile acțiunii e și pasul de confirmare.
+  await page.getByTestId("gcs-member-more").click();
+  await page.getByTestId("gcs-member-spammer").click();
+  await page.getByTestId("gcs-member-modal-spammer").getByRole("button", { name: "Marchează ca spammer" }).click();
   await expect(page.getByText("Spammer", { exact: true }).first()).toBeVisible();
 
   const [user] = await sql<{ isSpammer: boolean | number }>(`SELECT "isSpammer" FROM users WHERE id = $1`, [`spam${id}`]);

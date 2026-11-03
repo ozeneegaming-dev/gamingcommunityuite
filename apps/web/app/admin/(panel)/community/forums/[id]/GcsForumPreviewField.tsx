@@ -1,11 +1,11 @@
 "use client";
 
 import { faImage } from "@fortawesome/free-regular-svg-icons";
-import { faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
-import type { GcsErrorPayload, GcsResult } from "@gcs/core";
-import { GcsButton, GcsIconSvg } from "@gcs/ui";
+import { GcsIconSvg, type GcsUploadRules } from "@gcs/ui";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { useErrorMessage } from "@/lib/use-error-message";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 
 /** Modurile zonei de imagine a cardului (aceleași ca `GCS_FORUM_PREVIEW_MODES` din `@gcs/modules`). */
 const MODES = ["auto", "image", "color"] as const;
@@ -13,15 +13,19 @@ type Mode = (typeof MODES)[number];
 /** Forma cardului: zona de imagine e de 16 : 7. */
 const CARD = 16 / 7;
 const STEP = 5;
+/** Ce primește `/api/acp/forum-preview`: imaginile decorative (și SVG), cel mult 5 MB. */
+const RULES: GcsUploadRules = (() => {
+  const base = UPLOAD_RULES.image(5);
+  return { ...base, accept: [...base.accept, "image/svg+xml", ".svg"], typesLabel: `${base.typesLabel}, SVG` };
+})();
 
 export type GcsForumPreviewLabels = {
   legend: string;
   hint: string;
   modes: Record<Mode, { label: string; help: string }>;
-  upload: string;
-  replace: string;
-  remove: string;
-  uploading: string;
+  /** Titlul popupului de încărcare și numele imaginii de acum în câmp. */
+  uploadTitle: string;
+  current: string;
   empty: string;
   crop: string;
   cropHint: string;
@@ -31,8 +35,8 @@ export type GcsForumPreviewLabels = {
 
 /**
  * Imaginea de previzualizare a cardului unui forum (ACP › Forumuri › Editează, macheta „Carduri de forum”): modul (automat
- * din ultima postare, imaginea mea, doar culoarea forumului), încărcarea (prin `/api/acp/forum-preview`, ca fișier
- * decorativ al forumului) și decupajul la forma cardului (16 : 7). Imaginea rămâne întreagă: se salvează doar punctul
+ * din ultima postare, imaginea mea, doar culoarea forumului), încărcarea (popupul sistemului, cu progres, prin
+ * `/api/acp/forum-preview`, ca fișier decorativ al forumului) și decupajul la forma cardului (16 : 7). Imaginea rămâne întreagă: se salvează doar punctul
  * de focalizare, aplicat pe card cu `object-fit: cover` + `object-position`. Chenarul de decupaj se trage cu mouse-ul
  * (sau un click îl mută acolo) ori se mută din săgeți. Valorile intră în formular prin câmpurile ascunse.
  */
@@ -41,32 +45,20 @@ export function GcsForumPreviewField({ forumId, initial, labels }: { forumId: nu
   const [imageId, setImageId] = useState(initial.imageId ?? "");
   const [focus, setFocus] = useState({ x: initial.focusX, y: initial.focusY });
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<GcsErrorPayload | null>(null);
-  const file = useRef<HTMLInputElement>(null);
   const frame = useRef<HTMLDivElement>(null);
-  const message = useErrorMessage();
+  const post = useUploadPost();
 
-  const send = async (picked: File) => {
-    setBusy(true);
-    setError(null);
+  /** Încărcarea din popup (cu progres); eroarea serverului rămâne în popup. */
+  const send = async (picked: File, onProgress: (fraction: number) => void): Promise<string | null> => {
     const body = new FormData();
     body.set("file", picked);
     body.set("forumId", String(forumId));
-    try {
-      const res = await fetch("/api/acp/forum-preview", { method: "POST", body });
-      const result = (await res.json()) as GcsResult<{ id: string; url: string }>;
-      if (result.ok) {
-        setImageId(result.data.id);
-        setNatural(null);
-        setFocus({ x: 50, y: 50 });
-      } else setError(result.error);
-    } catch {
-      setError({ code: "network", status: 0 });
-    } finally {
-      setBusy(false);
-      if (file.current) file.current.value = "";
-    }
+    const res = await post<{ id: string; url: string }>("/api/acp/forum-preview", body, onProgress);
+    if (!res.ok) return res.error;
+    setImageId(res.data.id);
+    setNatural(null);
+    setFocus({ x: 50, y: 50 });
+    return null;
   };
 
   // Chenarul de decupaj, ca fracții din imagine: o imagine mai lată decât cardul se decupează pe orizontală, una mai
@@ -163,31 +155,14 @@ export function GcsForumPreviewField({ forumId, initial, labels }: { forumId: nu
       {imageId && <p className="gcs-muted gcs-acpHint">{labels.cropHint}</p>}
 
       <div className="gcs-forumPreview__tools">
-        <input
-          ref={file}
-          type="file"
-          className="gcs-srOnly"
-          accept="image/png,image/webp,image/gif,image/jpeg,image/svg+xml,.svg"
-          onChange={(e) => {
-            const picked = e.target.files?.[0];
-            if (picked) void send(picked);
-          }}
-          data-testid="gcs-forum-preview-file"
-          tabIndex={-1}
+        <GcsUploadInput
+          title={labels.uploadTitle}
+          rules={RULES}
+          current={imageId ? { url: `/files/${imageId}`, name: labels.current } : null}
+          upload={send}
+          onRemove={() => setImageId("")}
+          testId="gcs-forum-preview-file"
         />
-        <GcsButton type="button" variant="ghost" size="sm" loading={busy} disabled={busy} onClick={() => file.current?.click()} icon={<GcsIconSvg icon={faUpload} />} data-testid="gcs-forum-preview-upload">
-          {busy ? labels.uploading : imageId ? labels.replace : labels.upload}
-        </GcsButton>
-        {imageId && (
-          <GcsButton type="button" variant="ghost" size="sm" disabled={busy} onClick={() => setImageId("")} icon={<GcsIconSvg icon={faXmark} />} data-testid="gcs-forum-preview-remove">
-            {labels.remove}
-          </GcsButton>
-        )}
-        {error && (
-          <span className="gcs-field__error" role="alert">
-            {message(error)}
-          </span>
-        )}
       </div>
       {imageId && mode === "auto" && <p className="gcs-muted gcs-acpHint">{labels.autoNote}</p>}
     </fieldset>

@@ -12,7 +12,7 @@ import { forumExtOptions } from "@/lib/forum-ext-options";
 import { FORUM_TAB_COMPONENTS } from "@/lib/forum-slot-components";
 import { pluginHost, safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
-import { GcsIconPicker } from "@gcs/ui";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsIcon } from "@gcs/ui/icons";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
@@ -137,7 +137,7 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
             )}
             <div className="gcs-field" role="group" aria-label={t("form.icon")}>
               <span>{t("form.icon")}</span>
-              <GcsIconPicker name="icon" value={f.icon} searchUrl="/api/icons/search" labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }} />
+              <GcsIconInput name="icon" value={f.icon} testId="gcs-forum-icon" />
             </div>
             {!isCategory && (
               <div className="gcs-field">
@@ -225,10 +225,8 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
           legend: tp("legend"),
           hint: tp("hint"),
           modes,
-          upload: tp("upload"),
-          replace: tp("replace"),
-          remove: tp("remove"),
-          uploading: tp("uploading"),
+          uploadTitle: tp("uploadTitle"),
+          current: tp("current"),
           empty: tp("empty"),
           crop: tp("crop"),
           cropHint: tp("cropHint"),
@@ -370,7 +368,7 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
             </label>
             <div className="gcs-field" role="group" aria-label={tp("ctaIcon")}>
               <span>{tp("ctaIcon")}</span>
-              <GcsIconPicker name="ctaIcon" value={f.page?.ctaIcon ?? null} searchUrl="/api/icons/search" labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }} />
+              <GcsIconInput name="ctaIcon" value={f.page?.ctaIcon ?? null} testId="gcs-forum-cta-icon" />
             </div>
           </fieldset>
           <label className="gcs-check">

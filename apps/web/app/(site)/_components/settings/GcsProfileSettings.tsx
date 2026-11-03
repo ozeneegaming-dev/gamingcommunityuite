@@ -1,13 +1,16 @@
 
 "use client";
 
-import { faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import type { GcsResult } from "@gcs/core";
 import { GCS_RICH_FIELDS } from "@gcs/core/rich-fields";
 import { groupFields, type GcsFieldGroupDef } from "@gcs/modules/field-groups";
 import { GcsAvatar, GcsButton, GcsIconSvg } from "@gcs/ui";
 import type { GcsEditorTool } from "@gcs/ui/editor";
 import { useState } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
+import { useUploadPost } from "@/lib/upload-request";
 import { saveBirthday } from "../../profile-actions";
 import { removeImage, saveProfile, setCoverPosition } from "../../settings-actions";
 import { GcsRichTextInput } from "../editor/GcsRichTextInput";
@@ -213,14 +216,17 @@ export function GcsProfileFieldsForm({
   );
 }
 
-/** Încărcarea avatarului sau a cover-ului (prin `/api/profile/images`, fără limita de 1 MB a Server Actions). */
+/**
+ * Încărcarea avatarului sau a cover-ului (prin `/api/profile/images`, fără limita de 1 MB a Server Actions): popupul
+ * sistemului verifică tipul, mărimea (limita grupului / a cover-ului, `maxMb`) și arată progresul trimiterii.
+ */
 export function GcsImageSetting({
   kind,
   name,
   url,
   positionY,
   allowed,
-  accept,
+  maxMb,
   labels,
 }: {
   kind: "avatar" | "cover";
@@ -228,22 +234,23 @@ export function GcsImageSetting({
   url: string | null;
   positionY: number;
   allowed: boolean;
-  accept: string;
+  /** Mărimea maximă acceptată de server, în MB. */
+  maxMb: number;
   labels: Labels;
 }) {
   const { pending, status, run } = useSettingsAction(labels.saved);
   const [position, setPosition] = useState(positionY);
-  const [uploading, setUploading] = useState(false);
+  const post = useUploadPost();
 
-  const upload = async (file: File) => {
-    setUploading(true);
+  const upload = async (file: File, onProgress: (fraction: number) => void): Promise<string | null> => {
     const body = new FormData();
     body.set("file", file);
     body.set("kind", kind);
     body.set("positionY", String(position));
-    const res = (await fetch("/api/profile/images", { method: "POST", body }).then((r) => r.json())) as GcsResult<{ url: string }>;
-    setUploading(false);
-    run(async () => res);
+    const res = await post<{ url: string }>("/api/profile/images", body, onProgress);
+    if (!res.ok) return res.error;
+    run(async () => ({ ok: true, data: res.data }));
+    return null;
   };
 
   const title = kind === "avatar" ? labels.avatar : labels.cover;
@@ -262,28 +269,16 @@ export function GcsImageSetting({
       {!allowed ? (
         <p className="gcs-field__hint">{labels.coverDenied}</p>
       ) : (
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <label className="gcs-btn gcs-btn--ghost" style={{ cursor: "pointer" }}>
-            {labels.upload}
-            <input
-              type="file"
-              accept={accept}
-              className="gcs-srOnly"
-              data-testid={`gcs-upload-${kind}`}
-              disabled={uploading || pending}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void upload(f);
-                e.target.value = "";
-              }}
-            />
-          </label>
-          {url && (
-            <GcsButton icon={<GcsIconSvg icon={faTrash} />} variant="ghost" disabled={pending} onClick={() => run(() => removeImage({ kind }))}>
-              {labels.remove}
-            </GcsButton>
-          )}
-        </div>
+        <GcsUploadInput
+          title={title}
+          rules={UPLOAD_RULES.image(maxMb)}
+          current={url ? { url, name: title } : null}
+          upload={upload}
+          disabled={pending}
+          {...(url ? { onRemove: () => run(() => removeImage({ kind })) } : {})}
+          testId={`gcs-upload-${kind}`}
+          className="gcs-imageSetting__upload"
+        />
       )}
       {kind === "cover" && url && allowed && (
         <div className="gcs-field">

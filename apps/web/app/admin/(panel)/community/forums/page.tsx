@@ -1,10 +1,11 @@
 import { FORUMS_ACP_SECTION } from "@gcs/modules";
-import { GcsCard, GcsIconPicker } from "@gcs/ui";
+import { GcsCard } from "@gcs/ui";
 import { resolveIcon } from "@gcs/ui/icon-registry";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
 import { createForum } from "./actions";
@@ -68,12 +69,7 @@ export default async function AcpForumsPage() {
           </div>
           <div className="gcs-field" role="group" aria-label={t("form.icon")}>
             <span>{t("form.icon")}</span>
-            <GcsIconPicker
-              name="icon"
-              value={null}
-              searchUrl="/api/icons/search"
-              labels={{ search: t("form.iconSearch"), none: t("form.iconNone"), noResults: t("form.iconNoResults") }}
-            />
+            <GcsIconInput name="icon" value={null} testId="gcs-forum-icon" />
           </div>
           <label className="gcs-field">
             {t("form.linkUrl")}

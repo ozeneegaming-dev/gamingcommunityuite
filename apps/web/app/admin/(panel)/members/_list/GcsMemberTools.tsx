@@ -1,17 +1,21 @@
 "use client";
 
 import { faFileExport, faFileImport, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsIconSvg, GcsModal } from "@gcs/ui";
+import { GcsButton, GcsIconSvg, GcsModal, type GcsUploadRules } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { createMember, importMembersCsv } from "../actions";
 
+/** Fișierul importului: CSV (după extensie; Windows îl dă uneori ca `application/vnd.ms-excel`), cel mult 1 MB. */
+const CSV_RULES: GcsUploadRules = { accept: [".csv", "text/csv", "application/vnd.ms-excel"], typesLabel: "CSV", maxBytes: 1024 * 1024 };
+
 /**
  * Uneltele listei ACP → Membri (Membri v2): „Membru nou” (dialog cu nume, email, parolă și grup), „Import CSV”
- * (fișierul se citește în browser; rezultatul arată rândurile create și pe cele greșite) și „Export CSV” (căutarea
- * curentă).
+ * (fișierul se alege din popupul de încărcare și se citește în browser; rezultatul arată rândurile create și pe cele
+ * greșite) și „Export CSV” (căutarea curentă).
  */
 export function GcsMemberTools({ groups, defaultGroupId, exportHref, canEdit }: { groups: { id: number; name: string }[]; defaultGroupId: number | null; exportHref: string; canEdit: boolean }) {
   const t = useTranslations("acp.members.tools");
@@ -117,10 +121,10 @@ export function GcsMemberTools({ groups, defaultGroupId, exportHref, canEdit }: 
           <form className="gcs-memberToolsForm" onSubmit={onImport} data-testid="gcs-member-import">
             <p className="gcs-memberToolsForm__hint">{t("import.hint")}</p>
             <code className="gcs-memberToolsForm__sample">name,email,password,group</code>
-            <label className="gcs-field">
-              {t("import.file")}
-              <input className="gcs-input" type="file" name="file" accept=".csv,text/csv" />
-            </label>
+            <div className="gcs-field">
+              <span>{t("import.file")}</span>
+              <GcsUploadInput name="file" title={t("import.title")} rules={CSV_RULES} testId="gcs-member-import-file" />
+            </div>
             {error && (
               <p role="alert" className="gcs-memberToolsForm__error">
                 {error}

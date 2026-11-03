@@ -7,9 +7,11 @@ import { GcsIconSvg } from "../icons/svg";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Panoul deschis: formularele din el (ex. `GcsActionForm`) îl închid după o salvare reușită. */
+/** Panoul (sau dialogul) deschis: formularele din el (ex. `GcsActionForm`) îl închid după o salvare reușită. */
 const DrawerContext = createContext<{ close: () => void } | null>(null);
 export const useGcsDrawer = () => useContext(DrawerContext);
+/** Același context îl dau și dialogurile modale: un formular dintr-un popup îl închide după salvare. */
+export const GcsCloseProvider = DrawerContext.Provider;
 
 export type GcsDrawerProps = {
   title: ReactNode;
@@ -46,8 +48,9 @@ export function GcsDrawer({ title, icon, aside, onClose, children, footer, close
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      // Un dialog deschis peste panou (confirmarea, popupul de încărcare) își tratează singur tastele.
-      if (el && document.activeElement && !el.contains(document.activeElement) && document.querySelector(".gcs-modal")) return;
+      // Un dialog deschis peste panou (confirmarea, popupul de încărcare, chiar randat în panou) își tratează singur
+      // tastele: Escape îl închide doar pe el, iar Tab rămâne în el.
+      if (document.querySelector(".gcs-modal")) return;
       if (e.key === "Escape") {
         e.stopPropagation();
         close.current();

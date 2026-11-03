@@ -64,8 +64,9 @@ async function ensureVipStudio(page: Page): Promise<void> {
     return;
   }
   vipStudioChange = "installed";
-  await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(SIGNED);
-  await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
+  await page.getByTestId("gcs-plugin-upload-open").click();
+  await page.getByTestId("gcs-plugin-upload-pick").setInputFiles(SIGNED);
+  await page.getByTestId("gcs-plugin-upload-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
   await page.getByRole("button", { name: "Instalează pluginul" }).click();
   await expect(page.getByTestId("gcs-plugin-header").getByTestId("gcs-plugin-status")).toHaveText("Activ");

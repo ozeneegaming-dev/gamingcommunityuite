@@ -39,8 +39,15 @@ test("etapa 1: instalare → 2FA → grup VIP cu gradient → membru → ban →
   let groupUrl = "";
   await test.step("grupul „VIP Test” cu nume în gradient", async () => {
     await page.goto("/admin/groups");
-    await page.getByLabel("Numele grupului").fill("VIP Test");
-    await page.getByRole("button", { name: "Creează grupul" }).click();
+    // „Grup nou” din antet: dialogul cu numele, apoi direct pagina grupului.
+    await page.getByTestId("gcs-group-new").click();
+    const create = page.getByRole("dialog", { name: "Grup nou" });
+    await create.getByLabel("Numele grupului").fill("VIP Test");
+    await create.getByRole("button", { name: "Creează grupul" }).click();
+    await expect(page).toHaveURL(/\/admin\/groups\/\d+$/);
+    await expect(page.getByRole("heading", { name: "VIP Test", level: 1 })).toBeVisible();
+    // Înapoi în listă, grupul are rândul lui cu „Editează”.
+    await page.goto("/admin/groups");
     await page.getByRole("link", { name: "Editează: VIP Test" }).click();
     await expect(page.getByRole("heading", { name: "VIP Test", level: 1 })).toBeVisible();
     groupUrl = page.url();

@@ -1,6 +1,5 @@
 "use client";
 
-import type { GcsResult } from "@gcs/core";
 import {
   CUSTOM_CSS_FILE,
   compileThemeCss,
@@ -38,6 +37,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useUploadPost } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { isPreviewReadyMessage, STUDIO_MESSAGE_SOURCE, type GcsStudioApplyMessage } from "@/lib/theme-preview";
 import { discardThemeStudio, publishThemeStudio, saveThemeStudioDraft } from "../actions";
@@ -223,6 +223,7 @@ export function GcsThemeStudio({
 }) {
   const t = useTranslations("themeStudio");
   const errorMessage = useErrorMessage();
+  const postUpload = useUploadPost();
   const router = useRouter();
 
   const [value, setValue] = useState(initial);
@@ -361,7 +362,8 @@ export function GcsThemeStudio({
   };
 
   // ─── Imaginile ─────────────────────────────────────────────────────────────
-  const upload = async (slot: GcsStudioImageSlot, file: File) => {
+  /** Încărcarea din popupul imaginii (cu progres): `null` la succes sau textul erorii, arătat în popup. */
+  const upload = async (slot: GcsStudioImageSlot, file: File, onProgress: (fraction: number) => void): Promise<string | null> => {
     setUploading(slot);
     await flush();
     setStatus({ tone: "muted", text: t("status.uploading") });
@@ -369,17 +371,19 @@ export function GcsThemeStudio({
     body.set("file", file);
     body.set("kind", slot);
     body.set("theme", themeKey);
-    const res = (await fetch("/api/themes/images", { method: "POST", body })
-      .then((r) => r.json())
-      .catch(() => ({ ok: false, error: { code: "internal", status: 500 } }))) as GcsResult<{ url: string }>;
+    const res = await postUpload<{ url: string }>("/api/themes/images", body, onProgress);
     setUploading(null);
-    if (!res.ok) return setStatus({ tone: "error", text: errorMessage(res.error) });
+    if (!res.ok) {
+      setStatus({ tone: "error", text: res.error });
+      return res.error;
+    }
     const next = withImage(latest.current, slot, res.data.url);
     latest.current = next;
     setValue(next);
     setHasDraft(true);
     setStatus({ tone: "muted", text: t("status.saved") });
     frame.current?.contentWindow?.location.reload();
+    return null;
   };
 
   const removeImage = (slot: GcsStudioImageSlot) => {
@@ -459,7 +463,7 @@ export function GcsThemeStudio({
         slot={item.image}
         url={imageUrl(value, item.image)}
         busy={uploading !== null}
-        onUpload={(file) => void upload(item.image, file)}
+        onUpload={(file, onProgress) => upload(item.image, file, onProgress)}
         onRemove={() => removeImage(item.image)}
       />
     );

@@ -48,7 +48,10 @@ test("adminul încarcă logo-ul din editorul vizual deschis din meniu; vizitator
 
   // Draft: logo-ul apare în previzualizare (doar pentru admin).
   await page.getByTestId("gcs-studio-nav-logos").click();
-  await page.getByTestId("gcs-studio-upload-logo").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
+  await page.getByTestId("gcs-studio-upload-logo-open").click();
+  await page.getByTestId("gcs-studio-upload-logo-pick").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: PNG });
+  await page.getByTestId("gcs-studio-upload-logo-use").click();
+  await expect(page.getByTestId("gcs-studio-upload-logo-dialog")).toHaveCount(0);
   await expect(status).toHaveText(SAVED);
   await expect(page.getByTestId("gcs-studio-image-logo").locator("img")).toBeVisible();
   await expect.poll(async () => (await previewFrame(page)).getByTestId("gcs-brand-logo").count()).toBe(1);

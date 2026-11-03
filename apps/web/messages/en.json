@@ -533,7 +533,7 @@
         "overview": "Overview",
         "dashboard": "Dashboard",
         "files": "Files",
-        "site_features": "Apps & integrations",
+        "site_features": "Integrations",
         "applications": "Applications and plugins",
         "integrations": "Integrations",
         "menu_manager": "Menu manager",
@@ -1005,9 +1005,6 @@
         "email": "Email",
         "joined": "Joined",
         "lastActive": "Last active",
-        "twoFactor": "2FA",
-        "yes": "on",
-        "no": "off",
         "viewProfile": "View profile"
       },
       "groups": {
@@ -1034,7 +1031,8 @@
         "extend": "Set expiry",
         "expiresAt": "Expiry of {group}",
         "expiresAtLabel": "Expires on",
-        "expiryHint": "Empty = no expiry. A temporary group is removed automatically and the member is notified."
+        "expiryHint": "Empty = no expiry. A temporary group is removed automatically and the member is notified.",
+        "group": "Group"
       },
       "ban": {
         "title": "Ban",
@@ -1056,7 +1054,8 @@
           "expired": "expired"
         },
         "until": "until {date}",
-        "permanent": "permanent"
+        "permanent": "permanent",
+        "modalTitle": "Ban member"
       },
       "warn": {
         "title": "Warning",
@@ -1074,13 +1073,15 @@
         "fromPreset": "from the chosen reason",
         "revoked": "revoked",
         "revoke": "Revoke",
-        "revokeConfirm": "The warning is revoked and its points no longer count; restrictions are recalculated."
+        "revokeConfirm": "The warning is revoked and its points no longer count; restrictions are recalculated.",
+        "modalTitle": "Warn member"
       },
       "ips": {
         "title": "Known IPs",
         "none": "No known IPs",
         "shared": "Accounts sharing the same IP",
-        "sharedNone": "No other accounts on these IPs"
+        "sharedNone": "No other accounts on these IPs",
+        "more": "{count, plural, one {# more IP} other {# more IPs}}"
       },
       "perms": {
         "title": "Individual permissions",
@@ -1108,7 +1109,8 @@
         },
         "amount": "Amount",
         "currency": "Currency",
-        "note": "Note"
+        "note": "Note",
+        "list": "Member's donations"
       },
       "tabs": {
         "label": "Member sections",
@@ -1128,18 +1130,11 @@
         "passwordReset": "Password reset requested",
         "posts": "Posts",
         "ip": "Last IP",
-        "logins": "Sign-in methods",
-        "loginMethods": {
-          "credential": "Password",
-          "steam": "Steam",
-          "discord": "Discord",
-          "google": "Google",
-          "other": "Other"
-        },
-        "loginLocked": "Sign-in locked until {time}"
+        "loginLocked": "Sign-in locked until {time}",
+        "twoFactorOn": "2FA on",
+        "twoFactorOff": "No 2FA"
       },
       "actions": {
-        "title": "Account actions",
         "validate": "Validate",
         "validateConfirm": "Mark the email as confirmed by the team?",
         "spammer": "Flag as spammer",
@@ -1152,9 +1147,7 @@
         "resetPasswordConfirm": "Sign the member out everywhere and require a new password at the next visit?",
         "disable2fa": "Disable 2FA",
         "disable2faConfirm": "Disable two-factor sign-in for this member? Use it only when they lost access to their authenticator.",
-        "ban": "Ban",
         "gdpr": "GDPR export",
-        "hint": "Every action goes into the log. Merge and delete open their own confirmation pages.",
         "unlockLogin": "Unlock sign-in",
         "unlockLoginConfirm": "Lift the lock after wrong passwords? The member can try again right away."
       },
@@ -1190,7 +1183,17 @@
           "mb": "{value} MB",
           "chars": "{value} characters"
         },
-        "warnPoints": "{count, plural, one {# active warning point} other {# active warning points}}"
+        "warnPoints": "{count, plural, one {# active warning point} other {# active warning points}}",
+        "manageGroups": "Manage",
+        "groupPrimary": "Primary",
+        "groupSecondary": "Secondary",
+        "warnings": "Warnings",
+        "bans": "Bans",
+        "donationAdd": "Add",
+        "donationsNone": "No donations.",
+        "donationsTotal": "Confirmed total",
+        "donationsLast": "Latest",
+        "donationsPending": "{count, plural, one {# donation awaiting confirmation} other {# donations awaiting confirmation}}"
       },
       "activity": {
         "chart": "Activity (90 days)",
@@ -1244,6 +1247,15 @@
         "banDomain": "Ban the email domain (not big providers)",
         "report": "Report to the public spammer list",
         "reason": "Ban reason"
+      },
+      "modalClose": "Close",
+      "bar": {
+        "label": "Member actions",
+        "groups": "Groups",
+        "warn": "Warn",
+        "ban": "Ban",
+        "donation": "Donation",
+        "more": "More"
       }
     },
     "groups": {
@@ -1251,20 +1263,38 @@
       "create": {
         "title": "New group",
         "name": "Group name",
-        "submit": "Create group"
+        "submit": "Create group",
+        "hint": "You choose the colour, permissions and the rest after creating it, on the group's page.",
+        "cancel": "Cancel"
       },
-      "columns": {
-        "name": "Group",
-        "members": "Members",
-        "type": "Type"
-      },
-      "protected": "Default",
+      "protected": "System",
       "vip": "VIP",
       "custom": "Custom",
       "edit": "Edit",
       "order": "Group order",
       "moveUp": "Move {group} up",
-      "moveDown": "Move {group} down"
+      "moveDown": "Move {group} down",
+      "search": "Search for a group",
+      "filter": "Filter by type",
+      "filters": {
+        "all": "All",
+        "protected": "System",
+        "vip": "VIP",
+        "custom": "Custom"
+      },
+      "dragHint": "Drag the rows to change the display order",
+      "dragOff": "The order is changed from “All”, without a search",
+      "drag": "Drag {group} to move it",
+      "orderSaved": "Order saved",
+      "noMatch": "No groups found.",
+      "membersCount": "{count, plural, one {# member} other {# members}}",
+      "flags": {
+        "acpFull": "Full ACP",
+        "acp": "ACP",
+        "globalMod": "Global mod",
+        "noAccess": "No access",
+        "vip": "VIP"
+      }
     },
     "group": {
       "back": "Back to groups",
@@ -1291,7 +1321,8 @@
       "settings": {
         "title": "Group settings and permissions",
         "save": "Save settings",
-        "unlimited": "-1 = unlimited, 0 = not allowed"
+        "unlimited": "-1 = unlimited, 0 = not allowed",
+        "general": "General"
       },
       "delete": {
         "title": "Delete",
@@ -1302,9 +1333,6 @@
       "look": {
         "title": "Postbit and legend",
         "icon": "Group icon",
-        "iconSearch": "Search for an icon",
-        "iconNone": "No icon",
-        "iconNoResults": "No icons found.",
         "banner": "Postbit banner",
         "bannerHint": "A color (#D62839) or a gradient between two colors.",
         "inLegend": "Shown in the group legend",
@@ -1494,9 +1522,6 @@
         "moveContentTo": "Move topics to",
         "noMove": "(the forum has no topics)",
         "confirmDelete": "Delete the forum?",
-        "iconSearch": "Search for an icon (e.g. gamepad, shield)",
-        "iconNone": "No icon",
-        "iconNoResults": "No icons found.",
         "subforumColumns": "Subforum columns",
         "preview": {
           "legend": "Preview image",
@@ -1515,15 +1540,13 @@
               "help": "The gradient with the large icon, like a forum with no posts."
             }
           },
-          "upload": "Upload an image",
-          "replace": "Change image",
-          "remove": "Remove image",
-          "uploading": "Uploading…",
           "empty": "No image uploaded",
           "crop": "Visible part on the card",
           "cropHint": "Drag the frame (or move it with the arrow keys) to choose the part shown on the card; the rest is cropped.",
           "result": "How it looks on the card",
-          "autoNote": "With an image uploaded, the card uses it in automatic mode too; remove it to go back to the preview from the latest post."
+          "autoNote": "With an image uploaded, the card uses it in automatic mode too; remove it to go back to the preview from the latest post.",
+          "uploadTitle": "Upload the card image",
+          "current": "Card image"
         }
       },
       "icons": {
@@ -1637,16 +1660,12 @@
     },
     "moderators": {
       "title": "Moderators",
-      "empty": "No forum moderators. Global moderators are the groups with “Moderator in all forums”.",
-      "forum": "Forum",
-      "who": "Moderator",
+      "empty": "No forum moderators yet. Add one with “Add moderator”.",
       "powers": "Powers",
       "remove": "Remove",
-      "add": "Add moderators",
+      "add": "Add moderator",
       "forums": "Forums",
-      "user": "Username",
-      "group": "or group",
-      "noGroup": "—",
+      "group": "Group",
       "submit": "Add",
       "power": {
         "edit": "Edit",
@@ -1660,7 +1679,45 @@
         "feature": "Feature",
         "approve": "Approve",
         "warn": "Warn"
-      }
+      },
+      "globalTitle": "Global moderators",
+      "globalHint": "the groups with “Moderator in all forums”",
+      "globalEmpty": "No group has “Moderator in all forums”. The permission is turned on from the group's page.",
+      "members": "{count, plural, one {# member} other {# members}}",
+      "groupLink": "Group {group}",
+      "forumTitle": "Forum moderators",
+      "allPowers": "All powers",
+      "editRow": "Edit moderator {who} on {forum}",
+      "editTitle": "Moderator on {forum}",
+      "removeConfirm": "Remove {who} from the moderators of {forum}? Their powers there end immediately.",
+      "whoTitle": "Who",
+      "targetUser": "A member",
+      "targetGroup": "A group",
+      "member": "Member",
+      "memberPlaceholder": "Type the name, with or without @",
+      "memberHint": "Pick from the suggestions; names are shown in their group's style.",
+      "memberChange": "Change member ({name})",
+      "suggestions": "Members found",
+      "groupLabel": "Group",
+      "groupChoose": "Choose a group",
+      "chosen": "{count} selected",
+      "forumSearch": "Search for a forum",
+      "noForums": "There are no forums yet.",
+      "noForumMatch": "No forums found.",
+      "noCategory": "No category",
+      "all": "All",
+      "none": "None",
+      "allIn": "Select all forums in {category}",
+      "noneIn": "Clear all forums in {category}",
+      "presets": "Power presets",
+      "preset": {
+        "all": "All",
+        "basic": "Basic moderation",
+        "approvals": "Approvals only"
+      },
+      "powersNone": "Choose at least one power.",
+      "submitCount": "Add to {count, plural, one {# forum} other {# forums}}",
+      "save": "Save powers"
     },
     "savedActions": {
       "title": "Saved actions",
@@ -1712,7 +1769,6 @@
       "add": "Add",
       "addRank": "New rank",
       "addBadge": "New badge",
-      "addRule": "New rule",
       "confirmDelete": "Delete permanently?",
       "moveUp": "Move {name} up",
       "moveDown": "Move {name} down",
@@ -1751,13 +1807,7 @@
         "colorHint": "The emblem's enamel and ribbon",
         "colorPicker": "Pick the colour",
         "icon": "Icon",
-        "iconSearch": "Search icons",
-        "iconNone": "No icon (use the text)",
-        "iconNoResults": "No icons found",
-        "symbolHint": "1–3 characters, used when no icon is chosen",
-        "image": "Custom image (optional)",
-        "imageHint": "PNG, JPEG, WebP or GIF. Replaces the drawn emblem.",
-        "removeImage": "Remove the custom image"
+        "symbolHint": "1–3 characters, used when no icon is chosen"
       },
       "v2": {
         "help": "Build rules as sentences: When something happens (events come from the enabled apps) → And the conditions → Then the rewards. A disabled app takes its events with it.",
@@ -1863,9 +1913,6 @@
         "thrPosts": "{n} posts",
         "thrRep": "{n} reputation",
         "or": "or",
-        "match": "Thresholds",
-        "matchAll": "all",
-        "matchAny": "any",
         "criteria": "App criteria",
         "criterionMetric": "Criterion {n}",
         "criterionMin": "Minimum for criterion {n}",
@@ -1883,16 +1930,53 @@
         },
         "animated": "Subtle animation",
         "emblemImage": "Custom emblem (optional)",
-        "removeImage": "Remove the custom emblem",
-        "perkGroup": "Perk: group",
-        "perkBadge": "Perk: badge",
-        "perkNameStyle": "Perk: name style",
         "ranksHelp": "A member gets the highest rank whose thresholds are met (all or any). App criteria (hours played, ELO, membership days…) add to the thresholds. Perks are given on rank-up and removed when the rank is lost.",
         "preset": {
           "community": "Community (XP)",
           "gaming": "Gaming (XP + servers)",
           "veteran": "Veterans (posts + membership)"
-        }
+        },
+        "secRule": "Rule"
+      },
+      "panel": {
+        "secThresholds": "Thresholds",
+        "thresholdsHint": "An empty threshold is not required.",
+        "matchLabel": "The member must reach",
+        "matchAll": "All thresholds",
+        "matchAny": "Any threshold",
+        "addCriterion": "Add a criterion",
+        "removeCriterion": "Remove criterion {n}",
+        "noMetrics": "No installed app offers rank criteria (hours played, ELO…).",
+        "secEmblem": "Emblem",
+        "emblemPreview": "Emblem preview",
+        "textIcon": "Symbol next to the name",
+        "textIconHint": "Optional: an emoji or 1–3 characters, shown next to the rank in posts.",
+        "emblemUploadTitle": "Upload the rank emblem",
+        "emblemUploadHint": "Replaces the drawn emblem wherever the rank appears.",
+        "secPerks": "Perks",
+        "perkGroup": "Group",
+        "perkBadge": "Badge",
+        "perkStyle": "Cosmetic style",
+        "perksHint": "Given when the member reaches the rank and taken back when they lose it.",
+        "secBasics": "Basics",
+        "keyHint": "Lowercase letters, digits and _ (cannot be changed after saving).",
+        "manualHint": "Unchecked: the badge is awarded automatically by rules.",
+        "secLook": "Look",
+        "secImage": "Custom image",
+        "badgeUploadTitle": "Upload the badge image",
+        "badgeImageHint": "Optional. Replaces the drawn badge wherever it appears.",
+        "noBadges": "No badges yet. Add the first one with “New badge”.",
+        "pointsChip": "{n, plural, one {# point} other {# points}}",
+        "manualChip": "Manual",
+        "autoChip": "Automatic",
+        "secClassicWhen": "Condition",
+        "secClassicReward": "Reward",
+        "thresholdHint": "“For each …” rules don't use the threshold.",
+        "eachNoBadge": "“For each …” rules only give points.",
+        "classicNew": "New classic rule",
+        "classicEmpty": "No classic rules.",
+        "thresholdChip": "Threshold {n}",
+        "secRare": "Rare badges"
       }
     },
     "promotions": {
@@ -1916,20 +2000,11 @@
     },
     "profiles": {
       "title": "Profiles",
-      "settingsTitle": "Profile settings",
       "coverMaxMb": "Maximum cover size (MB)",
       "wallEnabled": "Profile wall enabled",
-      "key": "Key",
-      "label": "Label",
-      "type": "Type",
-      "section": "Tab",
       "visibility": "Who can see it",
       "maxLength": "Max length",
-      "position": "Order",
-      "options": "Options (for lists)",
-      "optionsHint": "Comma separated: PC, PlayStation, Xbox",
       "required": "Required",
-      "showOnCard": "Shown on the hover card",
       "save": "Save",
       "delete": "Delete",
       "add": "New field",
@@ -1952,31 +2027,21 @@
         "MEMBERS": "Members only",
         "STAFF": "Staff only"
       },
-      "optionImages": "Option images (Select with images)",
-      "optionImagesHint": "One line each: Option = image address (https://… or /files/…)",
-      "icon": "Icon",
-      "iconSearch": "Search for an icon",
-      "iconNone": "No icon",
-      "iconNoResults": "No icons found.",
-      "showInPostbit": "Show in postbit",
-      "postbitTitle": "Postbit",
-      "postbitHint": "Fields marked “Show in postbit” appear on the author card in topics, in the order below.",
+      "postbitHint": "Fields with “In posts” on show under the author's avatar in topics, in the order below. Drag them or use the arrows, then save.",
       "postbitSave": "Save order",
-      "postbitPosition": "Position for {field}",
       "groups": {
-        "title": "Field groups",
         "hint": "The groups in “Edit profile” and in the profile column, with the help text shown to members. Fields without a group appear in their section.",
         "helper": "Help text",
         "helperHint": "What the member should fill in here",
         "add": "Add a group",
         "confirmDelete": "Delete the group? Its fields stay, without a group.",
-        "group": "Group",
-        "none": "No group"
+        "none": "No group",
+        "new": "New group",
+        "newTitle": "New field group",
+        "edit": "Edit the “{name}” group",
+        "count": "{count, plural, =0 {No fields} one {One field} other {# fields}}"
       },
-      "fieldHelper": "Field help text",
       "fieldHelperHint": "Shown under the field, in the form",
-      "linkTemplate": "Contact link (optional)",
-      "linkTemplateHint": "“Text” fields only: the member types the handle and the link is built from the template (https, with '{handle}').",
       "faceitKey": "FACEIT Data API key",
       "faceitKeySet": "Set (type another one to change it)",
       "faceitKeyEmpty": "Missing: the FACEIT tab is hidden",
@@ -1984,7 +2049,80 @@
       "faceitHint": "Create the key in the FACEIT developer portal (server-side key). Without it, the FACEIT tab does not appear.",
       "sponsorMoved": "The “Sponsor” badge threshold (and its period) is set in",
       "sponsorLink": "VIP & Shop › Donations › Settings",
-      "sponsorMin": "“Sponsor” badge from (total donations)"
+      "description": "The fields of member profiles, their groups, what shows under the avatar in posts and the profile settings.",
+      "tabs": {
+        "label": "Parts of the Profiles page",
+        "fields": "Fields",
+        "groups": "Field groups",
+        "postbit": "Order in posts",
+        "settings": "Settings"
+      },
+      "list": {
+        "drag": "Drag to move “{name}”",
+        "moveUp": "Move “{name}” up",
+        "moveDown": "Move “{name}” down",
+        "orderSaved": "Order saved.",
+        "search": "Search for a field",
+        "filterSection": "Filter by section",
+        "filterGroup": "Filter by group",
+        "allSections": "All sections",
+        "allGroups": "All groups",
+        "noGroup": "No group",
+        "orderLocked": "While a filter is active the order can't change. Clear the search and filters to drag fields.",
+        "noMatch": "No field matches the search or filters.",
+        "clearFilters": "Clear filters",
+        "onCard": "On card",
+        "inPostbit": "In posts",
+        "editField": "Edit the “{name}” field",
+        "visibility": {
+          "PUBLIC": "Public",
+          "MEMBERS": "Members",
+          "STAFF": "Staff"
+        }
+      },
+      "form": {
+        "newTitle": "New field",
+        "basics": "Basics",
+        "label": "Label",
+        "key": "Key",
+        "keyHint": "Lowercase letters, digits and _ (2–40). It can't change after saving.",
+        "keyLocked": "The key doesn't change: the values members filled in use it.",
+        "type": "Type",
+        "helper": "Help text",
+        "placement": "Where it shows",
+        "group": "Group",
+        "section": "Section",
+        "icon": "Icon",
+        "look": "Look",
+        "showOnCard": "On the member card",
+        "showInPostbit": "In posts, under the avatar",
+        "values": "Values",
+        "valuesHint": "The options the member picks from, one per row (at least two).",
+        "valuesImagesHint": "The options the member picks from, each with its image: a site file (/files/…) or an https address.",
+        "optionPlaceholder": "Option {n}",
+        "optionLabel": "Option {n}",
+        "optionImageLabel": "Image of option {n}",
+        "optionRemove": "Remove option {n}",
+        "optionAdd": "Add an option",
+        "link": "Link",
+        "optional": "(optional)",
+        "linkTemplate": "Link template",
+        "linkHint": "The value becomes a link: the member types only the handle and the address is built from the template (https, with '{handle}'). Empty = plain text."
+      },
+      "empty": {
+        "fieldsTitle": "No profile fields yet",
+        "fieldsText": "Add the first field (e.g. “Graphics card” or “Steam”): members fill it in under “Edit profile” and it shows on the profile.",
+        "groupsTitle": "No field groups",
+        "groupsText": "Groups gather fields in “Edit profile” and on the profile, with a title and a help text.",
+        "postbitTitle": "No fields in posts",
+        "postbitText": "Turn on “In posts, under the avatar” on a field and it shows up here, ready to order.",
+        "postbitAction": "Go to fields"
+      },
+      "settings": {
+        "profile": "Profile",
+        "faceit": "FACEIT",
+        "elsewhere": "Elsewhere"
+      }
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -2108,8 +2246,8 @@
         "tabAdvanced": "Advanced",
         "tabPermissions": "Permissions",
         "enabled": "Enable chatbox",
-        "enabledHint": "The same switch as in ACP → System → Applications: when off, the chat disappears from the menu, the home page and /chat.",
-        "enabledNoRight": "Only staff with the ACP → System → Applications right can turn the chat on or off.",
+        "enabledHint": "The same switch as in ACP → Apps → Apps and plugins: when off, the chat disappears from the menu, the home page and /chat.",
+        "enabledNoRight": "Only staff with the ACP → Apps → Apps and plugins right can turn the chat on or off.",
         "timeFormat": "Time format",
         "required": "REQUIRED",
         "newestOnTop": "Newer messages on top",
@@ -2556,9 +2694,6 @@
         "body": "The package (.zip) is checked before anything else: size, paths, manifest, compatibility, dependencies, migrations and certification. It is installed only after you confirm.",
         "file": "Choose the plugin archive (.zip)",
         "hint": "Maximum 8 MB. For an update, upload the new version of the same plugin.",
-        "submit": "Upload and check",
-        "uploading": "Checking…",
-        "network": "The upload failed. Check your connection and try again.",
         "trusted": "Trusted certification keys: {keys}.",
         "noTrusted": "No certification keys configured (GCS_PLUGIN_TRUSTED_KEYS): every package is treated as not certified."
       },
@@ -2909,7 +3044,8 @@
         "adminsNone": "No admins chosen.",
         "groups": "Who sees the server",
         "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
-        "enabled": "Active (shown on the site and queried)"
+        "enabled": "Active (shown on the site and queried)",
+        "bannerUpload": "Upload the banner"
       },
       "test": "Test",
       "testing": "Querying…",
@@ -3524,11 +3660,7 @@
         "game": "Game",
         "files": "Images",
         "hint": "The file name gives the map name (de_dust2.jpg → de_dust2). Max 5 MB per image, max 100 files at once.",
-        "submit": "Upload",
-        "uploading": "Uploading…",
-        "none": "Choose at least one image.",
         "tooMany": "Max {max} files at once.",
-        "failed": "The upload failed.",
         "saved": "{count, plural, one {# image saved.} other {# images saved.}}"
       },
       "template": {
@@ -4123,7 +4255,6 @@
         "createPack": "Create pack",
         "deletePack": "Delete pack",
         "files": "Emote files",
-        "upload": "Upload",
         "uploaded": "{count, plural, one {# emote added} other {# emotes added}}",
         "noEmotes": "This pack has no emotes yet.",
         "code": "Code",
@@ -8468,8 +8599,6 @@
       "file": "Choose the plugin archive (.zip, .tar, .tar.gz or .xml)",
       "limits": "Up to {size} MB, at most {files} files.",
       "formats": "Recognized formats",
-      "submit": "Upload and analyze",
-      "uploading": "Analyzing…",
       "network": "The upload failed. Check your connection and try again."
     },
     "formats": {
@@ -9092,10 +9221,6 @@
       "banner": "Banner",
       "logoCurrent": "Current logo",
       "bannerCurrent": "Current banner",
-      "uploading": "Uploading…",
-      "replace": "Change",
-      "upload": "Upload",
-      "removeImage": "Remove",
       "logoHint": "PNG, JPG, WebP or GIF, max {kb} KB; cropped square (256 × 256 px).",
       "bannerHint": "PNG, JPG, WebP or GIF, max {kb} KB; 1600 × 400 px recommended. Without a banner the colour gradient is used.",
       "description": "Description",
@@ -9514,7 +9639,6 @@
       "lift": "Lift the sanction",
       "images": "Images (screenshots)",
       "imagesHint": "PNG, JPEG, WebP or GIF, up to 5 MB each; up to 10 pieces of evidence in total.",
-      "uploading": "Uploading…",
       "removeImage": "Remove"
     },
     "picker": {
@@ -10744,7 +10868,11 @@
       "errMax": "The image is {w} × {h} px, which is too large.",
       "errSquare": "The image is {w} × {h} px and must be square.",
       "errReal": "The file isn't a valid image.",
-      "errUpload": "The upload failed. Try again."
+      "errUpload": "The upload failed. Try again.",
+      "dropHereMany": "Drag the files here",
+      "useMany": "Use the valid files",
+      "many": "Files chosen: {count}",
+      "manyBad": "{bad} of {count} don't pass the checks and are skipped; only the others are used."
     },
     "iconPicker": {
       "search": "Search for an icon",

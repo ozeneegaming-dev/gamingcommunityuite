@@ -29,8 +29,9 @@ async function shot(page: Page, name: string): Promise<void> {
 test.beforeAll(() => {
   execFileSync(process.execPath, ["--import", "tsx", "scripts/build-forum-aspect.ts"], { cwd: SDK_DIR, stdio: "pipe" });
   // Imaginile testului: desenate aici (fără imagini ale altora); iconița are și un script, care trebuie să dispară.
-  writeFileSync(ICON, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" onload="alert(1)"><script>alert(2)</script><rect width="24" height="24" rx="5" fill="#FF6A3D"/><circle cx="12" cy="12" r="6" fill="#FFFFFF"/></svg>');
-  writeFileSync(BG, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 240"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#1B0F33"/><stop offset="1" stop-color="#FF4DB8"/></linearGradient></defs><rect width="1600" height="240" fill="url(#g)"/></svg>');
+  // Cu `width` / `height`: popupul de încărcare citește dimensiunile desenului înainte de trimitere.
+  writeFileSync(ICON, '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" onload="alert(1)"><script>alert(2)</script><rect width="24" height="24" rx="5" fill="#FF6A3D"/><circle cx="12" cy="12" r="6" fill="#FFFFFF"/></svg>');
+  writeFileSync(BG, '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="240" viewBox="0 0 1600 240"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#1B0F33"/><stop offset="1" stop-color="#FF4DB8"/></linearGradient></defs><rect width="1600" height="240" fill="url(#g)"/></svg>');
 });
 
 test.afterAll(async () => {
@@ -72,8 +73,9 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
 
   // 1. Instalarea din ACP (pachet nesemnat în teste: codul 2FA și cheia tastată).
   await page.goto("/admin/system/applications");
-  await page.getByTestId("gcs-plugin-upload").locator('input[type="file"]').setInputFiles(ZIP);
-  await page.getByTestId("gcs-plugin-upload").getByRole("button", { name: "Încarcă și verifică" }).click();
+  await page.getByTestId("gcs-plugin-upload-open").click();
+  await page.getByTestId("gcs-plugin-upload-pick").setInputFiles(ZIP);
+  await page.getByTestId("gcs-plugin-upload-use").click();
   await expect(page).toHaveURL(/\/admin\/system\/applications\/install\/[a-z0-9]+$/);
   await expect(page.getByTestId("gcs-plugin-checks").locator('[data-level="error"]')).toHaveCount(0);
   const confirm = page.getByTestId("gcs-plugin-confirm");
@@ -87,13 +89,19 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
   await page.goto(`/admin/community/forums/${t.forum.id}?tab=${encodeURIComponent(`x:${EXT}:aspect`)}`);
   const card = page.getByTestId(`gcs-forum-ext-${EXT}-aspect`);
   await expect(card).toBeVisible();
-  await card.getByTestId("gcs-ext-icon-file").setInputFiles(ICON);
+  await card.getByTestId("gcs-ext-icon-file-open").click();
+  await card.getByTestId("gcs-ext-icon-file-pick").setInputFiles(ICON);
+  await card.getByTestId("gcs-ext-icon-file-use").click();
+  await expect(card.getByTestId("gcs-ext-icon-file-dialog")).toHaveCount(0, { timeout: 20_000 });
   await expect(card.getByTestId("gcs-ext-icon").locator("img")).toBeVisible({ timeout: 20_000 });
   await card.getByTestId("gcs-ext-titleGradient").getByRole("checkbox").uncheck();
   await card.getByTestId("gcs-ext-tag").fill("Recrutăm");
   await card.getByTestId("gcs-ext-tagColor").selectOption("warn");
   await card.getByTestId("gcs-ext-tagPlace").selectOption("above");
-  await card.getByTestId("gcs-ext-bg-file").setInputFiles(BG);
+  await card.getByTestId("gcs-ext-bg-file-open").click();
+  await card.getByTestId("gcs-ext-bg-file-pick").setInputFiles(BG);
+  await card.getByTestId("gcs-ext-bg-file-use").click();
+  await expect(card.getByTestId("gcs-ext-bg-file-dialog")).toHaveCount(0, { timeout: 20_000 });
   await expect(card.getByTestId("gcs-ext-bg").locator("img")).toBeVisible({ timeout: 20_000 });
   await card.getByTestId("gcs-ext-bgStyle").selectOption("right");
   await card.getByTestId("gcs-ext-veil").fill("70");
@@ -162,7 +170,10 @@ test("aspectul unui forum din pluginul instalat: tabul cu previzualizare, indexu
   expect(widgetType, "un widget cu cardul comun pe index").not.toBe("");
   await page.locator(`ul[data-page="index"] [data-testid="gcs-widget-aspect-link"][data-widget="${widgetType}"]`).first().click();
   const wcard = page.getByTestId(`gcs-widget-ext-${EXT}-aspect`);
-  await wcard.getByTestId("gcs-ext-bg-file").setInputFiles(BG);
+  await wcard.getByTestId("gcs-ext-bg-file-open").click();
+  await wcard.getByTestId("gcs-ext-bg-file-pick").setInputFiles(BG);
+  await wcard.getByTestId("gcs-ext-bg-file-use").click();
+  await expect(wcard.getByTestId("gcs-ext-bg-file-dialog")).toHaveCount(0, { timeout: 20_000 });
   await expect(wcard.getByTestId("gcs-ext-bg").locator("img")).toBeVisible({ timeout: 20_000 });
   await wcard.getByTestId("gcs-ext-titleColor").fill("#3DDC97");
   await wcard.getByTestId("gcs-ext-tag").fill("Live");

@@ -1,7 +1,7 @@
 "use client";
 
 import { faBoxOpen, faCopy, faFileExport, faFileImport, faPen, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { GcsButton, GcsIconSvg, GcsTooltip } from "@gcs/ui";
+import { GcsButton, GcsDrawer, GcsIconSvg, GcsTooltip } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -49,17 +49,20 @@ const num = (v: string) => (v.trim() === "" ? null : Number(v));
 const pick = (list: Opt[], ids: number[]) => list.filter((o) => ids.includes(o.id)).map((o) => o.name);
 
 /**
- * ACP → Membri → Realizări → Reguli (Realizări v2): constructorul „Când → Și → Atunci” și lista regulilor ca propoziții
- * scurte, cu pornire / oprire, copiere, editare și ștergere (confirmare în pagină); exportul / importul JSON și
- * „Pachet Gaming”.
+ * ACP → Membri → Realizări → Reguli (Realizări v2): lista regulilor ca propoziții scurte („Când … → Atunci …”), cu
+ * pornire / oprire, copiere, editare și ștergere (confirmare în pagină); exportul / importul JSON și „Pachet Gaming”.
+ * Constructorul „Când → Și → Atunci” stă în panoul din dreapta, deschis de „Regulă nouă” sau de „Editează”.
  */
 export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
   const t = useTranslations("acp.achievements.v2");
+  const tPanel = useTranslations("ui.panel");
   const router = useRouter();
   const errorMessage = useErrorMessage();
   const first = props.events[0];
   const [draft, setDraft] = useState(() => blank(first?.key ?? "", first?.kind ?? "count"));
-  const [editing, setEditing] = useState<number | null>(null);
+  // Panoul constructorului: `null` = închis, `"new"` = regulă nouă, altfel id-ul regulii editate.
+  const [panel, setPanel] = useState<number | "new" | null>(null);
+  const editing = typeof panel === "number" ? panel : null;
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,14 +113,20 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
   const toggleId = (list: number[], id: number) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   function startEdit(r: GcsBuilderRule) {
-    setEditing(r.id);
+    setError(null);
     setDraft({ name: r.name, event: r.event, enabled: r.enabled, conditions: r.conditions, rewards: r.rewards });
-    document.getElementById("gcs-rule-builder")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPanel(r.id);
   }
 
-  function reset() {
-    setEditing(null);
+  function startNew() {
+    setError(null);
     setDraft(blank(first?.key ?? "", first?.kind ?? "count"));
+    setPanel("new");
+  }
+
+  function close() {
+    setPanel(null);
+    setError(null);
   }
 
   async function doExport() {
@@ -157,7 +166,7 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
   const rewardEditor = (side: "actor" | "other") => {
     const r = draft.rewards[side] ?? EMPTY;
     const sel = (value: number | null, list: Opt[], onChange: (v: number | null) => void, label: string, none: string) => (
-      <label className="gcs-field gcs-ruleB__field">
+      <label className="gcs-field">
         {label}
         <select className="gcs-input" value={value ?? ""} onChange={(e) => onChange(num(e.target.value))}>
           <option value="">{none}</option>
@@ -170,15 +179,15 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
       </label>
     );
     return (
-      <div className="gcs-ruleB__reward" data-testid={`gcs-rule-reward-${side}`}>
-        <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--sm">
+      <div className="gcs-formGrid" data-testid={`gcs-rule-reward-${side}`}>
+        <label className="gcs-field">
           {t("rewardPoints")}
           <input className="gcs-input" type="number" min={-1000} max={1000} value={r.points} onChange={(e) => setReward(side, { points: Number(e.target.value) || 0 })} />
         </label>
         {sel(r.badgeId, props.badges, (v) => setReward(side, { badgeId: v }), t("rewardBadge"), t("none"))}
         {sel(r.groupId, props.rewardGroups, (v) => setReward(side, { groupId: v }), t("rewardGroup"), t("none"))}
         {r.groupId !== null && (
-          <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--sm">
+          <label className="gcs-field">
             {t("rewardGroupDays")}
             <input className="gcs-input" type="number" min={1} placeholder={t("permanent")} value={r.groupDays ?? ""} onChange={(e) => setReward(side, { groupDays: num(e.target.value) })} />
           </label>
@@ -187,7 +196,7 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
           <>
             {sel(r.vipGroupId, props.vipGroups, (v) => setReward(side, { vipGroupId: v, vipDays: v ? (r.vipDays ?? 7) : null }), t("rewardVip"), t("none"))}
             {r.vipGroupId !== null && (
-              <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--sm">
+              <label className="gcs-field">
                 {t("rewardVipDays")}
                 <input className="gcs-input" type="number" min={1} value={r.vipDays ?? ""} onChange={(e) => setReward(side, { vipDays: num(e.target.value) })} />
               </label>
@@ -199,140 +208,31 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
     );
   };
 
+  /** Propoziția regulii: „Când” și „Atunci” îngroșate (lista regulilor și previzualizarea din panou). */
+  const sentenceView = (r: Omit<GcsBuilderRule, "id" | "unavailable">) => {
+    const s = sentence(r);
+    return (
+      <>
+        <b>{t("when")}</b> {s.when} {s.how}
+        {s.where && <> · {s.where}</>} <b>→ {t("then")}</b> {s.then || "—"}
+        {s.other && <> · {s.other}</>}
+      </>
+    );
+  };
+
+  const save = () =>
+    run(
+      () => saveEventRule(editing, { ...draft, name: draft.name.trim() || sentence(draft).when }),
+      () => {
+        setNotice(t("saved"));
+        setPanel(null);
+      },
+    );
+
+  const editingRule = editing !== null ? props.rules.find((r) => r.id === editing) : undefined;
+
   return (
     <>
-      <section className="gcs-card gcs-ruleB" id="gcs-rule-builder" aria-labelledby="gcs-rule-builder-title" data-testid="gcs-rule-builder">
-        <h2 id="gcs-rule-builder-title" className="gcs-acpWidget__title">
-          {editing ? t("editTitle") : t("builderTitle")}
-        </h2>
-        {props.events.length === 0 ? (
-          <p className="gcs-muted">{t("noEvents")}</p>
-        ) : (
-          <>
-            <div className="gcs-ruleB__step">
-              <span className="gcs-ruleB__word">{t("when")}</span>
-              <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--grow">
-                <span className="gcs-srOnly">{t("event")}</span>
-                <select
-                  className="gcs-input"
-                  aria-label={t("event")}
-                  value={draft.event}
-                  onChange={(e) => {
-                    const next = props.events.find((x) => x.key === e.target.value);
-                    setDraft((d) => ({ ...d, event: e.target.value, conditions: { ...d.conditions, mode: next?.kind === "value" ? "reach" : d.conditions.mode === "reach" ? "nth" : d.conditions.mode }, rewards: next?.other ? d.rewards : { ...d.rewards, other: null } }));
-                  }}
-                >
-                  {appGroups.map((app) => (
-                    <optgroup key={app} label={app}>
-                      {props.events
-                        .filter((x) => x.appLabel === app)
-                        .map((x) => (
-                          <option key={x.key} value={x.key}>
-                            {x.label}
-                          </option>
-                        ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="gcs-ruleB__step">
-              <span className="gcs-ruleB__word">{t("and")}</span>
-              {ev?.kind === "value" ? (
-                <span className="gcs-ruleB__text">{t("reachLabel")}</span>
-              ) : (
-                <select className="gcs-input gcs-ruleB__mode" aria-label={t("mode")} value={draft.conditions.mode} onChange={(e) => setCond({ mode: e.target.value as "nth" | "every" })}>
-                  <option value="nth">{t("modeNth")}</option>
-                  <option value="every">{t("modeEvery")}</option>
-                </select>
-              )}
-              <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--sm">
-                <span className="gcs-srOnly">{t("n")}</span>
-                <input className="gcs-input" type="number" min={1} aria-label={t("n")} value={draft.conditions.n} onChange={(e) => setCond({ n: Math.max(1, Number(e.target.value) || 1) })} />
-              </label>
-              {ev?.kind !== "value" && (
-                <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--sm">
-                  {t("windowDays")}
-                  <input className="gcs-input" type="number" min={1} placeholder={t("anytime")} value={draft.conditions.windowDays ?? ""} onChange={(e) => setCond({ windowDays: num(e.target.value) })} />
-                </label>
-              )}
-            </div>
-            <details className="gcs-ruleB__more">
-              <summary className="gcs-sweep">{t("moreConditions")}</summary>
-              {ev?.scopes.includes("forum") && chips(props.forums, draft.conditions.forumIds, (id) => setCond({ forumIds: toggleId(draft.conditions.forumIds, id) }), t("onlyForums"))}
-              {ev?.scopes.includes("server") && props.servers && chips(props.servers, draft.conditions.serverIds, (id) => setCond({ serverIds: toggleId(draft.conditions.serverIds, id) }), t("onlyServers"))}
-              {chips(props.groups, draft.conditions.groupIds, (id) => setCond({ groupIds: toggleId(draft.conditions.groupIds, id) }), t("onlyGroups"))}
-            </details>
-            <div className="gcs-ruleB__step gcs-ruleB__step--then">
-              <span className="gcs-ruleB__word">{t("then")}</span>
-              {rewardEditor("actor")}
-            </div>
-            {ev?.other && (
-              <div className="gcs-ruleB__step gcs-ruleB__step--then">
-                <label className="gcs-check">
-                  <input type="checkbox" checked={draft.rewards.other !== null} onChange={(e) => setDraft((d) => ({ ...d, rewards: { ...d.rewards, other: e.target.checked ? { ...EMPTY, points: 1 } : null } }))} />
-                  {t("otherReward", { who: ev.other })}
-                </label>
-                {draft.rewards.other && rewardEditor("other")}
-              </div>
-            )}
-            <p className="gcs-ruleB__preview" data-testid="gcs-rule-preview">
-              {(() => {
-                const s = sentence(draft);
-                return (
-                  <>
-                    <b>{t("when")}</b> {s.when} {s.how}
-                    {s.where && <> · {s.where}</>} <b>→ {t("then")}</b> {s.then || "—"}
-                    {s.other && <> · {s.other}</>}
-                  </>
-                );
-              })()}
-            </p>
-            <div className="gcs-ruleB__actions">
-              <label className="gcs-field gcs-ruleB__field gcs-ruleB__field--grow">
-                {t("ruleName")}
-                <input className="gcs-input" maxLength={80} value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
-              </label>
-              <label className="gcs-check">
-                <input type="checkbox" checked={draft.enabled} onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))} />
-                {t("enabled")}
-              </label>
-              <GcsButton
-                variant="primary"
-                icon={<GcsIconSvg icon={editing ? faPen : faPlus} />}
-                disabled={busy}
-                onClick={() =>
-                  run(
-                    () => saveEventRule(editing, { ...draft, name: draft.name.trim() || sentence(draft).when }),
-                    () => {
-                      setNotice(t("saved"));
-                      reset();
-                    },
-                  )
-                }
-              >
-                {editing ? t("saveRule") : t("addRule")}
-              </GcsButton>
-              {editing && (
-                <GcsButton variant="ghost" onClick={reset}>
-                  {t("cancel")}
-                </GcsButton>
-              )}
-            </div>
-          </>
-        )}
-        {error && (
-          <p role="alert" className="gcs-field__error">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p role="status" className="gcs-ruleB__notice">
-            {notice}
-          </p>
-        )}
-      </section>
-
       <section className="gcs-card gcs-ruleList" aria-labelledby="gcs-rule-list-title" data-testid="gcs-rule-list">
         <div className="gcs-ruleList__head">
           <h2 id="gcs-rule-list-title" className="gcs-acpWidget__title">
@@ -361,59 +261,185 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
                 e.target.value = "";
               }}
             />
+            <GcsButton variant="primary" size="sm" icon={<GcsIconSvg icon={faPlus} />} onClick={startNew} disabled={props.events.length === 0} data-testid="gcs-rule-new">
+              {t("builderTitle")}
+            </GcsButton>
           </div>
         </div>
+        {props.events.length === 0 && <p className="gcs-muted">{t("noEvents")}</p>}
         {props.rules.length === 0 ? (
           <p className="gcs-muted">{t("empty")}</p>
         ) : (
           <ul className="gcs-ruleList__items">
-            {props.rules.map((r) => {
-              const s = sentence(r);
-              return (
-                <li key={r.id} className={`gcs-ruleList__row${r.enabled ? "" : " is-off"}`} data-testid="gcs-rule-row" data-rule={r.name}>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={r.enabled}
-                    aria-label={t("toggle", { name: r.name })}
-                    className="gcs-ruleList__switch gcs-sweep"
-                    disabled={busy || r.unavailable}
-                    onClick={() => run(() => toggleRule(r.id, !r.enabled))}
-                  >
-                    <span />
-                  </button>
-                  <span className="gcs-ruleList__text">
-                    <strong>{r.name}</strong>
-                    <span className="gcs-ruleList__sentence">
-                      {t("when")} {s.when} {s.how}
-                      {s.where && ` · ${s.where}`} → {s.then}
-                      {s.other && ` · ${s.other}`}
-                    </span>
-                    {r.unavailable && <span className="gcs-ruleList__warn">{t("unavailable")}</span>}
-                  </span>
-                  <span className="gcs-ruleList__actions">
-                    <GcsTooltip content={t("edit")}>
-                      <button type="button" className="gcs-iconBtn" aria-label={t("editNamed", { name: r.name })} disabled={r.unavailable} onClick={() => startEdit(r)}>
-                        <GcsIconSvg icon={faPen} />
-                      </button>
-                    </GcsTooltip>
-                    <GcsTooltip content={t("copy")}>
-                      <button type="button" className="gcs-iconBtn" aria-label={t("copyNamed", { name: r.name })} disabled={busy} onClick={() => run(() => duplicateRule(r.id))}>
-                        <GcsIconSvg icon={faCopy} />
-                      </button>
-                    </GcsTooltip>
-                    <GcsTooltip content={t("delete")}>
-                      <button type="button" className="gcs-iconBtn gcs-iconBtn--danger" aria-label={t("deleteNamed", { name: r.name })} disabled={busy} onClick={() => setConfirm({ kind: "delete", rule: r })}>
-                        <GcsIconSvg icon={faTrash} />
-                      </button>
-                    </GcsTooltip>
-                  </span>
-                </li>
-              );
-            })}
+            {props.rules.map((r) => (
+              <li key={r.id} className={`gcs-ruleList__row${r.enabled ? "" : " is-off"}`} data-testid="gcs-rule-row" data-rule={r.name}>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={r.enabled}
+                  aria-label={t("toggle", { name: r.name })}
+                  className="gcs-ruleList__switch gcs-sweep"
+                  disabled={busy || r.unavailable}
+                  onClick={() => run(() => toggleRule(r.id, !r.enabled))}
+                >
+                  <span />
+                </button>
+                <span className="gcs-ruleList__text">
+                  <strong>{r.name}</strong>
+                  <span className="gcs-ruleList__sentence">{sentenceView(r)}</span>
+                  {r.unavailable && <span className="gcs-ruleList__warn">{t("unavailable")}</span>}
+                </span>
+                <span className="gcs-ruleList__actions">
+                  <GcsTooltip content={t("edit")}>
+                    <button type="button" className="gcs-iconBtn" aria-label={t("editNamed", { name: r.name })} disabled={r.unavailable} onClick={() => startEdit(r)}>
+                      <GcsIconSvg icon={faPen} />
+                    </button>
+                  </GcsTooltip>
+                  <GcsTooltip content={t("copy")}>
+                    <button type="button" className="gcs-iconBtn" aria-label={t("copyNamed", { name: r.name })} disabled={busy} onClick={() => run(() => duplicateRule(r.id))}>
+                      <GcsIconSvg icon={faCopy} />
+                    </button>
+                  </GcsTooltip>
+                  <GcsTooltip content={t("delete")}>
+                    <button type="button" className="gcs-iconBtn gcs-iconBtn--danger" aria-label={t("deleteNamed", { name: r.name })} disabled={busy} onClick={() => setConfirm({ kind: "delete", rule: r })}>
+                      <GcsIconSvg icon={faTrash} />
+                    </button>
+                  </GcsTooltip>
+                </span>
+              </li>
+            ))}
           </ul>
         )}
+        {panel === null && error && (
+          <p role="alert" className="gcs-field__error">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="gcs-ruleB__notice">
+            {notice}
+          </p>
+        )}
       </section>
+
+      {panel !== null && (
+        <GcsDrawer
+          title={editing ? t("editTitle") : t("builderTitle")}
+          icon={<GcsIconSvg icon={editing ? faPen : faPlus} />}
+          size="lg"
+          closeLabel={tPanel("close")}
+          onClose={close}
+          testId="gcs-rule-builder"
+          footer={
+            <>
+              {editingRule && (
+                <GcsButton variant="ghost" size="sm" icon={<GcsIconSvg icon={faTrash} />} disabled={busy} onClick={() => setConfirm({ kind: "delete", rule: editingRule })}>
+                  {t("delete")}
+                </GcsButton>
+              )}
+              <span className="gcs-achSpacer" />
+              {error && (
+                <span role="alert" className="gcs-field__error">
+                  {error}
+                </span>
+              )}
+              <GcsButton variant="ghost" onClick={close}>
+                {t("cancel")}
+              </GcsButton>
+              <GcsButton variant="primary" icon={<GcsIconSvg icon={editing ? faPen : faPlus} />} disabled={busy} onClick={save}>
+                {editing ? t("saveRule") : t("addRule")}
+              </GcsButton>
+            </>
+          }
+        >
+          <p className="gcs-ruleB__preview" data-testid="gcs-rule-preview">
+            {sentenceView(draft)}
+          </p>
+          <fieldset className="gcs-formSec">
+            <legend>{t("when")}</legend>
+            <select
+              className="gcs-input"
+              aria-label={t("event")}
+              value={draft.event}
+              onChange={(e) => {
+                const next = props.events.find((x) => x.key === e.target.value);
+                setDraft((d) => ({ ...d, event: e.target.value, conditions: { ...d.conditions, mode: next?.kind === "value" ? "reach" : d.conditions.mode === "reach" ? "nth" : d.conditions.mode }, rewards: next?.other ? d.rewards : { ...d.rewards, other: null } }));
+              }}
+            >
+              {appGroups.map((app) => (
+                <optgroup key={app} label={app}>
+                  {props.events
+                    .filter((x) => x.appLabel === app)
+                    .map((x) => (
+                      <option key={x.key} value={x.key}>
+                        {x.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+          </fieldset>
+          <fieldset className="gcs-formSec">
+            <legend>{t("and")}</legend>
+            <div className="gcs-formGrid gcs-formGrid--3">
+              {ev?.kind === "value" ? (
+                <span className="gcs-field">
+                  <span>{t("mode")}</span>
+                  <span className="gcs-ruleB__text">{t("reachLabel")}</span>
+                </span>
+              ) : (
+                <label className="gcs-field">
+                  {t("mode")}
+                  <select className="gcs-input" value={draft.conditions.mode} onChange={(e) => setCond({ mode: e.target.value as "nth" | "every" })}>
+                    <option value="nth">{t("modeNth")}</option>
+                    <option value="every">{t("modeEvery")}</option>
+                  </select>
+                </label>
+              )}
+              <label className="gcs-field">
+                {t("n")}
+                <input className="gcs-input" type="number" min={1} value={draft.conditions.n} onChange={(e) => setCond({ n: Math.max(1, Number(e.target.value) || 1) })} />
+              </label>
+              {ev?.kind !== "value" && (
+                <label className="gcs-field">
+                  {t("windowDays")}
+                  <input className="gcs-input" type="number" min={1} placeholder={t("anytime")} value={draft.conditions.windowDays ?? ""} onChange={(e) => setCond({ windowDays: num(e.target.value) })} />
+                </label>
+              )}
+            </div>
+            <details className="gcs-ruleB__more">
+              <summary className="gcs-sweep">{t("moreConditions")}</summary>
+              {ev?.scopes.includes("forum") && chips(props.forums, draft.conditions.forumIds, (id) => setCond({ forumIds: toggleId(draft.conditions.forumIds, id) }), t("onlyForums"))}
+              {ev?.scopes.includes("server") && props.servers && chips(props.servers, draft.conditions.serverIds, (id) => setCond({ serverIds: toggleId(draft.conditions.serverIds, id) }), t("onlyServers"))}
+              {chips(props.groups, draft.conditions.groupIds, (id) => setCond({ groupIds: toggleId(draft.conditions.groupIds, id) }), t("onlyGroups"))}
+            </details>
+          </fieldset>
+          <fieldset className="gcs-formSec">
+            <legend>{t("then")}</legend>
+            {rewardEditor("actor")}
+            {ev?.other && (
+              <>
+                <label className="gcs-toggleRow">
+                  <span>{t("otherReward", { who: ev.other })}</span>
+                  <input type="checkbox" checked={draft.rewards.other !== null} onChange={(e) => setDraft((d) => ({ ...d, rewards: { ...d.rewards, other: e.target.checked ? { ...EMPTY, points: 1 } : null } }))} />
+                </label>
+                {draft.rewards.other && rewardEditor("other")}
+              </>
+            )}
+          </fieldset>
+          <fieldset className="gcs-formSec">
+            <legend>{t("secRule")}</legend>
+            <label className="gcs-field">
+              {t("ruleName")}
+              <input className="gcs-input" maxLength={80} value={draft.name} placeholder={sentence(draft).when} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
+            </label>
+            <label className="gcs-toggleRow">
+              <span>{t("enabled")}</span>
+              <input type="checkbox" checked={draft.enabled} onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))} />
+            </label>
+          </fieldset>
+        </GcsDrawer>
+      )}
 
       {confirm?.kind === "delete" && (
         <GcsConfirmDialog
@@ -423,7 +449,15 @@ export function GcsRuleBuilder(props: GcsRuleBuilderProps) {
           danger
           busy={busy}
           onCancel={() => setConfirm(null)}
-          onConfirm={() => run(() => deleteRule(confirm.rule.id), () => setConfirm(null))}
+          onConfirm={() =>
+            run(
+              () => deleteRule(confirm.rule.id),
+              () => {
+                if (editing === confirm.rule.id) setPanel(null);
+                setConfirm(null);
+              },
+            )
+          }
         />
       )}
       {confirm?.kind === "pack" && (

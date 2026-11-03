@@ -2,6 +2,7 @@
 
 import type { GcsBlockLabels, GcsEditorLabels } from "@gcs/ui/editor";
 import { useTranslations } from "next-intl";
+import { uploadLabels } from "@/lib/ui-labels";
 
 const KEYS = [
   "toolbar",
@@ -56,15 +57,34 @@ const KEYS = [
 ] as const satisfies readonly (keyof GcsEditorLabels)[];
 
 // Toate textele editorului trebuie traduse: o cheie lipsă din listă ar da `undefined` (ex. eticheta unui câmp).
-type Missing = Exclude<keyof GcsEditorLabels, (typeof KEYS)[number] | "characters" | "charactersMax">;
+type Missing = Exclude<keyof GcsEditorLabels, (typeof KEYS)[number] | "characters" | "charactersMax" | "upload" | "uploadErrors">;
 const ALL_KEYS: [Missing] extends [never] ? true : Missing = true;
 void ALL_KEYS;
 
-/** Textele editorului, traduse (`topic.editor.*`). */
+/** Textele erorilor (`errors.*`) aplatizate (`fields.too_large`, `reasons.x`, `rate_limited`), brute: editorul completează `{param}`. */
+function flatErrors(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  const walk = (node: unknown, prefix: string) => {
+    if (typeof node === "string") out[prefix] = node;
+    else if (node && typeof node === "object") for (const [k, v] of Object.entries(node)) walk(v, prefix ? `${prefix}.${k}` : k);
+  };
+  walk(raw, "");
+  return out;
+}
+
+/** Textele editorului, traduse (`topic.editor.*`), cu popupul de încărcare (`ui.upload.*`) și erorile încărcărilor. */
 export function useEditorLabels(): GcsEditorLabels {
   const t = useTranslations("topic.editor");
+  const tu = useTranslations("ui");
+  const te = useTranslations();
   // `characters` / `charactersMax` au parametri ({count}, {max}): îl luăm brut, editorul îi înlocuiește.
-  return { ...Object.fromEntries(KEYS.map((k) => [k, t(k)])), characters: t.raw("characters") as string, charactersMax: t.raw("charactersMax") as string } as GcsEditorLabels;
+  return {
+    ...Object.fromEntries(KEYS.map((k) => [k, t(k)])),
+    characters: t.raw("characters") as string,
+    charactersMax: t.raw("charactersMax") as string,
+    upload: uploadLabels(tu),
+    uploadErrors: flatErrors(te.raw("errors")),
+  } as GcsEditorLabels;
 }
 
 /** Forum v2: textele blocurilor editorului (`topic.editor.blocks.*`, aplatizate: `type.section`, `field.title`…). */

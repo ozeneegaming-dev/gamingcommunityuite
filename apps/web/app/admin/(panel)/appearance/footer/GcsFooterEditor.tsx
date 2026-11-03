@@ -1,62 +1,30 @@
 "use client";
 
 import type { GcsFooterColumn, GcsFooterConfig, GcsFooterLink } from "@gcs/modules";
-import { gcsToast, GcsButton, GcsIconPicker, GcsIconSvg, GcsModal, type GcsIconPickerMatch } from "@gcs/ui";
-import { faArrowDown, faArrowUp, faCheck, faFloppyDisk, faIcons, faPlus, faRotateLeft, faTrash, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import { gcsToast, GcsButton, GcsIconSvg, GcsModal } from "@gcs/ui";
+import { faArrowDown, faArrowUp, faCheck, faFloppyDisk, faPlus, faRotateLeft, faTrash, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, useTransition } from "react";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { saveFooter } from "./actions";
-
-/** Previzualizările iconițelor deja căutate (numele → desenul), comune tuturor rândurilor. */
-const iconCache = new Map<string, GcsIconPickerMatch | null>();
-
-/** Iconița aleasă, desenată din căutarea iconițelor (`/api/icons/search`), ca adminul să vadă ce a ales. */
-function IconPreview({ name }: { name: string }) {
-  const [icon, setIcon] = useState<GcsIconPickerMatch | null>(iconCache.get(name) ?? null);
-  useEffect(() => {
-    if (!name || iconCache.has(name)) {
-      setIcon(iconCache.get(name) ?? null);
-      return;
-    }
-    const ctrl = new AbortController();
-    const q = name.replace(/^fa-(solid|regular|brands) fa-/, "");
-    fetch(`/api/icons/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal })
-      .then((r) => (r.ok ? (r.json() as Promise<{ icons: GcsIconPickerMatch[] }>) : { icons: [] }))
-      .then((d) => {
-        const found = d.icons.find((i) => i.name === name) ?? null;
-        iconCache.set(name, found);
-        setIcon(found);
-      })
-      .catch(() => {});
-    return () => ctrl.abort();
-  }, [name]);
-  if (!icon) return <GcsIconSvg icon={faIcons} />;
-  return (
-    <svg aria-hidden="true" viewBox={`0 0 ${icon.width} ${icon.height}`} width="1em" height="1em" fill="currentColor">
-      <path d={icon.path} />
-    </svg>
-  );
-}
 
 type LinkProps = {
   link: GcsFooterLink;
   onChange: (link: GcsFooterLink) => void;
-  onPickIcon: () => void;
   extra?: React.ReactNode;
   testId: string;
 };
 
-/** Un link: eticheta, adresa și iconița (butonul deschide selectorul de iconițe). */
-function LinkRow({ link, onChange, onPickIcon, extra, testId }: LinkProps) {
+/** Un link: iconița (selectorul de iconițe al sistemului, cu categorii și căutare), eticheta și adresa. */
+function LinkRow({ link, onChange, extra, testId }: LinkProps) {
   const t = useTranslations("acp.footer");
   const id = useId();
   return (
     <div className="gcs-footerEditor__link" data-testid={testId}>
-      <button type="button" className="gcs-footerEditor__iconBtn" onClick={onPickIcon} aria-label={`${t("link.icon")}: ${link.icon || "—"}`} title={link.icon || t("link.icon")}>
-        <IconPreview name={link.icon} />
-      </button>
+      {/* Cheia: rândurile se pot șterge sau muta, iar selectorul își ține iconița aleasă. */}
+      <GcsIconInput key={link.icon || "-"} name={`${testId}-icon`} value={link.icon || null} compact onChange={(icon) => onChange({ ...link, icon: icon ?? "" })} testId={`${testId}-icon`} />
       <label className="gcs-field gcs-footerEditor__grow">
         <span className="gcs-srOnly">{t("link.label")}</span>
         <input className="gcs-input" value={link.label} maxLength={60} placeholder={t("link.label")} onChange={(e) => onChange({ ...link, label: e.target.value })} data-testid={`${testId}-label`} />
@@ -89,13 +57,11 @@ const emptyColumn = (): GcsFooterColumn => ({ title: "", accent: "", links: [emp
  */
 export function GcsFooterEditor({ initial, isDefault, maxColumns, maxLinks }: { initial: GcsFooterConfig; isDefault: boolean; maxColumns: number; maxLinks: number }) {
   const t = useTranslations("acp.footer");
-  const tIcons = useTranslations("acp.forums.form");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [config, setConfig] = useState(initial);
   const [ctaOn, setCtaOn] = useState(initial.about.cta !== null);
   const [cta, setCta] = useState<GcsFooterLink>(initial.about.cta ?? { label: "", href: "/staff", icon: "fa-solid fa-shield-halved" });
-  const [picking, setPicking] = useState<{ apply: (icon: string) => void; value: string } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [pending, start] = useTransition();
 
@@ -164,7 +130,7 @@ export function GcsFooterEditor({ initial, isDefault, maxColumns, maxLinks }: { 
           <input type="checkbox" checked={ctaOn} onChange={(e) => setCtaOn(e.target.checked)} data-testid="gcs-footer-cta-on" />
           {t("about.ctaOn")}
         </label>
-        {ctaOn && <LinkRow link={cta} onChange={setCta} onPickIcon={() => setPicking({ value: cta.icon, apply: (icon) => setCta((c) => ({ ...c, icon })) })} testId="gcs-footer-cta-row" />}
+        {ctaOn && <LinkRow link={cta} onChange={setCta} testId="gcs-footer-cta-row" />}
       </fieldset>
 
       <fieldset className="gcs-footerEditor__section">
@@ -211,7 +177,6 @@ export function GcsFooterEditor({ initial, isDefault, maxColumns, maxLinks }: { 
                   link={link}
                   testId={`gcs-footer-link-${i}-${j}`}
                   onChange={(l) => setColumn(i, { ...col, links: col.links.map((x, k) => (k === j ? l : x)) })}
-                  onPickIcon={() => setPicking({ value: link.icon, apply: (icon) => setColumn(i, { ...col, links: col.links.map((x, k) => (k === j ? { ...x, icon } : x)) }) })}
                   extra={
                     <button type="button" className="gcs-iconBtn" onClick={() => setColumn(i, { ...col, links: col.links.filter((_, k) => k !== j) })} aria-label={t("columns.removeLink")} title={t("columns.removeLink")}>
                       <GcsIconSvg icon={faTrash} />
@@ -266,21 +231,6 @@ export function GcsFooterEditor({ initial, isDefault, maxColumns, maxLinks }: { 
           </GcsButton>
         )}
       </div>
-
-      {picking && (
-        <GcsModal title={t("link.icon")} icon={<GcsIconSvg icon={faIcons} />} onClose={() => setPicking(null)} closeLabel={t("cancel")} size="md">
-          <GcsIconPicker
-            name="footer-icon"
-            value={picking.value || null}
-            searchUrl="/api/icons/search"
-            labels={{ search: tIcons("iconSearch"), none: tIcons("iconNone"), noResults: tIcons("iconNoResults") }}
-            onChange={(v) => {
-              picking.apply(v ?? "");
-              setPicking(null);
-            }}
-          />
-        </GcsModal>
-      )}
 
       {confirmReset && (
         <GcsModal title={t("resetTitle")} icon={<GcsIconSvg icon={faRotateLeft} />} onClose={() => setConfirmReset(false)} closeLabel={t("cancel")} size="sm">

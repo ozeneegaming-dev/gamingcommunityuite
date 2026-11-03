@@ -50,7 +50,7 @@ export async function awardBadge(userId: string, fd: FormData): Promise<GcsResul
   });
 }
 
-// ─── Membri v2: „Acțiuni cont” ─────────────────────────────────────────────────────────────────────────────
+// ─── Membri v2: acțiunile contului (bara și „Mai multe” din fișa membrului, fiecare în popupul ei) ──────────
 
 export async function validateMember(userId: string): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {

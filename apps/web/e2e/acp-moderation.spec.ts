@@ -97,12 +97,63 @@ test("un moderator adăugat pe forumul A are unelte acolo, dar nu pe forumul B",
 
   await enterAcpAsRoot(page, `RootM${id}`, `root-m${id}@example.com`);
   await page.goto("/admin/members/staff/moderators");
-  await page.getByRole("checkbox", { name: a.forumName }).check();
-  await page.getByLabel("Nume de utilizator").fill(`Paznic${id}`);
-  await page.getByRole("checkbox", { name: "Fixează" }).check();
-  await page.getByRole("checkbox", { name: "Blochează" }).check();
-  await page.getByRole("button", { name: "Adaugă", exact: true }).click();
-  await expect(page.getByTestId("gcs-acp-moderator").filter({ hasText: `Paznic${id}` })).toBeVisible();
+
+  // Moderatorii globali: grupurile cu „Moderator pe toate forumurile” (Root Admin implicit), cu membrii lor.
+  const root = page.getByTestId("gcs-mods-global").locator('[data-testid="gcs-mods-global-group"][data-group="root_admin"]');
+  await expect(root).toBeVisible();
+  await expect(root).toContainText(/\d+ (membru|membri|de membri)/);
+  await expect(root.getByRole("link", { name: /^Grupul / })).toHaveAttribute("href", /\/admin\/groups\/\d+$/);
+
+  // Panoul „Adaugă moderator”: forumurile grupate pe categorii, în ordinea arborelui.
+  await page.getByTestId("gcs-mod-add-open").click();
+  const panel = page.getByTestId("gcs-mod-add");
+  await expect(panel).toBeVisible();
+  const catA = panel.locator(`[data-testid="gcs-mod-category"][data-category="Categorie ${a.id}"]`);
+  const catB = panel.locator(`[data-testid="gcs-mod-category"][data-category="Categorie ${b.id}"]`);
+  await expect(catA.getByRole("checkbox", { name: a.forumName })).toBeVisible();
+  await expect(catB.getByRole("checkbox", { name: b.forumName })).toBeVisible();
+  await expect(catA.getByRole("checkbox", { name: b.forumName })).toHaveCount(0);
+  // „Toate” bifează toată categoria; a doua apăsare o golește.
+  await catB.getByRole("button", { name: `Alege toate forumurile din Categorie ${b.id}` }).click();
+  await expect(catB.getByRole("checkbox", { name: b.forumName })).toBeChecked();
+  await catB.getByRole("button", { name: `Scoate toate forumurile din Categorie ${b.id}` }).click();
+  await expect(catB.getByRole("checkbox", { name: b.forumName })).not.toBeChecked();
+  // Căutarea lasă doar forumul A; numărul celor alese se actualizează pe loc.
+  await panel.getByTestId("gcs-mod-forum-search").fill(a.forumName);
+  await expect(panel.getByTestId("gcs-mod-category")).toHaveCount(1);
+  await catA.getByRole("checkbox", { name: a.forumName }).check();
+  await expect(panel.getByTestId("gcs-mod-forum-count")).toHaveText("1 ales");
+
+  // Membrul: sugestii pe măsură ce scrii (și cu @ în față), cu numele în stilul grupului.
+  await panel.getByTestId("gcs-mod-member").fill(`@Paznic${id}`);
+  const suggestion = panel.getByTestId("gcs-mod-suggestion").filter({ hasText: `Paznic${id}` });
+  await expect(suggestion).toBeVisible();
+  await expect(suggestion.locator('[class*="gcs-name--"]')).toHaveCount(1);
+  await suggestion.click();
+  await expect(panel.getByTestId("gcs-mod-picked")).toContainText(`Paznic${id}`);
+
+  // Puterile: presetul „Doar aprobări”, plus Fixează și Blochează.
+  await panel.getByTestId("gcs-mod-preset-approvals").click();
+  await expect(panel.getByRole("checkbox", { name: "Aprobă" })).toBeChecked();
+  await expect(panel.getByRole("checkbox", { name: "Editează" })).not.toBeChecked();
+  await panel.getByRole("checkbox", { name: "Fixează" }).check();
+  await panel.getByRole("checkbox", { name: "Blochează" }).check();
+  await panel.getByRole("button", { name: "Adaugă pe 1 forum" }).click();
+  await expect(panel).toHaveCount(0);
+  const row = page.getByTestId("gcs-acp-moderator").filter({ hasText: `Paznic${id}` });
+  await expect(row).toBeVisible();
+  await expect(row).toContainText(`Categorie ${a.id}`);
+  await expect(row).toContainText("Fixează");
+
+  // Editarea: panoul precompletat; „Toate” → „Toate puterile” pe rând.
+  await row.getByTestId("gcs-mod-edit-open").click();
+  const edit = page.getByTestId("gcs-mod-edit");
+  await expect(edit.getByRole("checkbox", { name: "Fixează" })).toBeChecked();
+  await expect(edit.getByRole("checkbox", { name: "Editează" })).not.toBeChecked();
+  await edit.getByTestId("gcs-mod-preset-all").click();
+  await edit.getByRole("button", { name: "Salvează puterile" }).click();
+  await expect(edit).toHaveCount(0);
+  await expect(row).toContainText("Toate puterile");
 
   await mod.goto(inA.url);
   await expect(mod.getByText("Unelte de moderare")).toBeVisible();

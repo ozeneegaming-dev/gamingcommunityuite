@@ -42,6 +42,11 @@ export type GcsUploadLabels = {
   errSquare: string;
   errReal: string;
   errUpload: string;
+  /** Mai multe fișiere odată (`multiple`): `{count}` = câte s-au ales, `{bad}` = câte nu trec. Lipsă = textele de mai sus. */
+  dropHereMany?: string;
+  useMany?: string;
+  many?: string;
+  manyBad?: string;
 };
 
 export type GcsUploadFieldProps = {
@@ -60,6 +65,15 @@ export type GcsUploadFieldProps = {
    * formularul (câmpul `name`).
    */
   upload?: (file: File, onProgress: (fraction: number) => void) => Promise<string | null>;
+  /**
+   * Popupul primește mai multe fișiere odată (tragere, alegere, lipire): fiecare e verificat, cele care nu trec se sar.
+   * Fișierele bune ajung în `onFiles` / `uploadMany` (și în câmpul `name`).
+   */
+  multiple?: boolean;
+  /** Fișierele alese cu `multiple` (sau `[]` la „Scoate”). */
+  onFiles?: (files: File[]) => void;
+  /** Încărcarea mai multor fișiere din popup, cu progres (`multiple`): `null` la succes sau mesajul erorii. */
+  uploadMany?: (files: File[], onProgress: (fraction: number) => void) => Promise<string | null>;
   /** Butonul „Scoate” (doar dacă există un fișier și componenta știe să-l scoată). */
   onRemove?: () => void;
   disabled?: boolean;
@@ -91,18 +105,19 @@ function checkText(c: GcsUploadCheck, rules: GcsUploadRules, labels: GcsUploadLa
  * tipul (după conținut, nu după nume), mărimea și dimensiunile, cu previzualizare. „Folosește” îl pune în formular
  * (sau îl încarcă, cu progres, când componenta dă `upload`).
  */
-export function GcsUploadField({ title, name, rules, labels, current, onFile, upload, onRemove, disabled, required, testId, className }: GcsUploadFieldProps) {
+export function GcsUploadField({ title, name, rules, labels, current, onFile, upload, multiple, onFiles, uploadMany, onRemove, disabled, required, testId, className }: GcsUploadFieldProps) {
   const [open, setOpen] = useState(false);
   const [chosen, setChosen] = useState<{ file: File; url: string | null } | null>(null);
+  const [many, setMany] = useState<File[] | null>(null);
   const hidden = useRef<HTMLInputElement>(null);
   const isImage = Boolean(rules.image);
 
   // Miniatura fișierului ales trăiește cât componenta.
   useEffect(() => () => void (chosen?.url && URL.revokeObjectURL(chosen.url)), [chosen]);
 
-  const shownUrl = chosen?.url ?? current?.url ?? null;
-  const shownName = chosen?.file.name ?? current?.name ?? null;
-  const shownMeta = chosen ? formatBytes(chosen.file.size) : (current?.meta ?? null);
+  const shownUrl = many ? null : (chosen?.url ?? current?.url ?? null);
+  const shownName = many ? fill(labels.many ?? "{count}", { count: many.length }) : (chosen?.file.name ?? current?.name ?? null);
+  const shownMeta = many ? formatBytes(many.reduce((sum, f) => sum + f.size, 0)) : chosen ? formatBytes(chosen.file.size) : (current?.meta ?? null);
   const has = Boolean(shownUrl || shownName);
 
   function accept(file: File, previewUrl: string | null) {
@@ -116,16 +131,30 @@ export function GcsUploadField({ title, name, rules, labels, current, onFile, up
     setOpen(false);
   }
 
+  function acceptMany(files: File[]) {
+    setChosen(null);
+    setMany(files);
+    if (name && hidden.current) {
+      const dt = new DataTransfer();
+      for (const f of files) dt.items.add(f);
+      hidden.current.files = dt.files;
+    }
+    onFiles?.(files);
+    setOpen(false);
+  }
+
   function clear() {
     setChosen(null);
+    setMany(null);
     if (hidden.current) hidden.current.value = "";
-    onFile?.(null);
+    if (multiple) onFiles?.([]);
+    else onFile?.(null);
     onRemove?.();
   }
 
   return (
     <div className={cx("gcs-upfield", disabled && "gcs-upfield--disabled", className)} data-testid={testId}>
-      {name && <input ref={hidden} type="file" name={name} accept={rules.accept.join(",")} required={required && !current?.url} className="gcs-upfield__input" tabIndex={-1} aria-hidden="true" data-testid={testId ? `${testId}-input` : undefined} />}
+      {name && <input ref={hidden} type="file" name={name} accept={rules.accept.join(",")} multiple={multiple} required={required && !current?.url} className="gcs-upfield__input" tabIndex={-1} aria-hidden="true" data-testid={testId ? `${testId}-input` : undefined} />}
       <span className={cx("gcs-upfield__thumb", !shownUrl && "gcs-upfield__thumb--empty")} aria-hidden="true">
         {shownUrl && isImage ? <img src={shownUrl} alt="" /> : <GcsIconSvg icon={isImage ? faImage : faFile} />}
       </span>
@@ -136,12 +165,12 @@ export function GcsUploadField({ title, name, rules, labels, current, onFile, up
       <GcsButton variant="ghost" size="sm" disabled={disabled} icon={<GcsIconSvg icon={faArrowUpFromBracket} />} onClick={() => setOpen(true)} data-testid={testId ? `${testId}-open` : undefined}>
         {has ? labels.replace : labels.upload}
       </GcsButton>
-      {has && (onRemove || chosen) && (
+      {has && (onRemove || chosen || many) && (
         <button type="button" className="gcs-iconBtn" aria-label={labels.remove} title={labels.remove} disabled={disabled} onClick={clear}>
           <GcsIconSvg icon={faTrash} />
         </button>
       )}
-      {open && <GcsUploadDialog title={title} rules={rules} labels={labels} upload={upload} onClose={() => setOpen(false)} onAccept={accept} testId={testId} />}
+      {open && <GcsUploadDialog title={title} rules={rules} labels={labels} upload={upload} multiple={multiple} uploadMany={uploadMany} onAcceptMany={acceptMany} onClose={() => setOpen(false)} onAccept={accept} testId={testId} />}
     </div>
   );
 }
@@ -153,11 +182,15 @@ type DialogProps = {
   upload?: GcsUploadFieldProps["upload"];
   onClose: () => void;
   onAccept: (file: File, previewUrl: string | null) => void;
+  /** Mai multe fișiere odată: lista cu verificările fiecăruia; „Folosește” trimite doar fișierele bune. */
+  multiple?: boolean;
+  uploadMany?: GcsUploadFieldProps["uploadMany"];
+  onAcceptMany?: (files: File[]) => void;
   testId?: string;
 };
 
 /** Popupul: zona de tragere, alegerea din calculator, lipirea, verificările, previzualizarea și (opțional) progresul. */
-export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccept, testId }: DialogProps) {
+export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccept, multiple, uploadMany, onAcceptMany, testId }: DialogProps) {
   const picker = useRef<HTMLInputElement>(null);
   const browse = () => picker.current?.click();
   const [over, setOver] = useState(false);
@@ -166,8 +199,11 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
   const [checks, setChecks] = useState<GcsUploadCheck[]>([]);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [many, setMany] = useState<{ file: File; checks: GcsUploadCheck[] }[]>([]);
   const isImage = Boolean(rules.image);
-  const ok = file !== null && checks.length > 0 && checks.every((c) => c.ok);
+  const good = many.filter((m) => m.checks.every((c) => c.ok)).map((m) => m.file);
+  const picked = multiple ? many.length > 0 : file !== null;
+  const ok = multiple ? good.length > 0 : file !== null && checks.length > 0 && checks.every((c) => c.ok);
 
   async function take(next: File | undefined | null) {
     if (!next) return;
@@ -180,21 +216,52 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
     setChecks(await checkUploadFile(next, rules));
   }
 
+  async function takeMany(list: File[]) {
+    if (list.length === 0) return;
+    setError(null);
+    setProgress(null);
+    setMany(await Promise.all(list.map(async (f) => ({ file: f, checks: await checkUploadFile(f, rules) }))));
+  }
+
+  /** Fișierele trase, alese sau lipite: toate cu `multiple`, altfel primul. */
+  function takeList(list: FileList | File[] | null | undefined) {
+    const files = list ? [...list] : [];
+    if (multiple) void takeMany(files);
+    else void take(files[0]);
+  }
+
   function onDrop(e: DragEvent) {
     e.preventDefault();
     setOver(false);
-    void take(e.dataTransfer.files[0]);
+    takeList(e.dataTransfer.files);
   }
 
   function onPaste(e: ClipboardEvent) {
-    const pasted = [...e.clipboardData.files][0];
-    if (pasted) {
+    const pasted = [...e.clipboardData.files];
+    if (pasted.length > 0) {
       e.preventDefault();
-      void take(pasted);
+      takeList(pasted);
     }
   }
 
+  async function acceptAll() {
+    if (!ok) return;
+    if (!uploadMany) {
+      onAcceptMany?.(good);
+      return;
+    }
+    setProgress(0);
+    const err = await uploadMany(good, setProgress);
+    if (err) {
+      setProgress(null);
+      setError(err || labels.errUpload);
+      return;
+    }
+    onAcceptMany?.(good);
+  }
+
   async function use() {
+    if (multiple) return acceptAll();
     if (!file || !ok) return;
     if (!upload) {
       onAccept(file, preview);
@@ -213,7 +280,23 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
   return (
     <GcsModal title={title} icon={<GcsIconSvg icon={faArrowUpFromBracket} />} onClose={onClose} closeLabel={labels.close} className="gcs-updialog">
       <div className="gcs-updialog__body" onPaste={onPaste} data-testid={testId ? `${testId}-dialog` : "gcs-upload-dialog"}>
-        {file && checks.length > 0 ? (
+        {multiple && many.length > 0 ? (
+          <div className="gcs-updialog__many">
+            <ul className="gcs-updialog__manyList" data-testid={testId ? `${testId}-list` : undefined}>
+              {many.map((m, i) => {
+                const bad = m.checks.find((c) => !c.ok);
+                return (
+                  <li key={`${i}-${m.file.name}`} className={bad ? "gcs-updialog__bad" : "gcs-updialog__ok"} data-check={bad?.key ?? "ok"}>
+                    <GcsIconSvg icon={bad ? faTriangleExclamation : faCheck} />
+                    <b>{m.file.name}</b>
+                    <span>{bad ? checkText(bad, rules, labels) : formatBytes(m.file.size)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            {good.length < many.length && <p className="gcs-updialog__manyNote">{fill(labels.manyBad ?? "{bad} / {count}", { bad: many.length - good.length, count: many.length })}</p>}
+          </div>
+        ) : !multiple && file && checks.length > 0 ? (
           <div className="gcs-updialog__preview">
             <span className="gcs-updialog__pv" aria-hidden="true">
               {preview ? <img src={preview} alt="" /> : <GcsIconSvg icon={faFile} />}
@@ -244,7 +327,7 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
             <span className="gcs-updialog__big" aria-hidden="true">
               <GcsIconSvg icon={faArrowUpFromBracket} />
             </span>
-            <b>{over ? labels.dropRelease : labels.dropHere}</b>
+            <b>{over ? labels.dropRelease : multiple ? (labels.dropHereMany ?? labels.dropHere) : labels.dropHere}</b>
             <span className="gcs-muted">{labels.or}</span>
             <GcsButton
               variant="ghost"
@@ -264,9 +347,10 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
           ref={picker}
           type="file"
           accept={rules.accept.join(",")}
+          multiple={multiple}
           className="gcs-srOnly"
           onChange={(e) => {
-            void take(e.target.files?.[0]);
+            takeList(e.target.files);
             e.target.value = "";
           }}
           data-testid={testId ? `${testId}-pick` : "gcs-upload-pick"}
@@ -285,7 +369,7 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
           </p>
         )}
         <div className="gcs-updialog__actions">
-          {file ? (
+          {picked ? (
             <GcsButton variant="ghost" onClick={browse}>
               {labels.chooseOther}
             </GcsButton>
@@ -295,7 +379,7 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
             </GcsButton>
           )}
           <GcsButton variant="primary" disabled={!ok} loading={progress !== null} icon={<GcsIconSvg icon={faCheck} />} onClick={() => void use()} data-testid={testId ? `${testId}-use` : "gcs-upload-use"}>
-            {labels.use}
+            {multiple ? (labels.useMany ?? labels.use) : labels.use}
           </GcsButton>
         </div>
       </div>

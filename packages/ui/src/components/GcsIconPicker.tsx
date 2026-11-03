@@ -143,6 +143,8 @@ export function GcsIconPicker({ name, value, searchUrl, labels, onChange, compac
         aria-expanded={open}
         aria-controls={open ? popId : undefined}
         title={current ? iconLabel(current) : labels.none}
+        // Fără text vizibil (varianta îngustă), numele butonului spune ce face și ce iconiță e aleasă.
+        aria-label={compact ? `${labels.choose ?? labels.search}: ${current ? iconLabel(current) : labels.none}` : undefined}
         onClick={() => setOpen((v) => !v)}
         data-testid={testId ? `${testId}-open` : "gcs-icon-picker-open"}
       >

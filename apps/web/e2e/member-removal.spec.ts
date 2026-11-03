@@ -115,6 +115,8 @@ test("unirea: un cont doar-Steam se mută în contul principal, care intră apoi
 
   await test.step("previzualizarea: sursa, ținta, Steam trece în țintă, ce se mută", async () => {
     await page.goto(`/admin/members/${steamUserId}`);
+    // „Unește cu alt cont…” stă în meniul „Mai multe” al barei de acțiuni.
+    await page.getByTestId("gcs-member-more").click();
     await page.getByTestId("gcs-member-merge").click();
     await page.getByLabel("Contul care rămâne (ținta)").fill(`principal-${id}@example.com`);
     await page.getByRole("button", { name: "Caută" }).click();

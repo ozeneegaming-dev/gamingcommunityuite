@@ -1,1 +1,393 @@
 /* ACP › fișa membrului: capul, bara de acțiuni, prezentarea pe trei coloane. */
+
+/* ─── Capul: avatarul, numele cu grupul și stările, datele principale pe un rând ─────────────────────── */
+
+.gcs-mpHead {
+  margin-bottom: 16px;
+}
+.gcs-mpHead__top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+}
+.gcs-mpHead .gcs-avatar,
+.gcs-mpHead__avatar {
+  flex: none;
+  border-radius: 16px;
+}
+.gcs-mpHead__who {
+  min-width: 0;
+}
+.gcs-mpHead__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.gcs-mpHead__name {
+  margin: 0;
+  min-width: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.gcs-mpHead__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+}
+.gcs-mpHead__facts > div {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-mpHead__facts dt {
+  color: var(--gcs-muted);
+}
+.gcs-mpHead__facts dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--gcs-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.gcs-mpHead__profile {
+  white-space: nowrap;
+}
+
+/* ─── Bara de acțiuni: cele frecvente, „Mai multe”, apoi „Șterge” separat în dreapta ───────────────── */
+
+.gcs-mpBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-mpBar__moreWrap {
+  display: inline-flex;
+}
+/* Butonul meniului arată ca restul butoanelor din bară (stilul `.gcs-dropdown__trigger` e pentru antet). */
+.gcs-mpBar .gcs-dropdown__trigger.gcs-mpBar__more {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-btn-radius, 10px);
+  background: var(--gcs-btn-secondary-bg, var(--gcs-surface2));
+  color: var(--gcs-btn-secondary-text, var(--gcs-text));
+  font: 600 13.5px var(--gcs-font-text);
+}
+.gcs-mpBar .gcs-dropdown__trigger.gcs-mpBar__more:hover,
+.gcs-mpBar .gcs-dropdown__trigger.gcs-mpBar__more[aria-expanded="true"] {
+  background-color: var(--gcs-border);
+}
+.gcs-mpBar__delete,
+.gcs-root a.gcs-mpBar__delete {
+  margin-left: auto;
+  border-color: color-mix(in srgb, var(--gcs-acp-bad, var(--gcs-danger)) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-acp-bad, var(--gcs-danger)) 10%, transparent);
+  color: var(--gcs-acp-bad, var(--gcs-danger));
+}
+.gcs-mpBar__delete:hover,
+.gcs-root a.gcs-mpBar__delete:hover {
+  background: color-mix(in srgb, var(--gcs-acp-bad, var(--gcs-danger)) 20%, transparent);
+  color: var(--gcs-acp-bad, var(--gcs-danger));
+}
+
+/* ─── Taburile ─────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-mpTabs {
+  margin-bottom: 16px;
+}
+
+/* ─── Cardurile (titlul cu legătura din dreapta, conținutul) ───────────────────────────────────────── */
+
+.gcs-mpCard {
+  min-width: 0;
+}
+.gcs-mpCard--wide {
+  width: 100%;
+}
+.gcs-mpCard__head {
+  flex-wrap: nowrap;
+  padding: 11px 16px;
+}
+.gcs-mpCard__head > .gcs-acpWidget__title {
+  min-width: 0;
+}
+.gcs-mpCard__action,
+.gcs-root a.gcs-mpCard__action {
+  flex: none;
+  margin-left: auto;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gcs-mpCard__action:hover {
+  text-decoration: underline;
+}
+.gcs-mpCard__action:focus-visible {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.gcs-mpCard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  font-size: 13px;
+}
+.gcs-mpMuted {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-mpMono {
+  font-family: ui-monospace, monospace;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.gcs-mpLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.gcs-mpList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-mpSub {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-mpSub__title {
+  color: var(--gcs-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* Un rând „etichetă — valoare” (cotele, grupurile, donațiile). */
+.gcs-mpKv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-width: 0;
+}
+.gcs-mpKv > span:first-child {
+  color: var(--gcs-muted);
+}
+.gcs-mpKv--top {
+  align-items: flex-start;
+}
+.gcs-mpKv__end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+.gcs-mpKv > .gcs-mpKv__text,
+.gcs-mpKv > span.gcs-mpKv__text:first-child {
+  min-width: 0;
+  color: var(--gcs-text);
+  overflow-wrap: anywhere;
+}
+.gcs-mpKv > strong {
+  text-align: right;
+}
+.gcs-mpStats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.gcs-mpStats dd {
+  overflow-wrap: anywhere;
+}
+
+/* ─── „Prezentare”: trei coloane independente → două → una, fără goluri ─────────────────────────────── */
+
+.gcs-mpOverview {
+  container-type: inline-size;
+}
+.gcs-mpCols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.gcs-mpCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.gcs-mpOverview .gcs-activityBars {
+  height: 72px;
+}
+/* Mai îngust: coloanele se topesc (cardurile, în ordine, curg în coloane echilibrate). */
+@container (max-width: 1040px) {
+  .gcs-mpCols {
+    display: block;
+    columns: 2;
+    column-gap: 16px;
+  }
+  .gcs-mpCol {
+    display: contents;
+  }
+  .gcs-mpCols .gcs-mpCard {
+    display: block;
+    margin-bottom: 16px;
+    break-inside: avoid;
+  }
+}
+@container (max-width: 640px) {
+  .gcs-mpCols {
+    columns: 1;
+  }
+}
+
+/* ─── Celelalte taburi ─────────────────────────────────────────────────────────────────────────── */
+
+.gcs-mpStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-mpSplit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.gcs-mpProfile {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.gcs-mpProfile__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.gcs-mpInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+}
+.gcs-input.gcs-mpDays {
+  width: 90px;
+}
+
+/* Un rând de listă cu acțiuni (istoricul din popupuri, insignele, VIP-ul). */
+.gcs-mpRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gcs-border);
+  font-size: 13px;
+}
+.gcs-mpRow:last-child {
+  border-bottom: 0;
+}
+.gcs-mpRow--top {
+  align-items: flex-start;
+}
+.gcs-mpRow__who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gcs-mpRow__end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.gcs-mpRow__end > .gcs-actionForm {
+  align-items: center;
+}
+
+/* ─── Popupurile acțiunilor ────────────────────────────────────────────────────────────────────── */
+
+.gcs-mpModal__body {
+  min-width: 0;
+}
+.gcs-mpModal__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gcs-mpModal__lead {
+  margin: 0;
+  color: var(--gcs-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.gcs-mpModal .gcs-toggleRow {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gcs-border);
+}
+
+/* ─── Ecrane mici ──────────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .gcs-mpProfile,
+  .gcs-mpSplit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .gcs-mpHead__top {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+  }
+  .gcs-mpHead__profile {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .gcs-mpHead__name {
+    font-size: 19px;
+  }
+  .gcs-mpBar {
+    padding: 12px 14px;
+  }
+  .gcs-mpBar__delete,
+  .gcs-root a.gcs-mpBar__delete {
+    margin-left: 0;
+  }
+}
+@media (max-width: 420px) {
+  .gcs-mpHead__facts {
+    flex-direction: column;
+  }
+}

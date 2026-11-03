@@ -1,1 +1,329 @@
-/* ACP › Realizări: ranguri, badge-uri, reguli clasice (listă + panou). */
+/*
+ * ACP › Realizări: ranguri, badge-uri, reguli clasice (listă + panou). Scara rangurilor e singura listă a paginii de
+ * ranguri, badge-urile sunt o grilă de insigne, regulile clasice rânduri compacte; formularele stau în panoul din dreapta
+ * (`gcs-drawer`). Funcții de sistem: culorile vin din tokenii temei, temele doar le restilizează.
+ */
+
+/* ─── Piese comune ───────────────────────────────────────────────────────── */
+.gcs-achHint {
+  display: block;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--gcs-muted);
+}
+.gcs-achSpacer {
+  flex: 1;
+}
+.gcs-achChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface2, var(--gcs-surface));
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gcs-achChip--acc {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcs-achEmpty {
+  margin: 0;
+  padding: 18px 16px;
+  color: var(--gcs-muted);
+}
+
+/* Controlul segmentat („Toate pragurile / Oricare prag”): butoane radio ascunse peste etichete. */
+.gcs-achSeg {
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2, var(--gcs-surface));
+}
+.gcs-achSeg__opt {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+.gcs-achSeg__opt > input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  background: none;
+  opacity: 0;
+  cursor: pointer;
+}
+.gcs-achSeg__opt > span {
+  padding: 6px 12px;
+  border-radius: 7px;
+  color: var(--gcs-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
+}
+.gcs-achSeg__opt > input:checked + span {
+  background: var(--gcs-btn-primary-bg, var(--gcs-accent));
+  color: var(--gcs-btn-primary-text, #fff);
+}
+.gcs-achSeg__opt > input:focus-visible + span {
+  outline: 2px solid var(--gcs-accentInk, var(--gcs-accent));
+  outline-offset: 1px;
+}
+
+/* Culoarea: câmpul hex și mostra nativă alături. */
+.gcs-achColor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-achColor > .gcs-input {
+  flex: 1;
+  min-width: 0;
+}
+.gcs-achColor > input[type="color"] {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface2, var(--gcs-surface));
+  cursor: pointer;
+}
+
+/* ─── Ranguri: scara (rândul are „Editează”) și panoul ───────────────────── */
+.gcs-rankCard__edit {
+  flex: none;
+  display: inline-flex;
+}
+.gcs-rankCard__grip {
+  touch-action: none;
+}
+.gcs-rankCard__grip:active {
+  cursor: grabbing;
+}
+
+/* Un criteriu al aplicațiilor: metrica, minimul, „Scoate”. */
+.gcs-achCrit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Previzualizarea emblemei rangului la 64, 32 și 24 px. */
+.gcs-achPreview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface2, var(--gcs-surface));
+}
+.gcs-achPreview__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: var(--gcs-text);
+}
+
+/* ─── Badge-uri: grila insignelor ────────────────────────────────────────── */
+.gcs-achBadgeGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+.gcs-achBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px 12px 12px;
+  text-align: center;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.gcs-achBadge:hover {
+  border-color: color-mix(in srgb, var(--gcs-accent) 40%, var(--gcs-border));
+}
+.gcs-achBadge__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+.gcs-achBadge__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14.5px;
+  color: var(--gcs-text);
+}
+.gcs-achBadge__key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-achBadge__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.gcs-achBadge > :last-child {
+  margin-top: auto;
+}
+/* În panoul badge-ului editorul insignei are scena în stânga și alegerile în dreapta (o coloană pe ecrane înguste). */
+.gcs-drawer .gcs-badgeEditor {
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+}
+@media (max-width: 640px) {
+  .gcs-drawer .gcs-badgeEditor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ─── Reguli: constructorul în panou, regulile clasice pe rânduri ───────── */
+.gcs-drawer .gcs-ruleB__preview {
+  margin: 0;
+}
+.gcs-drawer .gcs-ruleB__more > summary {
+  margin-top: 2px;
+}
+.gcs-drawer__foot .gcs-field__error {
+  font-size: 12.5px;
+}
+.gcs-ruleList__sentence b {
+  color: var(--gcs-text);
+  font-weight: 700;
+}
+.gcs-achClassic__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.gcs-achClassic__row:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+}
+.gcs-achClassic__row.is-off .gcs-ruleList__text,
+.gcs-achClassic__row.is-off .gcs-achClassic__facts {
+  opacity: 0.6;
+}
+.gcs-achClassic__facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.gcs-achClassic__error {
+  grid-column: 1 / -1;
+}
+
+/* ─── Setări ─────────────────────────────────────────────────────────────── */
+.gcs-achSettings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 14px;
+}
+.gcs-achSettings__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+.gcs-achPoints {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-achPoints > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.gcs-achPoints > li > span:first-child {
+  flex: 1;
+  min-width: 0;
+  color: var(--gcs-muted);
+}
+.gcs-achPoints > li.is-off > strong {
+  opacity: 0.6;
+}
+.gcs-achLink {
+  align-self: flex-start;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* ─── Telefon ────────────────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .gcs-achClassic__row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .gcs-achClassic__facts {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  .gcs-achCrit {
+    grid-template-columns: minmax(0, 1fr) 80px auto;
+  }
+  .gcs-achPreview {
+    gap: 10px;
+  }
+  .gcs-achSeg__opt > span {
+    padding: 6px 10px;
+  }
+}
+@media (max-width: 480px) {
+  .gcs-rankCard__edit {
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcs-achSeg__opt > span,
+  .gcs-achBadge,
+  .gcs-achClassic__row {
+    transition: none;
+  }
+}

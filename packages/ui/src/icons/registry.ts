@@ -56,7 +56,7 @@ export const GCS_ICON_CATEGORIES = {
     "gamepad headset crosshairs skull dragon chess-knight dice dice-d20 puzzle-piece ghost robot rocket person-rifle bomb shield-halved khanda hat-wizard wand-sparkles map map-location-dot compass mountain-sun car flag-checkered stopwatch ranking-star trophy medal server",
   ),
   community: s(
-    "users user user-group people-group comments comment message bullhorn newspaper heart thumbs-up face-smile hand-wave handshake gift cake-candles calendar-days champagne-glasses music camera image video microphone globe earth-europe language hashtag at",
+    "users user user-group people-group comments comment message bullhorn newspaper heart thumbs-up face-smile hand handshake gift cake-candles calendar-days champagne-glasses music camera image video microphone globe earth-europe language hashtag at",
   ),
   staff: s(
     "shield-halved user-shield user-tie gavel scale-balanced ban triangle-exclamation circle-exclamation flag eye eye-slash lock unlock key clipboard-check list-check circle-check user-check user-xmark user-lock hammer screwdriver-wrench toolbox",

@@ -27,7 +27,10 @@ test("adminul importă RED-LINE OFFICIAL din fișier, o pornește și o alege di
 
   // Importul: tema nouă apare în listă, inactivă.
   await page.goto("/admin/appearance/themes");
-  await page.getByTestId("gcs-acp-theme-import-file").setInputFiles(PACKAGE);
+  // Pachetul: popupul de încărcare (verificările), apoi „Folosește” îl pune în formular.
+  await page.getByTestId("gcs-acp-theme-import-file-open").click();
+  await page.getByTestId("gcs-acp-theme-import-file-pick").setInputFiles(PACKAGE);
+  await page.getByTestId("gcs-acp-theme-import-file-use").click();
   await page.getByRole("button", { name: "Importă tema" }).click();
   const card = themeCard(page, "RED-LINE OFFICIAL");
   await expect(card).toBeVisible();

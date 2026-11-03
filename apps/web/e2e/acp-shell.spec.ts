@@ -170,3 +170,20 @@ test("Statistici → Prezentare generală arată plăcile aplicațiilor", async 
   await page.getByRole("navigation", { name: "Statistici", exact: true }).getByRole("link", { name: "Înregistrări" }).click();
   await expect(page.getByRole("heading", { name: "Înregistrări", level: 1 })).toBeVisible();
 });
+
+test("„Aplicații și pluginuri” apare o singură dată, în zona Aplicații; Sistem are grupul „Integrări”", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Apps${id}`, `apps-${id}@example.com`);
+  await page.goto("/admin/system/applications");
+  const rail = page.getByRole("navigation", { name: "Zonele ACP" });
+  await expect(rail.getByRole("button", { name: "Aplicații" })).toHaveAttribute("aria-current", "true");
+  const apps = page.getByRole("navigation", { name: "Aplicații", exact: true });
+  await expect(apps.getByRole("link", { name: "Aplicații și pluginuri" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("navigation", { name: "Cale de navigare" })).toContainText("Aplicații");
+
+  await rail.getByRole("button", { name: "Sistem" }).click();
+  const system = page.getByRole("navigation", { name: "Sistem", exact: true });
+  await expect(system).toContainText("Integrări");
+  await expect(system).not.toContainText("Aplicații și integrări");
+  await expect(system.getByRole("link", { name: "Aplicații și pluginuri" })).toHaveCount(0);
+});

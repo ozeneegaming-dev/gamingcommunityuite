@@ -1,1 +1,96 @@
 /* ACP: restul câmpurilor de încărcare și al selectoarelor de iconițe trecute pe piesele sistemului. */
+
+/* ── uploads2: popupul cu mai multe fișiere (lista verificărilor) și câmpurile de încărcare din ACP ── */
+.gcs-updialog__many {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.gcs-updialog__manyList {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: min(320px, 45vh);
+  overflow-y: auto;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: var(--gcs-surface2);
+  font-size: 13px;
+}
+.gcs-updialog__manyList li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+}
+.gcs-updialog__manyList li:nth-child(even) {
+  background: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+}
+.gcs-updialog__manyList b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+.gcs-updialog__manyList span {
+  min-width: 0;
+  text-align: right;
+  font-size: 12px;
+}
+.gcs-updialog__manyNote {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+@media (max-width: 520px) {
+  .gcs-updialog__manyList li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .gcs-updialog__manyList span {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+.gcs-forumPreview__tools .gcs-upfield {
+  flex: 1 1 320px;
+  max-width: 560px;
+}
+.gcs-emoteAdmin__upload,
+.gcs-pluginUpload .gcs-upfield {
+  max-width: 640px;
+}
+/* ── /uploads2 ── */
+
+/* ── uploads1: câmpurile de încărcare trecute pe popupul sistemului (site + ACP) ── */
+/* Câmpul imagine al unui tab contribuit (Aspect forumuri): câmpul, apoi indicația limitelor. */
+.gcs-extImageField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-extImageField .gcs-upfield,
+.gcs-upfield.gcs-shareImage__upload,
+.gcs-clanForm .gcs-upfield {
+  max-width: 560px;
+}
+/* Setări → Profil: câmpul sub avatar / copertă, pe toată lățimea cardului îngust. */
+.gcs-upfield.gcs-imageSetting__upload {
+  width: 100%;
+  margin-top: 10px;
+}
+/* Pe ecranele înguste câmpul ia toată lățimea. */
+@media (max-width: 520px) {
+  .gcs-extImageField .gcs-upfield,
+  .gcs-clanForm .gcs-upfield {
+    max-width: none;
+  }
+}
+/* ── /uploads1 ── */

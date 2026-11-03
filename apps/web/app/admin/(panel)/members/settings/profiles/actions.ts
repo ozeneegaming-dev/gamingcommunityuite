@@ -1,6 +1,6 @@
 "use server";
 
-import type { GcsResult } from "@gcs/core";
+import { GcsValidationError, type GcsResult } from "@gcs/core";
 import type { FieldVisibility, ProfileFieldSection, ProfileFieldType } from "@gcs/db";
 import { PROFILES_ACP_SECTION } from "@gcs/modules";
 import { field, intField, runAcpAction } from "@/lib/acp-actions";
@@ -17,13 +17,18 @@ function optionImages(raw: string): Record<string, string> {
   );
 }
 
+/** Opțiunile listei: editorul din panou trimite câte una pe rând (pot conține virgule); un singur rând = separate prin virgulă. */
+function optionList(raw: string): string[] {
+  return /\r?\n/.test(raw) ? raw.split(/\r?\n/) : raw.split(",");
+}
+
 export async function saveProfileField(id: number | null, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(PROFILES_ACP_SECTION, "edit", async (actor) => {
     await services().profileFields.save(actor, id, {
       key: field(fd, "key").trim(),
       label: field(fd, "label"),
       type: field(fd, "type") as ProfileFieldType,
-      options: field(fd, "options").split(/\r?\n|,/),
+      options: optionList(field(fd, "options")),
       section: field(fd, "section") as ProfileFieldSection,
       required: fd.get("required") === "on",
       maxLength: intField(fd, "maxLength"),
@@ -62,6 +67,22 @@ export async function deleteProfileFieldGroup(id: number): Promise<GcsResult<nul
   });
 }
 
+/** Ordinea câmpurilor din listă (tragere sau săgeți): toate id-urile, în ordinea nouă; serviciul verifică setul. */
+export async function reorderProfileFields(ids: number[]): Promise<GcsResult<null>> {
+  return runAcpAction(PROFILES_ACP_SECTION, "edit", async (actor) => {
+    await services().profileFields.reorder(actor, Array.isArray(ids) ? ids.map(Number) : []);
+    return null;
+  });
+}
+
+/** Ordinea grupurilor de câmpuri (tragere sau săgeți): toate id-urile, în ordinea nouă. */
+export async function reorderProfileFieldGroups(ids: number[]): Promise<GcsResult<null>> {
+  return runAcpAction(PROFILES_ACP_SECTION, "edit", async (actor) => {
+    await services().profileFields.reorderGroups(actor, Array.isArray(ids) ? ids.map(Number) : []);
+    return null;
+  });
+}
+
 export async function deleteProfileField(id: number): Promise<GcsResult<null>> {
   return runAcpAction(PROFILES_ACP_SECTION, "delete", async (actor) => {
     await services().profileFields.delete(actor, id);
@@ -69,15 +90,22 @@ export async function deleteProfileField(id: number): Promise<GcsResult<null>> {
   });
 }
 
-/** Ordinea câmpurilor din postbit (`postbit.fields`): după numerele din formular. */
+/**
+ * Ordinea câmpurilor din postbit (`postbit.fields`): lista din „Ordinea în postare” trimite `order.<cheie>` = poziția.
+ * Doar câmpurile marcate „În postare”, fiecare o dată, cu poziții întregi.
+ */
 export async function savePostbitOrder(fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(PROFILES_ACP_SECTION, "edit", async (actor) => {
-    const order = [...fd.entries()]
+    const { profiles, settings } = services();
+    const entries = [...fd.entries()]
       .filter(([k]) => k.startsWith("order."))
-      .map(([k, v]) => ({ key: k.slice(6), pos: Number(v) }))
-      .sort((a, b) => a.pos - b.pos)
-      .map((e) => e.key);
-    await services().settings.set("postbit.fields", order, actor);
+      .map(([k, v]) => ({ key: k.slice(6), pos: typeof v === "string" && /^\d{1,3}$/.test(v.trim()) ? Number(v) : Number.NaN }));
+    const postbit = new Set((await profiles.fields()).filter((f) => f.showInPostbit).map((f) => f.key));
+    if (entries.some((e) => !postbit.has(e.key) || !Number.isInteger(e.pos)) || new Set(entries.map((e) => e.key)).size !== entries.length) {
+      throw new GcsValidationError({ order: "invalid_order" });
+    }
+    const order = entries.sort((a, b) => a.pos - b.pos).map((e) => e.key);
+    await settings.set("postbit.fields", order, actor);
     return null;
   });
 }

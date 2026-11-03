@@ -98,13 +98,18 @@ test("postbit-ul urmează ordinea câmpurilor din ACP", async ({ page, context, 
   }
   const topic = await topicWithReplies(request, t.forum.id, `ordadm-${id}@example.com`, `Ordine ${id}`);
 
-  // Beta înaintea lui Alfa.
-  await page.goto("/admin/members/settings/profiles");
+  // Beta înaintea lui Alfa: fila „Ordinea în postare”, săgeata lui Beta (lista se poate și trage), apoi „Salvează ordinea”.
+  await page.goto("/admin/members/settings/profiles?tab=postbit");
   const card = page.getByTestId("gcs-acp-postbit");
-  await card.getByLabel(`Poziția pentru Beta ${id}`).fill("1");
-  await card.getByLabel(`Poziția pentru Alfa ${id}`).fill("2");
+  const keys = () => card.getByTestId("gcs-acp-postbit-row").evaluateAll((els) => els.map((e) => e.getAttribute("data-key")).filter((k) => k?.endsWith(`_${id}`)));
+  await expect.poll(keys).toEqual([`ord_a_${id}`, `ord_b_${id}`]);
+  const beta = card.locator(`[data-testid="gcs-acp-postbit-row"][data-key="ord_b_${id}"]`);
+  for (let i = 0; i < 5 && (await keys())[0] !== `ord_b_${id}`; i++) await beta.getByTestId("gcs-acp-sort-up").click();
+  expect(await keys()).toEqual([`ord_b_${id}`, `ord_a_${id}`]);
   await card.getByRole("button", { name: "Salvează ordinea" }).click();
   await expect(card.getByRole("status")).toBeVisible();
+  await page.reload();
+  await expect.poll(keys).toEqual([`ord_b_${id}`, `ord_a_${id}`]);
 
   await page.goto(topic.url);
   const order = await page

@@ -86,8 +86,13 @@ export async function checkUploadFile(file: File, rules: GcsUploadRules): Promis
     return checks;
   }
   const dims = typeOk ? await imageSize(file, type) : null;
-  if (!dims || dims.width === 0) {
+  if (!dims || (dims.width === 0 && type !== "image/svg+xml")) {
     checks.push({ key: "errReal", ok: false });
+    return checks;
+  }
+  // Un SVG doar cu `viewBox` (fără lățime și înălțime) e vectorial: se scalează, deci dimensiunile nu se verifică.
+  if (dims.width === 0) {
+    checks.push({ key: "okReal", ok: true });
     return checks;
   }
   const { width, height } = dims;

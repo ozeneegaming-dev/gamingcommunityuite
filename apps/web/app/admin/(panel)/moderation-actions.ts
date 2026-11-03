@@ -50,15 +50,28 @@ export async function reorderReactions(order: number[]): Promise<GcsResult<null>
   });
 }
 
+/**
+ * Panoul „Adaugă moderator”: ținta (`target`: `user` cu `userName`, cu sau fără `@`, ori `group` cu `groupId`), forumurile
+ * bifate și puterile. Fără `target` (formularele vechi), userul are prioritate față de grup.
+ */
 export async function addModerators(fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(MODERATORS_ACP_SECTION, "edit", async (actor) => {
-    const userName = field(fd, "userName").trim();
-    const groupId = intField(fd, "groupId");
+    const target = field(fd, "target");
+    const userName = target === "group" ? "" : field(fd, "userName").trim().replace(/^@+/, "");
+    const groupId = target === "user" ? Number.NaN : intField(fd, "groupId");
     await services().forumModerators.add(actor, {
       forumIds: ids(fd, "forumId"),
       powers: fd.getAll("power").map(String),
       ...(userName ? { userName } : Number.isNaN(groupId) ? {} : { groupId }),
     });
+    return null;
+  });
+}
+
+/** Panoul de editare al unui moderator pe forum: puterile bifate (forumul și ținta rămân). */
+export async function updateModerator(id: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(MODERATORS_ACP_SECTION, "edit", async (actor) => {
+    await services().forumModerators.update(actor, id, { powers: fd.getAll("power").map(String) });
     return null;
   });
 }

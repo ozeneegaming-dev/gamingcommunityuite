@@ -97,9 +97,11 @@ test("etapa 2: topic cu sondaj → aprobare → răspuns cu citat, imagine și m
       "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAMElEQVRIiWO4pmE5IIhh1GKN0aC+Npq4LEezk8ZoAXJttMi0HK0kNEarRcvhXy0CAKIgzA6emNzPAAAAAElFTkSuQmCC",
       "base64",
     );
-    const chooser = helper.waitForEvent("filechooser");
+    // Butonul „Imagine” deschide popupul de încărcare: verificările, apoi „Folosește” o încarcă în text.
     await helper.locator("#reply").getByRole("button", { name: "Imagine" }).click();
-    await (await chooser).setFiles({ name: "setari.png", mimeType: "image/png", buffer: png });
+    await helper.getByTestId("gcs-reply-editor-image-pick").setInputFiles({ name: "setari.png", mimeType: "image/png", buffer: png });
+    await helper.getByTestId("gcs-reply-editor-image-use").click();
+    await expect(helper.getByTestId("gcs-reply-editor-image-dialog")).toHaveCount(0);
     await expect(helper.locator("#reply .gcs-editor__content img")).toBeVisible();
 
     await helper.getByRole("button", { name: "Trimite răspunsul" }).click();

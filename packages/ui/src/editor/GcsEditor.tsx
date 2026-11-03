@@ -38,6 +38,8 @@ import {
 import type { Editor, JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { forwardRef, Fragment, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
+import { GcsUploadDialog, type GcsUploadLabels } from "../components/GcsUploadField";
+import type { GcsUploadRules } from "../components/uploadChecks";
 import { cx } from "../cx";
 import { GcsIconSvg } from "../icons/svg";
 import { GcsBlockTools, type GcsBlockLabels, type GcsEditorBlock } from "./blocks";
@@ -45,7 +47,7 @@ import { clearDraft, loadDraft, saveDraft } from "./draft";
 import { GCS_EMOJI_CATEGORIES, GCS_QUICK_EMOJI, type GcsEmojiCategory } from "./emoji";
 import { GCS_EDITOR_ALIGNS, GCS_EDITOR_COLORS, GCS_EDITOR_FONT_SIZES, GCS_EDITOR_HIGHLIGHTS, gcsEditorExtensions, isEmbedUrl, isImageUrl, type GcsEditorAllow } from "./extensions";
 import { gcsMentionSuggestion } from "./mentions";
-import { uploadFile } from "./uploads";
+import { uploadFile, type GcsUploaded } from "./uploads";
 
 /** Textele editorului (traduse de pagină). */
 export type GcsEditorLabels = {
@@ -103,7 +105,33 @@ export type GcsEditorLabels = {
   /** Lista de mențiuni: eticheta unui grup și a punctului „online”. */
   mentionGroup: string;
   mentionOnline: string;
+  /** Popupul de încărcare al butonului „Imagine” (cu `uploadUrl`); fără el, butonul alege direct fișierele. */
+  upload?: GcsUploadLabels;
+  /**
+   * Textele erorilor de încărcare, după cod: `fields.too_large`, `reasons.app_disabled`, `rate_limited`… (`{param}`
+   * se completează din eroare); lipsă = `uploadFailed`.
+   */
+  uploadErrors?: Record<string, string>;
 };
+
+/** Imaginile din popupul butonului „Imagine”: tipurile pipeline-ului și plafonul rutelor (grupul cel mai permisiv). */
+const DEFAULT_IMAGE_RULES: GcsUploadRules = {
+  accept: ["image/png", "image/jpeg", "image/webp", "image/gif"],
+  typesLabel: "PNG, JPG, WebP, GIF",
+  maxBytes: 100 * 1024 * 1024,
+  image: {},
+};
+
+/** Textul unei erori de încărcare (`uploadFile` aruncă `Error(cod)` cu `fields` / `params`). */
+function uploadErrorText(err: unknown, labels: GcsEditorLabels): string {
+  const e = err as Error & { fields?: Record<string, string>; params?: Record<string, string> };
+  const map = labels.uploadErrors ?? {};
+  const params = e.params ?? {};
+  const reason = params.reason;
+  const field = Object.values(e.fields ?? {})[0];
+  const text = (reason && map[`reasons.${reason}`]) || (field && map[`fields.${field}`]) || map[e.message] || labels.uploadFailed;
+  return text.replace(/\{(\w+)\}/g, (m, k: string) => params[k] ?? m);
+}
 
 /** Butoanele barei de unelte (varianta compactă alege dintre ele; fiecare apare doar dacă schema îl permite). */
 export type GcsEditorTool =
@@ -159,6 +187,8 @@ export type GcsEditorProps = {
   tools?: readonly GcsEditorTool[];
   /** Butonul „Imagine” cere adresa unei imagini (https), fără upload. */
   imageUrl?: boolean;
+  /** Regulile popupului „Imagine” (implicit: PNG, JPG, WebP, GIF până la 100 MB; serverul aplică limita grupului). */
+  uploadRules?: GcsUploadRules;
   /** Mai scund, fără „Tot ecranul” (câmpuri mici: semnătura, câmpurile de profil). */
   compact?: boolean;
   /** Id-ul etichetei formularului (zona de scris primește `aria-labelledby`). */
@@ -197,7 +227,7 @@ function paragraphs(text: string): JSONContent[] {
  * sanitizează doar serverul.
  */
 export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function GcsEditor(props, ref) {
-  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className, allow, tools, imageUrl, compact, labelledBy, blocks, blockLabels, plainPaste } = props;
+  const { labels, forumId, uploadUrl, mentionUrl, draftKey, initialContent, maxLength, onChange, footer, id, className, allow, tools, imageUrl, uploadRules, compact, labelledBy, blocks, blockLabels, plainPaste } = props;
   const plainPasteRef = useRef(plainPaste === true);
   plainPasteRef.current = plainPaste === true;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -212,6 +242,8 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
   const [imageError, setImageError] = useState(false);
   const [emojiTab, setEmojiTab] = useState<GcsEmojiCategory>("smileys");
   const [fullscreen, setFullscreen] = useState(false);
+  /** Popupul de încărcare al butonului „Imagine” (verificările și previzualizarea, apoi „Folosește” o încarcă). */
+  const [picking, setPicking] = useState(false);
   const baseId = id ?? "gcs-editor";
 
   const editor = useEditor({
@@ -289,6 +321,27 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
     };
   }, [fullscreen]);
 
+  /** Atașamentul încărcat intră în text: imaginea ca nod, celelalte fișiere ca link. */
+  function insertUploaded(e: Editor, up: GcsUploaded) {
+    if (up.isImage) {
+      e.chain().focus().insertContent({ type: "image", attrs: { attachmentId: up.id, alt: up.filename, width: up.width, height: up.height } }).run();
+    } else {
+      e.chain().focus().insertContent({ type: "text", text: up.filename, marks: [{ type: "link", attrs: { href: up.url } }] }).insertContent(" ").run();
+    }
+  }
+
+  /** Încărcarea din popup, cu progresul real; întoarce textul erorii (arătat în popup) sau `null`. */
+  async function uploadPicked(file: File, onProgress: (fraction: number) => void): Promise<string | null> {
+    const e = editorRef.current;
+    if (!e || !uploadUrl) return labels.uploadFailed;
+    try {
+      insertUploaded(e, await uploadFile(uploadUrl, forumId, file, (percent) => onProgress(percent / 100)));
+      return null;
+    } catch (err) {
+      return uploadErrorText(err, labels);
+    }
+  }
+
   async function uploadAll(files: File[]) {
     const e = editorRef.current;
     if (!e || !uploadUrl) return;
@@ -296,15 +349,10 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       setStatus(`${labels.uploading} ${file.name}`);
       setProgress(0);
       try {
-        const up = await uploadFile(uploadUrl, forumId, file, setProgress);
-        if (up.isImage) {
-          e.chain().focus().insertContent({ type: "image", attrs: { attachmentId: up.id, alt: up.filename, width: up.width, height: up.height } }).run();
-        } else {
-          e.chain().focus().insertContent({ type: "text", text: up.filename, marks: [{ type: "link", attrs: { href: up.url } }] }).insertContent(" ").run();
-        }
+        insertUploaded(e, await uploadFile(uploadUrl, forumId, file, setProgress));
         setStatus(null);
-      } catch {
-        setStatus(labels.uploadFailed);
+      } catch (err) {
+        setStatus(uploadErrorText(err, labels));
       } finally {
         setProgress(null);
       }
@@ -512,7 +560,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
       item(
         "image",
         uploadUrl
-          ? tool(labels.image, false, () => fileInput.current?.click(), icon(faImage))
+          ? tool(labels.image, picking, () => (labels.upload ? setPicking(true) : fileInput.current?.click()), icon(faImage))
           : tool(labels.image, popover === "image", () => toggle("image"), icon(faImage), { expanded: popover === "image" }),
       ),
       item("video", tool(labels.video, popover === "video", () => toggle("video"), icon(faVideo), { expanded: popover === "video" })),
@@ -533,7 +581,7 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
         )}
         <span className="gcs-editor__spacer" />
         {item("fullscreen", tool(fullscreen ? labels.exitFullscreen : labels.fullscreen, fullscreen, () => setFullscreen((f) => !f), icon(fullscreen ? faCompress : faExpand)))}
-        {uploadUrl && (
+        {uploadUrl && !labels.upload && (
           <input
             ref={fileInput}
             type="file"
@@ -776,6 +824,17 @@ export const GcsEditor = forwardRef<GcsEditorHandle, GcsEditorProps>(function Gc
         </span>
         {footer}
       </div>
+      {picking && uploadUrl && labels.upload && (
+        <GcsUploadDialog
+          title={labels.image}
+          rules={uploadRules ?? DEFAULT_IMAGE_RULES}
+          labels={labels.upload}
+          upload={uploadPicked}
+          onAccept={() => setPicking(false)}
+          onClose={() => setPicking(false)}
+          testId={`${baseId}-image`}
+        />
+      )}
     </div>
   );
 });

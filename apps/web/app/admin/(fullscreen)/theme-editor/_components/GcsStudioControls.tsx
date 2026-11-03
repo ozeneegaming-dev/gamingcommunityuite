@@ -1,10 +1,11 @@
 "use client";
 
 import { MOBILE_BAR_ITEMS, MOBILE_BAR_MAX, THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsMobileBarItem, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
-import { GcsIconSvg } from "@gcs/ui";
+import { GcsIconSvg, GcsUploadDialog } from "@gcs/ui";
 import { faArrowDown, faArrowUp, faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { UPLOAD_RULES, uploadLabels } from "@/lib/ui-labels";
 import { HEADER_ART_THUMBS } from "./header-art";
 import { fieldKey, type GcsStudioColorRef, type GcsStudioImageSlot } from "./studio-panels";
 
@@ -383,7 +384,13 @@ export function GcsStudioColorSelector({
   );
 }
 
-/** O imagine a temei (logo-urile, favicon-ul): previzualizare, încărcare, ștergere. */
+/** Mărimea maximă a fiecărei imagini (ca `uploadSiteImage`: antetul și consola 5 MB, logo-urile și favicon-ul 2 MB). */
+const IMAGE_MAX_MB: Record<GcsStudioImageSlot, number> = { logo: 2, logoLight: 2, logoMobile: 2, logoMobileLight: 2, favicon: 2, headerImage: 5, cockpitImage: 5 };
+
+/**
+ * O imagine a temei (logo-urile, favicon-ul, antetul): previzualizare, încărcare prin popupul sistemului (verificări,
+ * previzualizare, progresul trimiterii), ștergere.
+ */
 export function GcsStudioImageRow({
   slot,
   url,
@@ -394,10 +401,13 @@ export function GcsStudioImageRow({
   slot: GcsStudioImageSlot;
   url: string | null;
   busy: boolean;
-  onUpload: (file: File) => void;
+  /** Încarcă fișierul (cu progres): `null` la succes sau textul erorii, arătat în popup. */
+  onUpload: (file: File, onProgress: (fraction: number) => void) => Promise<string | null>;
   onRemove: () => void;
 }) {
   const t = useTranslations("themeStudio");
+  const tu = useTranslations("ui");
+  const [picking, setPicking] = useState(false);
   return (
     <div className="gcs-themeStudio__image" data-testid={`gcs-studio-image-${slot}`}>
       <span className="gcs-themeStudio__label">{t(`images.${slot}`)}</span>
@@ -410,22 +420,16 @@ export function GcsStudioImageRow({
         )}
       </div>
       <div className="gcs-themeStudio__imageActions">
-        <label className={busy ? "gcs-themeStudio__btn gcs-themeStudio__btn--busy" : "gcs-themeStudio__btn"}>
+        <button
+          type="button"
+          className={busy ? "gcs-themeStudio__btn gcs-themeStudio__btn--busy" : "gcs-themeStudio__btn"}
+          disabled={busy}
+          onClick={() => setPicking(true)}
+          data-testid={`gcs-studio-upload-${slot}-open`}
+        >
           <GcsIconSvg icon={faArrowUpFromBracket} />
           {t("images.upload")}
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="gcs-srOnly"
-            disabled={busy}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) onUpload(file);
-            }}
-            data-testid={`gcs-studio-upload-${slot}`}
-          />
-        </label>
+        </button>
         {url && (
           <button type="button" className="gcs-themeStudio__btn gcs-themeStudio__btn--ghost" onClick={onRemove} data-testid={`gcs-studio-remove-${slot}`}>
             <GcsIconSvg icon={faTrash} />
@@ -433,6 +437,17 @@ export function GcsStudioImageRow({
           </button>
         )}
       </div>
+      {picking && (
+        <GcsUploadDialog
+          title={t(`images.${slot}`)}
+          rules={UPLOAD_RULES.image(IMAGE_MAX_MB[slot])}
+          labels={uploadLabels(tu)}
+          upload={onUpload}
+          onAccept={() => setPicking(false)}
+          onClose={() => setPicking(false)}
+          testId={`gcs-studio-upload-${slot}`}
+        />
+      )}
     </div>
   );
 }

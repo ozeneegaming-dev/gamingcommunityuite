@@ -7,6 +7,8 @@ import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { GcsUploadInput } from "@/lib/ui-inputs";
+import { UPLOAD_RULES } from "@/lib/ui-labels";
 import { useErrorMessage } from "@/lib/use-error-message";
 import type { GcsAcpIconDef } from "../../_components/types";
 import { saveServer, testServer } from "./actions";
@@ -36,6 +38,8 @@ type Props = {
 
 const SECTION = { border: 0, padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12, minWidth: 0 } as const;
 const ROW = { display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" } as const;
+/** Bannerul: imaginile obișnuite, cel mult 8 MB (limita corpului din `/api/servers/banner`). */
+const BANNER_RULES = UPLOAD_RULES.image(8);
 
 /** Alegerea adminilor: căutare după nume (ca la mențiuni) și etichete cu „Scoate”; valorile pleacă în `adminIds`. */
 function AdminPicker({ initial }: { initial: { id: string; name: string }[] }) {
@@ -293,18 +297,17 @@ export function GcsServerForm({ values, games, forums, groups }: Props) {
         <legend className="gcs-acpWidget__title" style={{ marginBottom: 8 }}>
           {t("sections.page")}
         </legend>
-        <div className="gcs-field">
-          <label htmlFor="gcs-server-banner">{tf("banner")}</label>
+        <div className="gcs-field" style={{ maxWidth: 520 }}>
+          <span>{tf("banner")}</span>
           {preview && <img src={preview} alt={tf("bannerCurrent")} style={{ width: "100%", maxWidth: 520, height: 110, objectFit: "cover", borderRadius: 10, border: "1px solid var(--gcs-border)" }} />}
-          <input
-            id="gcs-server-banner"
+          {/* Fișierul ales pleacă odată cu formularul (`banner`), încărcat la salvare prin `/api/servers/banner`. */}
+          <GcsUploadInput
             name="banner"
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              setPreview(file ? URL.createObjectURL(file) : values.bannerUrl);
-            }}
+            title={tf("bannerUpload")}
+            rules={BANNER_RULES}
+            current={values.bannerUrl ? { url: values.bannerUrl, name: tf("bannerCurrent") } : null}
+            onFile={(file) => setPreview(file ? URL.createObjectURL(file) : values.bannerUrl)}
+            testId="gcs-server-banner"
           />
           <span className="gcs-field__hint">{tf("bannerHint")}</span>
           {values.bannerUrl && (

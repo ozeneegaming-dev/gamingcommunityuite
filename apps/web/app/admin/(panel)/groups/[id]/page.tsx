@@ -7,7 +7,7 @@ import {
   mentionSettingsOf,
   type GcsNameStyle,
 } from "@gcs/core";
-import { GcsCard, GcsIconPicker } from "@gcs/ui";
+import { GcsCard } from "@gcs/ui";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -18,6 +18,7 @@ import type { ReactNode } from "react";
 import { requireAcpSection } from "@/lib/acp";
 import { permissionLabel } from "@/lib/permission-label";
 import { services } from "@/lib/services";
+import { GcsIconInput } from "@/lib/ui-inputs";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { deleteGroup, updateGroupDetails, updateGroupDisplay, updateGroupLegend, updateGroupLook, updateGroupMentions, updateGroupOptIn, updateGroupSettings, updateGroupStyle } from "../actions";
 import { NameStyleEditor } from "./NameStyleEditor";
@@ -95,6 +96,21 @@ export default async function AcpGroupPage({ params }: Props) {
         : "boolean";
     return { def, kind, value };
   });
+  // Setările pe secțiuni, după aplicația care le declară (în ordinea modulelor); cele de bază, la „Generale”.
+  const moduleOf = new Map<string, { key: string; label: string }>();
+  for (const m of registry.all()) {
+    if (!m.app) continue;
+    const section = { key: m.key, label: tAll.has(m.app.labelKey as never) ? tAll(m.app.labelKey as never) : m.key };
+    for (const p of m.permissions) moduleOf.set(p.key, section);
+    moduleOf.set(`${m.key}.app_access`, section);
+  }
+  const settingSections = new Map<string, { label: string; items: typeof settings }>();
+  for (const s of settings) {
+    const section = moduleOf.get(s.def.key) ?? { key: "", label: t("settings.general") };
+    const entry = settingSections.get(section.key) ?? { label: section.label, items: [] };
+    entry.items.push(s);
+    settingSections.set(section.key, entry);
+  }
 
   return (
     <>
@@ -129,7 +145,7 @@ export default async function AcpGroupPage({ params }: Props) {
             <GcsActionForm action={updateGroupLook.bind(null, group.id)} submitLabel={t("look.save")} submitKind="save">
               <div className="gcs-field" role="group" aria-label={t("look.icon")}>
                 <span>{t("look.icon")}</span>
-                <GcsIconPicker name="icon" value={group.icon} searchUrl="/api/icons/search" labels={{ search: t("look.iconSearch"), none: t("look.iconNone"), noResults: t("look.iconNoResults") }} />
+                <GcsIconInput name="icon" value={group.icon} testId="gcs-group-icon" />
               </div>
               <label className="gcs-field">
                 {t("look.banner")}
@@ -344,42 +360,41 @@ export default async function AcpGroupPage({ params }: Props) {
         <Section title={t("settings.title")} icon="fa-solid fa-sliders">
           <GcsActionForm action={updateGroupSettings.bind(null, group.id)} submitLabel={t("settings.save")} submitKind="save">
             <p style={{ margin: 0, color: "var(--gcs-muted)", fontSize: 13 }}>{t("settings.unlimited")}</p>
-            {settings.map(({ def, kind, value }) => (
-              <div key={def.key}>
-                <input type="hidden" name={`kind:${def.key}`} value={kind} />
-                {kind === "text" ? (
-                  <label className="gcs-field">
-                    {permissionLabel(def, tAll, registry)}
-                    <input
-                      className="gcs-input"
-                      type="text"
-                      maxLength={40}
-                      name={`setting:${def.key}`}
-                      defaultValue={typeof value === "string" ? value : ""}
-                      style={{ maxWidth: 280 }}
-                    />
-                  </label>
-                ) : kind === "number" ? (
-                  <label className="gcs-field">
-                    {permissionLabel(def, tAll, registry)}
-                    <input
-                      className="gcs-input"
-                      type="number"
-                      min={-1}
-                      step={1}
-                      name={`setting:${def.key}`}
-                      defaultValue={typeof value === "number" ? value : 0}
-                      style={{ maxWidth: 180 }}
-                    />
-                  </label>
-                ) : (
-                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, minHeight: 36 }}>
-                    <input type="checkbox" name={`setting:${def.key}`} defaultChecked={value === true} style={checkbox} />
-                    {permissionLabel(def, tAll, registry)}
-                  </label>
-                )}
-              </div>
-            ))}
+            {[...settingSections.entries()].map(([key, section]) => {
+              const toggles = section.items.filter((s) => s.kind === "boolean");
+              const fields = section.items.filter((s) => s.kind !== "boolean");
+              return (
+                <fieldset key={key || "general"} className="gcs-formSec" data-testid="gcs-group-settings-section">
+                  <legend>{section.label}</legend>
+                  {toggles.length > 0 && (
+                    <div className="gcs-formGrid gcs-acpGroup__toggles">
+                      {toggles.map(({ def, kind, value }) => (
+                        <label key={def.key} className="gcs-toggleRow gcs-acpGroup__toggle">
+                          <input type="hidden" name={`kind:${def.key}`} value={kind} />
+                          <span>{permissionLabel(def, tAll, registry)}</span>
+                          <input type="checkbox" className="gcs-switch" name={`setting:${def.key}`} defaultChecked={value === true} />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {fields.length > 0 && (
+                    <div className="gcs-formGrid gcs-acpGroup__fields">
+                      {fields.map(({ def, kind, value }) => (
+                        <label key={def.key} className="gcs-field">
+                          <input type="hidden" name={`kind:${def.key}`} value={kind} />
+                          {permissionLabel(def, tAll, registry)}
+                          {kind === "text" ? (
+                            <input className="gcs-input" type="text" maxLength={40} name={`setting:${def.key}`} defaultValue={typeof value === "string" ? value : ""} />
+                          ) : (
+                            <input className="gcs-input" type="number" min={-1} step={1} name={`setting:${def.key}`} defaultValue={typeof value === "number" ? value : 0} />
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </fieldset>
+              );
+            })}
           </GcsActionForm>
         </Section>
       </div>

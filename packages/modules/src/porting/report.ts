@@ -144,7 +144,7 @@ const L = {
       "Completează locurile `TODO(portare)` din `{key}/server.mjs` ({todos}): datele paginilor, logica din șabloane, joburile.",
       "Portează fișierele din tabelul de mai sus (sursele sunt în `ORIGINAL/`, doar ca text).",
       "Traduce `lang/ro.json` (pornește cu textul sursei) și verifică migrația `migrations/001_init.sql`.",
-      "Împachetează folderul (`packPlugin` din `@gcs/plugin-sdk`) și instalează-l din ACP → Sistem → Aplicații și pluginuri. Asistentul nu instalează și nu activează nimic: decizia e a adminului.",
+      "Împachetează folderul (`packPlugin` din `@gcs/plugin-sdk`) și instalează-l din ACP → Aplicații → Aplicații și pluginuri. Asistentul nu instalează și nu activează nimic: decizia e a adminului.",
     ],
   },
   en: {

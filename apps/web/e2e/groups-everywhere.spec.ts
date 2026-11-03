@@ -57,9 +57,11 @@ test("un grup creat acum în ACP: pastila e link spre membrii lui, cu tooltip-ul
   await enterAcpAsRoot(rootPage, rootName, rootEmail);
 
   await rootPage.goto("/admin/groups");
-  const create = rootPage.getByRole("region", { name: "Grup nou" });
+  await rootPage.getByTestId("gcs-group-new").click();
+  const create = rootPage.getByRole("dialog", { name: "Grup nou" });
   await create.getByLabel("Numele grupului").fill(testersName);
   await create.getByRole("button", { name: "Creează grupul" }).click();
+  await expect(rootPage).toHaveURL(/\/admin\/groups\/\d+$/);
   await expect.poll(async () => (await sql<{ id: number }>(`SELECT id FROM groups WHERE name = $1`, [testersName]))[0]?.id ?? 0).toBeGreaterThan(0);
   testersId = (await sql<{ id: number }>(`SELECT id FROM groups WHERE name = $1`, [testersName]))[0]!.id;
 
