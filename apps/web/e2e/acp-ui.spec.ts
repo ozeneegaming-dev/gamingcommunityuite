@@ -101,7 +101,7 @@ test("postbit-ul urmează ordinea câmpurilor din ACP", async ({ page, context, 
   // Beta înaintea lui Alfa: fila „Ordinea în postare”, săgeata lui Beta (lista se poate și trage), apoi „Salvează ordinea”.
   await page.goto("/admin/members/settings/profiles?tab=postbit");
   const card = page.getByTestId("gcs-acp-postbit");
-  const keys = () => card.getByTestId("gcs-acp-postbit-row").evaluateAll((els) => els.map((e) => e.getAttribute("data-key")).filter((k) => k?.endsWith(`_${id}`)));
+  const keys = () => card.getByTestId("gcs-acp-postbit-row").evaluateAll((els, suffix) => els.map((e) => e.getAttribute("data-key")).filter((k) => k?.endsWith(suffix)), `_${id}`);
   await expect.poll(keys).toEqual([`ord_a_${id}`, `ord_b_${id}`]);
   const beta = card.locator(`[data-testid="gcs-acp-postbit-row"][data-key="ord_b_${id}"]`);
   for (let i = 0; i < 5 && (await keys())[0] !== `ord_b_${id}`; i++) await beta.getByTestId("gcs-acp-sort-up").click();

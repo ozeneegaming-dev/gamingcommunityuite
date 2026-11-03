@@ -85,7 +85,7 @@ test("Profiluri: lista arată rânduri, nu formulare; panoul se deschide, salvea
   });
 
   await test.step("ordinea: săgeata mută B înaintea lui A și rămâne după reîncărcare", async () => {
-    const shown = () => rows.evaluateAll((els) => els.map((e) => e.getAttribute("data-key")).filter((k) => k?.endsWith(`_${id}`)));
+    const shown = () => rows.evaluateAll((els, suffix) => els.map((e) => e.getAttribute("data-key")).filter((k) => k?.endsWith(suffix)), `_${id}`);
     // Câmpurile noi au aceeași poziție; între ele poate sta alt câmp, deci B urcă până trece de A.
     for (let i = 0; i < 5 && (await shown())[0] !== `rb_${id}`; i++) {
       await rowB.getByTestId("gcs-acp-sort-up").click();

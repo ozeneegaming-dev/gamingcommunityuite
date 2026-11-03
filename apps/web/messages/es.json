@@ -1104,7 +1104,7 @@
         "none": "No conocidos IPs",
         "shared": "Cuentas que comparten la misma IP",
         "sharedNone": "No hay otras cuentas en estos IPs",
-        "more": "{count, plural, one {încă # IP} few {încă # IP-uri} other {încă # de IP-uri}}"
+        "more": "{count, plural, one {încă # IP} many {încă # de IP-uri} other {încă # de IP-uri}}"
       },
       "perms": {
         "title": "Autorizaciones individuales",
@@ -1216,7 +1216,7 @@
         "donationsNone": "Nicio donație.",
         "donationsTotal": "Total confirmat",
         "donationsLast": "Ultima",
-        "donationsPending": "{count, plural, one {# donație așteaptă confirmarea} few {# donații așteaptă confirmarea} other {# de donații așteaptă confirmarea}}"
+        "donationsPending": "{count, plural, one {# donație așteaptă confirmarea} many {# de donații așteaptă confirmarea} other {# de donații așteaptă confirmarea}}"
       },
       "activity": {
         "chart": "Actividad (90 días)",
@@ -1310,7 +1310,7 @@
       "drag": "Trage {group} ca să-i schimbi locul",
       "orderSaved": "Ordinea a fost salvată",
       "noMatch": "Niciun grup găsit.",
-      "membersCount": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "membersCount": "{count, plural, one {# membru} many {# de membri} other {# de membri}}",
       "flags": {
         "acpFull": "ACP complet",
         "acp": "ACP",
@@ -1706,7 +1706,7 @@
       "globalTitle": "Moderatori globali",
       "globalHint": "grupurile cu „Moderator pe toate forumurile”",
       "globalEmpty": "Niciun grup nu are „Moderator pe toate forumurile”. Permisiunea se pornește din pagina grupului.",
-      "members": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "members": "{count, plural, one {# membru} many {# de membri} other {# de membri}}",
       "groupLink": "Grupul {group}",
       "forumTitle": "Moderatori pe forum",
       "allPowers": "Toate puterile",
@@ -1723,7 +1723,7 @@
       "suggestions": "Membri găsiți",
       "groupLabel": "Grupul",
       "groupChoose": "Alege un grup",
-      "chosen": "{count, plural, one {# ales} few {# alese} other {# de alese}}",
+      "chosen": "{count, plural, one {# ales} many {# de alese} other {# de alese}}",
       "forumSearch": "Caută un forum",
       "noForums": "Nu există încă forumuri.",
       "noForumMatch": "Niciun forum găsit.",
@@ -1739,7 +1739,7 @@
         "approvals": "Doar aprobări"
       },
       "powersNone": "Alege cel puțin o putere.",
-      "submitCount": "Adaugă pe {count, plural, one {# forum} few {# forumuri} other {# de forumuri}}",
+      "submitCount": "Adaugă pe {count, plural, one {# forum} many {# de forumuri} other {# de forumuri}}",
       "save": "Salvează puterile"
     },
     "savedActions": {
@@ -1989,7 +1989,7 @@
         "badgeUploadTitle": "Încarcă imaginea badge-ului",
         "badgeImageHint": "Opțional. Înlocuiește insigna desenată, oriunde apare badge-ul.",
         "noBadges": "Niciun badge încă. Adaugă primul cu „Badge nou”.",
-        "pointsChip": "{n, plural, one {# punct} few {# puncte} other {# de puncte}}",
+        "pointsChip": "{n, plural, one {# punct} many {# de puncte} other {# de puncte}}",
         "manualChip": "Manual",
         "autoChip": "Automat",
         "secClassicWhen": "Condiția",
@@ -2062,7 +2062,7 @@
         "new": "Grup nou",
         "newTitle": "Grup nou de câmpuri",
         "edit": "Editează grupul „{name}”",
-        "count": "{count, plural, =0 {Niciun câmp} one {Un câmp} few {# câmpuri} other {# de câmpuri}}"
+        "count": "{count, plural, =0 {Niciun câmp} one {Un câmp} many {# de câmpuri} other {# de câmpuri}}"
       },
       "fieldHelperHint": "Aparece bajo el campo, en el formulario",
       "faceitKey": "Clave de FACEIT Data API",

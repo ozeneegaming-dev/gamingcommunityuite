@@ -129,6 +129,10 @@ test("statisticile: afișarea, click-ul și închiderea se numără și apar în
   test.setTimeout(120_000);
   const id = uid();
   const barId = `s${id}`;
+  // Adminul intră în ACP înainte să existe bara: paginile site-ului prin care trece la înregistrare n-o afișează, deci
+  // singurul vizitator numărat rămâne cel de mai jos.
+  await useFreshIp(context, "100.95.4");
+  await enterAcpAsRoot(page, `Anunt${id}`, `ann-stats-${id}@example.com`);
   await setSetting(SETTING, config([bar(barId, { text: `Turneu ${id}`, cta: { label: "Vezi membrii", href: "/members", style: "white", newTab: false } })]));
 
   const guestContext = await browser.newContext();
@@ -147,8 +151,6 @@ test("statisticile: afișarea, click-ul și închiderea se numără și apar în
   expect((await dismissed).status()).toBe(204);
   await guestContext.close();
 
-  await useFreshIp(context, "100.95.4");
-  await enterAcpAsRoot(page, `Anunt${id}`, `ann-stats-${id}@example.com`);
   await page.goto("/admin/appearance/announcement-bar");
   const row = page.locator(`[data-testid="gcs-ann-row"][data-bar="${barId}"]`);
   await expect(row.getByTestId("gcs-ann-status-chip")).toHaveAttribute("data-status", "active");

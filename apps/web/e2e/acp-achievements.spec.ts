@@ -92,7 +92,7 @@ test("o regulă nouă „3 postări → badge” se aplică automat de worker du
   await classic.getByTestId("gcs-classic-rule-new-open").click();
   const newRule = page.getByTestId("gcs-classic-rule-new");
   await newRule.getByLabel("Nume", { exact: true }).fill(`3 postări ${id}`);
-  await newRule.getByLabel("Când", { exact: true }).selectOption("POSTS_COUNT");
+  await newRule.locator('select[name="trigger"]').selectOption("POSTS_COUNT");
   await newRule.getByLabel("Prag", { exact: true }).fill("3");
   await newRule.getByLabel("Badge", { exact: true }).selectOption({ label: `Activ ${id}` });
   await newRule.getByRole("button", { name: "Adaugă", exact: true }).click();
