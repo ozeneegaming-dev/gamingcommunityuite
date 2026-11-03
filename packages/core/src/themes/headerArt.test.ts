@@ -31,11 +31,13 @@ describe("setările imaginii antetului", () => {
     }
   });
 
-  test("implicit: fără imagine, pe tot antetul, 15% întunecare, fără nuanță, estompată, și pe telefon", () => {
-    for (const s of [DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS, GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
-      expect([s.header.image, s.header.art, s.header.imageArea, s.header.imageDim, s.header.imageTint, s.header.imageFade, s.header.imageMobile]).toEqual([null, "none", "all", 15, 0, true, true]);
-    }
-    // O temă salvată înainte de setări le primește pe cele implicite.
+  test("implicit: pe tot antetul, 15% întunecare, fără nuanță, estompată, și pe telefon; Forja doar la temele incluse", () => {
+    const of = (s: GcsThemeSettings) => [s.header.image, s.header.art, s.header.imageArea, s.header.imageDim, s.header.imageTint, s.header.imageFade, s.header.imageMobile];
+    for (const s of [DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS]) expect(of(s)).toEqual([null, "none", "all", 15, 0, true, true]);
+    // GCS Dark și GCS White (instalările noi) pornesc cu imaginea „Forja” (proprietarul, 2026-11-03).
+    for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) expect(of(s)).toEqual([null, "forja", "all", 15, 0, true, true]);
+    // O temă salvată înainte de setări le primește pe cele implicite ale designului: fără imagine (o instalare existentă
+    // nu se schimbă singură).
     expect(normalizeThemeSettings({ preset: "nova", header: { image: null } }).header.art).toBe("none");
   });
 

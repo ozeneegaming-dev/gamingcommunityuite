@@ -25,6 +25,11 @@ test("o instalare nouă: antetul de pe preview, consola compactă, cardurile în
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await expect(page.locator(".gcs-hb--esports")).toBeVisible();
+    // În spatele antetului: imaginea inclusă „Forja” (proprietarul, 2026-11-03), servită din build.
+    await expect(page.locator("html")).toHaveAttribute("data-gcs-header-image", "all");
+    const art = await page.locator(".gcs-hb--esports").evaluate((n) => /url\("?([^")]+)"?\)/.exec(getComputedStyle(n).backgroundImage)?.[1] ?? null);
+    expect(art, `${skin}: imaginea antetului`).toContain("header-forja");
+    expect((await page.request.get(art!)).status()).toBe(200);
     await shot(page, `forum-${skin}-desktop`);
     await shot(page, `forum-${skin}-desktop-full`, true);
     // Prima pagină aleasă de proprietar (varianta A): consola compactă (salutul și serverele, fără cele trei panouri),
