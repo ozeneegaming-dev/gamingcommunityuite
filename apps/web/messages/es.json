@@ -85,7 +85,9 @@
     "announcementBar": {
       "region": "Anuncio",
       "dismiss": "Cerrar el anuncio",
-      "show": "Mostrar el anuncio {n}"
+      "show": "Mostrar el anuncio {n}",
+      "days": "{d}z",
+      "timeLeft": "Timp rămas"
     },
     "scrollRail": {
       "group": "Navegación de la página",
@@ -1051,7 +1053,8 @@
         "extend": "Fijar caducidad",
         "expiresAt": "Caducidad de {group}",
         "expiresAtLabel": "Caduca el",
-        "expiryHint": "Vacío = sin caducidad. Un grupo temporal se quita solo y el miembro recibe un aviso."
+        "expiryHint": "Vacío = sin caducidad. Un grupo temporal se quita solo y el miembro recibe un aviso.",
+        "group": "Grupul"
       },
       "ban": {
         "title": "Banear",
@@ -1073,7 +1076,8 @@
           "expired": "caducado"
         },
         "until": "hasta {date}",
-        "permanent": "permanente"
+        "permanent": "permanente",
+        "modalTitle": "Banează membrul"
       },
       "warn": {
         "title": "Advertencia",
@@ -1091,13 +1095,15 @@
         "fromPreset": "del motivo elegido",
         "revoked": "anulada",
         "revoke": "Anular",
-        "revokeConfirm": "La advertencia se anula y sus puntos dejan de contar; las restricciones se recalculan."
+        "revokeConfirm": "La advertencia se anula y sus puntos dejan de contar; las restricciones se recalculan.",
+        "modalTitle": "Avertizează membrul"
       },
       "ips": {
         "title": "IPs conocidos",
         "none": "No conocidos IPs",
         "shared": "Cuentas que comparten la misma IP",
-        "sharedNone": "No hay otras cuentas en estos IPs"
+        "sharedNone": "No hay otras cuentas en estos IPs",
+        "more": "{count, plural, one {încă # IP} few {încă # IP-uri} other {încă # de IP-uri}}"
       },
       "perms": {
         "title": "Autorizaciones individuales",
@@ -1125,7 +1131,8 @@
         },
         "amount": "Importe",
         "currency": "Moneda",
-        "note": "Nota"
+        "note": "Nota",
+        "list": "Donațiile membrului"
       },
       "tabs": {
         "label": "Secciones del miembro",
@@ -1145,7 +1152,9 @@
         "passwordReset": "Cambio de contraseña solicitado",
         "posts": "Mensajes",
         "ip": "Última IP",
-        "loginLocked": "Acceso bloqueado hasta las {time}"
+        "loginLocked": "Acceso bloqueado hasta las {time}",
+        "twoFactorOn": "2FA activ",
+        "twoFactorOff": "Fără 2FA"
       },
       "actions": {
         "validate": "Validar",
@@ -1196,7 +1205,17 @@
           "mb": "{value} MB",
           "chars": "{value} caracteres"
         },
-        "warnPoints": "{count, plural, one {# punto de advertencia activo} many {# puntos de advertencia activos} other {# puntos de advertencia activos}}"
+        "warnPoints": "{count, plural, one {# punto de advertencia activo} many {# puntos de advertencia activos} other {# puntos de advertencia activos}}",
+        "manageGroups": "Gestionează",
+        "groupPrimary": "Principal",
+        "groupSecondary": "Secundare",
+        "warnings": "Avertismente",
+        "bans": "Banuri",
+        "donationAdd": "Adaugă",
+        "donationsNone": "Nicio donație.",
+        "donationsTotal": "Total confirmat",
+        "donationsLast": "Ultima",
+        "donationsPending": "{count, plural, one {# donație așteaptă confirmarea} few {# donații așteaptă confirmarea} other {# de donații așteaptă confirmarea}}"
       },
       "activity": {
         "chart": "Actividad (90 días)",
@@ -1250,6 +1269,15 @@
         "banDomain": "Bloquear el dominio del email (no los grandes proveedores)",
         "report": "Reportar a la lista pública de spammers",
         "reason": "Motivo del bloqueo"
+      },
+      "modalClose": "Închide",
+      "bar": {
+        "label": "Acțiunile membrului",
+        "groups": "Grupuri",
+        "warn": "Avertizează",
+        "ban": "Banează",
+        "donation": "Donație",
+        "more": "Mai multe"
       }
     },
     "groups": {
@@ -1257,7 +1285,9 @@
       "create": {
         "title": "Nuevo grupo",
         "name": "Nombre del grupo",
-        "submit": "Crear grupo"
+        "submit": "Crear grupo",
+        "hint": "Culoarea, drepturile și restul le alegi după creare, pe pagina grupului.",
+        "cancel": "Anulează"
       },
       "protected": "Predeterminado",
       "vip": "VIP",
@@ -1265,7 +1295,28 @@
       "edit": "Editar",
       "order": "Orden del Grupo",
       "moveUp": "Mover {group} hacia arriba",
-      "moveDown": "Mueva {group} hacia abajo"
+      "moveDown": "Mueva {group} hacia abajo",
+      "search": "Caută un grup",
+      "filter": "Filtrează după tip",
+      "filters": {
+        "all": "Toate",
+        "protected": "Sistem",
+        "vip": "VIP",
+        "custom": "Personalizate"
+      },
+      "dragHint": "Trage rândurile ca să schimbi ordinea afișării",
+      "dragOff": "Ordinea se schimbă din „Toate”, fără căutare",
+      "drag": "Trage {group} ca să-i schimbi locul",
+      "orderSaved": "Ordinea a fost salvată",
+      "noMatch": "Niciun grup găsit.",
+      "membersCount": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "flags": {
+        "acpFull": "ACP complet",
+        "acp": "ACP",
+        "globalMod": "Mod global",
+        "noAccess": "Fără acces",
+        "vip": "VIP"
+      }
     },
     "group": {
       "back": "Volver a grupos",
@@ -1292,7 +1343,8 @@
       "settings": {
         "title": "Ajustes y permisos del grupo",
         "save": "Guardar ajustes",
-        "unlimited": "-1 = ilimitado, 0 = no permitido"
+        "unlimited": "-1 = ilimitado, 0 = no permitido",
+        "general": "Generale"
       },
       "delete": {
         "title": "Eliminar",
@@ -1514,7 +1566,9 @@
           "crop": "Parte visible en la tarjeta",
           "cropHint": "Arrastra el marco (o muévelo con las flechas) para elegir la parte visible en la tarjeta; el resto se recorta.",
           "result": "Cómo se ve en la tarjeta",
-          "autoNote": "Con una imagen subida, la tarjeta también la usa en modo automático; quítala para volver a la vista previa del último mensaje."
+          "autoNote": "Con una imagen subida, la tarjeta también la usa en modo automático; quítala para volver a la vista previa del último mensaje.",
+          "uploadTitle": "Încarcă imaginea cardului",
+          "current": "Imaginea cardului"
         }
       },
       "icons": {
@@ -1647,7 +1701,45 @@
         "feature": "Destacar",
         "approve": "Aprobar",
         "warn": "Advertir"
-      }
+      },
+      "globalTitle": "Moderatori globali",
+      "globalHint": "grupurile cu „Moderator pe toate forumurile”",
+      "globalEmpty": "Niciun grup nu are „Moderator pe toate forumurile”. Permisiunea se pornește din pagina grupului.",
+      "members": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+      "groupLink": "Grupul {group}",
+      "forumTitle": "Moderatori pe forum",
+      "allPowers": "Toate puterile",
+      "editRow": "Editează moderatorul {who} de pe {forum}",
+      "editTitle": "Moderator pe {forum}",
+      "removeConfirm": "Scoți {who} dintre moderatorii forumului {forum}? Pierde imediat puterile de pe el.",
+      "whoTitle": "Cine",
+      "targetUser": "Un membru",
+      "targetGroup": "Un grup",
+      "member": "Membrul",
+      "memberPlaceholder": "Scrie numele, cu sau fără @",
+      "memberHint": "Alege din sugestii; numele apar în stilul grupului.",
+      "memberChange": "Schimbă membrul ({name})",
+      "suggestions": "Membri găsiți",
+      "groupLabel": "Grupul",
+      "groupChoose": "Alege un grup",
+      "chosen": "{count, plural, one {# ales} few {# alese} other {# de alese}}",
+      "forumSearch": "Caută un forum",
+      "noForums": "Nu există încă forumuri.",
+      "noForumMatch": "Niciun forum găsit.",
+      "noCategory": "Fără categorie",
+      "all": "Toate",
+      "none": "Niciunul",
+      "allIn": "Alege toate forumurile din {category}",
+      "noneIn": "Scoate toate forumurile din {category}",
+      "presets": "Preseturi de puteri",
+      "preset": {
+        "all": "Toate",
+        "basic": "Moderare de bază",
+        "approvals": "Doar aprobări"
+      },
+      "powersNone": "Alege cel puțin o putere.",
+      "submitCount": "Adaugă pe {count, plural, one {# forum} few {# forumuri} other {# de forumuri}}",
+      "save": "Salvează puterile"
     },
     "savedActions": {
       "title": "Medidas salvadas",
@@ -1865,7 +1957,48 @@
           "community": "Comunidad (XP)",
           "gaming": "Gaming (XP + servidores)",
           "veteran": "Veteranos (publicaciones + antigüedad)"
-        }
+        },
+        "secRule": "Regula"
+      },
+      "panel": {
+        "secThresholds": "Praguri",
+        "thresholdsHint": "Un prag gol nu se cere.",
+        "matchLabel": "Membrul trebuie să atingă",
+        "matchAll": "Toate pragurile",
+        "matchAny": "Oricare prag",
+        "addCriterion": "Adaugă un criteriu",
+        "removeCriterion": "Scoate criteriul {n}",
+        "noMetrics": "Nicio aplicație instalată nu oferă criterii de rang (ore jucate, ELO…).",
+        "secEmblem": "Emblema",
+        "emblemPreview": "Previzualizarea emblemei",
+        "textIcon": "Simbol lângă nume",
+        "textIconHint": "Opțional: un emoji sau 1–3 caractere, afișat lângă rang în postări.",
+        "emblemUploadTitle": "Încarcă emblema rangului",
+        "emblemUploadHint": "Înlocuiește emblema desenată, oriunde apare rangul.",
+        "secPerks": "Avantaje",
+        "perkGroup": "Grup",
+        "perkBadge": "Badge",
+        "perkStyle": "Stil cosmetic",
+        "perksHint": "Se dau la urcarea în rang și se retrag când membrul pierde rangul.",
+        "secBasics": "De bază",
+        "keyHint": "Litere mici, cifre și _ (nu se mai schimbă după salvare).",
+        "manualHint": "Debifat: badge-ul se acordă automat, prin reguli.",
+        "secLook": "Aspect",
+        "secImage": "Imagine proprie",
+        "badgeUploadTitle": "Încarcă imaginea badge-ului",
+        "badgeImageHint": "Opțional. Înlocuiește insigna desenată, oriunde apare badge-ul.",
+        "noBadges": "Niciun badge încă. Adaugă primul cu „Badge nou”.",
+        "pointsChip": "{n, plural, one {# punct} few {# puncte} other {# de puncte}}",
+        "manualChip": "Manual",
+        "autoChip": "Automat",
+        "secClassicWhen": "Condiția",
+        "secClassicReward": "Recompensa",
+        "thresholdHint": "Regulile „pentru fiecare …” nu folosesc pragul.",
+        "eachNoBadge": "Regulile „pentru fiecare …” dau doar puncte.",
+        "classicNew": "Regulă clasică nouă",
+        "classicEmpty": "Nicio regulă clasică.",
+        "thresholdChip": "Prag {n}",
+        "secRare": "Badge-uri rare"
       }
     },
     "promotions": {
@@ -1924,7 +2057,11 @@
         "helperHint": "Qué debe completar el miembro aquí",
         "add": "Añadir un grupo",
         "confirmDelete": "¿Eliminar el grupo? Sus campos se mantienen, sin grupo.",
-        "none": "Sin grupo"
+        "none": "Sin grupo",
+        "new": "Grup nou",
+        "newTitle": "Grup nou de câmpuri",
+        "edit": "Editează grupul „{name}”",
+        "count": "{count, plural, =0 {Niciun câmp} one {Un câmp} few {# câmpuri} other {# de câmpuri}}"
       },
       "fieldHelperHint": "Aparece bajo el campo, en el formulario",
       "faceitKey": "Clave de FACEIT Data API",
@@ -1933,7 +2070,81 @@
       "faceitClear": "Eliminar la clave de FACEIT",
       "faceitHint": "Crea la clave en el portal de desarrolladores de FACEIT (clave de servidor). Sin ella, la pestaña FACEIT no aparece.",
       "sponsorMoved": "El umbral de la insignia «Sponsor» (y su periodo) se configura en",
-      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes"
+      "sponsorLink": "VIP y Tienda › Donaciones › Ajustes",
+      "description": "Câmpurile din profilul membrilor, grupurile lor, ce apare sub avatar în postări și setările profilului.",
+      "tabs": {
+        "label": "Părțile paginii Profiluri",
+        "fields": "Câmpuri",
+        "groups": "Grupuri de câmpuri",
+        "postbit": "Ordinea în postare",
+        "settings": "Setări"
+      },
+      "list": {
+        "drag": "Trage ca să muți „{name}”",
+        "moveUp": "Mută „{name}” mai sus",
+        "moveDown": "Mută „{name}” mai jos",
+        "orderSaved": "Ordinea a fost salvată.",
+        "search": "Caută un câmp",
+        "filterSection": "Filtrează după secțiune",
+        "filterGroup": "Filtrează după grup",
+        "allSections": "Toate secțiunile",
+        "allGroups": "Toate grupurile",
+        "noGroup": "Fără grup",
+        "orderLocked": "Cu un filtru activ, ordinea nu se poate schimba. Golește căutarea și filtrele ca să tragi câmpurile.",
+        "noMatch": "Niciun câmp nu se potrivește cu căutarea sau filtrele.",
+        "clearFilters": "Golește filtrele",
+        "onCard": "Pe card",
+        "inPostbit": "În postare",
+        "editField": "Editează câmpul „{name}”",
+        "visibility": {
+          "PUBLIC": "Public",
+          "MEMBERS": "Membri",
+          "STAFF": "Staff"
+        }
+      },
+      "form": {
+        "newTitle": "Câmp nou",
+        "basics": "De bază",
+        "label": "Eticheta",
+        "key": "Cheia",
+        "keyHint": "Litere mici, cifre și _ (2–40). Nu se mai poate schimba după salvare.",
+        "keyLocked": "Cheia nu se schimbă: o folosesc valorile completate de membri.",
+        "type": "Tipul",
+        "helper": "Text de ajutor",
+        "placement": "Unde apare",
+        "group": "Grupul",
+        "section": "Secțiunea",
+        "icon": "Iconița",
+        "look": "Aspect",
+        "showOnCard": "Pe cardul membrului",
+        "showInPostbit": "În postare, sub avatar",
+        "values": "Valori",
+        "valuesHint": "Opțiunile din care alege membrul, câte una pe rând (cel puțin două).",
+        "valuesImagesHint": "Opțiunile din care alege membrul, fiecare cu imaginea ei: un fișier al site-ului (/files/…) sau o adresă https.",
+        "optionPlaceholder": "Opțiunea {n}",
+        "optionLabel": "Opțiunea {n}",
+        "optionImageLabel": "Imaginea opțiunii {n}",
+        "optionRemove": "Scoate opțiunea {n}",
+        "optionAdd": "Adaugă o opțiune",
+        "link": "Link",
+        "optional": "(opțional)",
+        "linkTemplate": "Șablonul linkului",
+        "linkHint": "Valoarea devine link: membrul scrie doar handle-ul, iar adresa se construiește din șablon (https, cu '{handle}'). Gol = doar text."
+      },
+      "empty": {
+        "fieldsTitle": "Niciun câmp de profil încă",
+        "fieldsText": "Adaugă primul câmp (ex. „Placa video” sau „Steam”): membrii îl completează în „Editează profilul”, iar el apare pe profil.",
+        "groupsTitle": "Niciun grup de câmpuri",
+        "groupsText": "Grupurile adună câmpurile în „Editează profilul” și pe profil, cu un titlu și un text de ajutor.",
+        "postbitTitle": "Niciun câmp în postare",
+        "postbitText": "Pornește „În postare, sub avatar” la un câmp, iar el apare aici, gata de ordonat.",
+        "postbitAction": "Mergi la câmpuri"
+      },
+      "settings": {
+        "profile": "Profilul",
+        "faceit": "FACEIT",
+        "elsewhere": "În altă parte"
+      }
     },
     "memberProfile": {
       "profileTitle": "Perfil",
@@ -2855,7 +3066,8 @@
         "adminsNone": "No admins chosen.",
         "groups": "Who sees the server",
         "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
-        "enabled": "Active (shown on the site and queried)"
+        "enabled": "Active (shown on the site and queried)",
+        "bannerUpload": "Încarcă bannerul"
       },
       "test": "Test",
       "testing": "Querying…",
@@ -4262,18 +4474,22 @@
       "cta": {
         "on": "Con botón",
         "label": "Texto del botón",
-        "href": "Dirección del botón"
+        "href": "Dirección del botón",
+        "title": "Butonul și linkul",
+        "newTab": "Deschide în tab nou"
       },
       "link": {
         "on": "Con enlace",
         "label": "Texto del enlace",
-        "href": "Dirección del enlace"
+        "href": "Dirección del enlace",
+        "labelPlaceholder": "Regulament"
       },
       "pages": "Páginas",
       "pageOptions": {
         "all": "Todas las páginas",
         "home": "Solo la portada",
-        "forum": "El foro (y la portada)"
+        "forum": "El foro (y la portada)",
+        "paths": "Alese"
       },
       "startsAt": "Empieza el (opcional)",
       "endsAt": "Termina el (opcional)",
@@ -4287,7 +4503,252 @@
       "removeTitle": "¿Eliminar la barra?",
       "removeBody": "La barra «{text}» desaparece del sitio al guardar.",
       "removeConfirm": "Eliminar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "list": "Barele",
+      "count": "{n} / {max}",
+      "emptyPanel": "Adaugă o bară ca s-o poți edita aici.",
+      "pick": "Alege o bară din listă.",
+      "untitled": "Bară fără text",
+      "panel": "Bara aleasă",
+      "enabledFor": "Bara {n} e pornită",
+      "duplicate": "Duplică",
+      "livePreview": "Previzualizare live",
+      "device": "Dispozitivul previzualizării",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Telefon"
+      },
+      "sectionsNav": "Secțiunile barei",
+      "sections": {
+        "content": "Conținut",
+        "look": "Aspect",
+        "position": "Poziție",
+        "audience": "Cine o vede",
+        "schedule": "Program",
+        "behaviour": "Comportament"
+      },
+      "status": {
+        "active": "Activă",
+        "scheduled": "Programată · {date}",
+        "expired": "Expirată",
+        "off": "Oprită"
+      },
+      "rowStats": "<b>{views}</b> afișări · <b>{clicks}</b> click-uri",
+      "unsaved": "Modificări nesalvate",
+      "publishHint": "Se publică pe site la „Salvează”.",
+      "icon": "Iconița",
+      "textHelp": "**gros**, *cursiv*, [link](/adresa). Variabilele se înlocuiesc pe site; una necunoscută dispare.",
+      "mobileText": "Text mai scurt pe telefon (opțional)",
+      "mobileTextHelp": "Gol = același text, tăiat pe două rânduri.",
+      "format": {
+        "toolbar": "Formatarea textului",
+        "bold": "Gros",
+        "italic": "Cursiv",
+        "link": "Link",
+        "sample": "text",
+        "linkSample": "textul linkului"
+      },
+      "vars": {
+        "membri_online": "Câți membri sunt online acum",
+        "jucatori_online": "Câți jucători sunt pe serverele de joc",
+        "numele_tau": "Numele celui care citește (vizitatorii nu-l au)"
+      },
+      "countdown": {
+        "title": "Numărătoare inversă",
+        "on": "Arată timpul rămas până la o dată",
+        "at": "Data și ora",
+        "atHelp": "În ora site-ului.",
+        "onEnd": "La final",
+        "ends": {
+          "text": "Arată un text",
+          "hide": "Ascunde bara"
+        },
+        "endText": "Textul de la final",
+        "endTextDefault": "A început!"
+      },
+      "presets": {
+        "forja": "Forja",
+        "accent": "Accent",
+        "info": "Info",
+        "success": "Succes",
+        "warning": "Avertisment",
+        "danger": "Pericol",
+        "subtle": "Discret",
+        "custom": "Personalizat"
+      },
+      "look": {
+        "colors": "Culorile",
+        "background": "Fundal",
+        "bg": {
+          "color": "Culoare",
+          "gradient": "Gradient",
+          "image": "Imagine"
+        },
+        "gradientColors": "Culorile gradientului",
+        "bgColor": "Culoarea fundalului",
+        "bgColor2": "A doua culoare",
+        "angle": "Unghiul (grade)",
+        "fgColor": "Culoarea textului",
+        "image": "Imaginea de fundal",
+        "imageTitle": "Încarcă imaginea de fundal",
+        "imageCurrent": "Imaginea barei",
+        "imageHint": "Lată, ex. 1920 × 80 px. Textul primește un strat închis ca să rămână citeț.",
+        "shape": "Forma",
+        "size": "Mărimea",
+        "sizes": {
+          "thin": "Subțire",
+          "normal": "Normală",
+          "large": "Mare"
+        },
+        "align": "Alinierea",
+        "aligns": {
+          "left": "Stânga",
+          "center": "Centru"
+        },
+        "textMode": "Textul",
+        "textModes": {
+          "static": "Fix",
+          "marquee": "Derulează"
+        },
+        "marqueeHint": "Textul trece încet de la dreapta la stânga și se oprește când ții mouse-ul pe bară. Cine are „mișcare redusă” pornită în sistem îl vede fix.",
+        "ctaStyle": "Butonul",
+        "ctaStyles": {
+          "white": "Alb, plin",
+          "filled": "Culoarea temei",
+          "outline": "Doar contur"
+        },
+        "pill": "Pastila",
+        "pills": {
+          "glass": "Transparentă",
+          "solid": "Închisă",
+          "outline": "Doar contur"
+        }
+      },
+      "position": {
+        "title": "Poziția pe site",
+        "sticky": "Rămâne lipită sus la derulare",
+        "stickyHint": "Doar pentru „Sus” și „Sub antet”.",
+        "fullWidth": "Pe toată lățimea ecranului (altfel, cât pagina)",
+        "fullWidthHint": "În pagină, bara are mereu lățimea paginii."
+      },
+      "positions": {
+        "top": "Sus, deasupra antetului",
+        "under": "Sub antet",
+        "page": "În pagină",
+        "bottom": "Jos, fixă"
+      },
+      "audience": {
+        "who": "Cine o vede",
+        "groups": "Doar aceste grupuri",
+        "groupsHint": "(niciunul = toți membrii)",
+        "excludeGroups": "Fără aceste grupuri",
+        "addGroup": "Grup",
+        "removeGroup": "Scoate grupul",
+        "newMembers": "Membri noi",
+        "newMembersBefore": "doar în primele",
+        "newMembersDays": "Numărul de zile",
+        "newMembersAfter": "zile de la înregistrare",
+        "where": "Unde apare",
+        "devices": "Dispozitive",
+        "deviceOptions": {
+          "all": "Toate",
+          "desktop": "Desktop",
+          "mobile": "Telefon"
+        },
+        "addPath": "Adaugă o adresă",
+        "removePath": "Scoate adresa",
+        "pathsHint": "„*” = orice, ex. /clanuri/* = toate paginile de sub /clanuri. Adresele excluse se aplică oricum.",
+        "excludePaths": "Nu pe aceste adrese",
+        "locales": "Limba site-ului",
+        "allLocales": "Toate limbile",
+        "summary": {
+          "everyone": "Toți",
+          "guests": "Doar vizitatorii",
+          "members": "Doar membrii",
+          "nobody": "Nimeni (vizitatori și membri opriți)",
+          "groups": "Grupurile: {groups}",
+          "without": "Fără: {groups}",
+          "pages": {
+            "home": "Prima pagină",
+            "forum": "Forumul",
+            "paths": "Doar adresele alese"
+          }
+        }
+      },
+      "schedule": {
+        "title": "Program",
+        "zoneHint": "Ora site-ului: {zone} ({id}), oricare ar fi ora calculatorului tău. Fusul se schimbă în Setări → Generale.",
+        "when": "Doar în anumite zile și ore",
+        "days": "Zilele",
+        "daysHint": "(toate aprinse = în fiecare zi)",
+        "dayNames": {
+          "1": "Luni",
+          "2": "Marți",
+          "3": "Miercuri",
+          "4": "Joi",
+          "5": "Vineri",
+          "6": "Sâmbătă",
+          "7": "Duminică"
+        },
+        "dayShort": {
+          "1": "L",
+          "2": "Ma",
+          "3": "Mi",
+          "4": "J",
+          "5": "V",
+          "6": "S",
+          "7": "D"
+        },
+        "window": "Doar între anumite ore",
+        "from": "De la ora",
+        "to": "Până la ora",
+        "until": "până la"
+      },
+      "behaviour": {
+        "title": "Închiderea și rotația",
+        "closeOnCta": "Se închide și la click pe buton",
+        "reappear": "După închidere, reapare după (zile)",
+        "reappearHint": "0 = niciodată, doar dacă schimbi bara.",
+        "rotate": "Cât stă pe ecran în rotație (secunde)",
+        "rotateHint": "Gol = {n} s, din setările generale ({min}–{max})."
+      },
+      "stats": {
+        "title": "Statistici",
+        "off": "Numărătoarea e oprită din Setări generale.",
+        "views": "Afișări",
+        "clicks": "Click-uri",
+        "dismissals": "Închideri",
+        "unsaved": "Se numără după prima salvare.",
+        "since": "De la {date}.",
+        "sinceStart": "De la publicare.",
+        "reset": "Resetează statisticile"
+      },
+      "settings": {
+        "title": "Setări generale",
+        "rotation": "Mai multe bare în același loc",
+        "multiple": "Mai multe bare active",
+        "multiples": {
+          "rotate": "Se rotesc",
+          "stack": "Stau una sub alta"
+        },
+        "transition": "Trecerea",
+        "transitions": {
+          "fade": "Estompare",
+          "slide": "Alunecare",
+          "none": "Fără"
+        },
+        "order": "Ordinea",
+        "orders": {
+          "list": "Ca în listă",
+          "random": "La întâmplare"
+        },
+        "pauseOnHover": "Rotația se oprește cât mouse-ul e pe bară",
+        "dots": "Puncte de alegere între bare",
+        "stats": "Numără afișările, click-urile și închiderile",
+        "statsHint": "O afișare se numără o dată pe zi pentru fiecare vizitator.",
+        "savedWith": "Se salvează odată cu barele.",
+        "done": "Gata"
+      }
     },
     "donations": {
       "title": "Donaciones",
@@ -5005,7 +5466,8 @@
       "custom": "Personalizado",
       "allow": "Mostradas",
       "https_only": "Solo HTTPS",
-      "block": "Bloqueadas (mostradas como enlace)"
+      "block": "Bloqueadas (mostradas como enlace)",
+      "google": "Google Translate"
     },
     "forums": {
       "posts_per_page": "Puestos por página",
@@ -5306,7 +5768,8 @@
       "locales": "Idiomas ofrecidos a los miembros",
       "translate_provider": "Traducción de contenidos (el botón “Translate”)",
       "libretranslate_url": "Dirección de servicio LibreTranslate",
-      "deepl_key": "DeepL API key (opcional)"
+      "deepl_key": "DeepL API key (opcional)",
+      "google_key": "Cheia API Google Cloud Translation (pentru Google Translate)"
     },
     "postbit": {
       "fields": "Campos postales (orden)"
@@ -10658,5 +11121,65 @@
     "text": "Este sitio usa cookies necesarias para iniciar sesión y para recordar tus preferencias (idioma, tema).",
     "accept": "Entendido",
     "privacy": "Política de privacidad"
+  },
+  "ui": {
+    "upload": {
+      "upload": "Încarcă",
+      "replace": "Înlocuiește",
+      "remove": "Scoate",
+      "noImage": "Nicio imagine",
+      "noFile": "Niciun fișier",
+      "dropHere": "Trage fișierul aici",
+      "dropRelease": "Dă drumul fișierului",
+      "or": "sau",
+      "browse": "Alege din calculator",
+      "paste": "Poți și lipi o imagine cu Ctrl + V.",
+      "use": "Folosește fișierul",
+      "chooseOther": "Alege altul",
+      "cancel": "Renunță",
+      "close": "Închide",
+      "uploading": "Se încarcă",
+      "rulesTypes": "{types}",
+      "rulesMax": "până la {max}",
+      "rulesMin": "minimum {w} × {h} px",
+      "rulesSquare": "pătrată",
+      "okType": "Tip acceptat",
+      "okSize": "{size} din {max}",
+      "okDims": "{w} × {h} px",
+      "okReal": "Fișier verificat după conținut",
+      "errType": "Tipul fișierului nu e acceptat. Sunt acceptate: {types}.",
+      "errSize": "Fișierul are {size}, iar limita e {max}.",
+      "errMin": "Imaginea are {w} × {h} px. Minimul e {min} px.",
+      "errMax": "Imaginea are {w} × {h} px și e prea mare.",
+      "errSquare": "Imaginea are {w} × {h} px și trebuie să fie pătrată.",
+      "errReal": "Fișierul nu e o imagine validă.",
+      "errUpload": "Încărcarea n-a reușit. Încearcă din nou.",
+      "dropHereMany": "Trage fișierele aici",
+      "useMany": "Folosește fișierele bune",
+      "many": "Fișiere alese: {count}",
+      "manyBad": "{bad} din {count} nu trec verificările și se sar; se folosesc doar celelalte."
+    },
+    "iconPicker": {
+      "search": "Caută o iconiță",
+      "none": "Fără iconiță",
+      "noResults": "Nicio iconiță găsită.",
+      "choose": "Alege o iconiță",
+      "categories": {
+        "popular": "Populare",
+        "gaming": "Gaming",
+        "community": "Comunitate",
+        "staff": "Staff",
+        "tech": "Tehnic",
+        "rewards": "Recompense",
+        "arrows": "Săgeți",
+        "brands": "Mărci"
+      }
+    },
+    "panel": {
+      "close": "Închide panoul",
+      "edit": "Editează",
+      "add": "Adaugă",
+      "saved": "Salvat"
+    }
   }
 }

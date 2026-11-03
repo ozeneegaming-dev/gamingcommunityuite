@@ -7,7 +7,7 @@ import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from ".
 import type { GcsPermissionService } from "../permissions/service";
 import type { GcsActor } from "../permissions/types";
 import type { GcsSettingsService } from "../settings/service";
-import { GcsDeepLProvider, GcsLibreTranslateProvider, type GcsTranslateProvider } from "./providers";
+import { GcsDeepLProvider, GcsGoogleTranslateProvider, GcsLibreTranslateProvider, type GcsTranslateProvider } from "./providers";
 
 export const TRANSLATE_LOCALES = ["ro", "en", "de", "es", "fr", "ru"] as const;
 const RATE = { window: 60, max: 30 };
@@ -22,7 +22,7 @@ export type GcsTranslatableContent = {
 
 /**
  * Butonul „Traduce” (specul etapei 5 §5): traduce HTML-ul unui conținut în limba cerută, prin providerul ales în ACP
- * (LibreTranslate propriu sau DeepL). Verifică accesul la conținut, are limită de cereri și cache (Redis + bază), iar
+ * (LibreTranslate propriu, DeepL sau Google Translate). Verifică accesul la conținut, are limită de cereri și cache (Redis + bază), iar
  * rezultatul e re-sanitizat cu regulile renderer-ului.
  */
 export class GcsTranslationService {
@@ -52,6 +52,10 @@ export class GcsTranslationService {
     if (kind === "deepl") {
       const key = await settings.get<string>("i18n.deepl_key");
       return key ? new GcsDeepLProvider(key) : null;
+    }
+    if (kind === "google") {
+      const key = await settings.get<string>("i18n.google_key");
+      return key ? new GcsGoogleTranslateProvider(key) : null;
     }
     if (kind === "libretranslate") {
       const url = await settings.get<string>("i18n.libretranslate_url");

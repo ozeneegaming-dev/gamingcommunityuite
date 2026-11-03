@@ -4,7 +4,7 @@ import { GcsRateLimiter } from "../auth/rateLimit";
 import { GcsForbidden, GcsNotFound, GcsRateLimited } from "../errors";
 import type { GcsModule } from "../modules/registry";
 import { GcsSettingsService } from "../settings/service";
-import { GcsDeepLProvider, GcsLibreTranslateProvider, type GcsTranslateProvider } from "./providers";
+import { GcsDeepLProvider, GcsGoogleTranslateProvider, GcsLibreTranslateProvider, type GcsTranslateProvider } from "./providers";
 import { GcsTranslationService } from "./service";
 
 const perms: GcsModule = {
@@ -122,6 +122,15 @@ describe("providerii", () => {
     expect(url).toBe("https://api-free.deepl.com/v2/translate");
     expect(JSON.parse(init.body as string)).toMatchObject({ target_lang: "EN-GB", tag_handling: "html" });
     expect((init.headers as Record<string, string>).authorization).toBe("DeepL-Auth-Key abc:fx");
+  });
+
+  test("Google Translate: API v2 cu cheia în adresă, HTML păstrat, limba sursă detectată", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { translations: [{ translatedText: "<p>Hallo</p>" }] } }), { status: 200 }));
+    const p = new GcsGoogleTranslateProvider("k&1", fetchMock as unknown as typeof fetch);
+    expect(await p.translateHtml("<p>salut</p>", "de")).toBe("<p>Hallo</p>");
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://translation.googleapis.com/language/translate/v2?key=k%261");
+    expect(JSON.parse(init.body as string)).toEqual({ q: ["<p>salut</p>"], target: "de", format: "html" });
   });
 
   test("o eroare HTTP a providerului devine eroare", async () => {

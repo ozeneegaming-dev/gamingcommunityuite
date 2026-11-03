@@ -5466,7 +5466,8 @@
       "custom": "Custom",
       "allow": "Shown",
       "https_only": "HTTPS only",
-      "block": "Blocked (shown as a link)"
+      "block": "Blocked (shown as a link)",
+      "google": "Google Translate"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -5767,7 +5768,8 @@
       "locales": "Languages offered to members",
       "translate_provider": "Content translation (the “Translate” button)",
       "libretranslate_url": "LibreTranslate service address",
-      "deepl_key": "DeepL API key (optional)"
+      "deepl_key": "DeepL API key (optional)",
+      "google_key": "Google Cloud Translation API key (for Google Translate)"
     },
     "postbit": {
       "fields": "Postbit fields (order)"

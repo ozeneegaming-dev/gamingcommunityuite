@@ -55,3 +55,23 @@ export class GcsDeepLProvider implements GcsTranslateProvider {
     return text;
   }
 }
+
+/**
+ * Google Cloud Translation (API v2, cheia din ACP): HTML păstrat (`format: html`), limba sursă detectată. Cheia merge în
+ * adresă (`?key=`), cum cere API-ul cu chei simple; cererea pleacă doar de pe server.
+ */
+export class GcsGoogleTranslateProvider implements GcsTranslateProvider {
+  readonly name = "google";
+  constructor(
+    private readonly key: string,
+    private readonly fetchImpl: Fetch = fetch,
+  ) {}
+
+  async translateHtml(html: string, target: string): Promise<string> {
+    const url = `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(this.key)}`;
+    const body = (await postJson(this.fetchImpl, url, { q: [html], target, format: "html" })) as { data?: { translations?: { translatedText?: unknown }[] } };
+    const text = body.data?.translations?.[0]?.translatedText;
+    if (typeof text !== "string") throw new Error("Răspuns Google Translate invalid");
+    return text;
+  }
+}

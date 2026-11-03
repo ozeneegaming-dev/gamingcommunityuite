@@ -103,6 +103,7 @@ export function GcsAnnouncementText({ nodes, vars }: { nodes: GcsAnnouncementNod
     if (n.t === "var") return vars[n.name] ?? "";
     if (n.t === "b") return <strong key={i}>{<GcsAnnouncementText nodes={n.c} vars={vars} />}</strong>;
     if (n.t === "i") return <em key={i}>{<GcsAnnouncementText nodes={n.c} vars={vars} />}</em>;
+    if (n.t !== "a") return null;
     return (
       <BarLink key={i} href={n.href} newTab={!isInternal(n.href)} className="gcs-annBar__inlineLink">
         <GcsAnnouncementText nodes={n.c} vars={vars} />

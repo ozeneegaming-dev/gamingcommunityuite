@@ -103,9 +103,10 @@ const settings: GcsSettingDef[] = [
   setting("i18n.locales", "json", [...GCS_LOCALE_KEYS], "languages", (v) =>
     Array.isArray(v) && v.length > 0 && v.every((l) => GCS_LOCALE_KEYS.includes(l as (typeof GCS_LOCALE_KEYS)[number])) ? null : "invalid_choice",
   ),
-  { ...setting("i18n.translate_provider", "string", "libretranslate", "languages", oneOf(["libretranslate", "deepl", "off"])), options: ["libretranslate", "deepl", "off"] },
+  { ...setting("i18n.translate_provider", "string", "libretranslate", "languages", oneOf(["libretranslate", "deepl", "google", "off"])), options: ["libretranslate", "deepl", "google", "off"] },
   setting("i18n.libretranslate_url", "string", "http://translate:5000", "languages", isUrlOrEmpty),
   setting("i18n.deepl_key", "secret", "", "languages"),
+  setting("i18n.google_key", "secret", "", "languages"),
   // Ora (în fusul site-ului) la care pleacă digestul zilnic al notificărilor (etapa 4).
   setting("notifications.digest_hour", "number", 8, "notifications", (v) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23 ? null : "invalid_range")),
   // Notificări v2: rezumatul săptămânal „Ce ai ratat” (ziua, ora) și curățenia notificărilor vechi.

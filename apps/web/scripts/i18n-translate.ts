@@ -1,7 +1,9 @@
 /**
- * Generează pachetele de limbă `de`, `es`, `fr`, `ru` din `en` prin LibreTranslate (specul etapei 5 §5).
+ * Generează pachetele de limbă `de`, `es`, `fr`, `ru` din `en` prin LibreTranslate sau Google Translate (specul
+ * etapei 5 §5). Româna rămâne limba de bază a site-ului; `en` e scrisă de mână și e sursa pachetelor traduse automat.
  *
- * Folosire: `pnpm --filter @gcs/web i18n:translate [--endpoint http://127.0.0.1:5005] [--only de,fr] [--all]`
+ * Folosire: `pnpm --filter @gcs/web i18n:translate [--provider google] [--endpoint http://127.0.0.1:5005] [--only de,fr] [--all]`
+ * (cu Google, cheia API vine din variabila `GOOGLE_TRANSLATE_KEY`, niciodată din argumente).
  *
  * - Traduce doar cheile noi sau cele al căror text englez s-a schimbat (manifestul `.translations.json` ține hash-ul
  *   sursei pentru fiecare cheie tradusă); `--all` le retraduce pe toate.
@@ -28,6 +30,7 @@ const arg = (name: string) => {
 const endpoint = (arg("endpoint") ?? process.env.LIBRETRANSLATE_URL ?? "http://127.0.0.1:5005").replace(/\/$/, "");
 const only = arg("only")?.split(",") ?? [...TARGETS];
 const retranslateAll = process.argv.includes("--all");
+const providerName = arg("provider") ?? "libretranslate";
 
 const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 16);
 const readJson = <T>(file: string, fallback: T): T => (existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as T) : fallback);
@@ -49,6 +52,29 @@ const libreTranslate: GcsHtmlTranslator = async (html, target) => {
     }
   }
 };
+
+/** Google Cloud Translation API v2: textul englez, cu argumentele ICU deja protejate de `translateMessages`. */
+const googleTranslate: GcsHtmlTranslator = async (html, target) => {
+  const key = process.env.GOOGLE_TRANSLATE_KEY;
+  if (!key) throw new Error("Lipsește GOOGLE_TRANSLATE_KEY");
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(key)}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ q: [html], source: "en", target, format: "text" }),
+      });
+      if (!res.ok) throw new Error(`Google Translate ${res.status}`);
+      const body = (await res.json()) as { data?: { translations?: { translatedText: string }[] } };
+      return (body.data?.translations ?? []).map((t) => t.translatedText);
+    } catch (error) {
+      if (attempt >= 3) throw error;
+      await new Promise((r) => setTimeout(r, 2000 * attempt));
+    }
+  }
+};
+
+const translator = providerName === "google" ? googleTranslate : libreTranslate;
 
 async function main() {
   const source = flatten(JSON.parse(readFileSync(path.join(dir, "en.json"), "utf8")) as Record<string, unknown>);
@@ -73,7 +99,7 @@ async function main() {
     let failed = 0;
     for (let i = 0; i < todo.length; i += chunk) {
       const keys = todo.slice(i, i + chunk);
-      const out = await translateMessages(keys.map((k) => source[k]!), target, libreTranslate);
+      const out = await translateMessages(keys.map((k) => source[k]!), target, translator);
       keys.forEach((k, j) => {
         const t = out[j];
         if (t) {

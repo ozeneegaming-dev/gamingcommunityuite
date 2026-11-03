@@ -5466,7 +5466,8 @@
       "custom": "Personalizat",
       "allow": "Afișate",
       "https_only": "Doar cele HTTPS",
-      "block": "Blocate (arătate ca link)"
+      "block": "Blocate (arătate ca link)",
+      "google": "Google Translate"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -5767,7 +5768,8 @@
       "locales": "Limbile oferite membrilor",
       "translate_provider": "Traducerea conținutului (butonul „Traduce”)",
       "libretranslate_url": "Adresa serviciului LibreTranslate",
-      "deepl_key": "Cheia API DeepL (opțional)"
+      "deepl_key": "Cheia API DeepL (opțional)",
+      "google_key": "Cheia API Google Cloud Translation (pentru Google Translate)"
     },
     "postbit": {
       "fields": "Câmpurile din postbit (ordinea)"
