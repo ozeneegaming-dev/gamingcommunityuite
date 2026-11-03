@@ -930,10 +930,14 @@
   }
 }
 @media (max-width: 767px) {
+  /* Consola nu lățește niciodată pagina: șirul de carduri se derulează în el, restul se taie la lățimea ecranului. */
   :root .gcs-ckWrap {
     padding: 0 12px;
+    overflow-x: clip;
   }
   :root .gcs-ck {
+    min-width: 0;
+    max-width: 100%;
     padding-top: 16px;
     gap: 12px;
   }
