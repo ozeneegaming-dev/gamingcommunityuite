@@ -499,7 +499,8 @@ const GCS_LOGO: GcsThemeSettings["logo"] = { ...NOVA_THEME_SETTINGS.logo, size: 
  * Consola temelor incluse: aspectul compact (prima pagină nouă, varianta A, 2026-11-03): salutul cu pastilele de stare
  * și banda serverelor, fără cutia cu panouri. Pornirea consolei rămâne alegerea adminului (din editorul vizual).
  */
-const GCS_COCKPIT: GcsThemeSettings["cockpit"] = { ...NOVA_THEME_SETTINGS.cockpit, layout: "compact" };
+/** Consola temelor incluse: pornită, compactă (salutul, starea și serverele; prima pagină aleasă de proprietar, varianta A). */
+const GCS_COCKPIT: GcsThemeSettings["cockpit"] = { ...NOVA_THEME_SETTINGS.cockpit, enabled: true, layout: "compact" };
 export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, cockpit: GCS_COCKPIT, scheme: { default: "dark", toggle: false } };
 /** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
 export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, cockpit: GCS_COCKPIT, scheme: { default: "light", toggle: false } };

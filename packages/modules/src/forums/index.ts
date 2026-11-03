@@ -93,7 +93,7 @@ const settings: GcsSettingDef[] = [
   postingSetting("forums.pinned_first", "boolean", true),
   // Vederea implicită a listelor (membrul poate alege alta): forumurile pe rânduri sau în grilă; topicurile ca listă
   // sau cu fragmentul primei postări.
-  { ...postingSetting("forums.forum_view", "string", "rows", oneOfValues(["rows", "grid"])), options: ["rows", "grid"] },
+  { ...postingSetting("forums.forum_view", "string", "grid", oneOfValues(["rows", "grid"])), options: ["rows", "grid"] },
   { ...postingSetting("forums.topic_view", "string", "list", oneOfValues(["list", "snippet"])), options: ["list", "snippet"] },
   // „Popular acum”: topicurile cu cel puțin N răspunsuri în ultimele 24 de ore (0 = oprit).
   postingSetting("forums.popular_threshold", "number", 10, between(0, 10_000)),

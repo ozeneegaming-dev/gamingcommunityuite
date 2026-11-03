@@ -283,14 +283,17 @@ async function prepareDatabase(baseUrl: string, translatorUrl: string): Promise<
   const db = createPrismaClient(url.toString());
   await seedDefaults(db, createRegistry());
   // Instanța testelor de sistem păstrează antetul „Standard” (un rând cu meniul întreg, clopoțelul și luna / soarele,
-  // fără ascundere la derulare), pe care sunt scrise testele lor. Antetul livrat implicit (cel de pe preview, Esports)
-  // se verifică pe instanța installer-ului (`stage-brand-smoke.spec.ts`) și în `hero-cockpit.spec.ts`.
+  // fără ascundere la derulare), fără consola Hero Cockpit și cu forumurile pe rânduri: aspectul pe care sunt scrise
+  // testele lor. Aspectul livrat implicit (antetul Esports, consola compactă, cardurile în grilă) se verifică pe instanța
+  // installer-ului (`stage-brand-smoke.spec.ts`), în `hero-cockpit.spec.ts`, `home-a.spec.ts` și `forum-cards.spec.ts`.
   for (const key of [GCS_DARK_THEME_KEY, GCS_WHITE_THEME_KEY]) {
     const theme = await db.theme.findUnique({ where: { key }, select: { settings: true } });
     if (!theme) continue;
     const standard = { ...NOVA_THEME_SETTINGS.header, compact: false, rowMain: 76 };
-    await db.theme.update({ where: { key }, data: { settings: { ...(theme.settings as object), header: standard, logo: NOVA_THEME_SETTINGS.logo } as never } });
+    const cockpit = { ...NOVA_THEME_SETTINGS.cockpit };
+    await db.theme.update({ where: { key }, data: { settings: { ...(theme.settings as object), header: standard, logo: NOVA_THEME_SETTINGS.logo, cockpit } as never } });
   }
+  await db.setting.upsert({ where: { key: "forums.forum_view" }, create: { key: "forums.forum_view", value: "rows" }, update: { value: "rows" } });
   await db.setting.upsert({
     where: { key: "i18n.libretranslate_url" },
     create: { key: "i18n.libretranslate_url", value: translatorUrl },

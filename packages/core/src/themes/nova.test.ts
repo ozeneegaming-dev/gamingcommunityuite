@@ -117,6 +117,7 @@ describe("designul Nova: setările", () => {
     expect({ ...GCS_DARK_THEME_SETTINGS, scheme: null, header: NOVA_THEME_SETTINGS.header, logo: NOVA_THEME_SETTINGS.logo, cockpit: NOVA_THEME_SETTINGS.cockpit }).toEqual({ ...NOVA_THEME_SETTINGS, scheme: null });
     // Prima pagină nouă (varianta A, 2026-11-03): consola temelor incluse e compactă.
     expect([GCS_DARK_THEME_SETTINGS.cockpit.layout, GCS_WHITE_THEME_SETTINGS.cockpit.layout, NOVA_THEME_SETTINGS.cockpit.layout]).toEqual(["compact", "compact", "full"]);
+    expect([GCS_DARK_THEME_SETTINGS.cockpit.enabled, GCS_WHITE_THEME_SETTINGS.cockpit.enabled, NOVA_THEME_SETTINGS.cockpit.enabled]).toEqual([true, true, false]);
     // Antetul de pe preview (2026-11-02): Esports, cu chatul, limba, breadcrumb-ul și serverele live; compact, ascuns la derulare.
     for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
       expect(s.header.layout.preset).toBe("esports");
