@@ -1,6 +1,6 @@
 import "server-only";
 import { findActiveBan, GcsValidationError, hashPassword, isBotUser, isLegacyPasswordHash, prepareNewUser, upgradeLegacyPassword, verifyPassword } from "@gcs/core";
-import { termsRequiredOnRegister } from "@gcs/modules";
+import { referrerFromCookie, termsRequiredOnRegister } from "@gcs/modules";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { APIError } from "better-auth/api";
@@ -109,11 +109,20 @@ function createAuth(config: GcsAuthConfig) {
               throw error;
             }
           },
-          // Evenimentul public al înregistrării (etapa 6: listenerii pluginurilor). O eroare nu oprește înregistrarea.
-          after: async (user) => {
+          // Evenimentul public al înregistrării (etapa 6: listenerii pluginurilor) și recomandarea (cookie-ul lăsat de
+          // linkul `/r/<id>`, pe orice cale de înregistrare). O eroare nu oprește înregistrarea.
+          after: async (user, ctx) => {
             await services()
               .bus.emit({ name: "user.registered", payload: { userId: user.id }, tags: [] })
               .catch(() => {});
+            const headers = ctx?.headers ?? ctx?.request?.headers ?? null;
+            const referrer = referrerFromCookie(headers?.get("cookie"));
+            if (referrer) {
+              const ip = headers ? clientIp(headers) : null;
+              await services()
+                .referrals.claim(user.id, referrer, ip && ip !== "0.0.0.0" ? ip : null)
+                .catch(() => false);
+            }
           },
         },
       },

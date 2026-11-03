@@ -561,6 +561,23 @@ model BulkMail {
   @@map("bulk_mails")
 }
 
+/// Recomandări (ACP › Membri › Setări membri › Recomandări): cine a adus pe cine (linkul `/r/<id>`, cookie-ul citit la
+/// înregistrare). Fără relații: rândul rămâne după ștergerea unui cont (lista îl arată ca „cont șters”). `qualifiedAt` =
+/// membrul adus a îndeplinit condițiile (postări, email confirmat); atunci cel care l-a adus primește `rewardedPoints`.
+model Referral {
+  id             Int       @id @default(autoincrement())
+  referrerId     String
+  referredId     String    @unique
+  ip             String?
+  createdAt      DateTime  @default(now())
+  qualifiedAt    DateTime?
+  rewardedPoints Int       @default(0)
+
+  @@index([referrerId])
+  @@index([qualifiedAt])
+  @@map("referrals")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

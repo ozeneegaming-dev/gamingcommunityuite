@@ -180,6 +180,7 @@ import { GcsCacheAdminService } from "./system/cache";
 import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
 import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
 import { GcsBulkMailService } from "./notifications/bulkMail";
+import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -272,6 +273,8 @@ export type GcsServices = {
   contact: GcsContactService;
   /** Email în masă (ACP › Membri › Comunicare) și dezabonarea membrilor de la emailurile adminilor. */
   bulkMail: GcsBulkMailService;
+  /** Recomandările (linkul de invitație, calificarea și recompensa). */
+  referrals: GcsReferralService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -681,6 +684,16 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   // Contact: mesajele primite; notificarea duce la cutia din ACP, cu mesajul deschis.
   const contact = new GcsContactService({ db, settings, acp, notifications, mailer, rateLimiter, antispam, siteName: () => settings.get<string>("site.name") });
+  // Recomandări: notificarea duce la pagina membrului cu invitațiile lui.
+  const referrals = new GcsReferralService({ db, bus, settings, acp, notifications });
+  notifications.registerTarget(REFERRAL_NOTIFICATION, {
+    canView: async () => true,
+    describe: async (id) => {
+      const r = await db.referral.findUnique({ where: { id: Number(id) || 0 }, select: { referredId: true } });
+      const u = r ? await db.user.findUnique({ where: { id: r.referredId }, select: { name: true } }) : null;
+      return u ? { title: u.name, href: "/settings/referral" } : null;
+    },
+  });
   notifications.registerTarget(CONTACT_NOTIFICATION, {
     canView: async (userId) => (await acp.usersWith(CONTACT_ACP_SECTION, "view", 500)).includes(userId),
     describe: async (id) => {
@@ -1014,6 +1027,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     systemStatus,
     cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
     contact,
+    referrals,
     bulkMail: new GcsBulkMailService({
       db,
       acp,

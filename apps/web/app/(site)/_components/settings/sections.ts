@@ -19,6 +19,8 @@ export const SETTINGS_SECTIONS = [
   ["privacy", "fa-solid fa-user-shield"],
   // Membri v2: grupurile publice (opt-in).
   ["groups", "fa-solid fa-people-group"],
+  // Recomandări: linkul de invitație și cei aduși.
+  ["referral", "fa-solid fa-user-plus"],
   ["notifications", "fa-solid fa-bell"],
   ["appearance", "fa-solid fa-palette"],
   ["language", "fa-solid fa-language"],

@@ -5779,6 +5779,60 @@
       "audience": "Publicul",
       "sentLabel": "Trimise",
       "startedAt": "Pornit"
+    },
+    "referral": {
+      "title": "Recomandări",
+      "description": "Membrii își invită prietenii cu un link personal. Recomandarea contează când cel adus îndeplinește condițiile; atunci cel care a invitat primește puncte.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "Programul de invitații e pornit",
+      "stateOff": "Programul de invitații e oprit",
+      "chipPosts": "{count, plural, one {după # postare} many {după # de postări} other {după # de postări}}",
+      "chipJoin": "la înregistrare",
+      "chipVerified": "email confirmat",
+      "chipPoints": "+{points} puncte",
+      "tiles": {
+        "total": "recomandări",
+        "qualified": "calificate",
+        "last30": "în ultimele 30 de zile"
+      },
+      "top": "Cei care au adus cei mai mulți",
+      "topLine": "{count} aduși · {qualified} calificați",
+      "list": "Recomandări",
+      "total": "{count, plural, one {# recomandare} many {# de recomandări} other {# de recomandări}}",
+      "empty": "Nicio recomandare încă.",
+      "deleted": "cont șters",
+      "posts": "{count, plural, one {# postare} many {# de postări} other {# de postări}}",
+      "statusQualified": "Calificată",
+      "statusPending": "În așteptare",
+      "open": "Detalii",
+      "detail": "Recomandarea",
+      "referrer": "A invitat",
+      "referred": "A fost adus",
+      "joined": "Cont creat",
+      "state": "Stare",
+      "qualifiedAt": "Calificată pe {date}",
+      "delete": "Șterge recomandarea",
+      "confirmDelete": "Ștergi recomandarea? Punctele deja primite rămân.",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "secProgram": "Programul",
+        "secQualify": "Când contează o recomandare",
+        "secReward": "Recompensa",
+        "enabled": "Programul de invitații pornit",
+        "enabledHint": "Membrii văd linkul în Setări → Invită prieteni. Oprit, linkurile duc doar la pagina principală.",
+        "qualifyPosts": "Postări necesare",
+        "qualifyPostsHint": "0 = imediat după înregistrare.",
+        "requireVerified": "Și emailul confirmat",
+        "rewardPoints": "Puncte pentru cel care a invitat",
+        "maxPerMember": "Cel mult recompense pe membru",
+        "maxHint": "0 = fără limită.",
+        "badgesHint": "Badge-uri pentru invitații: o regulă cu evenimentul „Recomandări calificate” în",
+        "badgesLink": "Realizări › Reguli"
+      }
     }
   },
   "settings": {
@@ -5946,7 +6000,8 @@
       "google": "Google",
       "apps": "Aplicaciones autorizadas",
       "chat": "Chat",
-      "groups": "Grupos"
+      "groups": "Grupos",
+      "referral": "Invită prieteni"
     },
     "appearance": {
       "title": "Apariencia",
@@ -6553,6 +6608,24 @@
     },
     "bulk_mail": {
       "per_minute": "Email în masă: emailuri pe minut"
+    },
+    "referral": {
+      "config": "Recomandările",
+      "title": "Invită prieteni",
+      "hint": "Trimite linkul tău prietenilor. Cine își face cont cu el apare mai jos, iar tu primești recompensa când îndeplinește condițiile.",
+      "link": "Linkul tău de invitație",
+      "copy": "Copiază",
+      "copied": "Copiat",
+      "rulePosts": "{count, plural, one {Invitația contează după prima postare a prietenului.} many {Invitația contează după # de postări ale prietenului.} other {Invitația contează după # de postări ale prietenului.}}",
+      "ruleJoin": "Invitația contează imediat ce prietenul își face contul.",
+      "ruleVerified": "Prietenul trebuie să-și confirme emailul.",
+      "rulePoints": "Primești {points} puncte pentru fiecare prieten adus.",
+      "off": "Programul de invitații e oprit pe acest site.",
+      "invited": "invitați",
+      "qualified": "calificați",
+      "deleted": "cont șters",
+      "statusQualified": "Calificat",
+      "statusPending": "În așteptare"
     }
   },
   "permissions": {
@@ -7763,7 +7836,8 @@
         "warning_appeal": "Decisiones sobre apelaciones de advertencias",
         "multi_account": "Cuentas nuevas con la IP de otras (equipo)",
         "system_alert": "Alerte de stare a sistemului (disc, joburi picate)",
-        "contact_message": "Mesaje noi prin formularul de contact (staff)"
+        "contact_message": "Mesaje noi prin formularul de contact (staff)",
+        "referral": "Membrii aduși prin invitația ta"
       },
       "chat": {
         "mention": "Menciones de chat",
@@ -11436,7 +11510,8 @@
         "member_days": "Días como miembro",
         "profile_completed": "Completa su perfil",
         "steam_linked": "Vincula su cuenta de Steam",
-        "birthday": "Celebra su cumpleaños"
+        "birthday": "Celebra su cumpleaños",
+        "referrals": "Recomandări calificate"
       }
     },
     "other": {

@@ -599,3 +599,45 @@
   gap: 6px;
   padding: 16px 18px;
 }
+
+/* ── Recomandări: pagina membrului (Setări → Invită prieteni) ── */
+.gcs-referral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-referralLink {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gcs-referralLink .gcs-input {
+  flex: 1 1 280px;
+  font-family: var(--gcs-font-mono, ui-monospace, monospace);
+  font-size: 13px;
+}
+.gcs-referral__rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--gcs-muted);
+  font-size: 13.5px;
+}
+.gcs-referral__rules .gcs-icon {
+  width: 18px;
+  color: var(--gcs-accent);
+}
+.gcs-referral__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  color: var(--gcs-muted);
+}
+.gcs-referral__stats strong {
+  margin-right: 4px;
+  color: var(--gcs-text);
+  font-size: 24px;
+}

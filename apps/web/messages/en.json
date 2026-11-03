@@ -5779,6 +5779,60 @@
       "audience": "Audience",
       "sentLabel": "Sent",
       "startedAt": "Started"
+    },
+    "referral": {
+      "title": "Referrals",
+      "description": "Members invite their friends with a personal link. A referral counts once the new member meets the conditions; then the inviter gets points.",
+      "settings": "Settings",
+      "save": "Save",
+      "stateOn": "The invitation program is on",
+      "stateOff": "The invitation program is off",
+      "chipPosts": "{count, plural, one {after # post} other {after # posts}}",
+      "chipJoin": "at sign-up",
+      "chipVerified": "confirmed email",
+      "chipPoints": "+{points} points",
+      "tiles": {
+        "total": "referrals",
+        "qualified": "qualified",
+        "last30": "in the last 30 days"
+      },
+      "top": "Top inviters",
+      "topLine": "{count} invited · {qualified} qualified",
+      "list": "Referrals",
+      "total": "{count, plural, one {# referral} other {# referrals}}",
+      "empty": "No referrals yet.",
+      "deleted": "deleted account",
+      "posts": "{count, plural, one {# post} other {# posts}}",
+      "statusQualified": "Qualified",
+      "statusPending": "Pending",
+      "open": "Details",
+      "detail": "Referral",
+      "referrer": "Invited by",
+      "referred": "Joined",
+      "joined": "Account created",
+      "state": "State",
+      "qualifiedAt": "Qualified on {date}",
+      "delete": "Delete the referral",
+      "confirmDelete": "Delete the referral? Points already given stay.",
+      "pages": "Pages",
+      "page": "Page {page} of {pages}",
+      "prev": "Previous",
+      "next": "Next",
+      "cfg": {
+        "secProgram": "Program",
+        "secQualify": "When a referral counts",
+        "secReward": "Reward",
+        "enabled": "Invitation program on",
+        "enabledHint": "Members see their link in Settings → Invite friends. When off, links only lead to the home page.",
+        "qualifyPosts": "Posts needed",
+        "qualifyPostsHint": "0 = right after sign-up.",
+        "requireVerified": "And a confirmed email",
+        "rewardPoints": "Points for the inviter",
+        "maxPerMember": "Maximum rewards per member",
+        "maxHint": "0 = no limit.",
+        "badgesHint": "Badges for invitations: a rule with the “Qualified referrals” event in",
+        "badgesLink": "Achievements › Rules"
+      }
     }
   },
   "settings": {
@@ -5946,7 +6000,8 @@
       "google": "Google",
       "apps": "Authorised apps",
       "chat": "Chat",
-      "groups": "Groups"
+      "groups": "Groups",
+      "referral": "Invite friends"
     },
     "appearance": {
       "title": "Appearance",
@@ -6553,6 +6608,24 @@
     },
     "bulk_mail": {
       "per_minute": "Bulk mail: emails per minute"
+    },
+    "referral": {
+      "config": "Referrals",
+      "title": "Invite friends",
+      "hint": "Send your link to your friends. Whoever signs up with it appears below, and you get the reward once they meet the conditions.",
+      "link": "Your invitation link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "rulePosts": "{count, plural, one {The invitation counts after your friend's first post.} other {The invitation counts after # posts by your friend.}}",
+      "ruleJoin": "The invitation counts as soon as your friend signs up.",
+      "ruleVerified": "Your friend has to confirm their email.",
+      "rulePoints": "You get {points} points for every friend you bring.",
+      "off": "The invitation program is off on this site.",
+      "invited": "invited",
+      "qualified": "qualified",
+      "deleted": "deleted account",
+      "statusQualified": "Qualified",
+      "statusPending": "Pending"
     }
   },
   "permissions": {
@@ -7763,7 +7836,8 @@
         "warning_appeal": "Warning appeal decisions",
         "multi_account": "New accounts sharing another account's IP (staff)",
         "system_alert": "System status alerts (disk, failed jobs)",
-        "contact_message": "New contact form messages (staff)"
+        "contact_message": "New contact form messages (staff)",
+        "referral": "Members who joined through your invitation"
       },
       "chat": {
         "mention": "Chat mentions",
@@ -11436,7 +11510,8 @@
         "member_days": "Days as a member",
         "profile_completed": "Completes their profile",
         "steam_linked": "Links their Steam account",
-        "birthday": "Celebrates their birthday"
+        "birthday": "Celebrates their birthday",
+        "referrals": "Qualified referrals"
       }
     },
     "other": {
