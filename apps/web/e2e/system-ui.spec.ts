@@ -219,10 +219,11 @@ for (const theme of THEMES) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     await shot(page, `${theme.label}-375-home`);
 
-    // Contul: panoul pe toată lățimea; click în afară îl închide.
+    // Contul: foaia de jos (pe toată lățimea, în orice temă); Escape o închide.
     await page.getByTestId("gcs-user-menu").click();
     const account = page.getByTestId("gcs-account-menu");
     await expect(account).toBeVisible();
+    await expect(account).toHaveAttribute("data-variant", "sheet");
     await shot(page, `${theme.label}-375-account`);
     await page.keyboard.press("Escape");
     await expect(account).toBeHidden();

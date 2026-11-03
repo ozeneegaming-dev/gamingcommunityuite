@@ -30,6 +30,7 @@ test.afterAll(async () => {
 
 async function openPageEditor(page: Page) {
   await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-account-staff").click();
   await page.getByTestId("gcs-menu-page-editor").click();
   await expect(page.getByTestId("gcs-page-editor")).toBeVisible();
 }

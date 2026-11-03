@@ -10116,6 +10116,14 @@
         "pageEditor": "Editar la página",
         "acp": "Panel de administración (ACP)"
       },
+      "tiles": {
+        "attachments": "Adjuntos",
+        "privacy": "Privacidad",
+        "player": "Perfil de jugador"
+      },
+      "line": {
+        "posts": "{count, plural, one {mensaje} many {mensajes} other {mensajes}}"
+      },
       "theme": {
         "label": "Tema",
         "dark": "Oscuro",

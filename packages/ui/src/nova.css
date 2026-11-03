@@ -1595,7 +1595,8 @@ html.gcs-nova[data-theme="light"] {
   --gcs-ui-well-60: rgb(11 15 23 / 0.6);
   --gcs-ui-well-70: rgb(11 15 23 / 0.7);
   --gcs-hb-compact-bg: rgb(27 31 38 / 0.96);
-  --gcs-am-card-tint: color-mix(in srgb, var(--gcs-accent) 7%, transparent);
+  /* Antetul meniului contului: o nuanță plată a accentului (fără gradient). */
+  --gcs-am-card-tint: color-mix(in srgb, var(--gcs-accent) 6%, transparent);
   --gcs-ck-feature-alt: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
   --gcs-ui-ok-40: rgb(61 220 151 / 0.4);
   --gcs-ui-ok-15: rgb(61 220 151 / 0.15);

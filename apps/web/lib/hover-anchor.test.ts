@@ -39,6 +39,18 @@ describe("ce deschide hover card-ul", () => {
     expect(hoverAnchorOf(box.querySelector("p"))).toBeNull();
     expect(hoverAnchorOf(null)).toBeNull();
   });
+
+  test("nimic în zonele care refuză cardul (`data-gcs-card-off`, ex. avatarul din meniul contului)", () => {
+    const box = html(
+      '<span class="ava" data-gcs-card-off=""><a data-user-id="u1"><img alt="Ana"></a></span>' +
+        '<a class="own" data-user-id="u2" data-gcs-card-off="">Bogdan</a>' +
+        '<a class="ok" data-user-id="u3">Carmen</a>',
+    );
+    expect(hoverAnchorOf(box.querySelector("img"))).toBeNull();
+    expect(hoverAnchorOf(box.querySelector(".own"))).toBeNull();
+    // În afara zonei, numele deschide cardul ca oriunde.
+    expect(hoverAnchorKey(hoverAnchorOf(box.querySelector(".ok"))!)).toBe("u:u3");
+  });
 });
 
 describe("deschiderea cardului la click", () => {

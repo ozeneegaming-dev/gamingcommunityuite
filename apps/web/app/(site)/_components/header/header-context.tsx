@@ -21,5 +21,8 @@ export function useHeaderState(): GcsHeaderState {
   return useContext(HeaderStateContext);
 }
 
-/** Evenimentele dintre elementele antetului (bara de jos deschide căutarea, sertarul, „Creează”). */
-export const HEADER_EVENTS = { search: "gcs:search-open", drawer: "gcs:drawer-open", create: "gcs:create-open", preview: "gcs:header-preview" } as const;
+/**
+ * Evenimentele dintre elementele antetului (bara de jos deschide căutarea, sertarul, „Creează”, meniul contului).
+ * `account` e anulabil: meniul montat îl anulează (`preventDefault`); altfel bara duce la profil.
+ */
+export const HEADER_EVENTS = { search: "gcs:search-open", drawer: "gcs:drawer-open", create: "gcs:create-open", account: "gcs:account-open", preview: "gcs:header-preview" } as const;
