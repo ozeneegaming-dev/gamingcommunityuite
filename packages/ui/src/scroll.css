@@ -167,25 +167,31 @@
   transform: translateY(2px);
 }
 /*
- * Andocată (nu are loc în marginea conținutului): mai mică, în colțul de jos, întreagă în ecran. Pe telefon stă deasupra
- * barei de jos.
+ * Andocată (nu are loc în marginea conținutului): mai îngustă, în colțul de jos, întreagă în ecran și în marginea
+ * paginii (28 px de la 4 px: nu ajunge la conținutul cardurilor). Pe telefon stă deasupra barei de jos.
  */
 .gcs-scrollRail--dock {
-  left: 8px;
+  left: 4px;
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  width: 34px;
+  width: 28px;
+  border-radius: 6px;
 }
 .gcs-scrollRail--dock .gcs-scrollRail__btn {
-  height: 38px;
+  height: 40px;
+}
+.gcs-scrollRail--dock .gcs-scrollRail__btn svg {
+  width: 14px;
+  height: 14px;
 }
 @media (max-width: 760px) {
   .gcs-scrollRail {
-    left: 8px;
+    left: 4px;
     bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-    width: 34px;
+    width: 28px;
+    border-radius: 6px;
   }
   .gcs-scrollRail__btn {
-    height: 38px;
+    height: 40px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
