@@ -23,6 +23,22 @@ export type GcsWebhookView = Omit<WebhookEndpoint, "events"> & { events: string[
 
 const eventsOf = (v: unknown): string[] => (Array.isArray(v) ? v.filter((e): e is string => typeof e === "string" && (WEBHOOK_EVENTS as readonly string[]).includes(e)) : []);
 
+/** Cât așteaptă rezolvarea DNS a unei adrese (salvarea din ACP nu rămâne blocată). */
+const DNS_TIMEOUT_MS = 5000;
+
+/** IP-urile unui domeniu; nimic dacă nu se rezolvă în `DNS_TIMEOUT_MS`. */
+async function resolveHost(host: string): Promise<string[]> {
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<[]>((resolve) => {
+    timer = setTimeout(() => resolve([]), DNS_TIMEOUT_MS);
+  });
+  try {
+    return (await Promise.race([dnsLookup(host, { all: true }).catch(() => []), timeout])).map((a) => a.address);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Adresa e publică (fără rețele interne): schema, portul, apoi fiecare IP rezolvat. */
 async function assertPublicUrl(raw: string): Promise<URL> {
   let url: URL;
@@ -32,8 +48,9 @@ async function assertPublicUrl(raw: string): Promise<URL> {
     throw new GcsValidationError({ url: "invalid_url" });
   }
   const host = url.hostname.replace(/^\[|\]$/g, "");
-  const addresses = isIP(host) !== 0 ? [host] : (await dnsLookup(host, { all: true }).catch(() => [])).map((a) => a.address);
-  if (addresses.length === 0 || addresses.some((a) => !isPublicAddress(a))) throw new GcsValidationError({ url: "blocked_address" });
+  const addresses = isIP(host) !== 0 ? [host] : await resolveHost(host);
+  if (addresses.length === 0) throw new GcsValidationError({ url: "unresolvable" });
+  if (addresses.some((a) => !isPublicAddress(a))) throw new GcsValidationError({ url: "blocked_address" });
   return url;
 }
 
