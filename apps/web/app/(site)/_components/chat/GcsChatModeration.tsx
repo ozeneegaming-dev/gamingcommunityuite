@@ -22,7 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { GcsErrorPayload, GcsResult } from "@gcs/core";
 import type { GcsChatEphemeral, GcsChatGrantView, GcsChatMessageView, GcsChatModCard, GcsChatModMenu, GcsChatRight, GcsChatSystemLine, GcsChatViewerState } from "@gcs/modules";
-import { GcsButton, GcsIconSvg, GcsMemberName, GcsModal, gcsToast, type GcsIconSvgProps } from "@gcs/ui";
+import { GcsButton, GcsHoverCardIconAction, GcsIconSvg, GcsMemberName, GcsModal, gcsToast, type GcsIconSvgProps } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -198,7 +198,8 @@ const QUICK_ICONS = { mute: faCommentSlash, kick: faRightFromBracket, warn: faTr
 
 /**
  * Mute / Kick / Avertisment în hover card-ul unui membru, când cardul e deschis din camera în care viewer-ul moderează
- * (rădăcina camerei are `data-gcs-chat-mod`, vezi `rootAttrs`): fiecare buton cere camerei dialogul de moderare.
+ * (rădăcina camerei are `data-gcs-chat-mod`, vezi `rootAttrs`): un rând al lor, cu eticheta „Moderare chat” și
+ * butoane-iconiță cu tooltip (încap în card la orice lățime); fiecare buton cere camerei dialogul de moderare.
  */
 function GcsChatHoverActions({ ctx }: { ctx: GcsHoverCardActionContext }) {
   const tm = useTranslations("chat.mod");
@@ -207,12 +208,15 @@ function GcsChatHoverActions({ ctx }: { ctx: GcsHoverCardActionContext }) {
   const quick = (root.dataset.gcsChatMod ?? "").split(",").filter((a): a is GcsChatModRequest["action"] => a === "mute" || a === "kick" || a === "warn");
   if (quick.length === 0) return null;
   return (
-    <span className="gcs-hoverCard__chatMod" data-testid="gcs-hover-chatmod">
+    <span className="gcs-hoverCard__chatMod" role="group" aria-label={tm("quickTitle")} data-testid="gcs-hover-chatmod">
+      <span className="gcs-hoverCard__staffLabel" aria-hidden="true">
+        <GcsIconSvg icon={faShieldHalved} />
+        <span>{tm("quickTitle")}</span>
+      </span>
       {quick.map((a) => (
-        <GcsButton
+        <GcsHoverCardIconAction
           key={a}
-          variant="ghost"
-          size="sm"
+          label={tm(a)}
           className="gcs-sweep"
           icon={<GcsIconSvg icon={QUICK_ICONS[a]} />}
           onClick={() => {
@@ -221,9 +225,7 @@ function GcsChatHoverActions({ ctx }: { ctx: GcsHoverCardActionContext }) {
             document.dispatchEvent(new CustomEvent(CHAT_MOD_EVENT, { detail }));
           }}
           data-testid={`gcs-hover-chatmod-${a}`}
-        >
-          {tm(a)}
-        </GcsButton>
+        />
       ))}
     </span>
   );

@@ -15,6 +15,7 @@ const SHOTS = process.env.GCS_E2E_SHOTS ?? "";
 const NEAR = 16;
 
 let topicUrl = "";
+let categoryName = "";
 
 test.beforeAll(async ({ request }) => {
   if (SHOTS) mkdirSync(SHOTS, { recursive: true });
@@ -27,14 +28,18 @@ test.beforeAll(async ({ request }) => {
     );
   }
   const tree = await forumTree(request);
+  categoryName = `Categorie ${tree.id}`;
   topicUrl = (await topicWithReplies(request, tree.forum.id, `tip-ana-${id}@example.com`, `Topic tooltip ${id}`, 14)).url;
 });
 
-async function guest(browser: Browser, opts: { width: number; height?: number; motion: "reduce" | "no-preference"; light?: boolean; ip: string }) {
+async function guest(browser: Browser, opts: { width: number; height?: number; motion: "reduce" | "no-preference"; light?: boolean; grid?: boolean; ip: string }) {
   const context = await browser.newContext({ reducedMotion: opts.motion, viewport: { width: opts.width, height: opts.height ?? (opts.width < 400 ? 812 : 900) } });
   await useFreshIp(context, opts.ip);
   const url = new URL(test.info().project.use.baseURL ?? "http://localhost:3100");
-  await context.addCookies([{ name: "gcs-skin", value: opts.light ? "gcs-white" : "gcs-dark", domain: url.hostname, path: "/" }]);
+  await context.addCookies([
+    { name: "gcs-skin", value: opts.light ? "gcs-white" : "gcs-dark", domain: url.hostname, path: "/" },
+    ...(opts.grid ? [{ name: "gcs-forum-view", value: "grid", domain: url.hostname, path: "/" }] : []),
+  ]);
   return { context, page: await context.newPage() };
 }
 
@@ -178,6 +183,33 @@ test("tema luminoasă: tooltip-ul lângă element, text lizibil", async ({ brows
   await shot(page, "tooltip-activity-light-1440");
   await context.close();
 });
+
+for (const width of [1440, 375]) {
+  test(`statisticile forumului în grilă (${width} px): bula de pe primul card e în stratul tooltip-urilor, întreagă și lângă buton`, async ({ browser }) => {
+    const { context, page } = await guest(browser, { width, motion: "reduce", grid: true, ip: `100.96.${width === 375 ? 30 : 31}` });
+    await page.goto("/");
+    await expect(page.locator(".gcs-forumIndex")).toHaveAttribute("data-view", "grid");
+    const card = page.locator(".gcs-category").filter({ has: page.getByRole("heading", { name: categoryName }) }).getByTestId("gcs-forum-row").first();
+    const btn = (await card.getByTestId("gcs-forum-stats-btn").elementHandle())!;
+    await settled(btn);
+    await btn.click();
+    const bubble = page.getByTestId("gcs-forum-bubble");
+    await expect(bubble).toBeVisible();
+    await expect(bubble).toContainText(/[0-9]+ topic/);
+    // În `<body>` (nu în cardul sau caseta categoriei, care taie conținutul), întreagă în ecran, lângă buton.
+    expect(await bubble.evaluate((el) => el.parentElement === document.body)).toBe(true);
+    const box = (await bubble.boundingBox())!;
+    const anchor = (await btn.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    expectNear(box, anchor);
+    await shot(page, `stats-grid-${width}`);
+    await page.keyboard.press("Escape");
+    await expect(bubble).toBeHidden();
+    await context.close();
+  });
+}
 
 test("telefon (375 px): tooltip-ul și banda „Sus / Jos” stau în ecran, pagina nu se lățește", async ({ browser }) => {
   const { context, page } = await guest(browser, { width: 375, motion: "reduce", ip: "100.96.4" });

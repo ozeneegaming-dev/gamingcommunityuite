@@ -7118,6 +7118,7 @@
       "profile": "View profile",
       "history": "Their chat history",
       "card": "Moderation record",
+      "quickTitle": "Chat moderation",
       "warn": "Warning",
       "mute": "Mute",
       "kick": "Kick from chat",

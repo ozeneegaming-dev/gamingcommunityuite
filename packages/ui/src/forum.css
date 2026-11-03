@@ -483,6 +483,26 @@
   font-weight: 700;
   font-size: 15px;
 }
+/*
+ * Tot rândul (sau cardul, în grilă) duce în forum: linkul titlului se întinde peste rând, iar celelalte linkuri și
+ * butoane (subforumurile, ultimul mesaj, statisticile) și elementele cu tooltip sau card la hover stau deasupra lui și
+ * își păstrează destinația. Fără script: un singur link, deci merge din tastatură și pentru cititoarele de ecran.
+ */
+.gcs-forumRow:has(.gcs-forumRow__link) {
+  position: relative;
+  cursor: pointer;
+}
+.gcs-forumRow__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.gcs-forumRow:has(.gcs-forumRow__link) :is(a, button, [role="button"], [tabindex], [title], [data-tip], .gcs-avatar):not(.gcs-forumRow__link) {
+  position: relative;
+  z-index: 1;
+}
 .gcs-root .gcs-forumRow__title a,
 .gcs-root .gcs-topicRow__title > a {
   color: var(--gcs-heading, var(--gcs-text));

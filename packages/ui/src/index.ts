@@ -6,7 +6,7 @@ export { GcsButton, type GcsButtonProps } from "./components/GcsButton";
 export { GcsCard, type GcsCardProps } from "./components/GcsCard";
 export { GcsClanTag, type GcsClanTagData, type GcsClanTagProps } from "./components/GcsClanTag";
 export { GcsChart, type GcsChartProps, type GcsChartType } from "./components/GcsChart";
-export { GcsHoverCard, type GcsHoverCardChip, type GcsHoverCardData, type GcsHoverCardLabels, type GcsHoverCardV2, type GcsHoverCardV2Labels } from "./components/GcsHoverCard";
+export { GcsHoverCard, GcsHoverCardActions, GcsHoverCardIconAction, type GcsHoverCardChip, type GcsHoverCardData, type GcsHoverCardLabels, type GcsHoverCardV2, type GcsHoverCardV2Labels } from "./components/GcsHoverCard";
 export { GcsGroupCard, type GcsGroupCardData, type GcsGroupCardIcon, type GcsGroupCardLabels } from "./components/GcsGroupCard";
 export { placeHoverCard, type GcsHoverCardPlacement } from "./components/hoverCardPosition";
 export { GcsBadgeArt, type GcsBadgeArtProps, type GcsBadgeArtSource } from "./components/GcsBadgeArt";

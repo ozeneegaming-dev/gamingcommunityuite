@@ -89,7 +89,8 @@ test.describe("hover card", () => {
     await expect(card.getByTestId("gcs-hover-followers")).toHaveText("0");
     await card.getByTestId("gcs-hover-follow").click();
     await expect(card.getByTestId("gcs-hover-followers")).toHaveText("1");
-    await expect(card.getByTestId("gcs-hover-follow")).toHaveText("Nu mai urmări");
+    // „Urmărește” e un buton-iconiță: eticheta e numele accesibil și tooltip-ul.
+    await expect(card.getByTestId("gcs-hover-follow")).toHaveAttribute("aria-label", "Nu mai urmări");
 
     await page.keyboard.press("Escape");
     await expect(card).toHaveCount(0);
