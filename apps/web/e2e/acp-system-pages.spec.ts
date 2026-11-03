@@ -186,3 +186,94 @@ test("Acțiuni salvate: adaug, editez pașii (același rând, nu unul nou) și �
     await sql(`DELETE FROM mod_saved_actions WHERE name = $1`, [name]);
   }
 });
+
+test("Botul: o postare programată se editează din panou (data rămâne în ora browserului) și se anulează", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `BotEd${id}`, `boted-${id}@example.com`);
+  const title = `Anunț programat ${id}`;
+  try {
+    await page.goto("/admin/system/bot");
+    await page.getByTestId("gcs-bot-schedule-new-open").click();
+    const add = page.getByTestId("gcs-bot-schedule-new");
+    await add.getByTestId("gcs-bot-schedule-title").fill(title);
+    await add.getByTestId("gcs-bot-schedule-content").locator('[contenteditable="true"]').fill("Turneul începe sâmbătă.");
+    await add.getByTestId("gcs-bot-schedule-at").fill("2030-01-15T10:30");
+    await add.getByRole("button", { name: "Programează" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-bot-scheduled-row"][data-title="${title}"]`);
+    await expect(row.locator("[data-state]")).toHaveAttribute("data-state", "pending");
+
+    await row.getByTestId("gcs-bot-schedule-edit-open").click();
+    const edit = page.getByTestId("gcs-bot-schedule-edit");
+    await expect(edit.getByTestId("gcs-bot-schedule-title")).toHaveValue(title);
+    await expect(edit.getByTestId("gcs-bot-schedule-at")).toHaveValue("2030-01-15T10:30");
+    await expect(edit.getByTestId("gcs-bot-schedule-content")).toContainText("Turneul începe sâmbătă.");
+    await edit.getByTestId("gcs-bot-schedule-title").fill(`${title} (mutat)`);
+    await edit.getByTestId("gcs-bot-schedule-at").fill("2030-01-16T18:00");
+    await edit.getByLabel("Fixează topicul").check();
+    await shot(page, "bot-schedule-edit");
+    await edit.getByRole("button", { name: "Salvează" }).click();
+    await expect(edit).toHaveCount(0);
+    const moved = page.locator(`[data-testid="gcs-bot-scheduled-row"][data-title="${title} (mutat)"]`);
+    await expect(moved).toContainText("Fixează topicul");
+    expect(await sql(`SELECT id FROM bot_scheduled_posts WHERE title LIKE $1`, [`${title}%`])).toHaveLength(1);
+
+    await moved.getByTestId("gcs-bot-schedule-edit-open").click();
+    await page.getByTestId("gcs-bot-schedule-edit").getByRole("button", { name: "Anulează" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(moved).toHaveCount(0);
+  } finally {
+    await sql(`DELETE FROM bot_scheduled_posts WHERE title LIKE $1`, [`${title}%`]);
+  }
+});
+
+test("Contact: setările din ACP, un vizitator scrie pe /contact, adminul răspunde pe email și arhivează", async ({ page, browser }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Cont${id}`, `cont-${id}@example.com`);
+  const email = `vizitator-${id}@example.com`;
+  try {
+    await page.goto("/admin/settings/contact");
+    await expect(page.getByRole("heading", { name: "Contact", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-contact-settings-open").click();
+    const cfg = page.getByTestId("gcs-contact-settings");
+    await cfg.getByLabel("Textul de deasupra formularului").fill(`Scrie-ne pentru unban ${id}`);
+    await cfg.getByLabel("Subiectele (unul pe rând)").fill("Cerere unban\nProblemă VIP");
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(cfg).toHaveCount(0);
+
+    // Vizitatorul: textul și subiectele din ACP, captcha-ul invizibil, confirmarea.
+    const guestContext = await browser.newContext();
+    await useFreshIp(guestContext, "198.18.72");
+    const guest = await guestContext.newPage();
+    await guest.goto("/contact");
+    await expect(guest.getByTestId("gcs-contact")).toContainText(`Scrie-ne pentru unban ${id}`);
+    await guest.getByLabel("Numele tău").fill("Vizitator Test");
+    await guest.getByLabel("Emailul tău").fill(email);
+    await guest.getByLabel("Subiectul").selectOption("Cerere unban");
+    await guest.getByLabel("Mesajul").fill(`Am fost banat din greșeală pe serverul de mix (${id}).`);
+    await shot(guest, "contact-1-form");
+    await guest.getByRole("button", { name: "Trimite mesajul" }).click();
+    await expect(guest.getByTestId("gcs-contact-sent")).toBeVisible({ timeout: 30_000 });
+    await guestContext.close();
+
+    // Adminul: mesajul nou, răspunsul pe email, apoi arhivarea.
+    await page.goto(`/admin/settings/contact?q=${encodeURIComponent(email)}`);
+    const row = page.locator('[data-testid="gcs-contact-row"]').first();
+    await expect(row).toHaveAttribute("data-status", "new");
+    await expect(row).toHaveAttribute("data-subject", "Cerere unban");
+    await row.getByTestId("gcs-contact-panel-open").click();
+    const msg = page.getByTestId("gcs-contact-panel");
+    await expect(msg.getByTestId("gcs-contact-body")).toContainText("banat din greșeală");
+    await msg.getByLabel("Răspunsul tău").fill("Salut! Am verificat și am scos banul.");
+    await msg.getByRole("button", { name: "Trimite răspunsul" }).click();
+    await expect(msg.getByTestId("gcs-contact-replies")).toContainText("Am verificat și am scos banul.");
+    await shot(page, "contact-2-reply");
+    await msg.getByRole("button", { name: "Arhivează" }).click();
+    await expect(page.locator('[data-testid="gcs-contact-row"]')).toHaveCount(0);
+    expect(await sql(`SELECT status FROM contact_messages WHERE email = $1`, [email])).toEqual([{ status: "archived" }]);
+  } finally {
+    await sql(`DELETE FROM contact_messages WHERE email = $1`, [email]);
+    await resetSetting("contact.config");
+  }
+});

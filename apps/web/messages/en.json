@@ -5024,7 +5024,12 @@
         },
         "open": "Open topic",
         "cancel": "Cancel",
-        "cancelConfirm": "The scheduled post is deleted and will not be published."
+        "cancelConfirm": "The scheduled post is deleted and will not be published.",
+        "new": "New post",
+        "save": "Save",
+        "noCategory": "No category",
+        "secPost": "Post",
+        "secWhen": "Publishing"
       }
     },
     "bans": {
@@ -5663,6 +5668,69 @@
       "none": "Clear all",
       "groupAll": "All in category",
       "noCategory": "No category"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Messages received through the site's contact form. Reply by email directly, archive what is solved.",
+      "viewPage": "View the page",
+      "settings": "Settings",
+      "save": "Save",
+      "stateOn": "The contact form is on",
+      "stateOff": "The contact form is off",
+      "stateRedirect": "The contact page sends visitors to an external address",
+      "chipGuests": "visitors and members",
+      "chipMembers": "members only",
+      "chipBell": "staff notification",
+      "chipEmails": "{count, plural, one {copy to # address} other {copies to # addresses}}",
+      "filters": "Filters",
+      "tabOpen": "Open ({count})",
+      "tabArchived": "Archived ({count})",
+      "tabAll": "All",
+      "total": "{count, plural, one {# message} other {# messages}}",
+      "search": "Search by name, email or subject",
+      "empty": "No messages here.",
+      "status": {
+        "new": "New",
+        "read": "Read",
+        "answered": "Answered",
+        "archived": "Archived"
+      },
+      "open": "Open",
+      "from": "From",
+      "email": "Email",
+      "received": "Received",
+      "ip": "IP",
+      "reply": "Your reply",
+      "replyHint": "Sent by email to {email}, with the message quoted below.",
+      "sendReply": "Send the reply",
+      "markRead": "Mark as read",
+      "archive": "Archive",
+      "unarchive": "Reopen",
+      "delete": "Delete",
+      "confirmDelete": "Delete the message permanently?",
+      "pages": "Pages",
+      "page": "Page {page} of {pages}",
+      "prev": "Previous",
+      "next": "Next",
+      "cfg": {
+        "secPage": "The /contact page",
+        "secDelivery": "Delivery and retention",
+        "enabled": "Contact page on",
+        "enabledHint": "When off, /contact shows “page not found”.",
+        "guests": "Visitors can write too",
+        "guestsHint": "Visitors go through the invisible captcha from Anti-spam. Otherwise, only signed-in members.",
+        "intro": "Text above the form",
+        "introPlaceholder": "Write to us and we will reply by email as soon as we can.",
+        "subjects": "Subjects (one per line)",
+        "subjectsHint": "Shown as a list. Without any subject, the sender writes their own.",
+        "redirectUrl": "Send to an external address",
+        "redirectHint": "Optional: /contact goes there (e.g. a Discord server or a support page) instead of the form.",
+        "notifyStaff": "Notify staff in the bell",
+        "notifyHint": "Everyone with access to this page is notified of each new message.",
+        "emails": "Email copies",
+        "emailsHint": "Up to 10 addresses, one per line or separated by commas.",
+        "keepDays": "Keep messages (days)"
+      }
     }
   },
   "settings": {
@@ -6428,6 +6496,9 @@
       "remote_images_hint": "In posts, signatures, profiles and messages. Blocked = shown as a link to the image.",
       "orphan_days": "Delete unused files after (days)",
       "orphan_days_hint": "Files uploaded and never attached to a post or message, daily, in batches. 0 = off. Recommended: at least 7."
+    },
+    "contact": {
+      "config": "Contact form"
     }
   },
   "permissions": {
@@ -7637,7 +7708,8 @@
         "weekly_digest": "Weekly digest “What you missed”",
         "warning_appeal": "Warning appeal decisions",
         "multi_account": "New accounts sharing another account's IP (staff)",
-        "system_alert": "System status alerts (disk, failed jobs)"
+        "system_alert": "System status alerts (disk, failed jobs)",
+        "contact_message": "New contact form messages (staff)"
       },
       "chat": {
         "mention": "Chat mentions",
@@ -11456,5 +11528,21 @@
       "add": "Add",
       "saved": "Saved"
     }
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Write to us and we will reply by email as soon as we can.",
+    "name": "Your name",
+    "email": "Your email",
+    "subject": "Subject",
+    "pickSubject": "Choose a subject",
+    "message": "Message",
+    "send": "Send the message",
+    "sending": "Sending…",
+    "as": "Sending as {name} ({email}). The reply goes to this email.",
+    "sentTitle": "Your message was sent",
+    "sentBody": "Thank you! The team will reply by email.",
+    "loginRequired": "The contact form is for members only.",
+    "login": "Sign in"
   }
 }

@@ -148,6 +148,20 @@ describe("bun venitul și postările programate", () => {
     expect(await w.db.botScheduledPost.count()).toBe(1);
   });
 
+  test("editarea unei postări programate: titlul, conținutul, data și opțiunile; nu după publicare", async () => {
+    const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+    const { id } = await bot.schedule(w.root, { forumId, title: "Prima variantă", content: doc("Vechi"), publishAt: new Date("2026-10-27T10:00:00Z"), pin: true });
+    await bot.reschedule(w.root, id, { forumId, title: "  A doua variantă ", content: doc("Nou"), publishAt: new Date("2026-10-28T09:00:00Z"), lock: true });
+    const view = (await bot.scheduled(w.root)).find((p) => p.id === id)!;
+    expect(view).toMatchObject({ title: "A doua variantă", publishAt: "2026-10-28T09:00:00.000Z", lock: true, pin: false, status: "pending", content: doc("Nou") });
+    await expect(bot.reschedule(w.root, id, { forumId, title: "Trecut", content: doc("x"), publishAt: new Date("2026-10-20T09:00:00Z") })).rejects.toMatchObject({ fields: { publishAt: "in_past" } });
+
+    now = new Date("2026-10-28T09:00:30Z");
+    expect(await bot.publishScheduled()).toBe(1);
+    await expect(bot.reschedule(w.root, id, { forumId, title: "Prea târziu", content: doc("x"), publishAt: new Date("2026-11-01T09:00:00Z") })).rejects.toMatchObject({ status: 404 });
+    expect(await w.db.auditLog.count({ where: { action: "bot.reschedule", targetId: String(id) } })).toBe(1);
+  });
+
   test("ACP: numele botului se schimbă (unic); un membru fără drept ACP e refuzat", async () => {
     await bot.rename(w.root, "Știri GCS");
     expect((await bot.account())!.name).toBe("Știri GCS");

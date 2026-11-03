@@ -21,15 +21,17 @@ type Props = {
   /** Formularul (de obicei un `GcsActionForm`, randat pe server); se închide singur după salvare. */
   children: ReactNode;
   testId?: string;
+  /** Panoul pornește deschis (ex. elementul din linkul unei notificări). */
+  defaultOpen?: boolean;
 };
 
 /**
  * Tiparul „listă + panou” din ACP: un buton (pe rândul elementului sau în titlul paginii) care deschide panoul de
  * editare din dreapta, cu formularul elementului. Paginile rămân scurte: doar elementul ales își arată formularul.
  */
-export function GcsAcpEditPanel({ label, iconOnly, buttonIcon, variant = "ghost", title, titleIcon, aside, footer, size, children, testId }: Props) {
+export function GcsAcpEditPanel({ label, iconOnly, buttonIcon, variant = "ghost", title, titleIcon, aside, footer, size, children, testId, defaultOpen = false }: Props) {
   const t = useTranslations("ui.panel");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const text = label ?? t("edit");
   return (
     <>

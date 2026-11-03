@@ -430,3 +430,130 @@
   gap: 6px;
   margin: 4px 0 2px;
 }
+
+/* ── Botul comunității: postările programate (listă + panou) ── */
+.gcs-botSched__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gcs-botSched__list {
+  margin: 0 -20px -20px;
+  border-top: 1px solid var(--gcs-border);
+}
+
+/* ── Contact: pagina publică și cutia din ACP ── */
+.gcs-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 32px;
+}
+.gcs-contact__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gcs-contact__intro {
+  margin: 0;
+  font-size: 15px;
+  white-space: pre-line;
+}
+.gcs-contact__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gcs-contact__as {
+  margin: 0;
+  font-size: 13.5px;
+}
+.gcs-contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.gcs-contact__error {
+  color: var(--gcs-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-contact__sent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--gcs-ok) 40%, var(--gcs-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gcs-ok) 10%, var(--gcs-surface));
+}
+.gcs-contact__login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.gcs-contactSummary {
+  margin-bottom: 14px;
+}
+.gcs-contactSearch .gcs-input {
+  min-width: min(100%, 260px);
+}
+.gcs-contactRow--new .gcs-sysList__body strong {
+  color: var(--gcs-accent);
+}
+.gcs-contactRow__snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+.gcs-contactMsg {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-contactMsg .gcs-sysFacts {
+  padding: 0;
+}
+.gcs-contactMsg__body {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--gcs-accent);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.gcs-contactMsg__replies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-contactMsg__replies li {
+  padding: 10px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+}
+.gcs-contactMsg__replies p {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+.gcs-contactMsg__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .gcs-contact {
+    padding: 20px 16px;
+  }
+}

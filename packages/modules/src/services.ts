@@ -178,6 +178,7 @@ import { GcsOrphanFilesService } from "./uploads/orphans";
 import { GcsFileAdminService } from "./uploads/admin";
 import { GcsCacheAdminService } from "./system/cache";
 import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
+import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -266,6 +267,8 @@ export type GcsServices = {
   systemStatus: GcsSystemStatusService;
   /** ACP › Sistem › Cache: zonele cache-ului și golirea lor. */
   cacheAdmin: GcsCacheAdminService;
+  /** Formularul de contact (`/contact`) și mesajele lui din ACP › Setări › Contact. */
+  contact: GcsContactService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -673,6 +676,15 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     canView: async (userId) => (await acp.usersWith("system.status", "view", 500)).includes(userId),
     describe: async (id) => ({ title: id.startsWith("job:") ? id.slice(4) : id, href: "/admin/system/status" }),
   });
+  // Contact: mesajele primite; notificarea duce la cutia din ACP, cu mesajul deschis.
+  const contact = new GcsContactService({ db, settings, acp, notifications, mailer, rateLimiter, antispam, siteName: () => settings.get<string>("site.name") });
+  notifications.registerTarget(CONTACT_NOTIFICATION, {
+    canView: async (userId) => (await acp.usersWith(CONTACT_ACP_SECTION, "view", 500)).includes(userId),
+    describe: async (id) => {
+      const msg = await db.contactMessage.findUnique({ where: { id: Number(id) || 0 }, select: { subject: true } });
+      return msg ? { title: msg.subject, href: `/admin/settings/contact?open=${id}` } : null;
+    },
+  });
   const notificationProducers = new GcsNotificationProducers({
     db,
     kv,
@@ -998,6 +1010,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     fileAdmin: new GcsFileAdminService({ db, acp, attachments, settings }),
     systemStatus,
     cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
+    contact,
     files,
     attachments,
     forums,

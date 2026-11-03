@@ -5024,7 +5024,12 @@
         },
         "open": "Deschide topicul",
         "cancel": "Anulează",
-        "cancelConfirm": "Postarea programată se șterge și nu mai e publicată."
+        "cancelConfirm": "Postarea programată se șterge și nu mai e publicată.",
+        "new": "Postare nouă",
+        "save": "Salvează",
+        "noCategory": "Fără categorie",
+        "secPost": "Postarea",
+        "secWhen": "Publicarea"
       }
     },
     "bans": {
@@ -5663,6 +5668,69 @@
       "none": "Debifează tot",
       "groupAll": "Toate din categorie",
       "noCategory": "Fără categorie"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Mesajele primite prin formularul de contact al site-ului. Răspunde direct pe email, arhivează ce e rezolvat.",
+      "viewPage": "Vezi pagina",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "Formularul de contact e pornit",
+      "stateOff": "Formularul de contact e oprit",
+      "stateRedirect": "Pagina de contact trimite la o adresă externă",
+      "chipGuests": "vizitatori și membri",
+      "chipMembers": "doar membri",
+      "chipBell": "notificare staff",
+      "chipEmails": "{count, plural, one {copie la # adresă} few {copii la # adrese} other {copii la # de adrese}}",
+      "filters": "Filtre",
+      "tabOpen": "Deschise ({count})",
+      "tabArchived": "Arhivate ({count})",
+      "tabAll": "Toate",
+      "total": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
+      "search": "Caută după nume, email sau subiect",
+      "empty": "Niciun mesaj aici.",
+      "status": {
+        "new": "Nou",
+        "read": "Citit",
+        "answered": "Răspuns",
+        "archived": "Arhivat"
+      },
+      "open": "Deschide",
+      "from": "De la",
+      "email": "Email",
+      "received": "Primit",
+      "ip": "IP",
+      "reply": "Răspunsul tău",
+      "replyHint": "Pleacă pe email la {email}, cu mesajul citat dedesubt.",
+      "sendReply": "Trimite răspunsul",
+      "markRead": "Marchează citit",
+      "archive": "Arhivează",
+      "unarchive": "Redeschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi definitiv mesajul?",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "secPage": "Pagina /contact",
+        "secDelivery": "Livrare și păstrare",
+        "enabled": "Pagina de contact pornită",
+        "enabledHint": "Oprită, adresa /contact dă „pagina nu există”.",
+        "guests": "Și vizitatorii pot scrie",
+        "guestsHint": "Vizitatorii trec prin captcha-ul invizibil din Anti-spam. Altfel, doar membrii autentificați.",
+        "intro": "Textul de deasupra formularului",
+        "introPlaceholder": "Scrie-ne și îți răspundem pe email cât mai repede.",
+        "subjects": "Subiectele (unul pe rând)",
+        "subjectsHint": "Apar ca listă. Fără niciun subiect, expeditorul scrie unul liber.",
+        "redirectUrl": "Trimite la o adresă externă",
+        "redirectHint": "Opțional: /contact duce acolo (ex. un server Discord sau o pagină de suport) în loc de formular.",
+        "notifyStaff": "Anunță staff-ul în clopoțel",
+        "notifyHint": "Cine are acces la această pagină primește notificarea fiecărui mesaj nou.",
+        "emails": "Copii pe email",
+        "emailsHint": "Cel mult 10 adrese, câte una pe rând sau separate prin virgulă.",
+        "keepDays": "Păstrează mesajele (zile)"
+      }
     }
   },
   "settings": {
@@ -6428,6 +6496,9 @@
       "remote_images_hint": "În postări, semnături, profiluri și mesaje. Blocate = arătate ca link spre imagine.",
       "orphan_days": "Șterge fișierele nefolosite după (zile)",
       "orphan_days_hint": "Fișierele încărcate și nelegate de nicio postare sau mesaj, zilnic, pe loturi. 0 = oprit. Recomandat: cel puțin 7."
+    },
+    "contact": {
+      "config": "Formularul de contact"
     }
   },
   "permissions": {
@@ -7637,7 +7708,8 @@
         "weekly_digest": "Rezumatul săptămânal „Ce ai ratat”",
         "warning_appeal": "Decizii la contestațiile avertismentelor",
         "multi_account": "Conturi noi cu IP-ul altor conturi (staff)",
-        "system_alert": "Alerte de stare a sistemului (disc, joburi picate)"
+        "system_alert": "Alerte de stare a sistemului (disc, joburi picate)",
+        "contact_message": "Mesaje noi prin formularul de contact (staff)"
       },
       "chat": {
         "mention": "Mențiuni în chat",
@@ -11456,5 +11528,21 @@
       "add": "Adaugă",
       "saved": "Salvat"
     }
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Scrie-ne și îți răspundem pe email cât mai repede.",
+    "name": "Numele tău",
+    "email": "Emailul tău",
+    "subject": "Subiectul",
+    "pickSubject": "Alege subiectul",
+    "message": "Mesajul",
+    "send": "Trimite mesajul",
+    "sending": "Se trimite…",
+    "as": "Trimiți ca {name} ({email}). Răspunsul vine pe acest email.",
+    "sentTitle": "Mesajul a fost trimis",
+    "sentBody": "Mulțumim! Echipa îți răspunde pe email.",
+    "loginRequired": "Formularul de contact e doar pentru membri.",
+    "login": "Intră în cont"
   }
 }

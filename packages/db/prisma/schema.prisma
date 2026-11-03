@@ -517,6 +517,27 @@ model SpamLog {
   @@map("spam_logs")
 }
 
+/// Mesajele primite prin formularul de contact (ACP › Setări › Contact). `userId` fără relație: mesajul (cu numele și
+/// emailul trimise) rămâne și după ștergerea contului, până la curățarea după `contact.keep_days`.
+/// `status`: new | read | answered | archived.
+model ContactMessage {
+  id          Int       @id @default(autoincrement())
+  userId      String?
+  name        String
+  email       String
+  subject     String
+  body        String
+  ip          String?
+  status      String    @default("new")
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

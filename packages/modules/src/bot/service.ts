@@ -83,6 +83,8 @@ export type GcsBotScheduledView = {
   error: string | null;
   lock: boolean;
   pin: boolean;
+  /** Documentul editorului (pentru editarea unei postări încă nepublicate). */
+  content: unknown;
 };
 
 export type GcsBotScheduleInput = { forumId: number; title: string; content: unknown; prefixId?: number | null; lock?: boolean; pin?: boolean; publishAt: Date };
@@ -315,21 +317,54 @@ export class GcsCommunityBot {
       error: r.error,
       lock: r.lock,
       pin: r.pin,
+      content: r.contentJson,
     }));
   }
 
-  /** O postare programată nouă (data în viitor; conținutul e documentul editorului). */
-  async schedule(actor: GcsActor, input: GcsBotScheduleInput): Promise<{ id: number }> {
-    const { db } = this.deps;
-    await this.deps.acp.assert(actor, BOT_ACP_SECTION, "edit");
+  /** Titlul, data (în viitor), documentul și forumul unei postări programate; întoarce titlul curățat și forumul. */
+  private async validSchedule(input: GcsBotScheduleInput): Promise<{ title: string; forumId: number }> {
     const title = input.title.trim();
     if (title.length < 3 || title.length > 150) throw new GcsValidationError({ title: "length" });
     if (!(input.publishAt instanceof Date) || Number.isNaN(input.publishAt.getTime()) || input.publishAt.getTime() < this.now().getTime() - 60_000) {
       throw new GcsValidationError({ publishAt: "in_past" });
     }
     if (!input.content || typeof input.content !== "object" || (input.content as { type?: unknown }).type !== "doc") throw new GcsValidationError({ content: "required" });
-    const forum = await db.forum.findUnique({ where: { id: input.forumId }, select: { id: true } });
+    const forum = await this.deps.db.forum.findUnique({ where: { id: input.forumId }, select: { id: true } });
     if (!forum) throw new GcsValidationError({ forumId: "invalid_choice" });
+    return { title, forumId: forum.id };
+  }
+
+  /**
+   * Editează o postare programată încă nepublicată (sau eșuată): forumul, titlul, conținutul, data și opțiunile. O
+   * postare eșuată redevine „în așteptare” (se reîncearcă la noua dată).
+   */
+  async reschedule(actor: GcsActor, id: number, input: GcsBotScheduleInput): Promise<void> {
+    const { db } = this.deps;
+    await this.deps.acp.assert(actor, BOT_ACP_SECTION, "edit");
+    const { title, forumId } = await this.validSchedule(input);
+    const { count } = await db.botScheduledPost.updateMany({
+      where: { id, status: { in: ["pending", "failed"] } },
+      data: {
+        forumId,
+        title,
+        contentJson: input.content as Prisma.InputJsonValue,
+        lock: input.lock === true,
+        pin: input.pin === true,
+        publishAt: input.publishAt,
+        status: "pending",
+        error: null,
+      },
+    });
+    if (count === 0) throw new GcsNotFound({ entity: "bot_scheduled" });
+    await writeAudit(db, { actorId: actor.userId, action: "bot.reschedule", targetType: "bot_scheduled", targetId: String(id), after: { title, publishAt: input.publishAt.toISOString() }, ip: actor.ip });
+  }
+
+  /** O postare programată nouă (data în viitor; conținutul e documentul editorului). */
+  async schedule(actor: GcsActor, input: GcsBotScheduleInput): Promise<{ id: number }> {
+    const { db } = this.deps;
+    await this.deps.acp.assert(actor, BOT_ACP_SECTION, "edit");
+    const { title, forumId } = await this.validSchedule(input);
+    const forum = { id: forumId };
     const row = await db.botScheduledPost.create({
       data: {
         forumId: forum.id,

@@ -83,6 +83,11 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, t, _n, d) => `Cont nou „${t}” cu IP-ul altor ${Number(d.others) || 0} conturi${Number(d.banned) ? ` (${Number(d.banned)} banate)` : ""}`,
     en: (_a, t, _n, d) => `New account “${t}” shares its IP with ${Number(d.others) || 0} other accounts${Number(d.banned) ? ` (${Number(d.banned)} banned)` : ""}`,
   },
+  // Contact: mesajul nou (`data.from` = numele expeditorului, titlul = subiectul).
+  "core.contact_message": {
+    ro: (_a, t, n, d) => (n > 1 ? `${n} mesaje noi prin formularul de contact` : `Mesaj nou de la ${String(d.from ?? "")} prin formularul de contact: ${t}`),
+    en: (_a, t, n, d) => (n > 1 ? `${n} new contact form messages` : `New contact form message from ${String(d.from ?? "")}: ${t}`),
+  },
   // Stare sistem: discul aproape plin (`data.freePct`) sau un job picat (`data.job`, `data.error`).
   "core.system_alert": {
     ro: (_a, _t, _n, d) => (d.kind === "disk" ? `Spațiu pe disc scăzut: doar ${Number(d.freePct) || 0}% liber` : `Jobul programat „${String(d.job ?? "")}” a picat${d.error ? `: ${String(d.error)}` : ""}`),

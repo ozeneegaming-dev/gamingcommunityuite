@@ -1,6 +1,7 @@
 import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community/footer";
 import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
+import { CONTACT_NOTIFICATION, contactSetting } from "../community/contact";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -114,6 +115,8 @@ const settings: GcsSettingDef[] = [
   ...NOTIFICATION_SETTING_DEFS,
   // Regulile comunității (pagina `/rules`), editate cu editorul postărilor în ACP → Setări → Reguli comunitate.
   communityRulesSetting,
+  // Formularul de contact (ACP › Setări › Contact): pagina, cine îl folosește, subiectele, copiile pe email, păstrarea.
+  contactSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
@@ -417,6 +420,8 @@ export const coreModule: GcsModule = {
   // Unelte IP: un cont nou cu IP-ul altor conturi (staff-ul cu acces la Unelte IP).
   { key: "core.multi_account", labelKey: "notifications.type.core.multi_account", important: false, defaultEmail: "OFF", category: "moderation" },
   // Stare sistem: discul aproape plin sau un job programat picat (administratorii cu acces la Stare sistem).
+  // Contact: un mesaj nou prin formularul de contact (staff-ul cu acces la Setări › Contact).
+  { key: CONTACT_NOTIFICATION, labelKey: "notifications.type.core.contact_message", important: false, defaultEmail: "OFF", category: "moderation" },
   { key: STATUS_ALERT_TYPE, labelKey: "notifications.type.core.system_alert", important: true, defaultEmail: "INSTANT", category: "moderation" },
     // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },

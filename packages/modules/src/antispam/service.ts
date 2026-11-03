@@ -202,14 +202,7 @@ export class GcsAntispamService {
    */
   async verifyRegistration(input: GcsRegistrationCheck, now = Date.now()): Promise<void> {
     const who = { ip: input.ip, email: input.email };
-    if ((await this.captchaMode()) === "pow") {
-      const verdict = input.pow ? verifyPowToken(this.deps.secret(), input.pow, now) : ({ ok: false, reason: "missing" } as const);
-      const fresh = verdict.ok && (await this.deps.rateLimiter.consume(`pow:${verdict.challenge}`, { window: Math.ceil((verdict.expiresAt - now) / 1000) + 60, max: 1 })).allowed;
-      if (!fresh) {
-        await this.log("captcha_failed", { ...who, detail: { reason: verdict.ok ? "reused" : verdict.reason } });
-        throw new GcsForbidden({ reason: "captcha_failed" });
-      }
-    }
+    if ((await this.captchaMode()) === "pow") await this.verifyPow(input.pow, who, {}, now);
     const questions = await this.questionsFor(input.locale);
     if (questions.length > 0) {
       const q = questions.find((x) => x.id === input.questionId);
@@ -224,6 +217,19 @@ export class GcsAntispamService {
     if (listed) {
       await this.log("spam_source", { ...who, detail: listed });
       throw new GcsForbidden({ reason: "spam_source" });
+    }
+  }
+
+  /**
+   * Captcha-ul proof-of-work (invizibil): tokenul e semnat, neexpirat și folosit o singură dată. Altfel refuzul intră
+   * în jurnal (`captcha_failed`, cu `detail` în plus, ex. formularul) și aruncă `GcsForbidden`.
+   */
+  async verifyPow(token: string | null, who: { ip: string | null; email: string | null }, detail: Record<string, unknown> = {}, now = Date.now()): Promise<void> {
+    const verdict = token ? verifyPowToken(this.deps.secret(), token, now) : ({ ok: false, reason: "missing" } as const);
+    const fresh = verdict.ok && (await this.deps.rateLimiter.consume(`pow:${verdict.challenge}`, { window: Math.ceil((verdict.expiresAt - now) / 1000) + 60, max: 1 })).allowed;
+    if (!fresh) {
+      await this.log("captcha_failed", { ...who, detail: { reason: verdict.ok ? "reused" : verdict.reason, ...detail } });
+      throw new GcsForbidden({ reason: "captcha_failed" });
     }
   }
 
