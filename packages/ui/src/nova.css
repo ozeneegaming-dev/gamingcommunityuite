@@ -1579,9 +1579,13 @@ html.gcs-nova[data-theme="light"] {
   --gcs-hb-sq-border: #343a45;
   --gcs-hb-text: #e6eaf0;
   --gcs-hb-muted: #8a94a6;
-  --gcs-panel-bg: linear-gradient(180deg, #1a2030, #121722);
-  --gcs-panel-border: #39435a;
-  --gcs-panel-shadow: 0 24px 60px rgb(0 0 0 / 0.6), 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 25%, transparent);
+  /*
+   * Panourile (dropdown-urile, submeniurile, notificările, contul), consola și bara de jos: suprafețele și bordurile
+   * temei, ca ale cardurilor (nu un albastru propriu). În modul luminos rămân închise, din paleta închisă a brandului.
+   */
+  --gcs-panel-bg: linear-gradient(180deg, var(--gcs-surface2), var(--gcs-surface));
+  --gcs-panel-border: color-mix(in srgb, var(--gcs-text) 13%, var(--gcs-border));
+  --gcs-panel-shadow: 0 24px 60px rgb(0 0 0 / 0.6);
   /* Culorile panourilor, ale consolei și ale barei de jos (valorile designului GCS; sistemul le ia din temă). */
   --gcs-ui-hover: rgb(255 255 255 / 0.03);
   --gcs-ui-hover-tab: rgb(255 255 255 / 0.05);
@@ -1591,44 +1595,77 @@ html.gcs-nova[data-theme="light"] {
   --gcs-ui-well-60: rgb(11 15 23 / 0.6);
   --gcs-ui-well-70: rgb(11 15 23 / 0.7);
   --gcs-hb-compact-bg: rgb(27 31 38 / 0.96);
-  --gcs-am-card-tint: rgb(90 60 160 / 0.18);
-  --gcs-ck-feature-alt: rgb(90 60 160 / 0.3);
+  --gcs-am-card-tint: color-mix(in srgb, var(--gcs-accent) 7%, transparent);
+  --gcs-ck-feature-alt: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
   --gcs-ui-ok-40: rgb(61 220 151 / 0.4);
   --gcs-ui-ok-15: rgb(61 220 151 / 0.15);
   --gcs-ui-ok-12: rgb(61 220 151 / 0.12);
-  --gcs-hb-cockpit-bg: linear-gradient(180deg, #252c3a, #151922 55%, #10141c);
+  --gcs-hb-cockpit-bg: linear-gradient(180deg, var(--gcs-surface2), var(--gcs-surface) 55%, var(--gcs-bg));
   --gcs-hb-notch-bg: linear-gradient(180deg, #2b3039, #22262e);
-  --gcs-hb-side-bg: linear-gradient(180deg, #1b2130, #10141c);
-  --gcs-mbar-bg: linear-gradient(180deg, #1c2230, #0f131b);
+  --gcs-hb-side-bg: linear-gradient(180deg, var(--gcs-surface2), var(--gcs-bg));
+  --gcs-mbar-bg: linear-gradient(180deg, var(--gcs-surface2), var(--gcs-bg));
   --gcs-ui-text: #ced5de;
   --gcs-ui-muted: #7e8999;
   --gcs-ui-dim: #8a94a6;
   --gcs-ui-faint: #6b7689;
   --gcs-hb-small: #c9d1de;
   --gcs-ck-sub: #aeb7c4;
-  --gcs-ui-line: #263044;
-  --gcs-ui-line2: #1e2533;
-  --gcs-ui-edge: #2a3346;
-  --gcs-ui-tile-border: #222a3a;
-  --gcs-ui-edge-strong: #39435a;
-  --gcs-ui-well: #0b0f17;
-  --gcs-hb-sq-cockpit: #151922;
+  --gcs-ui-line: color-mix(in srgb, var(--gcs-text) 6%, var(--gcs-border));
+  --gcs-ui-line2: var(--gcs-border);
+  --gcs-ui-edge: color-mix(in srgb, var(--gcs-text) 10%, var(--gcs-border));
+  --gcs-ui-tile-border: var(--gcs-border);
+  --gcs-ui-edge-strong: color-mix(in srgb, var(--gcs-text) 13%, var(--gcs-border));
+  --gcs-ui-well: var(--gcs-bg);
+  --gcs-hb-sq-cockpit: var(--gcs-surface);
   --gcs-ui-accent-ink: #ff6a3d;
   --gcs-ui-accent-2: #ff8a3d;
   --gcs-ui-ok: #3ddc97;
   --gcs-ui-off: #4a5468;
   --gcs-ui-blank: #3f4652;
   --gcs-hb-ring: #1b1f26;
-  --gcs-mbar-ring: #151a24;
+  --gcs-mbar-ring: var(--gcs-surface);
   --gcs-hb-edge: #11141a;
   --gcs-hb-sq-deep: #20242b;
-  --gcs-ck-top: #141821;
+  --gcs-ck-top: var(--gcs-surface);
   --gcs-ui-strong: #fff;
-  --gcs-ck-glow: rgb(90 60 160 / 0.42);
+  --gcs-ck-glow: color-mix(in srgb, var(--gcs-accent) 30%, transparent);
 }
+/* Modul luminos: antetul și panourile rămân închise, deci aceleași tokenuri vin din paleta închisă a brandului. */
 html.gcs-nova[data-theme="light"] {
+  --gcs-panel-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-surface));
+  --gcs-panel-border: color-mix(in srgb, var(--gcs-brand-text) 13%, var(--gcs-brand-border));
+  --gcs-hb-cockpit-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-surface) 55%, var(--gcs-brand-bg));
+  --gcs-hb-side-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-bg));
+  --gcs-mbar-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-bg));
+  --gcs-ui-line: color-mix(in srgb, var(--gcs-brand-text) 6%, var(--gcs-brand-border));
+  --gcs-ui-line2: var(--gcs-brand-border);
+  --gcs-ui-edge: color-mix(in srgb, var(--gcs-brand-text) 10%, var(--gcs-brand-border));
+  --gcs-ui-tile-border: var(--gcs-brand-border);
+  --gcs-ui-edge-strong: color-mix(in srgb, var(--gcs-brand-text) 13%, var(--gcs-brand-border));
+  --gcs-ui-well: var(--gcs-brand-bg);
+  --gcs-hb-sq-cockpit: var(--gcs-brand-surface);
+  --gcs-mbar-ring: var(--gcs-brand-surface);
+  --gcs-ck-top: var(--gcs-brand-surface);
   /* Pe butoanele deschise, sticla e mai puternică (30 %), ca să se vadă. */
   --gcs-glass-light: rgb(255 255 255 / 0.3);
+}
+@media (prefers-color-scheme: light) {
+  html.gcs-nova[data-theme="auto"] {
+    --gcs-panel-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-surface));
+    --gcs-panel-border: color-mix(in srgb, var(--gcs-brand-text) 13%, var(--gcs-brand-border));
+    --gcs-hb-cockpit-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-surface) 55%, var(--gcs-brand-bg));
+    --gcs-hb-side-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-bg));
+    --gcs-mbar-bg: linear-gradient(180deg, var(--gcs-brand-surface-2), var(--gcs-brand-bg));
+    --gcs-ui-line: color-mix(in srgb, var(--gcs-brand-text) 6%, var(--gcs-brand-border));
+    --gcs-ui-line2: var(--gcs-brand-border);
+    --gcs-ui-edge: color-mix(in srgb, var(--gcs-brand-text) 10%, var(--gcs-brand-border));
+    --gcs-ui-tile-border: var(--gcs-brand-border);
+    --gcs-ui-edge-strong: color-mix(in srgb, var(--gcs-brand-text) 13%, var(--gcs-brand-border));
+    --gcs-ui-well: var(--gcs-brand-bg);
+    --gcs-hb-sq-cockpit: var(--gcs-brand-surface);
+    --gcs-mbar-ring: var(--gcs-brand-surface);
+    --gcs-ck-top: var(--gcs-brand-surface);
+  }
 }
 
 /* Sweep-ul de sticlă e în `sweep.css` (comun tuturor temelor); aici rămâne doar aspectul Nova al butoanelor. */
