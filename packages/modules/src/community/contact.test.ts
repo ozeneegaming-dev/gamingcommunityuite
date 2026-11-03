@@ -93,7 +93,7 @@ describe("formularul de contact", () => {
     await expect(contact.list(member, { page: 1 })).rejects.toThrow();
 
     await contact.setStatus(root, a.id, "archived");
-    let list = await contact.list(root, { page: 1 });
+    const list = await contact.list(root, { page: 1 });
     expect(list.items.map((m) => m.name)).toEqual(["Bogdan"]);
     expect(list.counts).toMatchObject({ new: 1, archived: 1 });
     expect((await contact.list(root, { page: 1, status: "archived" })).items.map((m) => m.name)).toEqual(["Ana"]);

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { uid } from "./forum-fixtures";
+import { forumTree, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, groupId, resetSetting, sql, userId, useFreshIp } from "./helpers";
 import { e2eKv } from "./kv";
 
@@ -187,8 +187,10 @@ test("Acțiuni salvate: adaug, editez pașii (același rând, nu unul nou) și �
   }
 });
 
-test("Botul: o postare programată se editează din panou (data rămâne în ora browserului) și se anulează", async ({ page }) => {
+test("Botul: o postare programată se editează din panou (data rămâne în ora browserului) și se anulează", async ({ page, request }) => {
   const id = uid();
+  // Forumurile instanței E2E se creează la cerere.
+  await forumTree(request);
   await enterAcpAsRoot(page, `BotEd${id}`, `boted-${id}@example.com`);
   const title = `Anunț programat ${id}`;
   try {
