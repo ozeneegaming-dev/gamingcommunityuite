@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { forumTree, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, sql, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, resetSetting, sql, useFreshIp } from "./helpers";
 
 test.beforeEach(async ({ context }) => {
   await useFreshIp(context, "203.0.113");
@@ -143,8 +143,16 @@ test("Profiluri: lista arată rânduri, nu formulare; panoul se deschide, salvea
 
     await page.getByTestId("gcs-acp-profiles-tab-settings").click();
     await expect(page.getByTestId("gcs-acp-faceit-key")).toBeVisible();
+    // Limitele semnăturii stau tot aici și se salvează.
+    await page.getByLabel("Lungimea maximă (caractere)").fill("300");
+    const settingsForm = page.locator("form.gcs-acpProf__settings");
+    await settingsForm.getByRole("button", { name: "Salvează" }).click();
+    await expect(settingsForm.getByRole("status")).toHaveText("Salvat");
+    await page.reload();
+    await expect(page.getByLabel("Lungimea maximă (caractere)")).toHaveValue("300");
   });
 
+  await resetSetting("profile.signature_max_chars");
   await sql(`DELETE FROM profile_fields WHERE key IN ($1, $2)`, keys);
 });
 
