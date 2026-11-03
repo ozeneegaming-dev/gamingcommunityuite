@@ -817,3 +817,58 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Web App (PWA): previzualizarea aplicației instalate ── */
+.gcs-pwaPreview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 16px 18px;
+}
+.gcs-pwaPreview .gcs-sysFacts {
+  flex: 1 1 200px;
+  padding: 0;
+}
+.gcs-pwaPreview__phone {
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  height: 260px;
+  overflow: hidden;
+  border: 6px solid #1c1f26;
+  border-radius: 22px;
+  background: var(--gcs-pwa-bg);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 30%);
+}
+.gcs-pwaPreview__bar {
+  height: 22px;
+  background: var(--gcs-pwa-theme);
+}
+.gcs-pwaPreview__splash {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+}
+.gcs-pwaPreview__icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--gcs-pwa-theme);
+  font-size: 30px;
+}
+.gcs-pwaPreview__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

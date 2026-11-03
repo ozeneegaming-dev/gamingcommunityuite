@@ -549,6 +549,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
+  // Iconița aplicației instalabile (PWA): publică, ca favicon-ul.
+  attachments.registerAccess("theme.appicon", async () => true);
   attachments.registerAccess("theme.header", async () => true);
   attachments.registerAccess(HEADER_VIDEO_CONTENT_TYPE, async () => true);
   // Aspect forumuri: iconițele și fundalurile forumurilor și ale widget-urilor sunt publice.

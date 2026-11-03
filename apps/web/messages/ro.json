@@ -6055,6 +6055,100 @@
         "logTerms": "Notează termenii căutați",
         "logHint": "Doar termenul, numărul de rezultate și momentul (fără cine a căutat); ultimele 1000 de căutări."
       }
+    },
+    "rss": {
+      "title": "RSS",
+      "description": "Fluxurile RSS ale site-ului (cel general și câte unul pe forumurile publice) și importul de fluxuri ca topicuri.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "{count, plural, =0 {Niciun flux public} one {# flux public} few {# fluxuri publice} other {# de fluxuri publice}}",
+      "stateOff": "Fluxurile RSS sunt oprite",
+      "chipItems": "{n} topicuri pe flux",
+      "chipSnippets": "cu rezumat",
+      "chipCache": "cache {n} min",
+      "feeds": "Fluxurile site-ului",
+      "noFeeds": "Niciun forum public încă.",
+      "siteFeed": "Fluxul general (tot site-ul)",
+      "open": "Deschide",
+      "importTitle": "Import RSS",
+      "importBody": "Știrile din alte site-uri (RSS, actualizări Steam) devin topicuri ale botului comunității, prin pluginul Bot de știri.",
+      "importOpen": "Deschide Bot de știri",
+      "importDisabled": "Bot de știri (oprit)",
+      "importInstall": "Instalează Bot de știri din Aplicații",
+      "cfg": {
+        "secFeeds": "Fluxurile",
+        "secItems": "Conținutul",
+        "enabled": "Fluxuri RSS pornite",
+        "siteFeed": "Fluxul general /rss.xml",
+        "siteFeedHint": "Topicurile cu activitate recentă din toate forumurile publice.",
+        "items": "Topicuri pe flux",
+        "cacheMinutes": "Cache (minute)",
+        "snippets": "Rezumatul primei postări",
+        "snippetsHint": "Cititoarele RSS arată începutul topicului."
+      }
+    },
+    "share": {
+      "title": "Distribuire",
+      "description": "Meniul „Distribuie” al topicurilor: rețelele afișate, foaia de distribuire a telefonului și hashtag-urile pentru X.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "{count, plural, =0 {Doar copierea linkului} one {Meniul e pornit, cu # rețea} few {Meniul e pornit, cu # rețele} other {Meniul e pornit, cu # de rețele}}",
+      "stateOff": "Meniul „Distribuie” e oprit",
+      "chipNative": "foaia nativă pe telefon",
+      "chipTags": "hashtag-uri: {tags}",
+      "chipNone": "fără opțiuni în plus",
+      "networksTitle": "Rețelele",
+      "copy": "Copiază linkul",
+      "copyHint": "Copiază adresa topicului.",
+      "copyNative": "Pe telefon deschide foaia de distribuire a sistemului.",
+      "always": "Mereu",
+      "on": "Pornită",
+      "off": "Oprită",
+      "networks": {
+        "x": "X (Twitter)",
+        "facebook": "Facebook",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "reddit": "Reddit",
+        "linkedin": "LinkedIn",
+        "email": "Email"
+      },
+      "cfg": {
+        "secMenu": "Meniul",
+        "secNetworks": "Rețelele afișate",
+        "enabled": "Meniul „Distribuie” pe topicuri",
+        "nativeShare": "Foaia de distribuire a telefonului",
+        "nativeHint": "Pe telefon, „Copiază linkul” deschide lista aplicațiilor (Discord, Messenger…).",
+        "hashtags": "Hashtag-uri pentru X",
+        "hashtagsHint": "Separate prin virgulă, fără #."
+      }
+    },
+    "pwa": {
+      "title": "Web App (PWA)",
+      "description": "Site-ul se poate instala ca aplicație pe telefon sau desktop. Alege numele, iconița, culorile și pagina de pornire.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "preview": "Cum arată instalată",
+      "icon": "Iconița aplicației",
+      "iconHint": "O imagine pătrată (PNG, WebP sau JPG, cel mult 2 MB); devine PNG 512 × 512 pe fundal transparent.",
+      "displays": {
+        "standalone": "Ca aplicație (fără bara browserului)",
+        "minimal-ui": "Cu bara minimă a browserului",
+        "browser": "În browser"
+      },
+      "cfg": {
+        "secName": "Numele",
+        "secLook": "Aspectul",
+        "name": "Numele aplicației",
+        "shortName": "Numele scurt",
+        "shortHint": "Sub iconița de pe ecran; cel mult 12 caractere.",
+        "description": "Descrierea",
+        "themeColor": "Culoarea barei",
+        "backgroundColor": "Culoarea fundalului la pornire",
+        "display": "Cum se deschide",
+        "startUrl": "Pagina de pornire",
+        "startHint": "O adresă din site, ex. / sau /forum."
+      }
     }
   },
   "settings": {
@@ -6857,6 +6951,15 @@
     },
     "search": {
       "config": "Căutarea"
+    },
+    "rss": {
+      "config": "Fluxurile RSS"
+    },
+    "share": {
+      "config": "Distribuirea"
+    },
+    "pwa": {
+      "config": "Aplicația web"
     }
   },
   "permissions": {
