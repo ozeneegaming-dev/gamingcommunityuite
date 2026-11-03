@@ -1,13 +1,16 @@
 import {
+  GcsForbidden,
   GcsRateLimited,
   GcsValidationError,
   normalizeUsername,
   searchBackend,
   type GcsActor,
+  type GcsKv,
   type GcsPermissionService,
   type GcsRateLimiter,
   type GcsSettingsService,
 } from "@gcs/core";
+import { loadSearchConfig, logSearch } from "./searchConfig";
 import type { PrismaClient } from "@gcs/db";
 import sanitizeHtml from "sanitize-html";
 import { forumContainer } from "./posting";
@@ -38,7 +41,6 @@ export type GcsSearchResult = {
   snippet: string;
 };
 
-const SEARCH_LIMIT = { window: 60, max: 20 };
 
 /**
  * Căutarea în forum (spec §2.1, §7): full-text prin `GcsSearchBackend` (PostgreSQL: configurația `gcs_ro`, fără
@@ -52,14 +54,19 @@ export class GcsForumSearch {
       permissions: GcsPermissionService;
       settings: GcsSettingsService;
       rateLimiter: GcsRateLimiter;
+      /** Jurnalul anonim al termenilor (ACP › Căutare); fără el nu se notează nimic. */
+      kv?: Pick<GcsKv, "listPush">;
     },
   ) {}
 
   async search(actor: GcsActor, input: GcsSearchInput): Promise<{ results: GcsSearchResult[]; pagination: GcsPagination }> {
     const { db, permissions, settings, rateLimiter } = this.deps;
+    // ACP › Căutare: vizitatorii, lungimea minimă, limita pe minut, rezultatele pe pagină, vechimea maximă.
+    const cfg = await loadSearchConfig(settings);
+    if (!actor.userId && !cfg.guests) throw new GcsForbidden({ reason: "login_required" });
     const q = input.q.replace(/\s+/g, " ").trim();
-    if (q.length < 2 || q.length > 200) throw new GcsValidationError({ q: "too_short" });
-    const limit = await rateLimiter.consume(`search:${actor.userId ?? actor.ip}`, SEARCH_LIMIT);
+    if (q.length < cfg.minLength || q.length > 200) throw new GcsValidationError({ q: "too_short" }, { min: String(cfg.minLength) });
+    const limit = await rateLimiter.consume(`search:${actor.userId ?? actor.ip}`, { window: 60, max: cfg.perMinute });
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
 
     const forums = await db.forum.findMany({ select: { id: true, parentId: true } });
@@ -70,7 +77,7 @@ export class GcsForumSearch {
       for (let i = 0; i < scope.length; i++) for (const f of forums) if (f.parentId === scope[i]) scope.push(f.id);
       ids = ids.filter((id) => scope.includes(id));
     }
-    const perPage = await settings.get<number>("forums.topics_per_page");
+    const perPage = cfg.perPage > 0 ? cfg.perPage : await settings.get<number>("forums.topics_per_page");
     const page = Math.max(1, input.page);
     if (ids.length === 0) return { results: [], pagination: { page, pages: 1, perPage, total: 0 } };
 
@@ -80,7 +87,9 @@ export class GcsForumSearch {
       if (!author) return { results: [], pagination: { page, pages: 1, perPage, total: 0 } };
       authorId = author.id;
     }
-    const since = input.since ? new Date(input.since) : null;
+    const asked = input.since ? new Date(input.since) : null;
+    const oldest = cfg.maxAgeDays > 0 ? new Date(Date.now() - cfg.maxAgeDays * 86_400_000) : null;
+    const since = asked && !Number.isNaN(asked.getTime()) && (!oldest || asked > oldest) ? asked : oldest;
     const { total, hits: rows } = await searchBackend().search(db, {
       q,
       type: input.type,
@@ -90,6 +99,7 @@ export class GcsForumSearch {
       limit: perPage,
       offset: (page - 1) * perPage,
     });
+    if (cfg.logTerms && this.deps.kv && page === 1) await logSearch(this.deps.kv, q, total).catch(() => {});
 
     const authorIds = [...new Set(rows.map((r) => r.authorId).filter((id): id is string => id !== null))];
     const users = authorIds.length

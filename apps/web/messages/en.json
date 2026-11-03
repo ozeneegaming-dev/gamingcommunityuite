@@ -6014,6 +6014,47 @@
         "closed": "Only admins (the list below)",
         "modeHint": "Closed list: members only choose existing tags."
       }
+    },
+    "search": {
+      "title": "Search",
+      "description": "How members search and what they look for: the most searched terms and those without results, meaning content that is missing.",
+      "settings": "Settings",
+      "save": "Save",
+      "stateAll": "Search is open to everyone",
+      "stateMembers": "Search is for members only",
+      "chipMin": "at least {n} characters",
+      "chipRate": "{n} searches per minute",
+      "chipAge": "only the last {n} days",
+      "chipLog": "terms are logged anonymously",
+      "chipNoLog": "terms are not logged",
+      "period": "Period",
+      "lastDays": "Last {days} days",
+      "searches": "{count, plural, one {# search} other {# searches}}",
+      "zeroShare": "{count, plural, =0 {all with results} other {# without results}}",
+      "clear": "Clear the log",
+      "clearConfirm": "Clear the log of searched terms?",
+      "topTitle": "Most searched",
+      "zeroTitle": "No results",
+      "zeroHint": "Members searched for this and found nothing: ideas for topics, guides or tags.",
+      "noTerms": "No searches in the chosen period.",
+      "cfg": {
+        "secWho": "Who searches",
+        "secResults": "Results",
+        "secLog": "Log",
+        "guests": "Visitors can search too",
+        "guestsHint": "Otherwise search requires an account.",
+        "minLength": "Minimum term length",
+        "perMinute": "Searches per minute (per member or IP)",
+        "defaultType": "Searched by default",
+        "topics": "Topics",
+        "posts": "Posts",
+        "perPage": "Results per page",
+        "perPageHint": "0 = same as topic lists.",
+        "maxAgeDays": "Only content from the last (days)",
+        "maxAgeHint": "0 = all content. On very large forums a limit makes search faster.",
+        "logTerms": "Log searched terms",
+        "logHint": "Only the term, the number of results and the time (not who searched); the last 1000 searches."
+      }
     }
   },
   "settings": {
@@ -6813,6 +6854,9 @@
     },
     "tags": {
       "config": "Tags"
+    },
+    "search": {
+      "config": "Search"
     }
   },
   "permissions": {
@@ -7899,9 +7943,10 @@
     "submit": "Search",
     "results": "{count, plural, one {# result} other {# results}} for “{q}”",
     "none": "No results for “{q}”.",
-    "tooShort": "Type at least 2 characters.",
+    "tooShort": "Type at least {min} characters.",
     "rateLimited": "Too many searches. Try again in a minute.",
-    "in": "in {forum}"
+    "in": "in {forum}",
+    "loginRequired": "Search is for members only: sign in to search."
   },
   "tags": {
     "title": "Tag: #{tag}",

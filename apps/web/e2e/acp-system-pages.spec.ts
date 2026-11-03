@@ -461,3 +461,31 @@ test("Etichete: lista cu topicuri, redenumirea, unirea și setările", async ({ 
     await resetSetting("tags.config");
   }
 });
+
+test("Căutare: termenii căutați apar în ACP; setarea „doar membri” oprește vizitatorii", async ({ page, browser }) => {
+  const id = uid().toLowerCase();
+  await enterAcpAsRoot(page, `Src${id}`, `src-${id}@example.com`);
+  const term = `inexistent${id}`;
+  try {
+    await page.goto(`/search?q=${term}`);
+    await page.goto("/admin/system/search");
+    await expect(page.getByRole("heading", { name: "Căutare", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-search-zero").locator(`[data-term="${term}"]`)).toBeVisible();
+
+    await page.getByTestId("gcs-search-settings-open").click();
+    const cfg = page.getByTestId("gcs-search-settings");
+    await cfg.getByLabel("Și vizitatorii pot căuta").uncheck();
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-search-summary")).toContainText("doar pentru membri");
+    await shot(page, "search-acp");
+
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto(`/search?q=orice${id}`);
+    await expect(guest.getByText("Căutarea e doar pentru membri")).toBeVisible();
+    await ctx.close();
+  } finally {
+    await resetSetting("search.config");
+  }
+});

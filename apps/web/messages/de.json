@@ -7712,7 +7712,7 @@
     "submit": "Suchen",
     "results": "{count, plural, one {# Ergebnis} other {# Ergebnisse}} für „{q}",
     "none": "Keine Ergebnisse für \"{q}\".",
-    "tooShort": "Geben Sie mindestens 2 Zeichen ein.",
+    "tooShort": "Geben Sie mindestens {min} Zeichen ein.",
     "rateLimited": "Zu viele Suchen. Versuchen Sie es in einer Minute noch einmal.",
     "in": "in {forum}"
   },

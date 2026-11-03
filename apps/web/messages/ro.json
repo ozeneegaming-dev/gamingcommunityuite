@@ -6014,6 +6014,47 @@
         "closed": "Doar adminii (lista de mai jos)",
         "modeHint": "Lista închisă: membrii aleg doar etichetele existente."
       }
+    },
+    "search": {
+      "title": "Căutare",
+      "description": "Cum caută membrii și ce caută: termenii cei mai căutați și cei fără rezultate, adică ce conținut lipsește.",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateAll": "Căutarea e deschisă tuturor",
+      "stateMembers": "Căutarea e doar pentru membri",
+      "chipMin": "minim {n} caractere",
+      "chipRate": "{n} căutări pe minut",
+      "chipAge": "doar ultimele {n} zile",
+      "chipLog": "termenii se notează anonim",
+      "chipNoLog": "termenii nu se notează",
+      "period": "Perioada",
+      "lastDays": "Ultimele {days} zile",
+      "searches": "{count, plural, one {# căutare} few {# căutări} other {# de căutări}}",
+      "zeroShare": "{count, plural, =0 {toate cu rezultate} one {# fără rezultate} few {# fără rezultate} other {# fără rezultate}}",
+      "clear": "Golește jurnalul",
+      "clearConfirm": "Golești jurnalul termenilor căutați?",
+      "topTitle": "Cele mai căutate",
+      "zeroTitle": "Fără rezultate",
+      "zeroHint": "Membrii au căutat asta și n-au găsit nimic: idei de topicuri, ghiduri sau etichete.",
+      "noTerms": "Nicio căutare în perioada aleasă.",
+      "cfg": {
+        "secWho": "Cine caută",
+        "secResults": "Rezultatele",
+        "secLog": "Jurnalul",
+        "guests": "Și vizitatorii pot căuta",
+        "guestsHint": "Altfel căutarea cere cont.",
+        "minLength": "Lungimea minimă a termenului",
+        "perMinute": "Căutări pe minut (pe membru sau IP)",
+        "defaultType": "Ce caută implicit",
+        "topics": "Topicuri",
+        "posts": "Postări",
+        "perPage": "Rezultate pe pagină",
+        "perPageHint": "0 = ca listele de topicuri.",
+        "maxAgeDays": "Doar conținutul din ultimele (zile)",
+        "maxAgeHint": "0 = tot conținutul. Pe forumuri foarte mari, o limită face căutarea mai rapidă.",
+        "logTerms": "Notează termenii căutați",
+        "logHint": "Doar termenul, numărul de rezultate și momentul (fără cine a căutat); ultimele 1000 de căutări."
+      }
     }
   },
   "settings": {
@@ -6813,6 +6854,9 @@
     },
     "tags": {
       "config": "Etichetele"
+    },
+    "search": {
+      "config": "Căutarea"
     }
   },
   "permissions": {
@@ -7899,9 +7943,10 @@
     "submit": "Caută",
     "results": "{count, plural, one {# rezultat} few {# rezultate} other {# de rezultate}} pentru „{q}”",
     "none": "Niciun rezultat pentru „{q}”.",
-    "tooShort": "Scrie cel puțin 2 caractere.",
+    "tooShort": "Scrie cel puțin {min} caractere.",
     "rateLimited": "Prea multe căutări. Încearcă din nou peste un minut.",
-    "in": "în {forum}"
+    "in": "în {forum}",
+    "loginRequired": "Căutarea e doar pentru membri: intră în cont ca să cauți."
   },
   "tags": {
     "title": "Tag: #{tag}",

@@ -6,6 +6,7 @@ import { bulkMailRateSetting } from "../notifications/bulkMail";
 import { REFERRAL_NOTIFICATION, referralSetting } from "../profile/referrals";
 import { statsSetting } from "../stats/reports";
 import { tagsSetting } from "../forums/tagsAdmin";
+import { searchSetting } from "../forums/searchConfig";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -129,6 +130,8 @@ const settings: GcsSettingDef[] = [
   statsSetting,
   // Etichetele (ACP › Descoperire › Etichete): pornite pe tot site-ul, lista deschisă sau închisă.
   tagsSetting,
+  // Căutarea (ACP › Descoperire › Căutare): vizitatorii, lungimea minimă, limitele, rezultatele, jurnalul termenilor.
+  searchSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),

@@ -1057,7 +1057,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     prefixes,
     reports,
     moderation: forumModeration,
-    search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
+    search: new GcsForumSearch({ db, permissions, settings, rateLimiter, kv }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
     forumSlots: new GcsForumSlotService({ db, cache, bus, registry, apps, acp }),

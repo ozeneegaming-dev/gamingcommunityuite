@@ -23,6 +23,7 @@ export * from "./notifications/bulkMail";
 export * from "./profile/referrals";
 export * from "./stats/reports";
 export * from "./forums/tagsAdmin";
+export * from "./forums/searchConfig";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
 export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch, type GcsForumPreviewInput } from "./forums/forums";
