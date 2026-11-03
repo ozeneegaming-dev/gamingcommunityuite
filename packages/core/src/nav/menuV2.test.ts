@@ -77,6 +77,29 @@ describe("managerul de meniu v2", () => {
     expect(edit[1]!.children.map((c) => c.kind)).toEqual(["separator", "link", "separator", "separator", "link", "separator"]);
   });
 
+  test("salvarea păstrează id-ul itemilor neschimbați (meniul împărțit din antet îi ține minte după id)", async () => {
+    const base: GcsNavItemInput[] = [
+      { label: { ro: "Acasă" }, href: "/" },
+      { kind: "dropdown", label: { ro: "Comunitate" }, children: [{ label: { ro: "Membri" }, href: "/members" }, { kind: "separator", label: {} }, { label: { ro: "Staff" }, href: "/staff" }] },
+      { label: { ro: "Clanuri" }, href: "/clans" },
+    ];
+    await nav.save(root, base);
+    const ids = (list: Awaited<ReturnType<typeof nav.editable>>) => list.map((i) => [i.id, i.children.map((c) => c.id)] as const);
+    const [[home], [group, [members, sep, staff]], [clans]] = ids(await nav.editable());
+    // Ordinea schimbată, „Clanuri” redenumit, un item nou: doar cei neschimbați își păstrează id-ul.
+    await nav.save(root, [
+      { kind: "dropdown", label: { ro: "Comunitate" }, children: [{ label: { ro: "Staff" }, href: "/staff" }, { kind: "separator", label: {} }, { label: { ro: "Membri" }, href: "/members" }] },
+      { label: { ro: "Acasă" }, href: "/" },
+      { label: { ro: "Echipe" }, href: "/clans" },
+      { label: { ro: "Nou" }, href: "/new" },
+    ]);
+    const after = ids(await nav.editable());
+    expect(after[0]).toEqual([group, [staff, sep, members]]);
+    expect(after[1]![0]).toBe(home);
+    expect([after[2]![0], after[3]![0]]).not.toContain(clans);
+    expect(new Set(after.map(([id]) => id)).size).toBe(4);
+  });
+
   test("validarea tipurilor: separator pe primul nivel, pagină de aplicație fără aplicație, valori necunoscute", async () => {
     const fields = (items: GcsNavItemInput[]) =>
       nav.save(root, items).then(

@@ -147,6 +147,12 @@ function descriptionValue(d: GcsNavDescription | null | undefined): GcsNavDescri
   return Object.keys(texts).length > 0 ? texts : null;
 }
 
+/** Identitatea unui item la salvare (părintele, linkul și eticheta, cu limbile sortate), pentru păstrarea id-ului. */
+function navItemIdentity(parentId: number | null, href: string | null, label: unknown): string {
+  const texts = label && typeof label === "object" ? (label as Record<string, unknown>) : {};
+  return JSON.stringify([parentId, href, Object.keys(texts).sort().map((k) => [k, texts[k]])]);
+}
+
 /**
  * „Link scurt” de salvat: doar pe un subitem care nu e separator (pe primul nivel n-are coloană în care să stea; un item
  * mutat pe primul nivel își pierde marcajul, fără eroare, ca ciorna să se salveze și după un drag & drop).
@@ -391,12 +397,21 @@ export class GcsNavService {
     await this.validateAll(items);
     const before = await this.editable();
     await db.$transaction(async (tx) => {
+      // Itemii neschimbați (același părinte, link și etichetă) își păstrează id-ul: aspectul antetului ține minte după
+      // id ce stă în dreapta logo-ului („Navigație (dreapta)”), iar o salvare a meniului nu trebuie să-l golească.
+      const reusable = new Map<string, number[]>();
+      for (const old of await tx.navItem.findMany({ select: { id: true, parentId: true, href: true, label: true }, orderBy: [{ parentId: "asc" }, { position: "asc" }] })) {
+        const key = navItemIdentity(old.parentId, old.href, old.label);
+        reusable.set(key, [...(reusable.get(key) ?? []), old.id]);
+      }
       await tx.navItem.deleteMany({});
       const create = async (list: GcsNavItemInput[], parentId: number | null) => {
         for (const [position, it] of list.entries()) {
           const separator = it.kind === "separator";
+          const id = reusable.get(navItemIdentity(parentId, separator ? null : (it.href ?? null), separator ? {} : it.label))?.shift();
           const row = await tx.navItem.create({
             data: {
+              ...(id === undefined ? {} : { id }),
               parentId,
               position,
               label: (separator ? {} : it.label) as Prisma.InputJsonValue,

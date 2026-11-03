@@ -11,15 +11,16 @@ import { useEditorLabels } from "../topic/useEditorLabels";
 
 type Picked = { id: string; name: string; nameKey?: string | null };
 
-/** Destinatari: „chip”-uri + căutare după nume (sugestiile din `/api/forums/mentions`). */
+/** Destinatari: „chip”-uri + căutare după nume (sugestiile din `/api/forums/mentions`), cu sau fără `@` în față. */
 export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel }: { value: Picked[]; onChange: (v: Picked[]) => void; label: string; placeholder: string; removeLabel: string }) {
   const [q, setQ] = useState("");
   const [options, setOptions] = useState<Picked[]>([]);
+  const term = q.trim().replace(/^@+/, "");
   useEffect(() => {
-    if (q.trim().length < 2) return;
+    if (term.length < 2) return;
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
-      fetch(`/api/forums/mentions?q=${encodeURIComponent(q.trim())}`, { signal: ctrl.signal })
+      fetch(`/api/forums/mentions?q=${encodeURIComponent(term)}`, { signal: ctrl.signal })
         .then((r) => r.json() as Promise<{ users: Picked[] }>)
         .then((d) => setOptions(d.users.filter((u) => !value.some((v) => v.id === u.id))))
         .catch(() => {});
@@ -28,13 +29,13 @@ export function GcsUserPicker({ value, onChange, label, placeholder, removeLabel
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [q, value]);
+  }, [term, value]);
   const add = (u: Picked) => {
     onChange([...value, u]);
     setQ("");
     setOptions([]);
   };
-  const visible = q.trim().length >= 2 ? options : [];
+  const visible = term.length >= 2 ? options : [];
   return (
     <div className="gcs-field">
       <label htmlFor="gcs-pick-user">{label}</label>

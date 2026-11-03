@@ -435,9 +435,11 @@ export function GcsAccountMenu({
                       className="gcs-groupMention gcs-am__group"
                       data-group-id={g.id}
                       style={g.color ? ({ "--g": g.color } as React.CSSProperties) : undefined}
+                      title={g.name}
                       data-testid="gcs-account-group"
                     >
-                      {g.name}
+                      {/* Un nume lung se taie cu „…” (tot numele în tooltip), ca să nu intre sub comutatorul de status. */}
+                      <span className="gcs-am__groupText">{g.name}</span>
                     </a>
                   ))}
                 </span>

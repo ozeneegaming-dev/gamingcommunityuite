@@ -35,8 +35,12 @@ async function clearNavCache(): Promise<void> {
 /** Animațiile și tranzițiile în curs din element (și din copiii lui) s-au terminat. */
 const settle = (el: Locator) => el.evaluate((node) => Promise.all(node.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
 
-// Lat cât să apară pătratele iconițelor pe bară (de la 1600 px; mai îngust, bara arată doar etichetele).
 const DESKTOP = { width: 1600, height: 900 };
+/**
+ * Pătratele iconițelor apar doar când încap toți itemii barei (altfel bara arată doar etichetele). Meniul de test are
+ * prea mulți itemi pentru asta, așa că, pe durata testului, câțiva itemi de pe primul nivel sunt opriți.
+ */
+const SPARE_HREFS = ["/chat", "/activity", "/leaderboard", "/vip"];
 /** Subitemii Servere marcați „Link scurt” în ACP și subitemul cu descrierea scrisă acolo (refăcuți după test). */
 const SHORT = ["Banuri", "Contestații"];
 const DESCRIBED = "Toate serverele";
@@ -46,6 +50,13 @@ const TOUCHED_HREFS = ["/servers", "/bans", "/servers/tickets"];
 async function restoreMenu(): Promise<void> {
   await sql(`UPDATE nav_items SET description = NULL, "shortLink" = false WHERE "parentId" IS NOT NULL AND href IN ($1, $2, $3)`, TOUCHED_HREFS);
   await sql(`DELETE FROM nav_drafts`);
+  await clearNavCache();
+}
+
+/** Pornește / oprește itemii dați (după id), apoi golește cache-ul meniului. */
+async function setEnabled(ids: number[], enabled: boolean): Promise<void> {
+  if (ids.length === 0) return;
+  await sql(`UPDATE nav_items SET enabled = $1 WHERE id IN (${ids.map((_, i) => `$${i + 2}`).join(", ")})`, [enabled, ...ids]);
   await clearNavCache();
 }
 
@@ -62,6 +73,7 @@ test("submeniurile din antet: ACP › Meniu (descrierea, linkurile scurte), pano
   const id = uid();
   const desc = `Statusul serverelor, scris din ACP ${id}`;
   const saved = await novaSettings();
+  let spare: number[] = [];
   await enterAcpAsRoot(page, `Mega${id}`, `mega-${id}@example.com`);
 
   try {
@@ -100,6 +112,8 @@ test("submeniurile din antet: ACP › Meniu (descrierea, linkurile scurte), pano
     });
 
     // Iconițele în meniul principal (setarea temei), ca în machetă: pătratele de 40 px.
+    spare = (await sql<{ id: number }>(`SELECT id FROM nav_items WHERE "parentId" IS NULL AND enabled = true AND href IN ($1, $2, $3, $4)`, SPARE_HREFS)).map((r) => r.id);
+    await setEnabled(spare, false);
     await patchNova({ header: { navIcons: true } });
     await page.setViewportSize(DESKTOP);
     await page.goto("/");
@@ -252,6 +266,7 @@ test("submeniurile din antet: ACP › Meniu (descrierea, linkurile scurte), pano
       await shot(page, "mega-375");
     });
   } finally {
+    await setEnabled(spare, true);
     await restoreMenu();
     await restoreNova(saved);
   }

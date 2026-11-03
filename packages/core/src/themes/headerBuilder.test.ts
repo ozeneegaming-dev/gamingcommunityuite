@@ -215,8 +215,11 @@ describe("constructorul de antet: meniul împărțit (Esports)", () => {
   });
   test("adminul alege care itemi merg în dreapta (ordinea meniului rămâne)", () => {
     expect(splitNavItems(items, [5, 1])).toEqual({ left: [{ id: 2 }, { id: 3 }, { id: 4 }], right: [{ id: 1 }, { id: 5 }] });
-    // Id-uri care nu mai există sunt ignorate.
-    expect(splitNavItems(items, [99])).toEqual({ left: items, right: [] });
+    // Id-uri care nu mai există sunt ignorate; dacă nu mai există niciunul, împărțirea e cea implicită.
+    expect(splitNavItems(items, [5, 99])).toEqual({ left: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }], right: [{ id: 5 }] });
+    expect(splitNavItems(items, [98, 99])).toEqual(splitNavItems(items, null));
+    // „Nimic în dreapta”, ales explicit.
+    expect(splitNavItems(items, [])).toEqual({ left: items, right: [] });
   });
   test("jumătățile urmează aspectul curent (și draftul previzualizării): fără „navRight” pe desktop, totul în stânga", () => {
     const esports = headerPreset("esports");
