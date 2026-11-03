@@ -1755,7 +1755,18 @@
       "reply": "Отклоненный ответ (факультативно)",
       "save": "Сохранить действие",
       "delete": "Удалить",
-      "steps": "Шаги"
+      "steps": "Шаги",
+      "description": "Pașii de moderare aplicați dintr-un singur click pe topicuri: blocare, fixare, evidențiere, mutare și un răspuns predefinit.",
+      "add": "Acțiune nouă",
+      "saveChanges": "Salvează",
+      "secBasics": "Acțiunea",
+      "forumsTitle": "Unde se poate folosi",
+      "forumsHint": "Niciun forum bifat = în toate forumurile.",
+      "noCategory": "Fără categorie",
+      "replyChip": "Răspuns predefinit",
+      "allForums": "În toate forumurile",
+      "inForums": "În: {forums}",
+      "confirmDelete": "Ștergi acțiunea salvată? Topicurile deja moderate cu ea rămân cum sunt."
     },
     "achievements": {
       "ranksTitle": "Ранги",
@@ -5013,7 +5024,12 @@
         },
         "open": "Открыть тему",
         "cancel": "Отменить",
-        "cancelConfirm": "Запланированная публикация будет удалена и не будет опубликована."
+        "cancelConfirm": "Запланированная публикация будет удалена и не будет опубликована.",
+        "new": "Postare nouă",
+        "save": "Salvează",
+        "noCategory": "Fără categorie",
+        "secPost": "Postarea",
+        "secWhen": "Publicarea"
       }
     },
     "bans": {
@@ -5646,6 +5662,123 @@
         "confirm": "{count, plural, one {Ștergi definitiv fișierul bifat?} few {Ștergi definitiv cele # fișiere bifate?} many {Ștergi definitiv cele # de fișiere bifate?} other {Ștergi definitiv cele # de fișiere bifate?}}",
         "done": "{count, plural, one {# fișier șters} few {# fișiere șterse} many {# de fișiere șterse} other {# de fișiere șterse}}"
       }
+    },
+    "forumChecks": {
+      "all": "Bifează tot",
+      "none": "Debifează tot",
+      "groupAll": "Toate din categorie",
+      "noCategory": "Fără categorie"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Mesajele primite prin formularul de contact al site-ului. Răspunde direct pe email, arhivează ce e rezolvat.",
+      "viewPage": "Vezi pagina",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "Formularul de contact e pornit",
+      "stateOff": "Formularul de contact e oprit",
+      "stateRedirect": "Pagina de contact trimite la o adresă externă",
+      "chipGuests": "vizitatori și membri",
+      "chipMembers": "doar membri",
+      "chipBell": "notificare staff",
+      "chipEmails": "{count, plural, one {copie la # adresă} few {copii la # adrese} many {copii la # de adrese} other {copii la # de adrese}}",
+      "filters": "Filtre",
+      "tabOpen": "Deschise ({count})",
+      "tabArchived": "Arhivate ({count})",
+      "tabAll": "Toate",
+      "total": "{count, plural, one {# mesaj} few {# mesaje} many {# de mesaje} other {# de mesaje}}",
+      "search": "Caută după nume, email sau subiect",
+      "empty": "Niciun mesaj aici.",
+      "status": {
+        "new": "Nou",
+        "read": "Citit",
+        "answered": "Răspuns",
+        "archived": "Arhivat"
+      },
+      "open": "Deschide",
+      "from": "De la",
+      "email": "Email",
+      "received": "Primit",
+      "ip": "IP",
+      "reply": "Răspunsul tău",
+      "replyHint": "Pleacă pe email la {email}, cu mesajul citat dedesubt.",
+      "sendReply": "Trimite răspunsul",
+      "markRead": "Marchează citit",
+      "archive": "Arhivează",
+      "unarchive": "Redeschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi definitiv mesajul?",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "secPage": "Pagina /contact",
+        "secDelivery": "Livrare și păstrare",
+        "enabled": "Pagina de contact pornită",
+        "enabledHint": "Oprită, adresa /contact dă „pagina nu există”.",
+        "guests": "Și vizitatorii pot scrie",
+        "guestsHint": "Vizitatorii trec prin captcha-ul invizibil din Anti-spam. Altfel, doar membrii autentificați.",
+        "intro": "Textul de deasupra formularului",
+        "introPlaceholder": "Scrie-ne și îți răspundem pe email cât mai repede.",
+        "subjects": "Subiectele (unul pe rând)",
+        "subjectsHint": "Apar ca listă. Fără niciun subiect, expeditorul scrie unul liber.",
+        "redirectUrl": "Trimite la o adresă externă",
+        "redirectHint": "Opțional: /contact duce acolo (ex. un server Discord sau o pagină de suport) în loc de formular.",
+        "notifyStaff": "Anunță staff-ul în clopoțel",
+        "notifyHint": "Cine are acces la această pagină primește notificarea fiecărui mesaj nou.",
+        "emails": "Copii pe email",
+        "emailsHint": "Cel mult 10 adrese, câte una pe rând sau separate prin virgulă.",
+        "keepDays": "Păstrează mesajele (zile)"
+      }
+    },
+    "bulkMail": {
+      "title": "Email în masă",
+      "description": "Trimite un email tuturor membrilor sau doar anumitor grupuri. Pleacă pe loturi, în ritmul ales; fiecare email are link de dezabonare.",
+      "new": "Email nou",
+      "rate": "Ritm",
+      "perMinute": "Emailuri pe minut",
+      "perMinuteHint": "Gazdele de email limitează des trimiterea; un ritm mic evită blocarea.",
+      "save": "Salvează",
+      "create": "Salvează ciorna",
+      "secMessage": "Mesajul",
+      "secAudience": "Cui se trimite",
+      "subject": "Subiectul",
+      "body": "Conținutul",
+      "bodyHint": "{name} devine numele membrului, {site} numele site-ului.",
+      "groupsHint": "Niciun grup bifat = toți membrii.",
+      "primaryOnly": "Doar grupul principal (nu și grupurile secundare)",
+      "activeDays": "Doar activi în ultimele (zile)",
+      "activeAny": "oricând",
+      "countLoading": "Se numără destinatarii…",
+      "count": "{count, plural, =0 {Niciun destinatar} one {# destinatar} few {# destinatari} many {# de destinatari} other {# de destinatari}}",
+      "excludedHint": "Nu primesc: membrii dezabonați, cei banați, spammerii și conturile fără email confirmat.",
+      "empty": "Niciun email încă. Începe cu „Email nou”.",
+      "allMembers": "Toți membrii",
+      "primaryChip": "doar grupul principal",
+      "activeChip": "activi în ultimele {days} zile",
+      "progress": "{sent} din {total} trimise",
+      "failed": "{count, plural, one {# eșuat} few {# eșuate} many {# de eșuate} other {# de eșuate}}",
+      "status": {
+        "draft": "Ciornă",
+        "sending": "Se trimite",
+        "sent": "Trimis",
+        "cancelled": "Oprit"
+      },
+      "edit": "Editează",
+      "open": "Deschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi emailul din listă? Cele deja trimise rămân în căsuțele membrilor.",
+      "sendTest": "Trimite-mi un test",
+      "sendTestHint": "Doar la adresa ta, cu numele tău în locul {name}.",
+      "start": "Trimite acum",
+      "startConfirm": "Pornești trimiterea către toți destinatarii aleși? Nu se mai poate edita după.",
+      "cancel": "Oprește trimiterea",
+      "cancelConfirm": "Oprești trimiterea? Cei care l-au primit deja rămân cu el.",
+      "duplicate": "Duplică ca ciornă",
+      "audience": "Publicul",
+      "sentLabel": "Trimise",
+      "startedAt": "Pornit"
     }
   },
   "settings": {
@@ -5664,7 +5797,10 @@
       "smtp_pass": "SMTP пароль",
       "from": "Адрес отправителя",
       "title": "Эл. почта",
-      "hint": "Мы отправим ссылку для подтверждения на новый адрес; старый остаётся, пока вы не подтвердите."
+      "hint": "Мы отправим ссылку для подтверждения на новый адрес; старый остаётся, пока вы не подтвердите.",
+      "adminMail": "Emailuri de la administratori",
+      "adminMailHint": "Anunțurile trimise de echipă tuturor membrilor (evenimente, noutăți). Notificările contului tău nu depind de asta.",
+      "adminMailSaved": "Salvat"
     },
     "auth": {
       "registration_open": "Регистрация открыта",
@@ -6411,6 +6547,12 @@
       "remote_images_hint": "В сообщениях, подписях, профилях и личных сообщениях. Заблокированы = показываются ссылкой на изображение.",
       "orphan_days": "Удалять неиспользуемые файлы через (дней)",
       "orphan_days_hint": "Загруженные и так и не прикреплённые к сообщению файлы, ежедневно, пакетами. 0 = выключено. Рекомендуется: не меньше 7."
+    },
+    "contact": {
+      "config": "Formularul de contact"
+    },
+    "bulk_mail": {
+      "per_minute": "Email în masă: emailuri pe minut"
     }
   },
   "permissions": {
@@ -7620,7 +7762,8 @@
         "weekly_digest": "Еженедельная сводка «Что вы пропустили»",
         "warning_appeal": "Решения по апелляциям на предупреждения",
         "multi_account": "Новые аккаунты с IP других аккаунтов (команда)",
-        "system_alert": "Alerte de stare a sistemului (disc, joburi picate)"
+        "system_alert": "Alerte de stare a sistemului (disc, joburi picate)",
+        "contact_message": "Mesaje noi prin formularul de contact (staff)"
       },
       "chat": {
         "mention": "Чат упоминает",
@@ -11439,5 +11582,29 @@
       "add": "Adaugă",
       "saved": "Salvat"
     }
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Scrie-ne și îți răspundem pe email cât mai repede.",
+    "name": "Numele tău",
+    "email": "Emailul tău",
+    "subject": "Subiectul",
+    "pickSubject": "Alege subiectul",
+    "message": "Mesajul",
+    "send": "Trimite mesajul",
+    "sending": "Se trimite…",
+    "as": "Trimiți ca {name} ({email}). Răspunsul vine pe acest email.",
+    "sentTitle": "Mesajul a fost trimis",
+    "sentBody": "Mulțumim! Echipa îți răspunde pe email.",
+    "loginRequired": "Formularul de contact e doar pentru membri.",
+    "login": "Intră în cont"
+  },
+  "unsubscribe": {
+    "title": "Dezabonare",
+    "done": "Te-ai dezabonat",
+    "doneBody": "Nu mai primești emailurile trimise de administratori. Le poți porni din nou oricând din setările contului.",
+    "invalid": "Link invalid",
+    "invalidBody": "Linkul de dezabonare nu e valid sau contul nu mai există.",
+    "settings": "Setările emailului"
   }
 }
