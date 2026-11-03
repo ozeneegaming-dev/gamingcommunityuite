@@ -85,7 +85,9 @@
     "announcementBar": {
       "region": "Announcement",
       "dismiss": "Dismiss the announcement",
-      "show": "Show announcement {n}"
+      "show": "Show announcement {n}",
+      "days": "{d}d",
+      "timeLeft": "Time left"
     },
     "scrollRail": {
       "group": "Page navigation",
@@ -4457,54 +4459,296 @@
     },
     "announcementBar": {
       "title": "Announcement bar",
-      "intro": "The slim bar above the content, on the whole site and in every theme. Several active bars rotate.",
-      "preview": "View on the site",
-      "empty": "No bars yet.",
-      "add": "Add a bar",
+      "intro": "The site's announcement bars, in every theme: where they sit, how they look, who sees them and when. Several active bars rotate.",
+      "preview": "View on site",
+      "empty": "No bars yet. Add your first announcement bar.",
+      "add": "New bar",
       "bar": "Bar {n}",
-      "enabled": "Active",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "remove": "Delete the bar",
-      "label": "Label (pill)",
-      "labelPlaceholder": "e.g. NEWS",
+      "remove": "Delete",
+      "label": "Pill",
+      "labelPlaceholder": "e.g. 5V5 TOURNAMENT",
       "text": "Text",
       "style": "Style",
-      "styles": {
-        "accent": "Accent (theme colour)",
-        "info": "Info",
-        "warning": "Warning"
-      },
       "cta": {
         "on": "With a button",
         "label": "Button text",
-        "href": "Button address"
+        "href": "Button address",
+        "title": "Button and link",
+        "newTab": "Open in a new tab"
       },
       "link": {
-        "on": "With a link",
+        "on": "With a secondary link",
         "label": "Link text",
-        "href": "Link address"
+        "href": "Link address",
+        "labelPlaceholder": "Rules"
       },
       "pages": "Pages",
       "pageOptions": {
-        "all": "All pages",
-        "home": "Home page only",
-        "forum": "The forum (and the home page)"
+        "all": "All",
+        "home": "Home page",
+        "forum": "Forum",
+        "paths": "Chosen"
       },
-      "startsAt": "Starts at (optional)",
-      "endsAt": "Ends at (optional)",
-      "guests": "Guests see it",
-      "members": "Members see it",
-      "dismissible": "Can be dismissed (remembered for each member / guest)",
-      "groups": "Only members of these groups (none selected = all members):",
-      "rotate": "Bar rotation (seconds)",
-      "rotateHelp": "Between {min} and {max} seconds; rotation pauses while the pointer is on the bar.",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "guests": "Guests",
+      "members": "Members",
+      "dismissible": "Can be dismissed",
+      "rotate": "How long a bar stays on screen (seconds)",
+      "rotateHelp": "Between {min} and {max} seconds; each bar can have its own time (Behaviour).",
       "save": "Save",
       "saved": "The announcement bars were saved.",
       "removeTitle": "Delete the bar?",
-      "removeBody": "The bar “{text}” disappears from the site after saving.",
+      "removeBody": "The bar “{text}” disappears from the site after saving, together with its statistics.",
       "removeConfirm": "Delete",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "list": "Bars",
+      "count": "{n} / {max}",
+      "emptyPanel": "Add a bar to edit it here.",
+      "pick": "Pick a bar from the list.",
+      "untitled": "Bar without text",
+      "panel": "Selected bar",
+      "enabledFor": "Bar {n} is on",
+      "duplicate": "Duplicate",
+      "livePreview": "Live preview",
+      "device": "Preview device",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Phone"
+      },
+      "sectionsNav": "Bar sections",
+      "sections": {
+        "content": "Content",
+        "look": "Look",
+        "position": "Position",
+        "audience": "Who sees it",
+        "schedule": "Schedule",
+        "behaviour": "Behaviour"
+      },
+      "status": {
+        "active": "Active",
+        "scheduled": "Scheduled · {date}",
+        "expired": "Expired",
+        "off": "Off"
+      },
+      "rowStats": "<b>{views}</b> views · <b>{clicks}</b> clicks",
+      "unsaved": "Unsaved changes",
+      "publishHint": "Goes live on the site when you click “Save”.",
+      "icon": "Icon",
+      "textHelp": "**bold**, *italic*, [link](/address). Variables are replaced on the site; an unknown one is removed.",
+      "mobileText": "Shorter text on phones (optional)",
+      "mobileTextHelp": "Empty = the same text, cut to two lines.",
+      "format": {
+        "toolbar": "Text formatting",
+        "bold": "Bold",
+        "italic": "Italic",
+        "link": "Link",
+        "sample": "text",
+        "linkSample": "link text"
+      },
+      "vars": {
+        "membri_online": "How many members are online now",
+        "jucatori_online": "How many players are on the game servers",
+        "numele_tau": "The reader's name (guests have none)"
+      },
+      "countdown": {
+        "title": "Countdown",
+        "on": "Show the time left until a date",
+        "at": "Date and time",
+        "atHelp": "In the site's time.",
+        "onEnd": "When it ends",
+        "ends": {
+          "text": "Show a text",
+          "hide": "Hide the bar"
+        },
+        "endText": "Text shown at the end",
+        "endTextDefault": "It has started!"
+      },
+      "presets": {
+        "forja": "Forja",
+        "accent": "Accent",
+        "info": "Info",
+        "success": "Success",
+        "warning": "Warning",
+        "danger": "Danger",
+        "subtle": "Subtle",
+        "custom": "Custom"
+      },
+      "look": {
+        "colors": "Colours",
+        "background": "Background",
+        "bg": {
+          "color": "Colour",
+          "gradient": "Gradient",
+          "image": "Image"
+        },
+        "gradientColors": "Gradient colours",
+        "bgColor": "Background colour",
+        "bgColor2": "Second colour",
+        "angle": "Angle (degrees)",
+        "fgColor": "Text colour",
+        "image": "Background image",
+        "imageTitle": "Upload the background image",
+        "imageCurrent": "Bar image",
+        "imageHint": "Wide, e.g. 1920 × 80 px. The text gets a dark layer so it stays readable.",
+        "shape": "Shape",
+        "size": "Size",
+        "sizes": {
+          "thin": "Thin",
+          "normal": "Normal",
+          "large": "Large"
+        },
+        "align": "Alignment",
+        "aligns": {
+          "left": "Left",
+          "center": "Centre"
+        },
+        "textMode": "Text",
+        "textModes": {
+          "static": "Static",
+          "marquee": "Scrolling"
+        },
+        "marqueeHint": "The text moves slowly from right to left and stops while the mouse is on the bar. People with “reduced motion” turned on in their system see it static.",
+        "ctaStyle": "Button",
+        "ctaStyles": {
+          "white": "White, filled",
+          "filled": "Theme colour",
+          "outline": "Outline only"
+        },
+        "pill": "Pill",
+        "pills": {
+          "glass": "Transparent",
+          "solid": "Dark",
+          "outline": "Outline only"
+        }
+      },
+      "position": {
+        "title": "Position on the site",
+        "sticky": "Stays stuck at the top while scrolling",
+        "stickyHint": "Only for “Top” and “Under the header”.",
+        "fullWidth": "Full screen width (otherwise, page width)",
+        "fullWidthHint": "Inside the page, the bar always has the page width."
+      },
+      "positions": {
+        "top": "Top, above the header",
+        "under": "Under the header",
+        "page": "In the page",
+        "bottom": "Bottom, fixed"
+      },
+      "audience": {
+        "who": "Who sees it",
+        "groups": "Only these groups",
+        "groupsHint": "(none = all members)",
+        "excludeGroups": "Not these groups",
+        "addGroup": "Group",
+        "removeGroup": "Remove the group",
+        "newMembers": "New members",
+        "newMembersBefore": "only in the first",
+        "newMembersDays": "Number of days",
+        "newMembersAfter": "days after registering",
+        "where": "Where it shows",
+        "devices": "Devices",
+        "deviceOptions": {
+          "all": "All",
+          "desktop": "Desktop",
+          "mobile": "Phone"
+        },
+        "addPath": "Add an address",
+        "removePath": "Remove the address",
+        "pathsHint": "“*” = anything, e.g. /clanuri/* = every page under /clanuri. Excluded addresses always apply.",
+        "excludePaths": "Not on these addresses",
+        "locales": "Site language",
+        "allLocales": "All languages",
+        "summary": {
+          "everyone": "Everyone",
+          "guests": "Guests only",
+          "members": "Members only",
+          "nobody": "Nobody (guests and members off)",
+          "groups": "Groups: {groups}",
+          "without": "Without: {groups}",
+          "pages": {
+            "home": "Home page",
+            "forum": "Forum",
+            "paths": "Chosen addresses only"
+          }
+        }
+      },
+      "schedule": {
+        "title": "Schedule",
+        "zoneHint": "Site time: {zone} ({id}), whatever your computer's clock says. The time zone is set in Settings → General.",
+        "when": "Only on some days and hours",
+        "days": "Days",
+        "daysHint": "(all lit = every day)",
+        "dayNames": {
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday",
+          "7": "Sunday"
+        },
+        "dayShort": {
+          "1": "Mo",
+          "2": "Tu",
+          "3": "We",
+          "4": "Th",
+          "5": "Fr",
+          "6": "Sa",
+          "7": "Su"
+        },
+        "window": "Only between certain hours",
+        "from": "From",
+        "to": "Until",
+        "until": "until"
+      },
+      "behaviour": {
+        "title": "Dismissing and rotation",
+        "closeOnCta": "Also dismissed when the button is clicked",
+        "reappear": "After dismissing, shows again after (days)",
+        "reappearHint": "0 = never, only when you change the bar.",
+        "rotate": "Time on screen in the rotation (seconds)",
+        "rotateHint": "Empty = {n} s, from the general settings ({min}–{max})."
+      },
+      "stats": {
+        "title": "Statistics",
+        "off": "Counting is turned off in the general settings.",
+        "views": "Views",
+        "clicks": "Clicks",
+        "dismissals": "Dismissals",
+        "unsaved": "Counted after the first save.",
+        "since": "Since {date}.",
+        "sinceStart": "Since publishing.",
+        "reset": "Reset the statistics"
+      },
+      "settings": {
+        "title": "General settings",
+        "rotation": "Several bars in the same place",
+        "multiple": "Several active bars",
+        "multiples": {
+          "rotate": "Rotate",
+          "stack": "Stack one under another"
+        },
+        "transition": "Transition",
+        "transitions": {
+          "fade": "Fade",
+          "slide": "Slide",
+          "none": "None"
+        },
+        "order": "Order",
+        "orders": {
+          "list": "As in the list",
+          "random": "Random"
+        },
+        "pauseOnHover": "Rotation pauses while the mouse is on the bar",
+        "dots": "Dots to switch between bars",
+        "stats": "Count views, clicks and dismissals",
+        "statsHint": "A view is counted once a day per visitor.",
+        "savedWith": "Saved together with the bars.",
+        "done": "Done"
+      }
     },
     "donations": {
       "title": "Donations",

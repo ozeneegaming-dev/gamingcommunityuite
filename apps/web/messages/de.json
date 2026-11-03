@@ -4252,7 +4252,6 @@
       "empty": "Noch keine Leiste.",
       "add": "Leiste hinzufügen",
       "bar": "Leiste {n}",
-      "enabled": "Aktiv",
       "moveUp": "Nach oben",
       "moveDown": "Nach unten",
       "remove": "Leiste löschen",
@@ -4260,11 +4259,6 @@
       "labelPlaceholder": "z. B. NEWS",
       "text": "Text",
       "style": "Stil",
-      "styles": {
-        "accent": "Akzent (Themenfarbe)",
-        "info": "Info",
-        "warning": "Warnung"
-      },
       "cta": {
         "on": "Mit Button",
         "label": "Button-Text",
@@ -4286,7 +4280,6 @@
       "guests": "Gäste sehen sie",
       "members": "Mitglieder sehen sie",
       "dismissible": "Kann geschlossen werden (für jedes Mitglied / jeden Gast gemerkt)",
-      "groups": "Nur Mitglieder dieser Gruppen (keine gewählt = alle Mitglieder):",
       "rotate": "Wechsel der Leisten (Sekunden)",
       "rotateHelp": "Zwischen {min} und {max} Sekunden; der Wechsel pausiert, solange der Zeiger auf der Leiste ist.",
       "save": "Speichern",

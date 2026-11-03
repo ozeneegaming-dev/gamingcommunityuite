@@ -1,4 +1,4 @@
-import { STEAM_PLACEHOLDER_DOMAIN } from "@gcs/modules";
+import { STEAM_PLACEHOLDER_DOMAIN, type GcsAnnouncementPosition } from "@gcs/modules";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
@@ -48,7 +48,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
     getFormatter(),
     getTranslations("imageViewer"),
     // Bara de anunț (ACP → Aspect → Conținut): barele acestui membru / vizitator, fără cele închise.
-    announcementView(actor),
+    announcementView(actor, locale),
     // Avertismente: banda „confirmă avertismentul” cât timp membrul nu poate posta din cauza lui.
     actor.userId ? services().warnings.writeGate(actor.userId) : null,
     // Anti-phishing: listele din ACP pentru paza linkurilor din browser (lista livrată e în cod).
@@ -59,6 +59,21 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
   const viewerLabels = Object.fromEntries(
     (["dialog", "close", "prev", "next", "zoomIn", "zoomOut", "original", "download", "thumbnails", "counter", "by", "source", "enlarge"] as const).map((k) => [k, tv.raw(k) as string]),
   ) as Parameters<typeof GcsImageViewerHost>[0]["labels"];
+  // Bara de anunț: câte un loc pentru fiecare poziție (sus, sub antet, în pagină, jos), fiecare doar cu barele lui.
+  const annLabels = {
+    region: tc("announcementBar.region"),
+    dismiss: tc("announcementBar.dismiss"),
+    show: tc.raw("announcementBar.show") as string,
+    days: tc.raw("announcementBar.days") as string,
+    timeLeft: tc("announcementBar.timeLeft"),
+  };
+  const annNow = new Date().toISOString();
+  const annSlot = (position: GcsAnnouncementPosition) => {
+    const bars = announcements.bars.filter((b) => b.position === position);
+    if (bars.length === 0) return null;
+    const { settings, viewerKey, timeZone, vars, icons } = announcements;
+    return <GcsAnnouncementBar position={position} bars={bars} settings={settings} viewerKey={viewerKey} timeZone={timeZone} vars={vars} icons={icons} labels={annLabels} now={annNow} />;
+  };
   return (
     <GcsRealtimeProvider>
       {/* Clasa designului temei pe `<html>` (pusă și de layout-ul rădăcină; aici, după navigarea din ACP). */}
@@ -67,8 +82,10 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       <Suspense fallback={null}>
         <GcsNavProgress />
       </Suspense>
+      {annSlot("top")}
       <GcsSiteHeader />
       <GcsNavHighlights actor={actor} locale={locale} />
+      {annSlot("under")}
       {/* Consola Hero Cockpit (designul Nova, pornită din temă): sub antet, pe pagina principală sau pe toate. */}
       <Suspense fallback={null}>
         <GcsCockpitSlot />
@@ -97,14 +114,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
             {tp("banner")} <a href="?safe=0">{tp("exit")}</a>
           </p>
         )}
-        {announcements.bars.length > 0 && (
-          <GcsAnnouncementBar
-            bars={announcements.bars}
-            rotateSeconds={announcements.rotateSeconds}
-            viewerKey={announcements.viewerKey}
-            labels={{ region: tc("announcementBar.region"), dismiss: tc("announcementBar.dismiss"), show: tc.raw("announcementBar.show") as string }}
-          />
-        )}
+        {annSlot("page")}
         {children}
       </main>
       {/* Banda „Sus / Jos” din stânga (setarea temei o poate ascunde). */}
@@ -112,6 +122,7 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
         labels={{ group: tc("scrollRail.group"), up: tc("scrollRail.up"), upHint: tc("scrollRail.upHint"), down: tc("scrollRail.down"), downHint: tc("scrollRail.downHint") }}
       />
       <GcsSiteFooter />
+      {annSlot("bottom")}
       {/* Membri v2: pagina curentă pentru /online (cine e unde). */}
       {!preview && <GcsWhereBeacon />}
       {modal}

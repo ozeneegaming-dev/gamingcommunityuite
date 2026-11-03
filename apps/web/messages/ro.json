@@ -85,7 +85,9 @@
     "announcementBar": {
       "region": "Anunț",
       "dismiss": "Închide anunțul",
-      "show": "Arată anunțul {n}"
+      "show": "Arată anunțul {n}",
+      "days": "{d}z",
+      "timeLeft": "Timp rămas"
     },
     "scrollRail": {
       "group": "Navigare în pagină",
@@ -4457,54 +4459,296 @@
     },
     "announcementBar": {
       "title": "Bară de anunț",
-      "intro": "Bara subțire de deasupra conținutului, pe tot site-ul și în orice temă. Mai multe bare active se rotesc.",
+      "intro": "Barele de anunț ale site-ului, în orice temă: unde stau, cum arată, cine le vede și când. Mai multe bare active se rotesc.",
       "preview": "Vezi pe site",
-      "empty": "Nicio bară încă.",
-      "add": "Adaugă o bară",
+      "empty": "Nicio bară încă. Adaugă prima bară de anunț.",
+      "add": "Bară nouă",
       "bar": "Bara {n}",
-      "enabled": "Activă",
       "moveUp": "Mută mai sus",
       "moveDown": "Mută mai jos",
-      "remove": "Șterge bara",
-      "label": "Eticheta (pastila)",
-      "labelPlaceholder": "ex. ANUNȚ",
+      "remove": "Șterge",
+      "label": "Pastila",
+      "labelPlaceholder": "ex. TURNEU 5V5",
       "text": "Textul",
       "style": "Stilul",
-      "styles": {
-        "accent": "Accent (culoarea temei)",
-        "info": "Informare",
-        "warning": "Avertisment"
-      },
       "cta": {
         "on": "Cu buton",
         "label": "Textul butonului",
-        "href": "Adresa butonului"
+        "href": "Adresa butonului",
+        "title": "Butonul și linkul",
+        "newTab": "Deschide în tab nou"
       },
       "link": {
-        "on": "Cu link",
+        "on": "Cu link secundar",
         "label": "Textul linkului",
-        "href": "Adresa linkului"
+        "href": "Adresa linkului",
+        "labelPlaceholder": "Regulament"
       },
       "pages": "Paginile",
       "pageOptions": {
-        "all": "Toate paginile",
-        "home": "Doar prima pagină",
-        "forum": "Forumul (și prima pagină)"
+        "all": "Toate",
+        "home": "Prima pagină",
+        "forum": "Forum",
+        "paths": "Alese"
       },
-      "startsAt": "Începe la (opțional)",
-      "endsAt": "Se termină la (opțional)",
-      "guests": "Vizitatorii o văd",
-      "members": "Membrii o văd",
-      "dismissible": "Se poate închide (ținut minte pentru fiecare membru / vizitator)",
-      "groups": "Doar membrii din aceste grupuri (niciunul ales = toți membrii):",
-      "rotate": "Rotirea barelor (secunde)",
-      "rotateHelp": "Între {min} și {max} secunde; rotirea se oprește cât timp cursorul e pe bară.",
+      "startsAt": "Începe",
+      "endsAt": "Se termină",
+      "guests": "Vizitatorii",
+      "members": "Membrii",
+      "dismissible": "Se poate închide",
+      "rotate": "Cât stă o bară pe ecran (secunde)",
+      "rotateHelp": "Între {min} și {max} secunde; fiecare bară poate avea timpul ei (Comportament).",
       "save": "Salvează",
       "saved": "Barele de anunț au fost salvate.",
       "removeTitle": "Ștergi bara?",
-      "removeBody": "Bara „{text}” dispare de pe site după salvare.",
+      "removeBody": "Bara „{text}” dispare de pe site după salvare, cu tot cu statisticile ei.",
       "removeConfirm": "Șterge",
-      "cancel": "Anulează"
+      "cancel": "Anulează",
+      "list": "Barele",
+      "count": "{n} / {max}",
+      "emptyPanel": "Adaugă o bară ca s-o poți edita aici.",
+      "pick": "Alege o bară din listă.",
+      "untitled": "Bară fără text",
+      "panel": "Bara aleasă",
+      "enabledFor": "Bara {n} e pornită",
+      "duplicate": "Duplică",
+      "livePreview": "Previzualizare live",
+      "device": "Dispozitivul previzualizării",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Telefon"
+      },
+      "sectionsNav": "Secțiunile barei",
+      "sections": {
+        "content": "Conținut",
+        "look": "Aspect",
+        "position": "Poziție",
+        "audience": "Cine o vede",
+        "schedule": "Program",
+        "behaviour": "Comportament"
+      },
+      "status": {
+        "active": "Activă",
+        "scheduled": "Programată · {date}",
+        "expired": "Expirată",
+        "off": "Oprită"
+      },
+      "rowStats": "<b>{views}</b> afișări · <b>{clicks}</b> click-uri",
+      "unsaved": "Modificări nesalvate",
+      "publishHint": "Se publică pe site la „Salvează”.",
+      "icon": "Iconița",
+      "textHelp": "**gros**, *cursiv*, [link](/adresa). Variabilele se înlocuiesc pe site; una necunoscută dispare.",
+      "mobileText": "Text mai scurt pe telefon (opțional)",
+      "mobileTextHelp": "Gol = același text, tăiat pe două rânduri.",
+      "format": {
+        "toolbar": "Formatarea textului",
+        "bold": "Gros",
+        "italic": "Cursiv",
+        "link": "Link",
+        "sample": "text",
+        "linkSample": "textul linkului"
+      },
+      "vars": {
+        "membri_online": "Câți membri sunt online acum",
+        "jucatori_online": "Câți jucători sunt pe serverele de joc",
+        "numele_tau": "Numele celui care citește (vizitatorii nu-l au)"
+      },
+      "countdown": {
+        "title": "Numărătoare inversă",
+        "on": "Arată timpul rămas până la o dată",
+        "at": "Data și ora",
+        "atHelp": "În ora site-ului.",
+        "onEnd": "La final",
+        "ends": {
+          "text": "Arată un text",
+          "hide": "Ascunde bara"
+        },
+        "endText": "Textul de la final",
+        "endTextDefault": "A început!"
+      },
+      "presets": {
+        "forja": "Forja",
+        "accent": "Accent",
+        "info": "Info",
+        "success": "Succes",
+        "warning": "Avertisment",
+        "danger": "Pericol",
+        "subtle": "Discret",
+        "custom": "Personalizat"
+      },
+      "look": {
+        "colors": "Culorile",
+        "background": "Fundal",
+        "bg": {
+          "color": "Culoare",
+          "gradient": "Gradient",
+          "image": "Imagine"
+        },
+        "gradientColors": "Culorile gradientului",
+        "bgColor": "Culoarea fundalului",
+        "bgColor2": "A doua culoare",
+        "angle": "Unghiul (grade)",
+        "fgColor": "Culoarea textului",
+        "image": "Imaginea de fundal",
+        "imageTitle": "Încarcă imaginea de fundal",
+        "imageCurrent": "Imaginea barei",
+        "imageHint": "Lată, ex. 1920 × 80 px. Textul primește un strat închis ca să rămână citeț.",
+        "shape": "Forma",
+        "size": "Mărimea",
+        "sizes": {
+          "thin": "Subțire",
+          "normal": "Normală",
+          "large": "Mare"
+        },
+        "align": "Alinierea",
+        "aligns": {
+          "left": "Stânga",
+          "center": "Centru"
+        },
+        "textMode": "Textul",
+        "textModes": {
+          "static": "Fix",
+          "marquee": "Derulează"
+        },
+        "marqueeHint": "Textul trece încet de la dreapta la stânga și se oprește când ții mouse-ul pe bară. Cine are „mișcare redusă” pornită în sistem îl vede fix.",
+        "ctaStyle": "Butonul",
+        "ctaStyles": {
+          "white": "Alb, plin",
+          "filled": "Culoarea temei",
+          "outline": "Doar contur"
+        },
+        "pill": "Pastila",
+        "pills": {
+          "glass": "Transparentă",
+          "solid": "Închisă",
+          "outline": "Doar contur"
+        }
+      },
+      "position": {
+        "title": "Poziția pe site",
+        "sticky": "Rămâne lipită sus la derulare",
+        "stickyHint": "Doar pentru „Sus” și „Sub antet”.",
+        "fullWidth": "Pe toată lățimea ecranului (altfel, cât pagina)",
+        "fullWidthHint": "În pagină, bara are mereu lățimea paginii."
+      },
+      "positions": {
+        "top": "Sus, deasupra antetului",
+        "under": "Sub antet",
+        "page": "În pagină",
+        "bottom": "Jos, fixă"
+      },
+      "audience": {
+        "who": "Cine o vede",
+        "groups": "Doar aceste grupuri",
+        "groupsHint": "(niciunul = toți membrii)",
+        "excludeGroups": "Fără aceste grupuri",
+        "addGroup": "Grup",
+        "removeGroup": "Scoate grupul",
+        "newMembers": "Membri noi",
+        "newMembersBefore": "doar în primele",
+        "newMembersDays": "Numărul de zile",
+        "newMembersAfter": "zile de la înregistrare",
+        "where": "Unde apare",
+        "devices": "Dispozitive",
+        "deviceOptions": {
+          "all": "Toate",
+          "desktop": "Desktop",
+          "mobile": "Telefon"
+        },
+        "addPath": "Adaugă o adresă",
+        "removePath": "Scoate adresa",
+        "pathsHint": "„*” = orice, ex. /clanuri/* = toate paginile de sub /clanuri. Adresele excluse se aplică oricum.",
+        "excludePaths": "Nu pe aceste adrese",
+        "locales": "Limba site-ului",
+        "allLocales": "Toate limbile",
+        "summary": {
+          "everyone": "Toți",
+          "guests": "Doar vizitatorii",
+          "members": "Doar membrii",
+          "nobody": "Nimeni (vizitatori și membri opriți)",
+          "groups": "Grupurile: {groups}",
+          "without": "Fără: {groups}",
+          "pages": {
+            "home": "Prima pagină",
+            "forum": "Forumul",
+            "paths": "Doar adresele alese"
+          }
+        }
+      },
+      "schedule": {
+        "title": "Program",
+        "zoneHint": "Ora site-ului: {zone} ({id}), oricare ar fi ora calculatorului tău. Fusul se schimbă în Setări → Generale.",
+        "when": "Doar în anumite zile și ore",
+        "days": "Zilele",
+        "daysHint": "(toate aprinse = în fiecare zi)",
+        "dayNames": {
+          "1": "Luni",
+          "2": "Marți",
+          "3": "Miercuri",
+          "4": "Joi",
+          "5": "Vineri",
+          "6": "Sâmbătă",
+          "7": "Duminică"
+        },
+        "dayShort": {
+          "1": "L",
+          "2": "Ma",
+          "3": "Mi",
+          "4": "J",
+          "5": "V",
+          "6": "S",
+          "7": "D"
+        },
+        "window": "Doar între anumite ore",
+        "from": "De la ora",
+        "to": "Până la ora",
+        "until": "până la"
+      },
+      "behaviour": {
+        "title": "Închiderea și rotația",
+        "closeOnCta": "Se închide și la click pe buton",
+        "reappear": "După închidere, reapare după (zile)",
+        "reappearHint": "0 = niciodată, doar dacă schimbi bara.",
+        "rotate": "Cât stă pe ecran în rotație (secunde)",
+        "rotateHint": "Gol = {n} s, din setările generale ({min}–{max})."
+      },
+      "stats": {
+        "title": "Statistici",
+        "off": "Numărătoarea e oprită din Setări generale.",
+        "views": "Afișări",
+        "clicks": "Click-uri",
+        "dismissals": "Închideri",
+        "unsaved": "Se numără după prima salvare.",
+        "since": "De la {date}.",
+        "sinceStart": "De la publicare.",
+        "reset": "Resetează statisticile"
+      },
+      "settings": {
+        "title": "Setări generale",
+        "rotation": "Mai multe bare în același loc",
+        "multiple": "Mai multe bare active",
+        "multiples": {
+          "rotate": "Se rotesc",
+          "stack": "Stau una sub alta"
+        },
+        "transition": "Trecerea",
+        "transitions": {
+          "fade": "Estompare",
+          "slide": "Alunecare",
+          "none": "Fără"
+        },
+        "order": "Ordinea",
+        "orders": {
+          "list": "Ca în listă",
+          "random": "La întâmplare"
+        },
+        "pauseOnHover": "Rotația se oprește cât mouse-ul e pe bară",
+        "dots": "Puncte de alegere între bare",
+        "stats": "Numără afișările, click-urile și închiderile",
+        "statsHint": "O afișare se numără o dată pe zi pentru fiecare vizitator.",
+        "savedWith": "Se salvează odată cu barele.",
+        "done": "Gata"
+      }
     },
     "donations": {
       "title": "Donații",

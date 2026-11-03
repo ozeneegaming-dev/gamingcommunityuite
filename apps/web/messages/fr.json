@@ -4252,7 +4252,6 @@
       "empty": "Aucune barre pour l’instant.",
       "add": "Ajouter une barre",
       "bar": "Barre {n}",
-      "enabled": "Active",
       "moveUp": "Monter",
       "moveDown": "Descendre",
       "remove": "Supprimer la barre",
@@ -4260,11 +4259,6 @@
       "labelPlaceholder": "p. ex. ANNONCE",
       "text": "Texte",
       "style": "Style",
-      "styles": {
-        "accent": "Accent (couleur du thème)",
-        "info": "Information",
-        "warning": "Avertissement"
-      },
       "cta": {
         "on": "Avec un bouton",
         "label": "Texte du bouton",
@@ -4286,7 +4280,6 @@
       "guests": "Visible pour les visiteurs",
       "members": "Visible pour les membres",
       "dismissible": "Peut être fermée (mémorisé pour chaque membre / visiteur)",
-      "groups": "Seulement les membres de ces groupes (aucun choisi = tous les membres) :",
       "rotate": "Rotation des barres (secondes)",
       "rotateHelp": "Entre {min} et {max} secondes ; la rotation s’arrête tant que le pointeur est sur la barre.",
       "save": "Enregistrer",

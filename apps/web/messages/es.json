@@ -4252,7 +4252,6 @@
       "empty": "Aún no hay barras.",
       "add": "Añadir una barra",
       "bar": "Barra {n}",
-      "enabled": "Activa",
       "moveUp": "Subir",
       "moveDown": "Bajar",
       "remove": "Eliminar la barra",
@@ -4260,11 +4259,6 @@
       "labelPlaceholder": "p. ej. AVISO",
       "text": "Texto",
       "style": "Estilo",
-      "styles": {
-        "accent": "Acento (color del tema)",
-        "info": "Información",
-        "warning": "Advertencia"
-      },
       "cta": {
         "on": "Con botón",
         "label": "Texto del botón",
@@ -4286,7 +4280,6 @@
       "guests": "La ven los visitantes",
       "members": "La ven los miembros",
       "dismissible": "Se puede cerrar (se recuerda para cada miembro / visitante)",
-      "groups": "Solo los miembros de estos grupos (ninguno = todos los miembros):",
       "rotate": "Rotación de las barras (segundos)",
       "rotateHelp": "Entre {min} y {max} segundos; la rotación se detiene mientras el puntero está sobre la barra.",
       "save": "Guardar",
