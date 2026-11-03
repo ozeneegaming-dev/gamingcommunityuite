@@ -45,7 +45,8 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(dialog).toHaveCount(0);
     await expect(page.locator('[data-widget="core.statsPanel"]')).toBeVisible();
     await expect(page.locator('[data-widget="core.announcement"]')).toBeVisible();
-    await expect(page.locator(".gcs-forumRow__icon svg").first()).toBeVisible();
+    // Iconița forumului: în rând sau, în grila implicită, pe card.
+    await expect(page.locator(".gcs-forumRow__icon svg, .gcs-forumCard__icon svg").first()).toBeVisible();
     await expect(page.locator(".gcs-siteFooter")).toContainText("Powered by GamingCommunitySuite");
   });
 

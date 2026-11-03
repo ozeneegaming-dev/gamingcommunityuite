@@ -102,9 +102,10 @@
 .gcs-hoverCard--v3 .gcs-hoverCard__avatar {
   display: flex;
   align-self: center;
-  width: 90px;
-  height: 90px;
-  margin-top: -48px;
+  /* 90 px avatarul + chenarul decupat de 3 px pe fiecare parte (`padding` din regula de bază). */
+  width: 96px;
+  height: 96px;
+  margin-top: -51px;
   background: var(--gcs-hoverCard-bg);
 }
 .gcs-hoverCard--v3 .gcs-hoverCard__avatar > .gcs-avatarFrame,

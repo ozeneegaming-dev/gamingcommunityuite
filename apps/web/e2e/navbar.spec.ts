@@ -37,7 +37,9 @@ test("meniul contului se folosește din tastatură; tema și limba se schimbă d
   await footer.getByTestId("gcs-footer-language").evaluate((d) => void ((d as HTMLDetailsElement).open = true));
   await footer.getByRole("button", { name: "EN" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  // Membri e acum un submeniu (buton): eticheta lui e tradusă.
+  // Membri e acum un submeniu (buton): eticheta lui e tradusă. Lat cât să încapă pe bară (etichetele cu majuscule și
+  // pătratele iconițelor; la 1280 px „MEMBERS” trece în „More”, cum e normal).
+  await page.setViewportSize({ width: 1600, height: 900 });
   await expect(page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: "Members" })).toBeVisible();
   const [row] = await sql<{ prefs: { locale?: string; skin?: string } }>(`SELECT prefs FROM users WHERE email = $1`, [`nav-${id}@example.com`]);
   expect(row!.prefs).toMatchObject({ locale: "en", skin: "gcs-white" });

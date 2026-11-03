@@ -162,9 +162,10 @@ test("telefon, 375 px: fără derulare orizontală, pastilele serverelor se deru
     const box = await w.boundingBox();
     expect(box, type).not.toBeNull();
     expect(box!.x + box!.width, type).toBeLessThanOrEqual(376);
-    // Strâns: doar banda cu titlul, pe un singur rând (cât banda, plus chenarul).
+    // Strâns: doar banda cu titlul, pe un singur rând (cât banda, plus marginea interioară a casetei, ca la widget-urile
+    // strânse de membru).
     const band = (await w.locator(":scope > .gcs-widgetTitle").boundingBox())!;
-    expect(box!.height - band.height, type).toBeLessThanOrEqual(4);
+    expect(box!.height - band.height, type).toBeLessThanOrEqual(24);
     expect(await w.locator(".gcs-widgetTitle__text").evaluate((el) => getComputedStyle(el).whiteSpace), type).toBe("nowrap");
   }
   await shot(page, "home-a-375.png");

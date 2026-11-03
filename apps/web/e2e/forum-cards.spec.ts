@@ -37,7 +37,7 @@ test.beforeAll(async ({ request }) => {
   categoryName = `Carduri ${id}`;
   authorName = `Spike${id}`;
   authorEmail = `cards-${id}@example.com`;
-  await sql(`INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), now())`, [
+  await sql(`INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))`, [
     `e2ecards${id}`,
     authorName,
     authorName.toLowerCase(),

@@ -23,7 +23,7 @@ test.beforeAll(async ({ request }) => {
   // Membri noi (rândurile „s-a alăturat comunității” din Activitate) și un topic lung (derularea pentru bandă).
   for (const n of ["Ana", "Bogdan", "Cris"]) {
     await sql(
-      `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), now())`,
+      `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))`,
       [`e2etip${n}${id}`, `${n}${id}`, `${n.toLowerCase()}${id}`, `tip-${n.toLowerCase()}-${id}@example.com`],
     );
   }

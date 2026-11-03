@@ -227,7 +227,15 @@ for (const theme of THEMES) {
     await page.goto("/");
     await expect(page.getByTestId("gcs-header-builder")).toHaveAttribute("data-device", "mobile");
     // Fără scroll orizontal la 375 px.
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+    // Elementele mai late decât ecranul (în mesajul de eroare, ca să se vadă direct cine lățește pagina).
+    const wide = await page.evaluate(() => {
+      const w = document.documentElement.clientWidth;
+      return [...document.querySelectorAll("body *")]
+        .filter((el) => el.getBoundingClientRect().right > w + 0.5 && el.getBoundingClientRect().width > 0)
+        .map((el) => `${el.tagName.toLowerCase()}.${String((el as HTMLElement).className).trim().split(/\s+/).slice(0, 3).join(".")} → ${Math.round(el.getBoundingClientRect().right)}`)
+        .slice(0, 12);
+    });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), wide.join(" | ")).toBeLessThanOrEqual(375);
     await shot(page, `${theme.label}-375-home`);
 
     // Contul: foaia de jos (pe toată lățimea, în orice temă); Escape o închide.

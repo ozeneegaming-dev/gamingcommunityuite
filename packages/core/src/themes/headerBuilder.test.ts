@@ -264,8 +264,9 @@ describe("setările temei: antetul, bara de jos și consola", () => {
     expect(NOVA_THEME_SETTINGS.cockpit.layout).toBe("full");
     for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
       expect(s.cockpit.layout).toBe("compact");
-      // Restul consolei e cel al designului: pornirea rămâne alegerea adminului.
-      expect({ ...s.cockpit, layout: "full" }).toEqual(NOVA_THEME_SETTINGS.cockpit);
+      // Prima pagină aleasă de proprietar (varianta A): consola compactă e pornită; restul e cel al designului.
+      expect(s.cockpit.enabled).toBe(true);
+      expect({ ...s.cockpit, layout: "full", enabled: false }).toEqual(NOVA_THEME_SETTINGS.cockpit);
     }
     // O temă salvată înainte de setare (fără `layout`) primește aspectul complet; una cu `compact` îl păstrează.
     expect(normalizeThemeSettings({ preset: "nova", cockpit: { enabled: true, pages: "home" } }).cockpit.layout).toBe("full");
