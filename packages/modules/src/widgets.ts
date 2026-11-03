@@ -50,14 +50,24 @@ export const coreWidgets: GcsWidgetDef[] = [
   widget({ key: "core.guestCta", labelKey: "widgets.core.guestCta", descriptionKey: "widgets.desc.core.guestCta", icon: "fa-solid fa-user-plus", iconOverride: false, defaultConfig: {} }),
   widget({ key: "core.newMembers", labelKey: "widgets.core.newMembers", descriptionKey: "widgets.desc.core.newMembers", icon: "fa-solid fa-user-plus", defaultConfig: { limit: 5 }, fields: [limitField()] }),
   // „Clasament” (specul 2026-10-10-hero-cockpit §4): un singur widget cu tab-urile măsurilor și perioada; amplasarea
-  // alege doar ce se vede la început.
+  // alege doar ce se vede la început. Tab-urile „Comunitate” (prima pagină nouă, 2026-11-03): „Topul săptămânii” (sau
+  // al perioadei alese) cu Postatori / Jucători / Clanuri, fără rândul perioadelor (pentru coloana îngustă).
   widget({
     key: "core.ranking",
     labelKey: "widgets.core.ranking",
     descriptionKey: "widgets.desc.core.ranking",
     icon: "fa-solid fa-trophy",
-    defaultConfig: { metric: "posts", period: "day" },
+    defaultConfig: { metric: "posts", period: "day", tabs: "forum" },
     fields: [
+      {
+        key: "tabs",
+        labelKey: "widgets.fields.tabs",
+        type: "select",
+        options: [
+          { value: "forum", labelKey: "widgets.tabs.forum" },
+          { value: "community", labelKey: "widgets.tabs.community" },
+        ],
+      },
       {
         key: "metric",
         labelKey: "widgets.fields.metric",
@@ -141,7 +151,9 @@ export const chatWidgets: GcsWidgetDef[] = [
 
 /**
  * Widget-ul aplicației Servere (specul 2026-10-07-servere §7): lista compactă a serverelor vizibile, cu statusul live.
- * Câmpurile: câte servere și jocul (gol = toate familiile).
+ * Câmpurile: câte servere, jocul (gol = toate familiile) și aspectul: `full` = rândul complet (adresa, „Conectează-te”,
+ * inelul de ocupare, butoanele, totalurile), `compact` = numele, jucătorii și bara subțire de ocupare (coloana îngustă
+ * a primei pagini noi, 2026-11-03; jucătorii de pe toate serverele stau în dreapta titlului).
  */
 export const serverWidgets: GcsWidgetDef[] = [
   widget({
@@ -149,7 +161,7 @@ export const serverWidgets: GcsWidgetDef[] = [
     labelKey: "widgets.servers.list",
     descriptionKey: "widgets.desc.servers.list",
     icon: "fa-solid fa-server",
-    defaultConfig: { limit: 5, game: "" },
+    defaultConfig: { limit: 5, game: "", layout: "full" },
     fields: [
       limitField(),
       {
@@ -163,7 +175,26 @@ export const serverWidgets: GcsWidgetDef[] = [
           { value: "minecraft", labelKey: "widgets.games.minecraft" },
         ],
       },
+      {
+        key: "layout",
+        labelKey: "widgets.fields.layout",
+        type: "select",
+        options: [
+          { value: "full", labelKey: "widgets.layouts.full" },
+          { value: "compact", labelKey: "widgets.layouts.compact" },
+        ],
+      },
     ],
+  }),
+  // „Meciuri live” (prima pagină nouă, 2026-11-03): meciurile mix în desfășurare (aceleași date ca panoul „Live acum” al
+  // consolei), cu scorul; fără niciun meci, „Niciun meci live acum” și linkul spre toate meciurile.
+  widget({
+    key: "servers.liveMatches",
+    labelKey: "widgets.servers.liveMatches",
+    descriptionKey: "widgets.desc.servers.liveMatches",
+    icon: "fa-solid fa-tower-broadcast",
+    defaultConfig: { limit: 3 },
+    fields: [limitField(10)],
   }),
   // Puntea (specul 2026-10-08-servere-pagini §6): adminii online acum pe serverele vizibile viewer-ului.
   widget({

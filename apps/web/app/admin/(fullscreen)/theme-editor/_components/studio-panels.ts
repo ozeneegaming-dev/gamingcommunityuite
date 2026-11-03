@@ -40,7 +40,7 @@ export type GcsStudioSettingItem = string | { image: GcsStudioImageSlot } | { he
 export function studioItemVisible(item: GcsStudioSettingItem, preset: string): boolean {
   if (themeHasDesignDecor(preset)) return true;
   if (typeof item === "string") return !NOVA_ONLY_FIELDS.includes(item);
-  if ("image" in item) return item.image !== "headerImage";
+  if ("image" in item) return true;
   return !item.decor;
 }
 
@@ -185,10 +185,11 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       "header.customHtml",
     ],
   },
-  // Consola Hero Cockpit de sub antet (sistemul, orice temă): pornită, pe ce pagini, ce panou în fiecare loc, imaginea.
+  // Consola Hero Cockpit de sub antet (sistemul, orice temă): pornită, pe ce pagini, aspectul (complet / compact), ce
+  // panou în fiecare loc (aspectul complet), imaginea.
   cockpit: {
     icon: faGauge,
-    settings: ["cockpit.enabled", "cockpit.pages", { heading: "cockpitPanels" }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage" }, { image: "cockpitImage" }],
+    settings: ["cockpit.enabled", "cockpit.pages", "cockpit.layout", { heading: "cockpitPanels" }, "cockpit.left", "cockpit.center", "cockpit.right", { heading: "cockpitImage" }, { image: "cockpitImage" }],
   },
   headerDesktop: {
     icon: faDesktop,
@@ -197,8 +198,16 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       "header.navIcons",
       "header.sticky",
       "header.crumbs",
-      { heading: "headerImage", decor: true },
+      // Imaginea antetului (sistemul, orice temă): una inclusă în GCS sau una încărcată (are prioritate), apoi unde
+      // stă și cum se îmbină cu antetul. Stratul și modelul tehnic sunt decorul graficii GCS (doar pe designul ei).
+      { heading: "headerImage" },
+      "header.art",
       { image: "headerImage" },
+      "header.imageArea",
+      "header.imageDim",
+      "header.imageTint",
+      "header.imageFade",
+      "header.imageMobile",
       "header.overlay",
       "header.pattern",
     ],

@@ -37,9 +37,10 @@ test("adminul încarcă logo-ul din editorul vizual deschis din meniu; vizitator
   await expect(visitor.getByTestId("gcs-brand")).toBeVisible();
   await expect(visitor.getByTestId("gcs-brand-logo")).toHaveCount(0);
 
-  // Meniul contului: „Editor temă” deschide editorul vizual al temei afișate.
+  // Meniul contului (submeniul „Staff”): „Editor temă” deschide editorul vizual al temei afișate.
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-account-staff").click();
   await page.getByTestId("gcs-menu-theme-editor").click();
   await expect(page).toHaveURL(/\/admin\/theme-editor\/gcs-dark$/);
   await expect(page.getByTestId("gcs-theme-studio")).toBeVisible();
@@ -85,6 +86,7 @@ test("un membru fără drept ACP nu vede uneltele de editare în meniu", async (
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
   await expect(page.getByTestId("gcs-menu-settings")).toBeVisible();
+  await expect(page.getByTestId("gcs-account-staff")).toHaveCount(0);
   await expect(page.getByTestId("gcs-menu-theme-editor")).toHaveCount(0);
   await expect(page.getByTestId("gcs-menu-page-editor")).toHaveCount(0);
   await expect(page.getByTestId("gcs-menu-acp")).toHaveCount(0);

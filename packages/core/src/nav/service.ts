@@ -56,6 +56,8 @@ export type GcsNavItemInput = {
   audience?: GcsNavAudience;
   counter?: string | null;
   highlight?: string | null;
+  /** „Link scurt” (doar subitemii): în mega meniu, plăcuță în coloana din dreapta, fără descriere. */
+  shortLink?: boolean;
   children?: GcsNavItemInput[];
 };
 export type GcsNavItemView = {
@@ -70,6 +72,8 @@ export type GcsNavItemView = {
   /** Manager meniu v2: stilul de evidențiere (`accent`, `glow`) și separatorul dintre subitemi. */
   highlight?: string | null;
   separator?: boolean;
+  /** „Link scurt” (doar subitemii): coloana din dreapta a mega meniului. */
+  shortLink?: boolean;
   children: GcsNavItemView[];
 };
 export type GcsNavItemEdit = Omit<GcsNavItemInput, "children" | "label"> & { id: number; label: GcsNavLabel; children: GcsNavItemEdit[] };
@@ -91,12 +95,14 @@ type Row = {
   audience?: string;
   counter?: string | null;
   highlight?: string | null;
+  shortLink?: boolean;
 };
 
 /** Valoarea unui contor pentru un viewer (`null` = fără insignă). */
 export type GcsNavCounterResolver = (key: string, viewer: GcsAppViewer) => Promise<number | null>;
 
-const DESCRIPTION_MAX = 100;
+/** Descrierea de un rând (mega meniul, sertarul de pe telefon): cel mult atâtea caractere, fără rânduri noi. */
+export const NAV_DESCRIPTION_MAX = 100;
 const BADGE_RE = /^[\p{L}\p{N}][\p{L}\p{N} .!+#%-]{0,11}$/u;
 
 /** Cheia descrierii implicite a unei etichete cu cheie (`site.nav.servers` → `site.navDesc.servers`). */
@@ -139,6 +145,20 @@ function descriptionValue(d: GcsNavDescription | null | undefined): GcsNavDescri
   if (!d) return null;
   const texts = Object.fromEntries(Object.entries(d).filter(([, t]) => typeof t === "string" && t.trim() !== "").map(([l, t]) => [l, t!.trim()]));
   return Object.keys(texts).length > 0 ? texts : null;
+}
+
+/** Identitatea unui item la salvare (părintele, linkul și eticheta, cu limbile sortate), pentru păstrarea id-ului. */
+function navItemIdentity(parentId: number | null, href: string | null, label: unknown): string {
+  const texts = label && typeof label === "object" ? (label as Record<string, unknown>) : {};
+  return JSON.stringify([parentId, href, Object.keys(texts).sort().map((k) => [k, texts[k]])]);
+}
+
+/**
+ * „Link scurt” de salvat: doar pe un subitem care nu e separator (pe primul nivel n-are coloană în care să stea; un item
+ * mutat pe primul nivel își pierde marcajul, fără eroare, ca ciorna să se salveze și după un drag & drop).
+ */
+export function navShortLink(it: Pick<GcsNavItemInput, "kind" | "shortLink">, child: boolean): boolean {
+  return child && it.kind !== "separator" && it.shortLink === true;
 }
 
 /** Linkurile permise: căi interne (`/…`, fără `//`) sau adrese http(s). */
@@ -230,6 +250,7 @@ export class GcsNavService {
           audience: it.audience ?? "all",
           counter: it.counter ?? null,
           highlight: it.highlight ?? null,
+          shortLink: navShortLink(it, parentId !== null),
         });
         walk(it.children ?? [], id);
       }
@@ -275,7 +296,7 @@ export class GcsNavService {
           const children = parentId === null ? build(r.id) : [];
           // Un grup (dropdown) fără subitemi vizibili nu apare.
           if (r.kind === "dropdown" && children.filter((c) => !c.separator).length === 0) return [];
-          return [{ id: r.id, label, description, badge, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, highlight: r.highlight ?? null, children: trimSeparators(children) }];
+          return [{ id: r.id, label, description, badge, icon: r.icon, href: r.href ?? "#", newTab: r.newTab, highlight: r.highlight ?? null, shortLink: parentId !== null && !!r.shortLink, children: trimSeparators(children) }];
         });
     return build(null);
   }
@@ -299,6 +320,7 @@ export class GcsNavService {
           audience: (NAV_AUDIENCES as readonly string[]).includes(r.audience ?? "") ? (r.audience as GcsNavAudience) : "all",
           counter: r.counter ?? null,
           highlight: r.highlight ?? null,
+          shortLink: !!r.shortLink,
           children: build(r.id),
         }));
     return build(null);
@@ -347,11 +369,12 @@ export class GcsNavService {
       if (it.icon != null && !this.deps.isIcon(it.icon)) throw new GcsValidationError({ [`${at}.icon`]: "invalid" });
       if (it.description != null) {
         const texts = typeof it.description === "object" && !Array.isArray(it.description) ? Object.entries(it.description) : null;
-        if (!texts || !texts.every(([l, t]) => LABEL_LOCALES.includes(l) && typeof t === "string" && t.length <= DESCRIPTION_MAX && ![...t].some((c) => c.charCodeAt(0) < 32))) {
+        if (!texts || !texts.every(([l, t]) => LABEL_LOCALES.includes(l) && typeof t === "string" && t.length <= NAV_DESCRIPTION_MAX && ![...t].some((c) => c.charCodeAt(0) < 32))) {
           throw new GcsValidationError({ [`${at}.description`]: "invalid" });
         }
       }
       if (it.badge != null && (typeof it.badge !== "string" || !BADGE_RE.test(it.badge))) throw new GcsValidationError({ [`${at}.badge`]: "invalid" });
+      if (it.shortLink != null && typeof it.shortLink !== "boolean") throw new GcsValidationError({ [`${at}.shortLink`]: "invalid" });
       if (kind !== "dropdown" && children.length === 0 && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
       if (it.href != null && !isSafeHref(it.href)) throw new GcsValidationError({ [`${at}.href`]: "invalid" });
       if (kind === "app" && it.appKey == null) throw new GcsValidationError({ [`${at}.appKey`]: "required" });
@@ -374,12 +397,21 @@ export class GcsNavService {
     await this.validateAll(items);
     const before = await this.editable();
     await db.$transaction(async (tx) => {
+      // Itemii neschimbați (același părinte, link și etichetă) își păstrează id-ul: aspectul antetului ține minte după
+      // id ce stă în dreapta logo-ului („Navigație (dreapta)”), iar o salvare a meniului nu trebuie să-l golească.
+      const reusable = new Map<string, number[]>();
+      for (const old of await tx.navItem.findMany({ select: { id: true, parentId: true, href: true, label: true }, orderBy: [{ parentId: "asc" }, { position: "asc" }] })) {
+        const key = navItemIdentity(old.parentId, old.href, old.label);
+        reusable.set(key, [...(reusable.get(key) ?? []), old.id]);
+      }
       await tx.navItem.deleteMany({});
       const create = async (list: GcsNavItemInput[], parentId: number | null) => {
         for (const [position, it] of list.entries()) {
           const separator = it.kind === "separator";
+          const id = reusable.get(navItemIdentity(parentId, separator ? null : (it.href ?? null), separator ? {} : it.label))?.shift();
           const row = await tx.navItem.create({
             data: {
+              ...(id === undefined ? {} : { id }),
               parentId,
               position,
               label: (separator ? {} : it.label) as Prisma.InputJsonValue,
@@ -395,6 +427,7 @@ export class GcsNavService {
               audience: it.audience ?? "all",
               counter: separator ? null : (it.counter ?? null),
               highlight: separator ? null : (it.highlight ?? null),
+              shortLink: navShortLink(it, parentId !== null),
             },
           });
           await create(it.children ?? [], row.id);
@@ -601,7 +634,8 @@ function matchesDefaults(rows: Row[], defaults: NavDefaultItem[]): boolean {
       r.appKey === appKey &&
       r.groups.length === 0 &&
       !r.newTab &&
-      r.enabled
+      r.enabled &&
+      !r.shortLink
     );
   };
   const top = rows.filter((r) => r.parentId === null);

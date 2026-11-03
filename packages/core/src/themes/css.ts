@@ -173,6 +173,15 @@ const SHADOWS: Record<GcsThemeSettings["boxes"]["shadow"], string> = {
   strong: GCS_BRAND.shadow.dialog,
 };
 
+/**
+ * Imaginea din spatele antetului: cea încărcată are prioritate, apoi imaginea inclusă aleasă (`--gcs-art-<nume>`, pe
+ * `<html>`), altfel niciuna.
+ */
+function headerImageCss(h: Pick<GcsThemeSettings["header"], "image" | "art">): string {
+  if (h.image) return `url("${h.image}")`;
+  return h.art === "none" ? "none" : `var(--gcs-art-${h.art})`;
+}
+
 /** Variabilele care nu depind de mod (dimensiuni, fonturi, umbre). */
 function sizes(s: GcsThemeSettings): string {
   const fonts = themeFonts(s);
@@ -197,8 +206,13 @@ function sizes(s: GcsThemeSettings): string {
     `  --gcs-sidebar-w: ${s.sidebar.width}px;`,
     `  --gcs-avatar-radius: ${s.avatars.rounded ? "50%" : "18%"};`,
     `  --gcs-btn-radius: ${s.buttons.radius}px;`,
-    // Nova: imaginea antetului (un fișier al site-ului, deja validat) și stratul închis de peste ea.
-    `  --gcs-header-image: ${s.header.image ? `url("${s.header.image}")` : "none"};`,
+    // Imaginea antetului: cea încărcată (un fișier al site-ului, deja validat) sau cea inclusă în GCS (adresa ei vine
+    // din `<html>`, pusă de layout-ul rădăcină), apoi cât se acoperă, cât se colorează și dacă se estompează jos.
+    `  --gcs-header-image: ${headerImageCss(s.header)};`,
+    `  --gcs-header-image-dim: ${s.header.imageDim}%;`,
+    `  --gcs-header-image-tint: ${s.header.imageTint}%;`,
+    `  --gcs-header-image-fade: ${s.header.imageFade ? 85 : 0}%;`,
+    // Nova: stratul închis de peste grafica GCS a antetului Standard.
     `  --gcs-header-overlay: ${s.header.overlay / 100};`,
   ].join("\n");
 }
@@ -260,9 +274,10 @@ function conditionalRules(s: GcsThemeSettings): string[] {
   if (s.boxes.shadow !== "none") rules.push(`.gcs-card:where(:not(.gcs-acp *)) {\n  box-shadow: var(--gcs-box-shadow);\n}`);
   if (!s.scheme.toggle) rules.push(`html:root .gcs-siteFooter__scheme {\n  display: none;\n}`);
   if (s.logo.textMobile) rules.push(`@media (max-width: 640px) {\n  html:root .gcs-brand__text {\n    display: flex;\n  }\n}`);
+  // Fără iconițe în meniul principal: nici pătratul de 40 px al iconiței (bara constructorului de antet).
   if (!s.header.navIcons) {
     rules.push(
-      `html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret) {\n  display: none;\n}`,
+      `html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-hb__navIcon {\n  display: none;\n}`,
     );
   }
   if (!s.header.sticky) rules.push(`html:root .gcs-siteHeader {\n  position: relative;\n}`);
@@ -271,7 +286,8 @@ function conditionalRules(s: GcsThemeSettings): string[] {
       `html:root .gcs-drawer__panel {\n  inset: 0 0 0 auto;\n  border-right: 0;\n  border-left: 1px solid var(--gcs-border);\n  animation-name: gcs-drawer-in-right;\n}`,
     );
   }
-  if (!s.mobileNav.icons) rules.push(`html:root .gcs-drawer__link > .gcs-icon {\n  display: none;\n}`);
+  // Fără iconițe în sertar: nici căsuța iconiței de pe subitemii cu descriere.
+  if (!s.mobileNav.icons) rules.push(`html:root .gcs-drawer__link > .gcs-icon,\nhtml:root .gcs-drawer__link > .gcs-drawer__icon {\n  display: none;\n}`);
   if (s.boxes.clickableRows) {
     rules.push(
       `html:root .gcs-forumRow {\n  position: relative;\n  cursor: pointer;\n}`,

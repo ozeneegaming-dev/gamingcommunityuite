@@ -32,6 +32,39 @@
 :root .gcs-hb[data-hidden] {
   transform: translateY(-100%);
 }
+/*
+ * Imaginea antetului (setarea temei, în orice temă și orice aspect): cea încărcată sau cea inclusă în GCS, în spatele
+ * întregului antet sau doar al primului rând (cel cu logo-ul). Straturile, de sus în jos: estomparea jos în culoarea
+ * antetului (doar pe tot antetul; nu în fundalul paginii, care pe o temă luminoasă ar lăsa textul alb al antetului pe
+ * deschis), acoperirea în culoarea antetului (meniul rămâne lizibil; pe un antet luminos imaginea se deschide), nuanța accentului (`background-blend-mode: color`), apoi imaginea, decupată pe mijloc și lipită sus.
+ * Doar fundaluri, fără pseudo-elemente: antetul rămâne fără context de suprapunere propriu. Bara compactă își păstrează
+ * fundalul; pe telefon imaginea apare doar dacă tema o lasă (`data-gcs-header-image-mobile`).
+ */
+:root[data-gcs-header-image="all"] .gcs-hb:not([data-compact], [data-device="mobile"]),
+:root[data-gcs-header-image="all"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact]) {
+  background-color: var(--gcs-header-bg, var(--gcs-chrome));
+  background-image:
+    linear-gradient(to bottom, transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent), color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent), color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent)),
+    var(--gcs-header-image);
+  background-size: auto, auto, auto, cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-blend-mode: normal, normal, color, normal;
+}
+:root[data-gcs-header-image="top"] .gcs-hb:not([data-compact], [data-device="mobile"]) > .gcs-hb__row:first-child,
+:root[data-gcs-header-image="top"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact]) > .gcs-hb__row:first-child {
+  background-color: var(--gcs-header-bg, var(--gcs-chrome));
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent), color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent)),
+    linear-gradient(color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent), color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent)),
+    var(--gcs-header-image);
+  background-size: auto, auto, cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-blend-mode: normal, color, normal;
+}
 :root .gcs-hb__row {
   transition:
     height var(--gcs-dur-slow) var(--gcs-ease-out),
@@ -340,41 +373,82 @@
   visibility: hidden;
   pointer-events: none;
 }
+/*
+ * Un item de pe bară (macheta „Submeniurile din antet”): iconița într-un pătrat de 40 px (neutru; plin cu accentul, cu
+ * un gradient fin și chenar interior, pe itemul deschis sau activ), eticheta în litere mari (15 px, 500, spațiere) și
+ * săgeata, care se rotește la 180° cât submeniul e deschis. Eticheta itemului deschis / activ e în culoarea de accent.
+ * Pătratul dispare cu setarea temei „Iconițe în meniul principal” oprită (regula din CSS-ul compilat al temei).
+ */
 :root .gcs-hb__nav {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 8px 12px;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: transparent;
-  color: var(--gcs-ui-text);
-  font: 600 14px var(--gcs-font-text);
+  color: var(--gcs-hb-text);
+  font: 500 15px var(--gcs-font-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
 }
-:root .gcs-hb__nav:is(:hover, :focus-visible, [aria-expanded="true"]) {
+:root .gcs-hb__nav:is(:hover, :focus-visible) {
   color: var(--gcs-ui-strong);
 }
-:root .gcs-hb__nav[aria-expanded="true"] {
-  border-color: var(--gcs-panel-border);
+:root .gcs-hb__nav:is([aria-expanded="true"], .gcs-hb__nav--active) {
+  color: var(--gcs-ui-accent-ink);
 }
-:root .gcs-hb__nav--active {
-  color: var(--gcs-ui-strong);
-  background-color: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
-  border-color: color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+:root .gcs-hb__navIcon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--gcs-hb-sq);
+  box-shadow: inset 0 0 0 1px var(--gcs-hb-sq-border);
+  color: var(--gcs-hb-text);
+  font-size: 17px;
+  letter-spacing: 0;
+  transition:
+    color var(--gcs-dur-slow) var(--gcs-ease-out),
+    box-shadow var(--gcs-dur-slow) var(--gcs-ease-out);
+}
+:root .gcs-hb__nav:is([aria-expanded="true"], .gcs-hb__nav--active) > .gcs-hb__navIcon {
+  background: linear-gradient(145deg, var(--gcs-accent-fill, var(--gcs-accent)), color-mix(in srgb, var(--gcs-accent-fill, var(--gcs-accent)) 70%, var(--gcs-hb-edge)));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-btn-primary-text, #fff) 14%, transparent);
+  color: var(--gcs-btn-primary-text, #fff);
+}
+/*
+ * Pătratele iconițelor doar când încap toți itemii cu ele. Altfel bara pune `data-compact` (GcsMegaNav) și toate barele
+ * antetului (și cealaltă jumătate a meniului împărțit Esports) arată doar etichetele, înainte ca vreun item să treacă în
+ * „Mai mult”. Lățimea antetului e limitată, deci decide spațiul barei, nu lățimea ecranului. `data-measure` forțează o
+ * variantă cât timp bara se măsoară.
+ */
+:root .gcs-hb:has(.gcs-hb__navBar[data-compact]) .gcs-hb__navBar:not([data-measure="icons"]) .gcs-hb__nav > .gcs-hb__navIcon,
+:root .gcs-hb__navBar[data-measure="text"] .gcs-hb__nav > .gcs-hb__navIcon {
+  display: none;
+}
+:root .gcs-hb__navLabel {
+  min-width: 0;
 }
 :root .gcs-hb__caret {
-  width: 9px;
-  height: 9px;
+  flex: none;
+  width: 10px;
+  height: 10px;
   color: var(--gcs-hb-muted);
-  transition: transform var(--gcs-dur) var(--gcs-ease-out);
+  transition:
+    transform var(--gcs-dur-slow) var(--gcs-ease-out),
+    color var(--gcs-dur-slow) var(--gcs-ease-out);
 }
 :root .gcs-hb__nav[aria-expanded="true"] .gcs-hb__caret {
   transform: rotate(180deg);
+  color: var(--gcs-ui-accent-ink);
 }
 /* ─── Panourile antetului: fade + 6 px, închise sunt `inert` ────────────────────────────────────────────── */
 :root .gcs-hb__pop {
@@ -513,77 +587,247 @@
   box-shadow: var(--gcs-panel-shadow);
   animation: gcs-pop-in var(--gcs-dur) var(--gcs-ease-out) both;
 }
-/* ─── Mega meniurile: 2 coloane (iconița, titlul, descrierea, insigna live), rândul de jos ───────────────── */
+/*
+ * ─── Mega meniurile (macheta „Submeniurile din antet”) ────────────────────────────────────────────────────
+ * Panoul: 420–1024 px după câți itemi sunt (1–3 coloane, plus coloana de 160 px a linkurilor scurte), colțuri de 8 px,
+ * un chenar subțire în gradient (neutru → accent, 40°), umbra moale și săgeata de sus, deasupra butonului (poziția ei,
+ * `--gcs-mega-arrow`, o pune scriptul la deschidere). Itemii: chenar de 1 px, iconița în căsuța de 44 px, titlul și
+ * descrierea de un rând; la hover, fundalul de accent (35 %), chenarul de accent și căsuța plină (iconița albă), 0,3 s.
+ * Deschiderea: panoul crește din sus (scaleY + opacitate, 0,3 s), itemii intră pe rând (câte 40 ms). Cu „reduced
+ * motion”, nimic din toate acestea: panoul apare direct.
+ */
 :root .gcs-mega__panel {
-  width: 640px;
-  padding: 0;
-  overflow: hidden;
+  --gcs-mega-w: 720px;
+  --gcs-mega-cols: 2;
+  width: min(var(--gcs-mega-w), calc(100vw - 24px));
+  min-width: 0;
+  max-height: none;
+  padding: 1px;
+  border: 0;
+  border-radius: 8px;
+  overflow: visible;
+  background: linear-gradient(40deg, var(--gcs-panel-border) 35%, color-mix(in srgb, var(--gcs-accent) 65%, transparent));
+  box-shadow:
+    0 0 12px rgb(0 0 0 / 0.35),
+    var(--gcs-panel-shadow);
+  transform: none;
+  transform-origin: top center;
+  transition:
+    opacity var(--gcs-dur) var(--gcs-ease-out),
+    visibility 0s linear var(--gcs-dur);
+}
+:root .gcs-mega__panel[data-open] {
+  transform: none;
+  transition:
+    opacity var(--gcs-dur) var(--gcs-ease-out),
+    visibility 0s;
+  animation: gcs-mega-open var(--gcs-dur-slow) var(--gcs-ease-out) both;
+}
+:root .gcs-mega__panel[data-cols="1"] {
+  --gcs-mega-w: 420px;
+  --gcs-mega-cols: 1;
+}
+:root .gcs-mega__panel[data-cols="1"][data-side] {
+  --gcs-mega-w: 600px;
+}
+:root .gcs-mega__panel[data-cols="2"][data-side] {
+  --gcs-mega-w: 880px;
+}
+:root .gcs-mega__panel[data-cols="3"] {
+  --gcs-mega-w: 1024px;
+  --gcs-mega-cols: 3;
+}
+@keyframes gcs-mega-open {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes gcs-mega-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Săgeata: un pătrat rotit, în culoarea chenarului amestecată cu accentul; jumătatea de jos stă sub panou. */
+:root .gcs-mega__arrow {
+  position: absolute;
+  top: -6px;
+  left: var(--gcs-mega-arrow, 48px);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 2px 0 0 0;
+  background: color-mix(in srgb, var(--gcs-accent) 40%, var(--gcs-panel-border));
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+:root .gcs-mega__in {
+  position: relative;
+  max-height: calc(100vh - 140px);
+  overflow: hidden auto;
+  border-radius: 7px;
+  background: var(--gcs-panel-bg);
+}
+:root .gcs-mega__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+:root .gcs-mega__panel[data-side] .gcs-mega__body {
+  grid-template-columns: minmax(0, 1fr) 160px;
 }
 :root .gcs-mega__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  padding: 12px;
+  grid-template-columns: repeat(var(--gcs-mega-cols), minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  padding: 14px;
 }
 :root .gcs-mega__list {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+:root .gcs-mega__sep {
+  display: block;
+  grid-column: 1 / -1;
+  height: 1px;
+  margin: 2px 4px;
+  background: var(--gcs-ui-line);
+}
 :root .gcs-mega__item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  padding: 10px;
-  border-radius: 10px;
+  min-width: 0;
+  padding: 12px 16px 12px 12px;
+  border-radius: 6px;
   border: 1px solid var(--gcs-ui-tile-border);
-  background-color: var(--gcs-ui-well-45);
-  color: var(--gcs-ui-strong);
+  background-color: transparent;
+  color: var(--gcs-ui-text);
   text-decoration: none;
+  transition:
+    background-color var(--gcs-dur-slow) var(--gcs-ease-out),
+    border-color var(--gcs-dur-slow) var(--gcs-ease-out);
 }
 :root .gcs-mega__item:is(:hover, :focus-visible) {
-  background-color: var(--gcs-ui-hover);
-  transform: scale(1.01);
-  color: var(--gcs-ui-strong);
+  background-color: color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+  border-color: var(--gcs-accent);
+  color: var(--gcs-ui-text);
 }
 :root .gcs-mega__item--active {
   border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
 }
 :root .gcs-mega__icon {
   flex: none;
-  width: 38px;
-  height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--gcs-accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gcs-accent) 45%, transparent);
-  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
-  font-size: 16px;
-  transition: transform var(--gcs-dur) var(--gcs-ease-out);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: var(--gcs-ui-well);
+  border: 1px solid var(--gcs-ui-tile-border);
+  color: var(--gcs-ui-accent-ink);
+  font-size: 18px;
+  transition:
+    background-color var(--gcs-dur-slow) var(--gcs-ease-out),
+    border-color var(--gcs-dur-slow) var(--gcs-ease-out),
+    color var(--gcs-dur-slow) var(--gcs-ease-out);
 }
 :root .gcs-mega__item:is(:hover, :focus-visible) .gcs-mega__icon {
-  transform: scale(1.15);
+  background: var(--gcs-accent-fill, var(--gcs-accent));
+  border-color: var(--gcs-accent-fill, var(--gcs-accent));
+  color: var(--gcs-btn-primary-text, #fff);
 }
 :root .gcs-mega__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  display: grid;
+  gap: 2px;
   min-width: 0;
 }
 :root .gcs-mega__title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font: 700 13.5px var(--gcs-font-text);
+  min-width: 0;
+  font: 600 15px var(--gcs-font-text);
   color: var(--gcs-ui-strong);
 }
+:root .gcs-mega__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 :root .gcs-mega__desc {
-  font: 400 12px/1.35 var(--gcs-font-text);
-  color: var(--gcs-hb-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 12px/1.4 var(--gcs-font-text);
+  color: var(--gcs-ui-muted);
+  transition: color var(--gcs-dur-slow) var(--gcs-ease-out);
+}
+:root .gcs-mega__item:is(:hover, :focus-visible) .gcs-mega__desc {
+  color: color-mix(in srgb, var(--gcs-ui-strong) 78%, transparent);
+}
+/* Coloana din dreapta: linkurile scurte, plăcuțe cu iconița deasupra și titlul dedesubt. */
+:root .gcs-mega__side {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 14px 12px;
+  border-left: 1px solid var(--gcs-ui-tile-border);
+}
+:root .gcs-mega__tile {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 76px;
+  padding: 12px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-ui-tile-border);
+  color: var(--gcs-ui-text);
+  font: 600 12.5px/1.3 var(--gcs-font-text);
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--gcs-dur-slow) var(--gcs-ease-out),
+    border-color var(--gcs-dur-slow) var(--gcs-ease-out),
+    color var(--gcs-dur-slow) var(--gcs-ease-out);
+}
+:root .gcs-mega__tile:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+  border-color: var(--gcs-accent);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-mega__tile--active {
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
+}
+:root .gcs-mega__tileIcon {
+  display: inline-flex;
+  font-size: 20px;
+  color: var(--gcs-ui-accent-ink);
+  transition: color var(--gcs-dur-slow) var(--gcs-ease-out);
+}
+:root .gcs-mega__tile:is(:hover, :focus-visible) .gcs-mega__tileIcon {
+  color: var(--gcs-ui-strong);
+}
+/* Intrarea pe rând: doar cât panoul e deschis (la redeschidere pornește din nou). */
+:root .gcs-mega__panel[data-open] :is(.gcs-mega__item, .gcs-mega__tile) {
+  animation: gcs-mega-item-in 0.35s var(--gcs-ease-out) both;
+  animation-delay: calc(var(--n, 0) * 40ms + 80ms);
 }
 :root .gcs-mega__badge {
+  flex: none;
   padding: 2px 5px;
   border-radius: 4px;
   font: 700 9px var(--gcs-font-text);
@@ -600,7 +844,7 @@
   color: #ffd36a;
   background: rgb(255 211 106 / 0.14);
 }
-:root .gcs-mega__item:is(:hover, :focus-visible) .gcs-mega__badge {
+:root :is(.gcs-mega__item, .gcs-mega__tile):is(:hover, :focus-visible) .gcs-mega__badge {
   transform: translateY(-1px);
   box-shadow: 0 0 12px color-mix(in srgb, currentColor 45%, transparent);
 }
@@ -616,6 +860,92 @@
   flex: 1;
   font-size: 12px;
   color: var(--gcs-ui-muted);
+}
+/* Ecranele desktop mai înguste: grila de 3 coloane trece pe 2 (panoul ar ieși din ecran). */
+@media (max-width: 1279px) {
+  :root .gcs-mega__panel[data-cols="3"] {
+    --gcs-mega-w: 880px;
+    --gcs-mega-cols: 2;
+  }
+}
+/* Fără mișcare: panoul și itemii apar direct, fără creștere, intrare pe rând sau tranziții. */
+@media (prefers-reduced-motion: reduce) {
+  :root .gcs-mega__panel,
+  :root .gcs-mega__panel[data-open],
+  :root .gcs-mega__panel[data-open] :is(.gcs-mega__item, .gcs-mega__tile) {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+  :root :is(.gcs-mega__item, .gcs-mega__tile, .gcs-mega__icon, .gcs-mega__desc, .gcs-mega__tileIcon, .gcs-mega__badge, .gcs-hb__navIcon, .gcs-hb__caret) {
+    transition: none;
+  }
+}
+
+/*
+ * ─── Sertarul de pe telefon: submeniul ca listă de carduri (iconița în căsuță, titlul, descrierea de un rând) ──
+ * Grupul deschis are un fundal și un chenar fin. `.gcs-drawer` în selectori: peste aspectul designelor pentru
+ * linkurile sertarului (înălțimea, chenarul transparent), ca toate temele să arate cardurile.
+ */
+:root .gcs-drawer .gcs-drawer__toggle[aria-expanded="true"] {
+  background-color: var(--gcs-surface2);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--gcs-ui-tile-border);
+}
+:root .gcs-drawer .gcs-drawer__sub {
+  gap: 6px;
+}
+:root .gcs-drawer .gcs-drawer__card {
+  gap: 10px;
+  min-height: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-ui-tile-border);
+  border-radius: 6px;
+  font-weight: 600;
+}
+:root .gcs-drawer__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--gcs-ui-well);
+  border: 1px solid var(--gcs-ui-tile-border);
+  color: var(--gcs-ui-accent-ink);
+  font-size: 15px;
+}
+:root .gcs-drawer__card:is(:hover, :focus-visible, .gcs-drawer__link--active) .gcs-drawer__icon {
+  background: var(--gcs-accent-fill, var(--gcs-accent));
+  border-color: var(--gcs-accent-fill, var(--gcs-accent));
+  color: var(--gcs-btn-primary-text, #fff);
+}
+:root .gcs-drawer__text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+:root .gcs-drawer__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-drawer__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 12px/1.35 var(--gcs-font-text);
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-drawer__subSep {
+  display: block;
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--gcs-border);
 }
 /* ─── Căutarea: panoul (câmpul, domeniile, filtrele, rezultatele rapide, recentele) ─────────────────────── */
 :root .gcs-sp {
@@ -914,7 +1244,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* ─── Contul: inelul de XP, cardul de rang, secțiunile, rândul de jos ───────────────────────────────────── */
+/* ─── Contul: inelul de XP, panoul compact (plăcile, „Staff” cu submeniu), foaia de jos pe telefon ─────────── */
 :root .gcs-am__trigger {
   display: inline-flex;
   align-items: center;
@@ -1000,219 +1330,444 @@
   transform: translateX(-50%) translateY(-1px);
   box-shadow: 0 0 12px color-mix(in srgb, var(--gcs-accent) 45%, transparent);
 }
+/*
+ * Panoul compact (macheta aprobată 2026-11-03): antetul pe 2 rânduri, plăcile pe 2 coloane, „Staff” ca un rând cu
+ * submeniu lateral, rândul de jos. Înălțimea maximă e ecranul de sub antet (`--am-max`, măsurată de componentă), cu
+ * derulare internă discretă; panoul nu taie (`overflow: visible`), ca submeniul să stea lângă el.
+ */
 :root .gcs-am__panel {
-  width: 370px;
-  padding: 0;
-  overflow-x: hidden;
-}
-:root .gcs-am__card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--gcs-accent) 22%, transparent), var(--gcs-am-card-tint) 60%, transparent);
-  border-bottom: 1px solid var(--gcs-ui-line);
+  width: 340px;
+  max-height: var(--am-max, calc(100vh - 120px));
+  padding: 0;
+  overflow: visible;
 }
-:root .gcs-am__id {
+:root .gcs-am__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--gcs-ui-line);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  background: var(--gcs-am-card-tint);
+}
+:root .gcs-am__idRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+}
+:root .gcs-am__ava {
+  display: inline-flex;
+  flex: none;
 }
 :root .gcs-am__idText {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
   min-width: 0;
 }
+/* Numele nu se taie (efectele numelor VIP ies din cutie): un nume foarte lung se rupe pe rândul următor. */
 :root .gcs-am__cardName {
+  min-width: 0;
   font: 700 15px var(--gcs-font-text);
+  overflow-wrap: anywhere;
 }
 :root .gcs-am__groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 :root .gcs-am__group {
-  padding: 1px 6px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 1px 7px;
   border-radius: 4px;
-  border: 1px solid var(--g, var(--gcs-ui-muted));
+  border: 1px solid color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 45%, transparent);
   color: var(--g, var(--gcs-ui-text));
-  background-color: color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 10%, transparent);
-  font: 700 9.5px var(--gcs-font-text);
-  letter-spacing: 0.06em;
+  background-color: color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 12%, transparent);
+  font: 700 10.5px var(--gcs-font-text);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
   transition: background-color var(--gcs-dur), border-color var(--gcs-dur), box-shadow var(--gcs-dur), transform var(--gcs-dur) var(--gcs-ease-out);
 }
+:root .gcs-am__groupText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 :root .gcs-am__group:is(:hover, :focus-visible) {
   background-color: color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 30%, transparent);
   border-color: color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 60%, transparent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 45%, transparent), 0 4px 12px rgb(0 0 0 / 0.25);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--g, var(--gcs-ui-muted)) 45%, transparent);
   transform: translateY(-1px);
 }
+/* Statusul: un comutator mic cu două variante (Online / Invizibil). */
 :root .gcs-am__status {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-ui-edge);
+  background: var(--gcs-ui-well-50);
 }
 :root .gcs-am__statusBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 0;
   border-radius: 999px;
-  border: 1px solid var(--gcs-ui-edge);
   background-color: transparent;
-  color: var(--gcs-ui-dim);
+  color: var(--gcs-ui-muted);
   font: 600 11px var(--gcs-font-text);
   cursor: pointer;
 }
+:root .gcs-am__statusBtn:is(:hover, :focus-visible) {
+  color: var(--gcs-ui-strong);
+}
 :root .gcs-am__statusBtn[aria-checked="true"] {
   color: var(--gcs-ui-strong);
+  background-color: var(--gcs-ui-hover-tab);
 }
 :root .gcs-am__statusBtn--online[aria-checked="true"] {
   color: var(--gcs-ui-ok);
-  border-color: var(--gcs-ui-ok-40);
-  background-color: var(--gcs-ui-ok-12);
-}
-:root .gcs-am__statusBtn--invisible[aria-checked="true"] {
-  border-color: var(--gcs-ui-off);
-  background-color: var(--gcs-ui-hover-tab);
+  background-color: var(--gcs-ui-ok-15);
 }
 :root .gcs-am__dot {
-  width: 7px;
-  height: 7px;
+  display: none;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
+}
+:root .gcs-am__statusBtn[aria-checked="true"] .gcs-am__dot {
+  display: block;
 }
 :root .gcs-am__statusBtn--invisible .gcs-am__dot {
   background: transparent;
   box-shadow: inset 0 0 0 1.5px currentColor;
 }
+/* Nivelul: eticheta și cifrele pe un rând, bara subțire dedesubt (cât mai rămâne: în tooltip). */
 :root .gcs-am__level {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gcs-ui-muted);
 }
 :root .gcs-am__levelLine {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--gcs-ui-strong);
+  gap: 2px 10px;
 }
-:root .gcs-am__muted {
-  font-size: 11px;
-  color: var(--gcs-ui-muted);
+:root .gcs-am__levelLine b {
+  color: var(--gcs-ui-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 :root .gcs-am__bar {
   display: block;
-  height: 7px;
-  border-radius: 4px;
+  height: 4px;
+  border-radius: 99px;
   background: var(--gcs-ui-line);
   overflow: hidden;
 }
 :root .gcs-am__bar > span {
   display: block;
   height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--gcs-accent), var(--gcs-ui-accent-2));
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gcs-accent-fill, var(--gcs-accent)), var(--gcs-accentInk, var(--gcs-ui-accent-ink)));
   transition: width var(--gcs-dur-slow) var(--gcs-ease-out);
 }
-:root .gcs-am__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-:root .gcs-am__stat {
+/* Lista: derulează în panou, cu bara subțire a temei. Nu e poziționată: submeniul se așază față de panou și nu e tăiat. */
+:root .gcs-am__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 7px;
-  border-radius: 8px;
-  border: 1px solid var(--gcs-ui-line);
-  background: var(--gcs-ui-well-60);
-  font-size: 11px;
-  color: var(--gcs-ui-muted);
-}
-:root .gcs-am__stat b {
-  font: 700 14px var(--gcs-font-display);
-  color: var(--gcs-ui-strong);
+  gap: 10px;
+  padding: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gcs-scroll-thumb, var(--gcs-ui-edge)) transparent;
 }
 :root .gcs-am__section {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 8px 8px 4px;
-  border-bottom: 1px solid var(--gcs-ui-line2);
+  gap: 4px;
 }
 :root .gcs-am__sectionTitle {
-  padding: 2px 8px 4px;
-  font: 600 10.5px var(--gcs-font-text);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 2px 8px;
+  font: 600 11.5px var(--gcs-font-text);
   color: var(--gcs-ui-muted);
 }
-:root .gcs-am__note {
-  font-size: 11px;
-  color: var(--gcs-ui-muted);
+:root .gcs-am__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
 }
-:root .gcs-am__foot {
+/* Plăcile și rândurile: iconiță + text; hover = nuanța textului 5% și iconița în accent. */
+:root :is(.gcs-am__tile, .gcs-am__row) {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: var(--gcs-ui-well-70);
+  gap: 9px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--gcs-ui-text);
+  font: 500 13px var(--gcs-font-text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+:root .gcs-am__row {
+  width: 100%;
+}
+:root :is(.gcs-am__tile, .gcs-am__row):is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, var(--gcs-ui-text) 5%, transparent);
+  color: var(--gcs-ui-strong);
+}
+:root .gcs-am__icon {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: 16px;
+  font-size: 15px;
+  color: var(--gcs-ui-muted);
+}
+:root :is(.gcs-am__tile, .gcs-am__row):is(:hover, :focus-visible) .gcs-am__icon {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-am__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root .gcs-am__badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--gcs-accent) 22%, transparent);
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+  font: 700 11px var(--gcs-font-text);
+  font-variant-numeric: tabular-nums;
+}
+:root .gcs-am__hint {
+  flex: 0 1 auto;
+  max-width: 48%;
+  overflow: hidden;
+  color: var(--gcs-ui-muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* „Staff”: un rând care deschide submeniul; deschis = nuanța accentului 12% cu chenarul interior. */
+:root .gcs-am__go {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  color: var(--gcs-ui-muted);
+}
+:root .gcs-am__staffRow[aria-expanded="true"] {
+  background-color: color-mix(in srgb, var(--gcs-accent) 12%, transparent);
+  color: var(--gcs-ui-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gcs-accent) 35%, transparent);
+}
+:root .gcs-am__staffRow[aria-expanded="true"] :is(.gcs-am__icon, .gcs-am__go) {
+  color: var(--gcs-accentInk, var(--gcs-ui-accent-ink));
+}
+:root .gcs-am__staff[data-side="left"] .gcs-am__staffRow[aria-expanded="true"] .gcs-am__go {
+  transform: scaleX(-1);
+}
+:root .gcs-am__staff[data-side="inline"] .gcs-am__staffRow[aria-expanded="true"] .gcs-am__go,
+:root .gcs-am__panel--sheet .gcs-am__staffRow[aria-expanded="true"] .gcs-am__go {
+  transform: rotate(90deg);
+}
+/* Submeniul: lângă panou (stânga / dreapta, după loc), aliniat cu rândul (`--am-fly-top`, măsurat de componentă). */
+:root .gcs-am__fly {
+  position: absolute;
+  top: var(--am-fly-top, 0px);
+  right: calc(100% + 8px);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 248px;
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid var(--gcs-panel-border);
+  border-radius: 10px;
+  background: var(--gcs-panel-bg);
+  box-shadow: var(--gcs-panel-shadow);
+}
+:root .gcs-am__fly[hidden] {
+  display: none;
+}
+:root .gcs-am__staff[data-side="right"] .gcs-am__fly {
+  right: auto;
+  left: calc(100% + 8px);
+}
+/* Fără loc lateral (ecran îngust) și în foaia de pe telefon: sub rând, în listă. */
+:root .gcs-am__staff[data-side="inline"] .gcs-am__fly,
+:root .gcs-am__panel--sheet .gcs-am__fly {
+  position: static;
+  width: auto;
+  margin: 2px 0 0 16px;
+  padding: 0 0 0 6px;
+  border: 0;
+  border-left: 1px solid var(--gcs-ui-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+/* Rândul de jos: tema (lună / soare), limba, ieșirea (în nuanța de pericol). */
+:root .gcs-am__foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--gcs-ui-line);
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 :root .gcs-am__seg {
   display: inline-flex;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--gcs-ui-edge);
 }
 :root .gcs-am__seg > button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
   border: 0;
   background-color: transparent;
-  color: var(--gcs-ui-text);
-  font: 600 11px var(--gcs-font-text);
+  color: var(--gcs-ui-muted);
+  font-size: 13px;
   cursor: pointer;
+}
+:root .gcs-am__seg > button:is(:hover, :focus-visible) {
+  color: var(--gcs-ui-strong);
 }
 :root .gcs-am__seg > button[aria-pressed="true"] {
   background-color: var(--gcs-accent-fill, var(--gcs-accent));
   color: #fff;
 }
 :root .gcs-am__lang select {
-  height: 28px;
+  height: 30px;
   padding: 0 6px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--gcs-ui-edge);
   background: transparent;
   color: var(--gcs-ui-text);
   font: 600 11px var(--gcs-font-text);
 }
 :root .gcs-am__logout {
-  margin-left: auto;
+  --gcs-am-danger: color-mix(in srgb, var(--gcs-danger, #e5484d) 72%, var(--gcs-ui-strong));
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 8px;
+  margin-left: auto;
+  padding: 7px 10px;
+  border-radius: 6px;
   border: 1px solid transparent;
   background-color: transparent;
-  color: #ff6a6a;
-  font: 700 12px var(--gcs-font-text);
+  color: var(--gcs-am-danger);
+  font: 600 13px var(--gcs-font-text);
   cursor: pointer;
 }
-/* Ieșirea (acțiune distructivă): nuanța roșie la hover. */
+/* Ieșirea (acțiune distructivă): nuanța de pericol la hover. */
 :root .gcs-am__logout:is(:hover, :focus-visible) {
-  background-color: color-mix(in srgb, #e5484d 15%, transparent);
-  border-color: color-mix(in srgb, #e5484d 40%, transparent);
-  color: #ff6a6a;
+  background-color: color-mix(in srgb, var(--gcs-danger, #e5484d) 14%, transparent);
+  border-color: color-mix(in srgb, var(--gcs-danger, #e5484d) 40%, transparent);
+  color: var(--gcs-am-danger);
+}
+/*
+ * Telefonul: foaia de jos (colțurile de sus rotunjite, mânerul, fundalul estompat). `:root .gcs-hb .gcs-am >`: mai tare
+ * decât panourile fixe de sub antet de pe mobil. Cât e deschisă, antetul trece peste bara de jos și pierde efectele
+ * care ar muta un `position: fixed` (blur-ul stării compacte, ascunderea la derulare).
+ */
+:root .gcs-hb .gcs-am > .gcs-am__panel.gcs-am__panel--sheet {
+  position: fixed;
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  width: auto;
+  max-width: none;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-width: 1px 0 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -18px 40px rgb(0 0 0 / 0.45);
+  transform: translateY(100%);
+}
+:root .gcs-hb .gcs-am > .gcs-am__panel.gcs-am__panel--sheet[data-open] {
+  transform: none;
+}
+:root .gcs-hb .gcs-am > .gcs-am__panel.gcs-am__panel--sheet[data-dragging] {
+  transition: none;
+}
+:root .gcs-am__panel--sheet .gcs-am__head {
+  padding-top: 8px;
+  touch-action: none;
+}
+:root .gcs-am__handle {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 2px;
+  border-radius: 99px;
+  background: var(--gcs-ui-edge-strong, var(--gcs-ui-edge));
+}
+:root .gcs-am__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(5 6 10 / 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--gcs-dur) var(--gcs-ease-out),
+    visibility 0s linear var(--gcs-dur);
+}
+:root .gcs-am__backdrop[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--gcs-dur) var(--gcs-ease-out),
+    visibility 0s;
+}
+:root .gcs-hb:has(.gcs-am__panel--sheet[data-open]) {
+  z-index: 90;
+  transform: none;
+  backdrop-filter: none;
 }
 /* ─── Presetările: Cockpit, Centrat, Panou lateral, Esports ─────────────────────────────────────────────── */
 :root .gcs-hb--cockpit {
@@ -1434,6 +1989,26 @@
 :root .gcs-hb--side[data-device="desktop"] .gcs-mega .gcs-hb__panel {
   top: 0;
   left: calc(100% + 8px);
+}
+/* Meniul vertical: săgeata itemului stă la capăt și arată spre panou; panoul (în dreapta barei) are săgeata în stânga. */
+:root .gcs-hb--side[data-device="desktop"] .gcs-hb__pop.gcs-mega {
+  display: flex;
+}
+:root .gcs-hb--side[data-device="desktop"] .gcs-hb__caret {
+  margin-left: auto;
+  transform: rotate(-90deg);
+}
+:root .gcs-hb--side[data-device="desktop"] .gcs-hb__nav[aria-expanded="true"] .gcs-hb__caret {
+  transform: rotate(90deg);
+}
+:root .gcs-hb--side[data-device="desktop"] .gcs-mega__panel {
+  max-width: calc(100vw - 272px);
+}
+:root .gcs-hb--side[data-device="desktop"] .gcs-mega__arrow {
+  top: 22px;
+  left: -6px;
+  margin-left: 0;
+  border-radius: 0 0 0 2px;
 }
 :root body:has(.gcs-hb--side[data-device="desktop"]) {
   padding-left: 240px;

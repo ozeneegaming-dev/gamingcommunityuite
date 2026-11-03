@@ -16,7 +16,7 @@ async function shot(page: Page, name: string, full = false) {
   await page.screenshot({ path: path.join(SHOTS!, `new-${name}.png`), fullPage: full });
 }
 
-test("o instalare nouă: antetul de pe preview, contoarele la hover, fără derulare orizontală pe telefon (GCS Dark și White)", async ({ page, context }) => {
+test("o instalare nouă: antetul de pe preview, consola compactă, cardurile în grilă, fără derulare orizontală pe telefon (GCS Dark și White)", async ({ page, context }) => {
   test.setTimeout(180_000);
   const host = new URL(test.info().project.use.baseURL ?? "http://localhost:3101").hostname;
   for (const skin of ["gcs-dark", "gcs-white"] as const) {
@@ -25,16 +25,22 @@ test("o instalare nouă: antetul de pe preview, contoarele la hover, fără deru
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await expect(page.locator(".gcs-hb--esports")).toBeVisible();
+    // În spatele antetului: imaginea inclusă „Forja” (proprietarul, 2026-11-03), servită din build.
+    await expect(page.locator("html")).toHaveAttribute("data-gcs-header-image", "all");
+    const art = await page.locator(".gcs-hb--esports").evaluate((n) => /url\("?([^")]+)"?\)/.exec(getComputedStyle(n).backgroundImage)?.[1] ?? null);
+    expect(art, `${skin}: imaginea antetului`).toContain("header-forja");
+    expect((await page.request.get(art!)).status()).toBe(200);
     await shot(page, `forum-${skin}-desktop`);
     await shot(page, `forum-${skin}-desktop-full`, true);
-    // Contoarele forumului (topicuri, postări): doar la hover, în bula butonului de statistici.
-    const row = page.locator(".gcs-forumRow").first();
-    await expect(row.locator(".gcs-forumRow__stats")).toBeHidden();
-    await row.hover();
-    await expect(page.locator(".gcs-forumRow__bubble")).toBeVisible();
-    await page.waitForTimeout(400);
-    if (SHOTS) await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS, `new-forum-${skin}-hover.png`) });
-    await page.mouse.move(0, 0);
+    // Prima pagină aleasă de proprietar (varianta A): consola compactă (salutul și serverele, fără cele trei panouri),
+    // forumurile în grilă, cu cardurile noi (zona de previzualizare, contoarele pe rândul titlului).
+    await expect(page.locator('[data-testid="gcs-cockpit"][data-layout="compact"]')).toBeVisible();
+    await expect(page.getByTestId("gcs-cockpit-feed")).toHaveCount(0);
+    await expect(page.getByTestId("gcs-forum-index")).toHaveAttribute("data-view", "grid");
+    const card = page.locator(".gcs-forumCard").first();
+    await expect(card.getByTestId("gcs-forum-card-media")).toBeVisible();
+    await expect(card.getByTestId("gcs-forum-stats-btn")).toHaveCount(0);
+    if (SHOTS) await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS, `new-forum-${skin}-cards.png`) });
     // La derulare: antetul se ascunde în jos și revine compact la o derulare în sus.
     await page.mouse.wheel(0, 1200);
     await page.waitForTimeout(500);

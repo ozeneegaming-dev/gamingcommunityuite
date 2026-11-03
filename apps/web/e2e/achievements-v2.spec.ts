@@ -4,6 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { clearThemeCache } from "./cockpit-fixtures";
 import { forumTree, memberInNewContext, topicWithReplies, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, sql, userId, useFreshIp } from "./helpers";
+import { e2eKv } from "./kv";
 
 /**
  * Realizări v2: constructorul de reguli din ACP (o regulă construită, declanșată de un topic → badge + notificare +
@@ -22,8 +23,29 @@ async function shot(page: Page, name: string): Promise<void> {
 
 const widget = (page: Page) => page.locator('[data-widget="profile.recentBadges"]').filter({ visible: true });
 
+/** Cache-ul layout-urilor de widget-uri (Redis / `gcs_kv`). */
+async function clearWidgetCache(): Promise<void> {
+  const r = await e2eKv();
+  try {
+    const keys = await r.keys("gcs:k:layout*");
+    if (keys.length > 0) await r.del(...keys);
+  } finally {
+    r.disconnect();
+  }
+}
+
+/** Amplasarea „Ultimele realizări” pusă de acest fișier (scoasă la final). */
+let badgesWidget: number | null = null;
+
 test.beforeAll(async () => {
   if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+  // Prima pagină implicită (varianta A, 2026-11-03) nu mai are „Ultimele realizări”: widget-ul se pune jos, pe toată
+  // lățimea (zona de jos nu se strânge pe telefon, ca rândurile din coloana din dreapta).
+  const [placed] = await sql<{ id: number }>(
+    `INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'bottom', 99, 'profile.recentBadges', '{"limit":5,"rare":"","group":""}', '[]') RETURNING id`,
+  );
+  badgesWidget = placed?.id ?? null;
+  await clearWidgetCache();
   await sql(
     `INSERT INTO themes (key, name, "isDefault", enabled, settings, "updatedAt") VALUES ($1, 'Clasic Realizări', false, true, $2::jsonb, now())
      ON CONFLICT (key) DO UPDATE SET enabled = true, settings = EXCLUDED.settings, "updatedAt" = now()`,
@@ -33,6 +55,8 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  if (badgesWidget !== null) await sql(`DELETE FROM widget_placements WHERE id = $1`, [badgesWidget]);
+  await clearWidgetCache();
   // Regulile pe evenimente și badge-urile pachetului nu trebuie să schimbe punctele din celelalte teste.
   await sql(`DELETE FROM achievement_rules WHERE trigger = 'EVENT'`);
   await sql(`DELETE FROM badges WHERE key LIKE 'gp\\_%' OR key LIKE 'e2e\\_ach\\_%'`);

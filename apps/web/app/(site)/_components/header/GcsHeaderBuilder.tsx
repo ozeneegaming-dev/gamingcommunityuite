@@ -25,8 +25,8 @@ import { GcsMessagesMenu } from "./GcsMessagesMenu";
 import { GcsCrumbTrail, GcsGuestPrefs, GcsMobileNav, type GcsNavEntry } from "./GcsNavClient";
 import { GcsSearchPanel } from "./GcsSearchPanel";
 
-/** Un item al meniului, cu descrierea și insigna (pentru mega meniuri), gata tradus. */
-export type GcsHeaderNavItem = GcsNavEntry & { description: string | null; badge: string | null; iconName: string | null; children: GcsHeaderNavItem[] };
+/** Un item al meniului, cu descrierea, insigna și „Link scurt” (pentru mega meniuri), gata tradus. */
+export type GcsHeaderNavItem = GcsNavEntry & { description: string | null; shortLink: boolean; badge: string | null; iconName: string | null; children: GcsHeaderNavItem[] };
 
 /** Iconițele folosite de meniurile clientului („Creează”, contul), randate aici o singură dată. */
 const MENU_ICONS = [
@@ -99,7 +99,7 @@ export async function GcsHeaderBuilder({ actor, theme, siteName, brand, menu, la
   const play = pickPlayNow(servers.map((v) => ({ id: v.id, name: v.name, connectHref: v.connectHref, online: !!v.status?.online, players: v.status?.players ?? 0, maxPlayers: v.status?.maxPlayers ?? 0 })));
   const entries = megaEntries(menu, summary, th, play?.connectHref ?? "/servers");
   // Meniul împărțit (Esports) se calculează la client din aspectul curent, ca previzualizarea draftului să-l arate live.
-  const navLabels = { label: t("mainNav"), moreLabel: t("nav.more"), home: landing };
+  const navLabels = { label: t("mainNav"), moreLabel: t("nav.more"), quickLabel: th("nav.quick"), home: landing };
 
   const parts: Record<string, ReactNode> = {
     logo: (

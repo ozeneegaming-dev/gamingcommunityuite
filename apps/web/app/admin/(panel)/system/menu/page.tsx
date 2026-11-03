@@ -1,4 +1,4 @@
-import { MENUS_ACP_SECTION, NAV_COUNTERS, type GcsNavItemEdit } from "@gcs/core";
+import { MENUS_ACP_SECTION, NAV_COUNTERS, navDescriptionKey, type GcsNavItemEdit } from "@gcs/core";
 import { GcsCard } from "@gcs/ui";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -55,6 +55,13 @@ export default async function AcpMenuManagerPage() {
     }
   }
   const autoLabels = Object.fromEntries([...keys].map((k) => [k, label(k)]));
+  // Descrierile automate ale acelorași chei (`site.nav.x` → `site.navDesc.x`), doar cele traduse: rezerva unei descrieri goale.
+  const autoDescriptions: Record<string, string> = Object.fromEntries(
+    [...keys].flatMap((k): [string, string][] => {
+      const key = navDescriptionKey(k);
+      return key && tAll.has(key) ? [[k, tAll(key)]] : [];
+    }),
+  );
   return (
     <>
       <GcsAcpTitle icon="fa-solid fa-bars-staggered" description={t("hint")}>
@@ -67,6 +74,7 @@ export default async function AcpMenuManagerPage() {
           hasDraft={!!draft}
           locales={locales.map((l) => ({ code: l.code, label: l.label }))}
           autoLabels={autoLabels}
+          autoDescriptions={autoDescriptions}
           groups={groups}
           appPages={appPages}
           counters={NAV_COUNTERS.map((k) => ({ key: k, label: t(`v2.counters.${k}`) }))}

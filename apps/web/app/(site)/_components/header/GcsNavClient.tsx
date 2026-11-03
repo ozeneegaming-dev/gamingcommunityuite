@@ -10,6 +10,7 @@ import {
   faGear,
   faHouse,
   faLanguage,
+  faLink,
   faMagnifyingGlass,
   faPaintbrush,
   faRightFromBracket,
@@ -22,15 +23,28 @@ import {
 import { gcsToast, GcsDropdown, GcsIconSvg, type GcsDropdownItem } from "@gcs/ui";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { Suspense, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ComponentProps, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
+import { isMegaSeparator } from "@/lib/mega-menu";
 import { fitCount, navActive, withoutDuplicateChildren } from "@/lib/nav-match";
 import { useErrorMessage } from "@/lib/use-error-message";
 import { setLocale } from "../../actions";
 import { openPageEditor } from "../../edit-actions";
 
-/** Un item de meniu gata de afișat (iconița vine randată de pe server). */
-export type GcsNavEntry = { id: number; label: string; href: string; icon: ReactNode; newTab: boolean; children: GcsNavEntry[] };
+/**
+ * Un item de meniu gata de afișat (iconița vine randată de pe server). `description`: rândul de sub titlu (mega meniul,
+ * submeniurile din sertar); `shortLink`: „Link scurt” din ACP › Meniu (coloana din dreapta a mega meniului).
+ */
+export type GcsNavEntry = {
+  id: number;
+  label: string;
+  href: string;
+  icon: ReactNode;
+  newTab: boolean;
+  description?: string | null;
+  shortLink?: boolean;
+  children: GcsNavEntry[];
+};
 
 /** Header-ul devine compact și estompat (blur) după primii pixeli de derulare. */
 export function GcsHeaderScroll() {
@@ -438,12 +452,9 @@ function MobileNav({ items, extra, labels, home, search }: MobileNavProps & { se
               {tree.map((i) =>
                 i.children.length > 0 ? (
                   <GcsDrawerGroup key={i.id} item={i} active={isActive(i)}>
-                    {i.children.map((c) => (
-                      <Link key={c.id} {...linkProps(c, "gcs-drawer__link gcs-drawer__link--sub")}>
-                        {c.icon}
-                        <span>{c.label}</span>
-                      </Link>
-                    ))}
+                    {i.children.map((c) =>
+                      isMegaSeparator(c) ? <span key={c.id} role="separator" className="gcs-drawer__subSep" /> : <GcsDrawerCard key={c.id} item={c} link={linkProps(c, "gcs-drawer__link gcs-drawer__link--sub gcs-drawer__card")} />,
+                    )}
                   </GcsDrawerGroup>
                 ) : (
                   <Link key={i.id} {...linkProps(i, "gcs-drawer__link")}>
@@ -464,6 +475,29 @@ function MobileNav({ items, extra, labels, home, search }: MobileNavProps & { se
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Un subitem în sertar, ca în mega meniul de pe desktop: iconița în căsuță, titlul și descrierea de un rând. Numele
+ * linkului rămâne titlul (descrierea e legată prin `aria-describedby`), ca „Staff” să nu se confunde cu o descriere.
+ */
+function GcsDrawerCard({ item, link }: { item: GcsNavEntry; link: ComponentProps<typeof Link> }) {
+  const descId = useId();
+  return (
+    <Link {...link} aria-label={item.label} aria-describedby={item.description ? descId : undefined} data-testid="gcs-drawer-card">
+      <span className="gcs-drawer__icon" aria-hidden="true">
+        {item.icon ?? <GcsIconSvg icon={faLink} />}
+      </span>
+      <span className="gcs-drawer__text">
+        <span className="gcs-drawer__title">{item.label}</span>
+        {item.description && (
+          <span id={descId} className="gcs-drawer__desc" data-testid="gcs-drawer-desc">
+            {item.description}
+          </span>
+        )}
+      </span>
+    </Link>
   );
 }
 

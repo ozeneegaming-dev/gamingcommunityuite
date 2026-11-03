@@ -722,3 +722,143 @@ a.gcs-legend__pill:focus-visible {
     font-size: 17px;
   }
 }
+
+/*
+ * ─── Prima pagină nouă (varianta A, 2026-11-03): widget-urile din coloana îngustă ─────────────────────────
+ * Linkul din dreapta titlului („Activitate”, „Toate”), postările pe un rând, „Cine e online” cu avatarele și numele
+ * primilor membri, „Meciuri live”. Doar tokenurile temei.
+ */
+.gcs-root a.gcs-widgetTitle__link {
+  color: var(--gcs-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gcs-root a.gcs-widgetTitle__link:is(:hover, :focus-visible) {
+  color: var(--gcs-accentInk);
+}
+/* Ultimele postări în coloana îngustă: titlul topicului pe un singur rând, apoi autorul și timpul. */
+.gcs-widgetList--oneLine .gcs-widgetRow__title {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset;
+}
+/* „Cine e online”: avatarele suprapuse, apoi numele în culorile grupurilor și „și încă N”. */
+.gcs-onlineSide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.gcs-onlineSide__stack {
+  display: flex;
+  padding-left: 2px;
+}
+.gcs-onlineSide__stack > * {
+  margin-right: -7px;
+  border-radius: var(--gcs-avatar-radius, 50%);
+  box-shadow: 0 0 0 2px var(--gcs-surface);
+}
+.gcs-onlineList.gcs-onlineSide__names {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-root a.gcs-onlineSide__more {
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+.gcs-root a.gcs-onlineSide__more:is(:hover, :focus-visible) {
+  color: var(--gcs-accentInk);
+}
+/* „Meciuri live”: fiecare meci e un card mic (insigna LIVE, serverul, harta, runda; echipele și scorul). */
+.gcs-liveMatches {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-liveMatches__link {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background-color: color-mix(in srgb, var(--gcs-bg) 40%, var(--gcs-surface));
+}
+.gcs-root a.gcs-liveMatches__link {
+  color: var(--gcs-text);
+}
+.gcs-liveMatches__link:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--gcs-accent) 45%, var(--gcs-border));
+}
+.gcs-liveMatches__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--gcs-muted);
+}
+.gcs-liveMatches__where {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-liveMatches__badge {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--gcs-danger);
+  color: var(--gcs-btn-primary-text, #fff);
+  font: 700 9.5px var(--gcs-font-text);
+  letter-spacing: 0.08em;
+}
+.gcs-liveMatches__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.gcs-liveMatches__team {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-liveMatches__team--b {
+  text-align: right;
+}
+.gcs-liveMatches__points {
+  font: 700 14px var(--gcs-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--gcs-accentInk);
+}
+.gcs-liveMatches__empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+.gcs-liveMatches__empty::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gcs-muted);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gcs-liveMatches__link {
+    transition: border-color 0.15s ease;
+  }
+}

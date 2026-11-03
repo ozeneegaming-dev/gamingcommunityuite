@@ -45,7 +45,8 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     await expect(dialog).toHaveCount(0);
     await expect(page.locator('[data-widget="core.statsPanel"]')).toBeVisible();
     await expect(page.locator('[data-widget="core.announcement"]')).toBeVisible();
-    await expect(page.locator(".gcs-forumRow__icon svg").first()).toBeVisible();
+    // Iconița forumului: în rând sau, în grila implicită, pe card.
+    await expect(page.locator(".gcs-forumRow__icon svg, .gcs-forumCard__icon svg").first()).toBeVisible();
     await expect(page.locator(".gcs-siteFooter")).toContainText("Powered by GamingCommunitySuite");
   });
 
@@ -114,6 +115,7 @@ test("etapa 5: header și login în popup → widget-uri și statistici → limb
     const test = original === "#3355ee" ? "#33aa55" : "#3355ee";
     // Editorul vizual, din meniul contului („Editor temă”), pe tema afișată.
     await admin.getByTestId("gcs-user-menu").click();
+    await admin.getByTestId("gcs-account-staff").click();
     await admin.getByTestId("gcs-menu-theme-editor").click();
     await expect(admin).toHaveURL(/\/admin\/theme-editor\/[a-z0-9-]+$/);
     await expect(admin.getByTestId("gcs-theme-studio")).toBeVisible();

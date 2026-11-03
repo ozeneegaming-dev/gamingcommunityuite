@@ -257,10 +257,12 @@ export function compactHeaderLayout(device: GcsHeaderDeviceLayout): { layout: Gc
 
 /**
  * Meniul împărțit în jurul logo-ului (Esports): itemii aleși de admin (`split`, id-uri) merg în dreapta, restul în
- * stânga, fiecare parte în ordinea meniului. Fără alegere: prima jumătate (rotunjită în sus) în stânga.
+ * stânga, fiecare parte în ordinea meniului. Fără alegere: prima jumătate (rotunjită în sus) în stânga. O alegere din
+ * care nu mai există niciun item (id-uri vechi, de dinainte de o salvare a meniului) contează ca lipsă de alegere, ca
+ * partea dreaptă să nu rămână goală; `[]` (ales explicit: nimic în dreapta) rămâne.
  */
 export function splitNavItems<T extends { id: number }>(items: readonly T[], split: readonly number[] | null): { left: T[]; right: T[] } {
-  if (split === null) {
+  if (split === null || (split.length > 0 && !items.some((i) => split.includes(i.id)))) {
     const half = Math.ceil(items.length / 2);
     return { left: items.slice(0, half), right: items.slice(half) };
   }

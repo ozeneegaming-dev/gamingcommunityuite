@@ -47,17 +47,21 @@ async function openCard(page: Page, anchor: Locator): Promise<Locator> {
   return layer;
 }
 
-/** Ce trebuie să aibă orice card v2 al membrului „star”: statusul, nivelul, cele 4 contoare, insignele și acțiunile. */
+/**
+ * Ce trebuie să aibă orice card al membrului „star” (cardul v3): statusul, cipul VIP, rangul cu nivelul, cele 3
+ * contoare (Postări / Reputație / Insigne), insignele și acțiunile.
+ */
 async function expectFullCard(layer: Locator, name: string): Promise<void> {
   const card = layer.getByTestId("gcs-hover-card");
-  await expect(card).toHaveClass(/gcs-hoverCard--v2/);
+  await expect(card).toHaveClass(/gcs-hoverCard--v3/);
   await expect(card.locator(".gcs-hoverCard__name")).toHaveText(name);
   await expect(card.getByTestId("gcs-hover-status")).toContainText("Online acum");
   await expect(card.getByTestId("gcs-hover-dot")).toBeVisible();
   await expect(card.getByTestId("gcs-hover-chip-vip")).toHaveText("VIP");
   await expect(card.getByTestId("gcs-hover-level")).toContainText("Nivel");
   await expect(card.getByTestId("gcs-hover-level").getByRole("progressbar")).toHaveAttribute("aria-valuenow", /\d+/);
-  await expect(card.locator(".gcs-hoverCard__stats > div")).toHaveCount(4);
+  await expect(card.locator(".gcs-hoverCard__stats > div")).toHaveCount(3);
+  await expect(card.getByTestId("gcs-hover-badge-count")).toHaveText(/^[1-9]\d*$/);
   await expect(card.getByTestId("gcs-hover-badges").locator(".gcs-badgeArt__item")).not.toHaveCount(0);
   await expect(card.getByTestId("gcs-hover-message")).toBeVisible();
   await expect(card.getByTestId("gcs-hover-follow")).toBeVisible();
@@ -324,6 +328,12 @@ test("Setări: prezentarea generală, dispozitivele (cu autentificarea automată
     // Din altă pagină (lista forumului), topicul se deschide la ultima postare.
     await page.goto(`/forum/${forum.id}-${forum.slug}`);
     await page.getByRole("link", { name: `Topic lung ${id}` }).first().click();
+    await expect(page).toHaveURL(new RegExp(`#post-${topic.ids.at(-1)}$`));
+    // Fragmentul rămâne și după o actualizare a routerului (în suita completă se pierdea la una ulterioară).
+    const refreshed = page.waitForResponse((r) => r.request().headers()["rsc"] === "1");
+    await page.evaluate(() => (window as unknown as { next: { router: { refresh(): void } } }).next.router.refresh());
+    await refreshed;
+    await page.waitForTimeout(500);
     await expect(page).toHaveURL(new RegExp(`#post-${topic.ids.at(-1)}$`));
     // „La început”: rămâne pe topic, fără salt.
     await page.goto("/settings/content");

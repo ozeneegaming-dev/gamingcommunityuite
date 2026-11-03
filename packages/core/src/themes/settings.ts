@@ -77,10 +77,23 @@ export const THEME_BAND_ICONS = ["circle", "rounded", "none"] as const;
 /** Constructorul de antet (Nova): cum se deschid meniurile și unde se aliniază meniul. */
 export const THEME_DROPDOWN_MODES = ["click", "hover"] as const;
 export const THEME_NAV_ALIGNS = ["left", "center", "right"] as const;
+/**
+ * Imaginea antetului (sistemul): imaginile desenate pentru GCS, livrate cu aplicația (`none` = fără imagine inclusă).
+ * O imagine încărcată (`header.image`) are prioritate.
+ */
+export const THEME_HEADER_ARTS = ["none", "forja", "arena"] as const;
+/** Unde stă imaginea antetului: în spatele întregului antet sau doar al primului rând (cel cu logo-ul). */
+export const THEME_HEADER_IMAGE_AREAS = ["all", "top"] as const;
 /** Navigarea pe mobil: iconițele în antet sau într-o bară jos. */
 export const THEME_MOBILE_PLACEMENTS = ["header", "bottom"] as const;
 /** Consola de sub antet (Hero Cockpit): doar pe pagina principală sau pe toate paginile. */
 export const THEME_COCKPIT_PAGES = ["home", "all"] as const;
+/**
+ * Aspectul consolei: `full` = banda personală, cutia cu cele 3 panouri și benzile serverelor (aspectul de până acum);
+ * `compact` = un singur rând cu salutul, pastilele de stare și butoanele rapide, apoi banda serverelor (prima pagină
+ * nouă, varianta A aprobată de proprietar, 2026-11-03).
+ */
+export const THEME_COCKPIT_LAYOUTS = ["full", "compact"] as const;
 /** „Aspectul listelor” (sistemul): fiecare rând e un card separat sau rândurile lipite, despărțite de o linie. */
 export const THEME_LIST_LAYOUTS = ["cards", "list"] as const;
 /** „Statistici forum” (sistemul): contoarele în rând, într-o bulă la hover / focus, sau ascunse. */
@@ -171,8 +184,23 @@ export type GcsThemeSettings = {
     heightMobile: number;
     navIcons: boolean;
     sticky: boolean;
-    /** Nova: imaginea de fundal a antetului (`/files/<id>`); `null` = grafica GCS (gradient cu model tehnic). */
+    /**
+     * Imaginea de fundal a antetului, încărcată (`/files/<id>`), în orice temă; are prioritate față de `art`. `null` =
+     * imaginea inclusă aleasă sau, fără ea, fundalul temei (în designul GCS, grafica cu model tehnic).
+     */
     image: string | null;
+    /** Imaginea inclusă în GCS din spatele antetului (`none` = niciuna). */
+    art: (typeof THEME_HEADER_ARTS)[number];
+    /** Imaginea stă în spatele întregului antet sau doar al primului rând. */
+    imageArea: (typeof THEME_HEADER_IMAGE_AREAS)[number];
+    /** Cât de mult se acoperă imaginea cu culoarea antetului (%), ca meniul să rămână lizibil. */
+    imageDim: number;
+    /** Cât de mult se colorează imaginea în culoarea accentului (%). */
+    imageTint: number;
+    /** Imaginea se estompează jos, în fundalul paginii (doar pe tot antetul). */
+    imageFade: boolean;
+    /** Imaginea apare și în antetul de pe telefon. */
+    imageMobile: boolean;
     /** Nova: cât de închis e stratul peste imagine (%). */
     overlay: number;
     /** Nova: modelul tehnic (grila de circuite) peste grafica implicită. */
@@ -222,6 +250,8 @@ export type GcsThemeSettings = {
   cockpit: {
     enabled: boolean;
     pages: (typeof THEME_COCKPIT_PAGES)[number];
+    /** Aspectul (vezi `THEME_COCKPIT_LAYOUTS`); în aspectul compact panourile nu se afișează. */
+    layout: (typeof THEME_COCKPIT_LAYOUTS)[number];
     left: GcsCockpitPanel;
     center: GcsCockpitPanel;
     right: GcsCockpitPanel;
@@ -320,6 +350,12 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
     navIcons: true,
     sticky: true,
     image: null,
+    art: "none",
+    imageArea: "all",
+    imageDim: 15,
+    imageTint: 0,
+    imageFade: true,
+    imageMobile: true,
     overlay: 70,
     pattern: true,
     crumbs: true,
@@ -343,7 +379,8 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
   buttons: { radius: 10 },
   bands: { style: "solid", icon: "circle" },
   effects: { hover: true },
-  cockpit: { enabled: false, pages: "home", left: "feed", center: "live", right: "top", image: null },
+  // Aspectul complet rămâne implicit: temele salvate înainte de setarea `layout` arată consola ca până acum.
+  cockpit: { enabled: false, pages: "home", layout: "full", left: "feed", center: "live", right: "top", image: null },
 };
 
 /**
@@ -441,11 +478,11 @@ export function themeDefaults(preset: GcsThemePreset | undefined | null): GcsThe
 
 /**
  * Setările care sunt DOAR decor al designului GCS (`preset: "nova"`): stilul benzilor, iconița din bandă și grafica
- * antetului (imaginea, stratul, modelul tehnic, rândul vechi cu breadcrumb). Editorul vizual le arată doar pe acest
- * design (în rest ar fi opțiuni „moarte”). Tot ce e funcție (constructorul de antet, consola, bara de jos, modul
- * meniurilor, efectele de hover, modurile listelor) ține de sistem și merge în orice temă.
+ * antetului (stratul peste grafica GCS, modelul tehnic, rândul vechi cu breadcrumb). Editorul vizual le arată doar pe
+ * acest design (în rest ar fi opțiuni „moarte”). Tot ce e funcție (constructorul de antet, imaginea antetului, consola,
+ * bara de jos, modul meniurilor, efectele de hover, modurile listelor) ține de sistem și merge în orice temă.
  */
-export const NOVA_ONLY_FIELDS: readonly string[] = ["header.image", "header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon"];
+export const NOVA_ONLY_FIELDS: readonly string[] = ["header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon"];
 
 /** Designul are decor propriu (benzile, grafica antetului): editorul îi arată setările din `NOVA_ONLY_FIELDS`. */
 export const themeHasDesignDecor = (preset: string | undefined | null): boolean => preset === "nova";
@@ -458,8 +495,8 @@ export const themeHasDesignDecor = (preset: string | undefined | null): boolean 
 /**
  * Antetul temelor incluse: cel de pe preview, ales de proprietar (2026-11-02). Presetarea Esports (rețelele sociale și
  * contul sus, meniul împărțit în jurul logo-ului, căutarea în dreapta), plus butonul chatului și limba pe rândul
- * principal, breadcrumb-ul și serverele live dedesubt; 120 px, compact și ascuns la derularea în jos. Imaginea de fundal
- * a preview-ului e un fișier al acelei instalări, deci rămâne grafica GCS; meniul se împarte jumătate-jumătate.
+ * principal, breadcrumb-ul și serverele live dedesubt; 120 px, compact și ascuns la derularea în jos; meniul se împarte
+ * jumătate-jumătate. În spatele antetului, imaginea inclusă „Forja” (proprietarul, 2026-11-03: și pe instalările noi).
  */
 function gcsHeaderLayout(): GcsHeaderBuilder {
   const layout = headerPreset("esports");
@@ -470,6 +507,7 @@ function gcsHeaderLayout(): GcsHeaderBuilder {
 }
 const GCS_HEADER: GcsThemeSettings["header"] = {
   ...NOVA_THEME_SETTINGS.header,
+  art: "forja",
   height: 120,
   heightMobile: 60,
   navIcons: true,
@@ -486,9 +524,15 @@ const GCS_HEADER: GcsThemeSettings["header"] = {
 };
 /** Logo-ul text al antetului de pe preview (numele site-ului, 40 px; 32 px pe mobil). */
 const GCS_LOGO: GcsThemeSettings["logo"] = { ...NOVA_THEME_SETTINGS.logo, size: 40, sizeMobile: 32 };
-export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, scheme: { default: "dark", toggle: false } };
+/**
+ * Consola temelor incluse: aspectul compact (prima pagină nouă, varianta A, 2026-11-03): salutul cu pastilele de stare
+ * și banda serverelor, fără cutia cu panouri. Pornirea consolei rămâne alegerea adminului (din editorul vizual).
+ */
+/** Consola temelor incluse: pornită, compactă (salutul, starea și serverele; prima pagină aleasă de proprietar, varianta A). */
+const GCS_COCKPIT: GcsThemeSettings["cockpit"] = { ...NOVA_THEME_SETTINGS.cockpit, enabled: true, layout: "compact" };
+export const GCS_DARK_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, cockpit: GCS_COCKPIT, scheme: { default: "dark", toggle: false } };
 /** „GCS White”: paleta luminoasă a designului (modul e mereu „light”, deci paleta `light` e cea afișată). */
-export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, scheme: { default: "light", toggle: false } };
+export const GCS_WHITE_THEME_SETTINGS: GcsThemeSettings = { ...NOVA_THEME_SETTINGS, header: GCS_HEADER, logo: GCS_LOGO, cockpit: GCS_COCKPIT, scheme: { default: "light", toggle: false } };
 
 /** Modul unei teme cu un singur mod (fără comutatorul întunecat / luminos al aceleiași teme); altfel `null`. */
 export const themeSingleScheme = (s: Pick<GcsThemeSettings, "scheme">): "dark" | "light" | null =>
@@ -580,6 +624,12 @@ function buildFields(): Record<string, GcsThemeField> {
     "header.navIcons": BOOL,
     "header.sticky": BOOL,
     "header.image": { kind: "file" },
+    "header.art": choice(THEME_HEADER_ARTS),
+    "header.imageArea": choice(THEME_HEADER_IMAGE_AREAS),
+    "header.imageDim": int(0, 80, "%", 5),
+    "header.imageTint": int(0, 100, "%", 5),
+    "header.imageFade": BOOL,
+    "header.imageMobile": BOOL,
     "header.overlay": int(0, 95, "%", 5),
     "header.pattern": BOOL,
     "header.crumbs": BOOL,
@@ -611,6 +661,7 @@ function buildFields(): Record<string, GcsThemeField> {
     "mobileNav.items": { kind: "barItems" },
     "cockpit.enabled": BOOL,
     "cockpit.pages": choice(THEME_COCKPIT_PAGES),
+    "cockpit.layout": choice(THEME_COCKPIT_LAYOUTS),
     "cockpit.left": choice(COCKPIT_PANELS),
     "cockpit.center": choice(COCKPIT_PANELS),
     "cockpit.right": choice(COCKPIT_PANELS),

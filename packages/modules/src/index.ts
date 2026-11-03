@@ -17,7 +17,7 @@ export * from "./uploads/settings";
 export * from "./uploads/orphans";
 export { canViewPost, registerForumContent } from "./forums/content";
 export { GcsForumCounters } from "./forums/counters";
-export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch } from "./forums/forums";
+export { FORUMS_ACP_SECTION, GcsForumService, type GcsForumInput, type GcsForumOrderItem, type GcsForumPatch, type GcsForumPreviewInput } from "./forums/forums";
 export * from "./forums/moderation";
 export * from "./forums/moderators";
 export { forumContainer, GcsForumPosting, POST_CONTENT_TYPE, type GcsForumDeps } from "./forums/posting";
@@ -25,6 +25,7 @@ export { GcsPollService, validatePoll, type GcsPollInput, type GcsPollView } fro
 export { GcsPrefixService, PREFIXES_ACP_SECTION, type GcsPrefixInput } from "./forums/prefixes";
 export { GcsPostService, type GcsEditInput, type GcsReplyInput, type GcsReplyResult, type GcsRevisionView } from "./forums/posts";
 export * from "./forums/queries";
+export * from "./forums/cardPreview";
 export { GcsReadMarkerService, UNREAD_DAYS } from "./forums/readMarkers";
 export { GcsForumSearch, type GcsSearchInput, type GcsSearchResult } from "./forums/search";
 export { DEFAULT_REACTIONS } from "./forums/seed";

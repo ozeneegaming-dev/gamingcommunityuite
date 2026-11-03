@@ -3,9 +3,11 @@ import type { GcsActor } from "@gcs/core";
 import type { GcsThemeSettings } from "@gcs/core/themes";
 import { levelProgress, normalizePrivacy, pickRank, POLL_INTERVAL_SETTING, type GcsServerView, type GcsUserRef } from "@gcs/modules";
 import { matchHref, serverHref } from "../app/(site)/_components/servers/types";
-import type { GcsCockpitData, GcsCockpitFeatured, GcsCockpitMatch, GcsCockpitUser, GcsFeedItem, GcsFeedTab } from "./cockpit";
+import type { GcsCockpitData, GcsCockpitFeatured, GcsCockpitMatch, GcsCockpitUser, GcsFeedItem, GcsFeedTab, GcsLiveMatchRow } from "./cockpit";
 import { memberHref, postHref, topicHref } from "./forum-urls";
+import { EMPTY_SUMMARY } from "./live-summary";
 import { liveSummary, visibleServers } from "./live-summary.server";
+import { quickCreateItems } from "./quick-create.server";
 import { COCKPIT_METRICS } from "./ranking";
 import { rankingMetrics, rankingRows } from "./ranking.server";
 import { services } from "./services";
@@ -158,6 +160,22 @@ async function liveMatch(actor: GcsActor, servers: GcsServerView[]): Promise<{ m
   };
 }
 
+/**
+ * Meciurile mix în desfășurare (widget-ul „Meciuri live”, aceleași date ca panoul „Live acum” al consolei): primele
+ * `limit`, cu scorul, și câte sunt în total. `null` = aplicația Servere oprită sau viewer-ul fără dreptul la
+ * statisticile de joc (widget-ul nu apare).
+ */
+export async function liveMatchList(actor: GcsActor, limit: number): Promise<{ items: GcsLiveMatchRow[]; total: number } | null> {
+  const { serverQueries, bridge } = services();
+  if (!(await serverQueries.appEnabled()) || !(await bridge.queries.canViewStats(actor).catch(() => false))) return null;
+  const list = await bridge.queries.matches(actor, { status: "live" }).catch(() => null);
+  if (!list) return { items: [], total: 0 };
+  return {
+    total: list.total,
+    items: list.items.slice(0, Math.max(1, limit)).map((m) => ({ id: m.id, server: m.server.name, map: m.map, round: m.round, teams: m.teams, href: matchHref(m.id) })),
+  };
+}
+
 /** Recomandatele (când nu e nimic live): topicurile evidențiate, ca în caruselul recomandat. */
 async function featured(actor: GcsActor): Promise<GcsCockpitFeatured[]> {
   const slides = await services()
@@ -191,31 +209,42 @@ async function welcome(actor: GcsActor): Promise<GcsCockpitData["welcome"]> {
       : [];
     friends = { online: shown.length, playing: playing.length, server: playing[0]?.server.name ?? null };
   }
-  return { user: ref(display), unread: topics.size, friends, level: levelProgress({ ...user, rankId: user.rankId ?? pickRank(ladder, user) }, ladder) };
+  return { user: ref(display), unread: topics.size, friends, level: levelProgress({ ...user, rankId: user.rankId ?? pickRank(ladder, user) }, ladder), newTopic: null };
+}
+
+/** „Topic nou” din consola compactă: pagina de topic nou a primului forum în care membrul poate porni topicuri. */
+async function newTopicHref(actor: GcsActor): Promise<string | null> {
+  const { forums } = await quickCreateItems(actor, "/").catch(() => ({ forums: [] as { href: string }[] }));
+  return forums[0]?.href ?? null;
 }
 
 /**
  * Datele consolei pentru viewer (prima randare pe server; în browser se reîmprospătează live): banda personală, cele 3
- * panouri alese în temă, benzile serverelor și rezumatul live.
+ * panouri alese în temă, benzile serverelor și rezumatul live. Aspectul compact nu are panouri (nici datele lor): doar
+ * salutul cu pastilele de stare, „Topic nou” / „Joacă acum” (vizitatorii: intrarea și înregistrarea) și serverele.
  */
 export async function cockpitData(actor: GcsActor, settings: GcsThemeSettings["cockpit"]): Promise<GcsCockpitData> {
+  const compact = settings.layout === "compact";
   const servers = await visibleServers(actor);
   const panels = [settings.left, settings.center, settings.right] as GcsCockpitData["panels"];
-  const wants = (p: string) => panels.includes(p as GcsCockpitData["panels"][number]);
-  const metrics = await rankingMetrics(actor, COCKPIT_METRICS);
-  const [w, feed, live, feat, ranking, summary, poll] = await Promise.all([
+  const wants = (p: string) => !compact && panels.includes(p as GcsCockpitData["panels"][number]);
+  const metrics = compact ? [] : await rankingMetrics(actor, COCKPIT_METRICS);
+  const { settings: siteSettings } = services();
+  const [w, feed, live, feat, ranking, summary, poll, newTopic, registration] = await Promise.all([
     welcome(actor),
     wants("feed") ? cockpitFeed(actor, "all") : [],
     wants("live") ? liveMatch(actor, servers) : { match: null, matches: 0 },
     wants("live") || wants("featured") ? featured(actor) : [],
     wants("top") ? rankingRows(actor, metrics[0] ?? "posts", "week") : Promise.resolve({ metric: "posts" as const, period: "week" as const, rows: [], you: null }),
-    liveSummary(actor, servers),
-    services()
-      .settings.get<number>(POLL_INTERVAL_SETTING)
-      .catch(() => 30),
+    compact ? EMPTY_SUMMARY : liveSummary(actor, servers),
+    siteSettings.get<number>(POLL_INTERVAL_SETTING).catch(() => 30),
+    compact && actor.userId ? newTopicHref(actor) : null,
+    compact && !actor.userId ? siteSettings.get<boolean>("auth.registration_open").catch(() => false) : false,
   ]);
   return {
-    welcome: w,
+    layout: compact ? "compact" : "full",
+    welcome: w ? { ...w, newTopic } : null,
+    registration: registration === true,
     panels,
     feed,
     live: { ...live, featured: feat },

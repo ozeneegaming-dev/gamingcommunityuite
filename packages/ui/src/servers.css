@@ -685,6 +685,69 @@
   font-size: 13px;
   font-weight: 700;
 }
+/*
+ * Aspectul compact (coloana îngustă a primei pagini, 2026-11-03): numele și jucătorii pe un rând (roșu = plin), harta
+ * dedesubt, bara subțire de ocupare; offline = estompat. Același rând oricât de lată e coloana.
+ */
+.gcs-serverWidget--compact .gcs-serverRow {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title count"
+    "detail detail"
+    "bar bar";
+  gap: 2px 10px;
+  padding: 8px 0;
+}
+.gcs-serverWidget--compact .gcs-serverRow:first-child {
+  padding-top: 0;
+}
+.gcs-serverRow__title {
+  grid-area: title;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.gcs-root a.gcs-serverRow__title {
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-serverWidget--compact .gcs-serverRow__count {
+  grid-area: count;
+  font-size: 12.5px;
+  color: var(--gcs-ok);
+}
+.gcs-serverRow__detail {
+  grid-area: detail;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--gcs-muted);
+}
+.gcs-serverWidget--compact .gcs-serverRow > .gcs-serverRow__bar {
+  display: block;
+  grid-area: bar;
+  margin-top: 4px;
+}
+.gcs-serverWidget--compact .gcs-serverBar--thin {
+  height: 3px;
+}
+.gcs-serverRow--compact[data-fill="full"] .gcs-serverRow__count {
+  color: var(--gcs-danger);
+}
+.gcs-serverRow--compact[data-fill="full"] .gcs-serverBar__fill {
+  background: var(--gcs-danger);
+}
+.gcs-serverRow--compact[data-fill="offline"] .gcs-serverRow__count {
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+.gcs-root .gcs-serverRow--compact[data-fill="offline"] a.gcs-serverRow__title {
+  color: var(--gcs-muted);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .gcs-serverBar__fill,

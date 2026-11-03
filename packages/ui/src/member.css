@@ -1,12 +1,15 @@
 /*
  * Profil gaming v2 — stilurile de sistem (globale, pe tokenurile temei, în orice temă: Clasic, Nova, pachetele importate):
- * hover card v2, profilul public v2 (taburile aplicațiilor, banda pe servere, Steam, FACEIT, coloana) și setările
+ * hover card-ul membrului (v3), profilul public v2 (taburile aplicațiilor, banda pe servere, Steam, FACEIT, coloana) și setările
  * contului v2. Temele doar restilizează. Regulile de hover setează `background-color`, niciodată `background` (sweep-ul).
  */
 
-/* ─── Hover card v2 ─────────────────────────────────────────────────────────────────────────────── */
+/* ─── Hover card v3 (cardul de membru aprobat pe 2026-11-03) ──────────────────────────────────────── */
 
-/* Apariția: opacitate + 6 px de alunecare (în jos sub nume, în sus deasupra); „reduced motion” = doar opacitatea. */
+/*
+ * Apariția: opacitate + 6 px de alunecare (în jos sub nume, în sus deasupra; foaia de jos urcă de jos). Cu „reduced
+ * motion”, cardul apare direct, fără nicio animație (nici fade).
+ */
 @keyframes gcs-motion-rise {
   from {
     opacity: 0;
@@ -17,6 +20,14 @@
     transform: none;
   }
 }
+@keyframes gcs-hoverCard-sheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .gcs-hoverCardLayer[data-side="below"] {
     animation: gcs-motion-drop var(--gcs-motion-base) var(--gcs-motion-ease) both;
@@ -24,38 +35,422 @@
   .gcs-hoverCardLayer[data-side="above"] {
     animation: gcs-motion-rise var(--gcs-motion-base) var(--gcs-motion-ease) both;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gcs-hoverCardLayer[data-side="below"],
-  .gcs-hoverCardLayer[data-side="above"] {
+  /* `backwards`: după intrare, foaia rămâne fără animație, ca glisarea în jos să o poată muta (`transform` inline). */
+  .gcs-hoverCardLayer[data-side="sheet"] {
+    animation: gcs-hoverCard-sheet var(--gcs-motion-slow) var(--gcs-motion-ease) backwards;
+  }
+  .gcs-hoverCardBackdrop {
     animation: gcs-motion-fade var(--gcs-motion-base) linear both;
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .gcs-hoverCardLayer,
+  .gcs-hoverCardBackdrop,
+  .gcs-hoverCardLayer .gcs-hoverCard {
+    animation: none;
+  }
+}
 
-.gcs-hoverCard--v2 .gcs-hoverCard__cover {
-  height: 64px;
+/*
+ * Cardul: 370 px (cel mult ecranul − 16 px), colțuri de 12 px, fundalul temei, un chenar discret și o umbră mare și
+ * moale. Doar tokenuri de temă: merge la fel în Clasic, GCS Dark / White și în pachetele importate.
+ */
+.gcs-hoverCard--v3 {
+  --gcs-hoverCard-bg: var(--gcs-box-bg, var(--gcs-surface));
+  width: 370px;
+  max-width: calc(100vw - 16px);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 50px rgb(0 0 0 / 0.5),
+    0 4px 15px rgb(0 0 0 / 0.3);
 }
-.gcs-hoverCard--v2 .gcs-hoverCard__body {
-  gap: 10px;
-  padding: 0 14px 14px;
+[data-theme="light"] .gcs-hoverCard--v3 {
+  box-shadow:
+    0 8px 50px rgb(20 22 28 / 0.14),
+    0 4px 15px rgb(20 22 28 / 0.08);
 }
-.gcs-hoverCard--v2 .gcs-hoverCard__identity {
-  padding-top: 8px;
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .gcs-hoverCard--v3 {
+    box-shadow:
+      0 8px 50px rgb(20 22 28 / 0.14),
+      0 4px 15px rgb(20 22 28 / 0.08);
+  }
 }
-/* Inelul în culoarea grupului; urmează forma avatarului (rotund sau pătrat, `--gcs-avatar-radius`). */
-.gcs-hoverCard--v2 .gcs-hoverCard__avatar {
-  box-shadow: 0 0 0 2px var(--gcs-hoverCard-ring, var(--gcs-accent));
+
+/* Coperta: 75 px pe toată lățimea; fără imagine, degradeul din culoarea grupului (accentul temei în lipsa ei). */
+.gcs-hoverCard--v3 .gcs-hoverCard__cover {
+  height: 75px;
+  border-bottom: 0;
+  border-radius: 11px 11px 0 0;
+  background:
+    radial-gradient(120% 150% at 100% 0%, color-mix(in srgb, var(--gcs-hoverCard-tone, var(--gcs-accent)) 42%, transparent), transparent 62%),
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--gcs-hoverCard-tone, var(--gcs-accent)) 55%, var(--gcs-hoverCard-bg)),
+      color-mix(in srgb, var(--gcs-hoverCard-tone, var(--gcs-accent)) 14%, var(--gcs-hoverCard-bg))
+    );
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__body {
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+
+/*
+ * Avatarul: 90 px, centrat, pe jumătate peste copertă, cu un chenar de 3 px în culoarea cardului (decupat) și rama VIP
+ * (`GcsAvatar frame`); urmează forma avatarelor temei (`--gcs-avatar-radius`).
+ */
+.gcs-hoverCard--v3 .gcs-hoverCard__avatar {
+  display: flex;
+  align-self: center;
+  /* 90 px avatarul + chenarul decupat de 3 px pe fiecare parte (`padding` din regula de bază). */
+  width: 96px;
+  height: 96px;
+  margin-top: -51px;
+  background: var(--gcs-hoverCard-bg);
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__avatar > .gcs-avatarFrame,
+.gcs-hoverCard--v3 .gcs-hoverCard__avatar > .gcs-avatar {
+  width: 90px !important;
+  height: 90px !important;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__avatar .gcs-avatar {
+  border-color: var(--gcs-hoverCard-bg);
+  font-size: 34px !important;
 }
 .gcs-hoverCard__dot {
   position: absolute;
-  right: 1px;
-  bottom: 1px;
-  width: 12px;
-  height: 12px;
+  z-index: 2;
+  right: 6px;
+  bottom: 6px;
+  width: 18px;
+  height: 18px;
   box-sizing: border-box;
   border-radius: 50%;
-  border: 2px solid var(--gcs-surface);
+  border: 3px solid var(--gcs-hoverCard-bg, var(--gcs-surface));
   background: var(--gcs-ok);
+}
+
+/* Identitatea, centrată: numele (20 px, culoarea grupului), rândul grupului, data înregistrării, statusul. */
+.gcs-hoverCard--v3 .gcs-hoverCard__identity {
+  align-items: center;
+  gap: 3px;
+  margin-top: -6px;
+  padding-top: 0;
+  text-align: center;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__name {
+  align-self: center;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__meta {
+  justify-content: center;
+  gap: 4px 10px;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--gcs-hoverCard-group, var(--gcs-muted)) 78%, var(--gcs-text));
+  text-decoration: none;
+}
+/* Cu tooltip-ul numărătorii în jur, pastila se poate strânge tot („…”), fără să iasă din rând. */
+.gcs-tooltipWrap:has(> .gcs-hoverCard__group) {
+  min-width: 0;
+  max-width: 100%;
+}
+a.gcs-hoverCard__group:is(:hover, :focus-visible) .gcs-hoverCard__groupName {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gcs-hoverCard__groupName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-hoverCard__groupIcon {
+  flex: none;
+  color: var(--gcs-hoverCard-group, var(--gcs-muted));
+}
+.gcs-hoverCard__groupDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gcs-hoverCard-group, var(--gcs-muted));
+}
+.gcs-hoverCard__joined {
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__status {
+  justify-content: center;
+  font-size: 12.5px;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__chips {
+  justify-content: center;
+  margin-top: 5px;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__bio {
+  margin-top: 5px;
+  text-align: center;
+}
+
+/* Contoarele: o cutie puțin mai deschisă, 3 coloane (Postări / Reputație / Insigne; arma Studio VIP, a patra). */
+.gcs-hoverCard--v3 .gcs-hoverCard__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 12px 6px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-text) 3%, var(--gcs-surface2));
+  font-size: 12px;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__stats:has(> .gcs-hoverCard__flair) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__stats > div > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__stats strong {
+  font-size: 17px;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__stats .gcs-rep--pos {
+  color: var(--gcs-heading, var(--gcs-text));
+}
+
+/* Rândurile: titlul în stânga, valoarea în dreapta („Alte grupuri”, câmpurile „pe card”, rangul cu insignele). */
+.gcs-hoverCard__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcs-hoverCard__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+}
+.gcs-hoverCard__rowTitle {
+  flex: none;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-hoverCard__rowEnd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 12px;
+  min-width: 0;
+  margin-left: auto;
+}
+.gcs-hoverCard__rowValue {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--gcs-text);
+}
+.gcs-hoverCard__tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gcs-accent) 16%, var(--gcs-surface2));
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-size: 16px;
+  font-weight: 800;
+}
+.gcs-hoverCard__tileText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+.gcs-hoverCard__tileText > b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--gcs-heading, var(--gcs-text));
+}
+.gcs-hoverCard__tileText > span:not(.gcs-hoverCard__bar) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard__tileText > .gcs-hoverCard__bar {
+  max-width: 150px;
+  height: 4px;
+  margin-top: 5px;
+}
+
+/* Ultimele insigne: cercuri colorate, ușor suprapuse; duc la tabul „Insigne” al profilului. */
+.gcs-hoverCard__badgeStack {
+  display: flex;
+  flex: none;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 4px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.gcs-hoverCard__badgeStack:focus-visible {
+  outline: 2px solid var(--gcs-accentInk, var(--gcs-accent));
+  outline-offset: 3px;
+}
+.gcs-hoverCard__badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--gcs-hoverCard-badge, var(--gcs-accent)) 26%, var(--gcs-surface2));
+  box-shadow: 0 0 0 2px var(--gcs-hoverCard-bg, var(--gcs-surface));
+  transition: transform var(--gcs-motion-fast) ease;
+}
+.gcs-hoverCard__badge:first-child {
+  margin-left: 0;
+}
+.gcs-hoverCard__badge:hover {
+  z-index: 1;
+  transform: translateY(-2px);
+}
+.gcs-hoverCard__badge .gcs-badgeArt {
+  width: 22px;
+  height: 22px;
+}
+
+/*
+ * Săgeata spre numele de sub mouse (pe latura din care s-a deschis cardul), la `--gcs-hoverCard-arrowX` calculat de
+ * gazdă. Lângă coperta-degrade are culoarea ei (pare o prelungire); lângă o imagine stă sub card (doar vârful).
+ */
+.gcs-hoverCardLayer__arrow {
+  position: absolute;
+  z-index: 2;
+  left: var(--gcs-hoverCard-arrowX, 28px);
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  box-sizing: border-box;
+  border: var(--gcs-box-border-w, 1px) solid var(--gcs-box-border, var(--gcs-border));
+  background: var(--gcs-box-bg, var(--gcs-surface));
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.gcs-hoverCardLayer[data-side="below"] > .gcs-hoverCardLayer__arrow {
+  top: -5px;
+  z-index: -1;
+  border-right: 0;
+  border-bottom: 0;
+}
+.gcs-hoverCardLayer[data-side="above"] > .gcs-hoverCardLayer__arrow {
+  bottom: -5px;
+  border-top: 0;
+  border-left: 0;
+}
+.gcs-hoverCardLayer[data-side="below"]:has(> .gcs-hoverCard--v3[data-banner="tone"]) > .gcs-hoverCardLayer__arrow {
+  z-index: 2;
+  background: color-mix(in srgb, var(--gcs-hoverCard-tone, var(--gcs-accent)) 50%, var(--gcs-box-bg, var(--gcs-surface)));
+}
+
+/*
+ * Telefonul (≤ 760 px, atingere): cardul ca foaie de jos — colțuri rotunde sus, mânerul, fundalul întunecat (o atingere
+ * pe el, glisarea în jos sau Escape o închid), focusul rămâne în foaie. Atingerea numelui merge tot la profil.
+ */
+.gcs-hoverCardBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 86;
+  background: rgb(5 6 10 / 0.62);
+}
+.gcs-hoverCardLayer.gcs-hoverCardLayer--sheet {
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 87;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border-radius: 18px 18px 0 0;
+  background: var(--gcs-box-bg, var(--gcs-surface));
+  box-shadow: 0 -18px 40px rgb(0 0 0 / 0.45);
+  outline: none;
+  touch-action: pan-y;
+}
+.gcs-hoverCardLayer--sheet[data-dragging] {
+  transition: none;
+}
+.gcs-hoverCardLayer--sheet:not([data-dragging]) {
+  transition: transform var(--gcs-motion-base) var(--gcs-motion-ease);
+}
+.gcs-hoverCardLayer--sheet .gcs-hoverCard {
+  width: 100%;
+  max-width: none;
+  border-width: 1px 0 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.gcs-hoverCardLayer--sheet .gcs-hoverCard__cover {
+  border-radius: 17px 17px 0 0;
+}
+/* Mânerul: un buton (Închide), cu ținta mare; desenat ca bara scurtă de sus a foii. */
+.gcs-hoverCardSheet__handle {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 50%;
+  width: 72px;
+  height: 22px;
+  margin-left: -36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.gcs-hoverCardSheet__handle::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  height: 4px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--gcs-text) 60%, transparent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+.gcs-hoverCardSheet__handle:focus-visible {
+  outline: 2px solid var(--gcs-accentInk, var(--gcs-accent));
+  outline-offset: -2px;
+  border-radius: 8px;
 }
 
 .gcs-hoverCard__status {
@@ -91,8 +486,7 @@
   text-decoration: none;
   transition: color var(--gcs-motion-fast) ease;
 }
-.gcs-hoverCard__server:is(:hover, :focus-visible),
-.gcs-hoverCard__more:is(:hover, :focus-visible) {
+.gcs-hoverCard__server:is(:hover, :focus-visible) {
   color: var(--gcs-accent);
 }
 
@@ -143,24 +537,7 @@
   transform: translateY(-1px);
 }
 
-/* Nivelul: „Nivel N · Rang”, procentul și bara de XP spre rangul următor (accentul temei). */
-.gcs-hoverCard__level {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--gcs-muted);
-}
-.gcs-hoverCard__levelHead {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.gcs-hoverCard__levelHead strong {
-  color: var(--gcs-text);
-  font-weight: 700;
-}
+/* Bara de XP spre rangul următor (rândul rangului din card), în accentul temei. */
 .gcs-hoverCard__bar,
 .gcs-xpBar {
   display: block;
@@ -189,49 +566,20 @@
   }
 }
 
-/* Ultimele insigne + „toate →”; miniaturile se măresc ușor la hover. */
-.gcs-hoverCard__badgeRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.gcs-hoverCard__badgeLabel {
-  flex: none;
-  font-size: 11px;
-  color: var(--gcs-muted);
-}
-.gcs-hoverCard__badgeRow .gcs-hoverCard__badges {
-  display: flex;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  min-width: 0;
-  overflow: hidden;
-}
-.gcs-hoverCard__badgeRow .gcs-badgeArt {
-  transition: transform var(--gcs-motion-fast) ease;
-}
-.gcs-hoverCard__badgeRow .gcs-badgeArt__item:hover .gcs-badgeArt {
-  transform: scale(1.08);
-}
-.gcs-hoverCard__more {
-  flex: none;
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gcs-accentInk, var(--gcs-accent));
-  text-decoration: none;
-}
-
 /*
- * Acțiunile: Mesaj cu eticheta, apoi Urmărește / Conținutul lui / Ignoră ca iconițe cu tooltip, pe un rând; sub el,
- * rândul extensiilor (ex. moderarea din chat). Așezarea comună e în `profile.css` (`.gcs-hoverCard__actionRow`).
+ * Acțiunile cardului v3: rândul membrului (Mesaj + iconițele), „Găsește conținutul lui” pe toată lățimea, apoi rândul
+ * de moderare (cu linia lui de sus, în `chatmod.css`). Butoanele de 34 px, ca în machetă; așezarea comună (și în cardul
+ * din șablonul temei) e în `profile.css`.
  */
-.gcs-hoverCard--v2 .gcs-hoverCard__actions {
-  padding-top: 10px;
-  border-top: 1px solid var(--gcs-border);
+.gcs-hoverCard--v3 .gcs-hoverCard__actions .gcs-btn:is(.gcs-hoverCard__primary, .gcs-hoverCard__wide) {
+  min-height: 34px;
+}
+.gcs-hoverCard--v3 .gcs-hoverCard__actions .gcs-btn.gcs-hoverCard__iconBtn {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  font-size: 14px;
 }
 .gcs-hoverCard__actions:empty {
   display: none;

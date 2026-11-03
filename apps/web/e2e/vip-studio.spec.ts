@@ -309,6 +309,7 @@ test("widget-ul „VIP online” arată membrul VIP cu numele, rama și banner-u
   const page = rootPage;
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-account-staff").click();
   await page.getByTestId("gcs-menu-page-editor").click();
   await expect(page.getByTestId("gcs-page-editor")).toBeVisible();
   await page.getByTestId("gcs-widget-add-sidebar").click();

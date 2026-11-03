@@ -77,6 +77,29 @@ describe("managerul de meniu v2", () => {
     expect(edit[1]!.children.map((c) => c.kind)).toEqual(["separator", "link", "separator", "separator", "link", "separator"]);
   });
 
+  test("salvarea păstrează id-ul itemilor neschimbați (meniul împărțit din antet îi ține minte după id)", async () => {
+    const base: GcsNavItemInput[] = [
+      { label: { ro: "Acasă" }, href: "/" },
+      { kind: "dropdown", label: { ro: "Comunitate" }, children: [{ label: { ro: "Membri" }, href: "/members" }, { kind: "separator", label: {} }, { label: { ro: "Staff" }, href: "/staff" }] },
+      { label: { ro: "Clanuri" }, href: "/clans" },
+    ];
+    await nav.save(root, base);
+    const ids = (list: Awaited<ReturnType<typeof nav.editable>>) => list.map((i) => [i.id, i.children.map((c) => c.id)] as const);
+    const [[home], [group, [members, sep, staff]], [clans]] = ids(await nav.editable());
+    // Ordinea schimbată, „Clanuri” redenumit, un item nou: doar cei neschimbați își păstrează id-ul.
+    await nav.save(root, [
+      { kind: "dropdown", label: { ro: "Comunitate" }, children: [{ label: { ro: "Staff" }, href: "/staff" }, { kind: "separator", label: {} }, { label: { ro: "Membri" }, href: "/members" }] },
+      { label: { ro: "Acasă" }, href: "/" },
+      { label: { ro: "Echipe" }, href: "/clans" },
+      { label: { ro: "Nou" }, href: "/new" },
+    ]);
+    const after = ids(await nav.editable());
+    expect(after[0]).toEqual([group, [staff, sep, members]]);
+    expect(after[1]![0]).toBe(home);
+    expect([after[2]![0], after[3]![0]]).not.toContain(clans);
+    expect(new Set(after.map(([id]) => id)).size).toBe(4);
+  });
+
   test("validarea tipurilor: separator pe primul nivel, pagină de aplicație fără aplicație, valori necunoscute", async () => {
     const fields = (items: GcsNavItemInput[]) =>
       nav.save(root, items).then(
@@ -157,6 +180,55 @@ describe("managerul de meniu v2", () => {
     ]);
     await apps.setEnabled(root, "navopt", false);
     expect(await hrefs(member)).toEqual([["/", []]]);
+  });
+
+  test("„Link scurt”: doar pe subitemi (pe primul nivel și pe separatori se pierde), în arbore, în editor și în ciornă", async () => {
+    const items: GcsNavItemInput[] = [
+      { label: { ro: "Sus" }, href: "/sus", shortLink: true },
+      {
+        kind: "dropdown",
+        label: { ro: "Comunitate" },
+        children: [
+          { label: { ro: "Membri" }, href: "/members", description: { ro: "Lista membrilor" } },
+          { kind: "separator", label: {}, shortLink: true },
+          { label: { ro: "Reguli" }, href: "/rules", shortLink: true },
+        ],
+      },
+    ];
+    await nav.save(root, items);
+    const tree = await nav.tree(member, "ro");
+    expect(tree[0]!.shortLink).toBe(false);
+    expect(tree[1]!.children.map((c) => [c.href, c.shortLink])).toEqual([
+      ["/members", false],
+      [NAV_SEPARATOR_HREF, undefined],
+      ["/rules", true],
+    ]);
+    expect(tree[1]!.children[0]!.description).toEqual({ text: "Lista membrilor" });
+    const edit = await nav.editable();
+    expect(edit[0]!.shortLink).toBe(false);
+    expect(edit[1]!.children.map((c) => c.shortLink)).toEqual([false, false, true]);
+
+    // Ciorna (previzualizarea) are aceleași reguli.
+    await nav.saveDraft(root, items);
+    nav.setPreviewResolver(async () => true);
+    const preview = await nav.tree(member, "ro");
+    expect(preview[0]!.shortLink).toBe(false);
+    expect(preview[1]!.children.map((c) => c.shortLink ?? false)).toEqual([false, false, true]);
+    nav.setPreviewResolver(null);
+  });
+
+  test("validarea: „Link scurt” e boolean; descrierea are cel mult 100 de caractere, pe un rând, în limbile site-ului", async () => {
+    const fields = (items: GcsNavItemInput[]) =>
+      nav.save(root, items).then(
+        () => null,
+        (e: { fields?: Record<string, string> }) => e.fields,
+      );
+    const group = (child: GcsNavItemInput): GcsNavItemInput[] => [{ kind: "dropdown", label: { ro: "Grup" }, children: [child] }];
+    expect(await fields(group({ label: { ro: "x" }, href: "/x", shortLink: "da" as never }))).toEqual({ "items.0.children.0.shortLink": "invalid" });
+    expect(await fields(group({ label: { ro: "x" }, href: "/x", description: { ro: "d".repeat(101) } }))).toEqual({ "items.0.children.0.description": "invalid" });
+    expect(await fields(group({ label: { ro: "x" }, href: "/x", description: { ro: "două\nrânduri" } }))).toEqual({ "items.0.children.0.description": "invalid" });
+    expect(await fields(group({ label: { ro: "x" }, href: "/x", description: { xx: "limbă necunoscută" } }))).toEqual({ "items.0.children.0.description": "invalid" });
+    expect(await fields(group({ label: { ro: "x" }, href: "/x", description: { ro: "d".repeat(100) }, shortLink: true }))).toBeNull();
   });
 
   test("ciorna cere dreptul pe Manager meniu și e validată ca meniul publicat", async () => {

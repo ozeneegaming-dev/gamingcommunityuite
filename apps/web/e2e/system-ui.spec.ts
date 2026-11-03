@@ -171,6 +171,17 @@ for (const theme of THEMES) {
     const mega = page.getByRole("menu", { name });
     await expect(mega).toBeVisible();
     await expect(mega.getByRole("menuitem").first()).toBeVisible();
+    // Panoul (în orice temă): în ecran, cu săgeata de sus deasupra butonului care l-a deschis.
+    await mega.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
+    const megaBox = (await mega.boundingBox())!;
+    expect(megaBox.x).toBeGreaterThanOrEqual(0);
+    expect(megaBox.x + megaBox.width).toBeLessThanOrEqual(1366);
+    const arrowBox = await mega.getByTestId("gcs-mega-arrow").boundingBox();
+    if (arrowBox) {
+      const triggerBox = (await trigger.boundingBox())!;
+      expect(arrowBox.x + arrowBox.width / 2).toBeGreaterThanOrEqual(triggerBox.x);
+      expect(arrowBox.x + arrowBox.width / 2).toBeLessThanOrEqual(triggerBox.x + triggerBox.width);
+    }
     await shot(page, `${theme.label}-desktop-mega`);
     await page.keyboard.press("Escape");
     await expect(mega).toBeHidden();
@@ -216,13 +227,22 @@ for (const theme of THEMES) {
     await page.goto("/");
     await expect(page.getByTestId("gcs-header-builder")).toHaveAttribute("data-device", "mobile");
     // Fără scroll orizontal la 375 px.
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+    // Elementele mai late decât ecranul (în mesajul de eroare, ca să se vadă direct cine lățește pagina).
+    const wide = await page.evaluate(() => {
+      const w = document.documentElement.clientWidth;
+      return [...document.querySelectorAll("body *")]
+        .filter((el) => el.getBoundingClientRect().right > w + 0.5 && el.getBoundingClientRect().width > 0)
+        .map((el) => `${el.tagName.toLowerCase()}.${String((el as HTMLElement).className).trim().split(/\s+/).slice(0, 3).join(".")} → ${Math.round(el.getBoundingClientRect().right)}`)
+        .slice(0, 12);
+    });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth), wide.join(" | ")).toBeLessThanOrEqual(375);
     await shot(page, `${theme.label}-375-home`);
 
-    // Contul: panoul pe toată lățimea; click în afară îl închide.
+    // Contul: foaia de jos (pe toată lățimea, în orice temă); Escape o închide.
     await page.getByTestId("gcs-user-menu").click();
     const account = page.getByTestId("gcs-account-menu");
     await expect(account).toBeVisible();
+    await expect(account).toHaveAttribute("data-variant", "sheet");
     await shot(page, `${theme.label}-375-account`);
     await page.keyboard.press("Escape");
     await expect(account).toBeHidden();

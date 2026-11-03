@@ -7,7 +7,8 @@
  * - `server/`: aplicația Next.js gata construită (`apps/web`, build „standalone”, fără sursele TypeScript), cu
  *   `node_modules` de producție plat (fără link-uri simbolice: arhivele se dezarhivează din File Manager-ul gazdei) și
  *   binarele native ale țintei — implicit **linux-x64 (glibc)**: sharp, argon2 și motoarele Prisma ale ambelor dialecte
- *   pentru OpenSSL 1.0 / 1.1 / 3; plus migrațiile PostgreSQL și MySQL (`server/packages/db/prisma/migrations*`). Nimic
+ *   pentru OpenSSL 1.0 / 1.1 / 3 (fiecare motor distinct o singură dată: `app.js` face la pornire celelalte nume, vezi
+ *   `dedupeEngines`); plus migrațiile PostgreSQL și MySQL (`server/packages/db/prisma/migrations*`). Nimic
  *   din `node_modules` la rădăcină: CloudLinux (NodeJS Selector) nu schimbă versiunea Node.js a unei aplicații care are
  *   `node_modules` în rădăcină. La prima pornire, `app.js` creează lângă ele `config/`, `uploads/`, `plugins/` și
  *   `applications/`;
@@ -28,7 +29,14 @@ import { assertLicenseKeys, assertPluginKeys, brandingIssues, checksumsFile, key
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEB = path.join(ROOT, "apps", "web");
 
-/** Ținta pachetului: motoarele Prisma și potrivirea pachetelor native (`<nume>-<os>-<cpu>[-<libc>]`). */
+/**
+ * Ținta pachetului: motoarele Prisma și potrivirea pachetelor native (`<nume>-<os>-<cpu>[-<libc>]`). Pe Linux, Prisma 6
+ * are doar două motoare distincte (OpenSSL 1.x legat static, glibc ≥ 2.17; OpenSSL 3), publicate sub cinci nume, iar
+ * numele cerut depinde de cum își vede gazda sistemul: CloudLinux cu CageFS (Namecheap) ascunde `/etc/os-release` și
+ * cere `debian-openssl-1.1.x`, CloudLinux 8 fără CageFS `rhel-openssl-1.1.x`, CloudLinux / AlmaLinux 9
+ * `rhel-openssl-3.0.x`, Ubuntu 22+ / Debian 12 `debian-openssl-3.0.x`. Toate numele rămân: arhiva are un singur
+ * exemplar din fiecare motor (`dedupeEngines`).
+ */
 export const LITE_TARGETS = {
   "linux-x64-gnu": {
     prisma: ["debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-1.1.x", "rhel-openssl-3.0.x"],
@@ -213,6 +221,9 @@ export function swapNatives(dest, target, { fetch = fetchPackage } = {}) {
   return fetched;
 }
 
+/** Un motor Prisma („library”): `libquery_engine-<țintă>.so.node`, `query_engine-windows.dll.node`. */
+const ENGINE_FILE = /^(?:lib)?query_engine-(.+?)\.(?:so|dll|dylib)\.node$/;
+
 /** Motoarele Prisma: doar cele ale țintei rămân în clienți (ambele dialecte). */
 export function pruneEngines(dest, target) {
   const keep = LITE_TARGETS[target].prisma;
@@ -221,7 +232,7 @@ export function pruneEngines(dest, target) {
   for (const dir of dirs) {
     if (!existsSync(dir)) throw new Error(`lipsește clientul Prisma: ${path.relative(dest, dir)}`);
     for (const name of readdirSync(dir)) {
-      const m = /^(?:lib)?query_engine-(.+?)\.(?:so|dll|dylib)\.node$/.exec(name);
+      const m = ENGINE_FILE.exec(name);
       if (m && !keep.includes(m[1])) rmSync(path.join(dir, name));
     }
     for (const t of keep) {
@@ -242,6 +253,119 @@ export function pruneEngines(dest, target) {
       rmSync(path.join(mysqlClient, name));
     } else if (name === "schema.prisma") cpSync(path.join(mysqlClient, name), path.join(besideServer, name));
   }
+}
+
+/**
+ * Fișierele clienților Prisma pe care serverul nu le încarcă: clienții generați folosesc motorul „library” și cer doar
+ * `@prisma/client/runtime/library.js`. Ies WebAssembly-ul pentru edge și pentru celelalte baze (~53 MB), motorul
+ * „binary”, varianta React Native și intrările `edge` / `wasm` ale clienților.
+ */
+export const PRISMA_UNUSED = /^(query_engine_bg|query_compiler_bg|wasm-engine-edge|wasm-compiler-edge|edge|edge-esm|react-native|binary|wasm|wasm-edge-light-loader|wasm-worker-loader)\./;
+
+/** Scoate din clienții Prisma fișierele `PRISMA_UNUSED`. Întoarce câte au ieșit. */
+export function slimPrismaClients(dest) {
+  const dirs = ["node_modules/@prisma/client/runtime", "node_modules/.prisma/client", "apps/web/generated/mysql-client", "packages/db/generated/mysql-client"];
+  let removed = 0;
+  for (const rel of dirs) {
+    const dir = path.join(dest, rel);
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir)) {
+      if (!PRISMA_UNUSED.test(name)) continue;
+      rmSync(path.join(dir, name), { recursive: true, force: true });
+      removed++;
+    }
+  }
+  if (!existsSync(path.join(dest, "node_modules/@prisma/client/runtime/library.js"))) throw new Error("lipsește @prisma/client/runtime/library.js");
+  return removed;
+}
+
+/**
+ * Externele Turbopack (`.next/node_modules/<pachet>-<hash>`, încărcate de bundle cu `require("<pachet>-<hash>")`) sunt
+ * în build-ul standalone link-uri spre pachetul din `node_modules`; copiate cu link-urile rezolvate, pachetul apare de
+ * două ori (`@prisma/client`: ~57 MB). Când bundle-ul cere doar pachetul (niciun fișier din el) și pachetul e CommonJS
+ * la aceeași versiune, folderul devine un pachet de o linie care îl încarcă pe cel din `node_modules`. Întoarce
+ * externele înlocuite.
+ */
+export function shimTurbopackExternals(dest) {
+  const externals = path.join(dest, "apps", "web", ".next", "node_modules");
+  const candidates = new Map();
+  for (const id of packagesIn(externals)) {
+    const ownFile = path.join(externals, id, "package.json");
+    if (!existsSync(ownFile)) continue;
+    const own = JSON.parse(readFileSync(ownFile, "utf8"));
+    const realFile = path.join(dest, "node_modules", own.name ?? "", "package.json");
+    if (!own.name || own.name === id || !existsSync(realFile)) continue;
+    const real = JSON.parse(readFileSync(realFile, "utf8"));
+    if (real.version === own.version && real.type !== "module") candidates.set(id, own);
+  }
+  const serverDir = path.join(dest, "apps", "web", ".next", "server");
+  if (candidates.size > 0 && existsSync(serverDir)) {
+    for (const rel of walk(serverDir)) {
+      if (!/\.[cm]?js$/.test(rel)) continue;
+      const code = readFileSync(path.join(serverDir, rel), "utf8");
+      for (const id of candidates.keys()) if (code.includes(`${id}/`)) candidates.delete(id);
+    }
+  }
+  for (const [id, own] of candidates) {
+    const dir = path.join(externals, id);
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, "package.json"), `${JSON.stringify({ name: id, version: own.version, private: true, main: "index.js" })}\n`);
+    writeFileSync(path.join(dir, "index.js"), `module.exports = require(${JSON.stringify(own.name)});\n`);
+  }
+  return [...candidates.keys()];
+}
+
+/** Fișierele de trasare ale build-ului (`*.nft.json`, ~50 MB): Next.js a făcut din ele build-ul standalone, serverul nu le citește. */
+export function dropTraceFiles(dest) {
+  const next = path.join(dest, "apps", "web", ".next");
+  if (!existsSync(next)) return 0;
+  const traces = walk(next).filter((rel) => rel.endsWith(".nft.json"));
+  for (const rel of traces) rmSync(path.join(next, rel));
+  return traces.length;
+}
+
+/** Fișierul din `server/` cu motoarele Prisma lăsate în afara arhivei (copii identice), făcute de `app.js` la pornire. */
+export const LITE_ENGINES_MANIFEST = "prisma-engines.json";
+
+/**
+ * Motoarele Prisma identice (același motor sub numele mai multor ținte și în ambii clienți) intră o singură dată în
+ * arhivă. Celelalte căi ajung în `prisma-engines.json` (`links`: cale → motorul păstrat; `engines`: motorul păstrat →
+ * sha256; căi relative la `server/`), iar `app.js` le face la pornire, ca legături fizice sau copii.
+ */
+export function dedupeEngines(dest) {
+  const dirs = [path.join(dest, "node_modules", ".prisma", "client"), path.join(dest, "apps", "web", "generated", "mysql-client")];
+  const kept = new Map();
+  const engines = {};
+  const links = {};
+  for (const dir of dirs) {
+    for (const name of readdirSync(dir).sort()) {
+      if (!ENGINE_FILE.test(name)) continue;
+      const file = path.join(dir, name);
+      const rel = path.relative(dest, file).split(path.sep).join("/");
+      const sum = sha256(readFileSync(file));
+      if (kept.has(sum)) {
+        links[rel] = kept.get(sum);
+        rmSync(file);
+      } else {
+        kept.set(sum, rel);
+        engines[rel] = sum;
+      }
+    }
+  }
+  if (Object.keys(links).length > 0) writeFileSync(path.join(dest, LITE_ENGINES_MANIFEST), `${JSON.stringify({ engines, links }, null, 2)}\n`);
+  return { engines: Object.keys(engines), links: Object.keys(links) };
+}
+
+/** Fișierele mari (≥ `minBytes`) cu același conținut în pachet: grupuri de căi. */
+export function duplicateFiles(files, minBytes = 1024 * 1024) {
+  const bySum = new Map();
+  for (const [rel, data] of files) {
+    if (data.length < minBytes) continue;
+    const sum = sha256(data);
+    bySum.set(sum, [...(bySum.get(sum) ?? []), rel]);
+  }
+  return [...bySum.values()].filter((group) => group.length > 1);
 }
 
 /**
@@ -341,17 +465,25 @@ export function buildLiteRelease({ version, out, licenseKeys, pluginKeys, target
     if (existsSync(path.join(WEB, "public"))) cpSync(path.join(WEB, "public"), path.join(dest, "apps", "web", "public"), { recursive: true });
     const natives = swapNatives(dest, target);
     pruneEngines(dest, target);
+    slimPrismaClients(dest);
+    const shims = shimTurbopackExternals(dest);
+    dropTraceFiles(dest);
+    const engines = dedupeEngines(dest);
 
     const files = liteReleaseFiles(dest, { version });
     const checked = new Map([...files].map(([rel, data]) => [rel, /\.(m?js|cjs)$/.test(rel) ? Buffer.from(LITE_BRANDING_ALLOW.reduce((s, re) => s.replace(re, ""), data.toString("utf8")), "utf8") : data]));
     const issues = brandingIssues(checked);
     if (issues.length > 0) throw new Error(`garda de branding a găsit nume interzise în pachet:\n${issues.slice(0, 50).join("\n")}`);
+    // Un fișier mare de două ori înseamnă o copie rămasă (un link rezolvat, un motor): arhiva crește degeaba.
+    const duplicates = duplicateFiles(files);
+    if (duplicates.length > 0) throw new Error(`fișiere mari identice în pachet:\n${duplicates.map((group) => group.join(" = ")).join("\n")}`);
     const top = `gcs-lite-${version}`;
     const entries = [...files].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([rel, data]) => ({ name: `${top}/${rel}`, data }));
     const zip = path.join(outDir, target === "linux-x64-gnu" ? `${top}.zip` : `${top}-${target}.zip`);
     writeFileSync(zip, writeZip(entries));
     writeFileSync(`${zip}.sha256`, `${sha256(readFileSync(zip))}  ${path.basename(zip)}\n`);
-    return { zip, files: files.size, natives, target };
+    const unpacked = [...files.values()].reduce((sum, data) => sum + data.length, 0);
+    return { zip, files: files.size, natives, target, bytes: statSync(zip).size, unpacked, engines, shims };
   } finally {
     rmSync(staging, { recursive: true, force: true });
   }
@@ -373,9 +505,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const licenseKeys = keyArgs.length ? parseLicenseKeys(keyArgs) : undefined;
     const pluginKeys = pluginKeysFromArgv(process.argv);
     const result = buildLiteRelease({ version, out: arg("out"), licenseKeys, pluginKeys, target: arg("target") ?? "linux-x64-gnu", skipBuild: process.argv.includes("--skip-build") });
-    console.log(`release Lite ${version} (${result.target}): ${result.files} fișiere`);
+    const mb = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+    console.log(`release Lite ${version} (${result.target}): ${result.files} fișiere, arhiva ${mb(result.bytes)}, dezarhivat ${mb(result.unpacked)}`);
     console.log(`  ${path.relative(ROOT, result.zip)}`);
     for (const n of result.natives) console.log(`  binar nativ: ${n}`);
+    console.log(`  motoare Prisma: ${result.engines.engines.length} în arhivă, ${result.engines.links.length} făcute de app.js la pornire`);
+    for (const s of result.shims) console.log(`  extern Turbopack trimis spre node_modules: ${s}`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

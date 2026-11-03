@@ -33,7 +33,8 @@ export function GcsChatSettingsTabs({ tabs, label }: { tabs: Tab[]; label: strin
     setActive(key);
     try {
       sessionStorage.setItem(STORAGE_KEY, key);
-      window.history.replaceState(window.history.state, "", `#${key}`);
+      // Starea `null`: routerul Next preia fragmentul și nu-l mai șterge la următoarea actualizare (ex. salvarea).
+      window.history.replaceState(null, "", `#${key}`);
     } catch {
       // Fără History API sau sessionStorage: tab-ul nu se păstrează la reîncărcare.
     }

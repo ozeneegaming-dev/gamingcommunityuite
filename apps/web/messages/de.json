@@ -391,6 +391,7 @@
       "not_vip": "Die gewählte Gruppe ist keine VIP-Stufe.",
       "permanent": "Ein permanenter VIP kann nicht verlängert werden.",
       "image": "Laden Sie ein Bild für ein Bildframe hoch.",
+      "preview_image": "Laden Sie ein Bild für „Mein Bild“ hoch.",
       "signature_media": "Die Signatur kann keine Bilder oder Videos enthalten.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1516,7 +1517,34 @@
         "iconSearch": "Suche nach einem Icon (z.B. Gamepad, Shield)",
         "iconNone": "Kein Icon",
         "iconNoResults": "Keine Icons gefunden.",
-        "subforumColumns": "Spalten des Unterforums"
+        "subforumColumns": "Spalten des Unterforums",
+        "preview": {
+          "legend": "Vorschaubild",
+          "hint": "Das Bild oben auf der Karte in der Rasteransicht. Laden Sie ein Bild hoch und schneiden Sie es auf die Kartenform zu (16:7). Ohne Bild erstellt die Karte ihre Vorschau selbst.",
+          "modes": {
+            "auto": {
+              "label": "Automatisch aus dem neuesten Beitrag (empfohlen)",
+              "help": "Das erste Bild des neuesten für Besucher sichtbaren Beitrags; sonst Titel, erste Zeilen und Autor über der Forumfarbe. Aktualisiert sich bei jedem neuen Beitrag, aus dem Cache."
+            },
+            "image": {
+              "label": "Mein Bild",
+              "help": "Das unten hochgeladene Bild, immer dasselbe."
+            },
+            "color": {
+              "label": "Nur die Forumfarbe",
+              "help": "Der Verlauf mit dem großen Symbol, wie bei einem Forum ohne Beiträge."
+            }
+          },
+          "upload": "Bild hochladen",
+          "replace": "Bild ändern",
+          "remove": "Bild entfernen",
+          "uploading": "Wird hochgeladen…",
+          "empty": "Kein Bild hochgeladen",
+          "crop": "Sichtbarer Teil auf der Karte",
+          "cropHint": "Ziehen Sie den Rahmen (oder verschieben Sie ihn mit den Pfeiltasten), um den sichtbaren Teil zu wählen; der Rest wird abgeschnitten.",
+          "result": "So sieht es auf der Karte aus",
+          "autoNote": "Mit einem hochgeladenen Bild verwendet die Karte es auch im automatischen Modus; entfernen Sie es, um zur Vorschau aus dem neuesten Beitrag zurückzukehren."
+        }
       },
       "icons": {
         "chat": "Diskussionen",
@@ -2292,6 +2320,11 @@
         "languages": "Sprachen",
         "labelIn": "Bezeichnung ({lang})",
         "descriptionIn": "Beschreibung im Mega-Menü ({lang})",
+        "descriptionHint": "Eine Zeile unter dem Titel, im Untermenü der Kopfzeile und im Handy-Menü (höchstens 100 Zeichen).",
+        "descriptionAuto": "Leer = die automatische Beschreibung: „{text}“",
+        "shortLink": "Kurzlink (rechte Spalte)",
+        "shortLinkHint": "Im Untermenü der Kopfzeile erscheint der Eintrag als Kachel in der rechten Spalte (Symbol und Titel, ohne Beschreibung).",
+        "shortChip": "kurz",
         "hrefOptional": "Link (optional für eine Gruppe)",
         "badgeTitle": "Abzeichen und Hervorhebung",
         "badgeText": "Festes Abzeichen",
@@ -6362,6 +6395,8 @@
     "statsOf": "Statistik des Forums {name}",
     "statsTopics": "{count, plural, one {<b>#</b> Thema} other {<b>#</b> Themen}}",
     "statsPosts": "{count, plural, one {<b>#</b> Antwort} other {<b>#</b> Antworten}}",
+    "cardStats": "{topics, plural, one {<b>#</b> Thema} other {<b>#</b> Themen}} / {posts, plural, one {<b>#</b> Beitrag} other {<b>#</b> Beiträge}}",
+    "cardLastBy": "Letzte Antwort von <name></name>, <when></when>",
     "pageHint": "Seite",
     "archived": "Archiviert",
     "popularNow": "Gerade beliebt",
@@ -6880,6 +6915,15 @@
       "content": "Seine Inhalte",
       "ignore": "Ignorieren",
       "unignore": "Nicht mehr ignorieren"
+    },
+    "v3": {
+      "registered": "Registriert am {date}",
+      "otherGroups": "Weitere Gruppen",
+      "rank": "Rang",
+      "badgeEarned": "Erhalten am {date}",
+      "allBadges": "Alle Abzeichen",
+      "findContent": "Inhalte finden",
+      "close": "Schließen"
     }
   },
   "messages": {
@@ -7443,7 +7487,7 @@
       "none": "Kein Bild",
       "upload": "Upload",
       "remove": "Entfernen",
-      "headerImage": "Header background",
+      "headerImage": "Eigenes Bild (hat Vorrang)",
       "cockpitImage": "Hintergrund der Konsole"
     },
     "tokens": {
@@ -7679,8 +7723,8 @@
         "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
       },
       "header_overlay": {
-        "label": "Image darkening",
-        "help": "How dark the layer over the header image is, so the text stays readable."
+        "label": "GCS-Grafik abdunkeln",
+        "help": "Wie dunkel die Ebene über der Standardgrafik des Standard-Headers ist."
       },
       "header_pattern": {
         "label": "Tech pattern",
@@ -7689,6 +7733,38 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_art": {
+        "label": "Mitgeliefertes Bild",
+        "help": "Für GCS gezeichnet, in den Farben des Themes. Ein hochgeladenes Bild hat Vorrang.",
+        "options": {
+          "none": "Keins",
+          "forja": "Schmiede",
+          "arena": "Arena"
+        }
+      },
+      "header_imageArea": {
+        "label": "Bildbereich",
+        "options": {
+          "all": "Ganzer Header",
+          "top": "Nur obere Zeile"
+        }
+      },
+      "header_imageDim": {
+        "label": "Bild abdunkeln",
+        "help": "Wie stark die Header-Farbe das Bild abdeckt, damit das Menü lesbar bleibt."
+      },
+      "header_imageTint": {
+        "label": "Akzent-Tönung",
+        "help": "Färbt das Bild in der Akzentfarbe des Themes."
+      },
+      "header_imageFade": {
+        "label": "Unten ausblenden",
+        "help": "Der untere Bildrand blendet weich in die Header-Farbe aus (ganzer Header)."
+      },
+      "header_imageMobile": {
+        "label": "Auch auf dem Handy",
+        "help": "Das Bild erscheint auch im Header auf dem Handy."
       },
       "header_rowTop": {
         "label": "Höhe der oberen Leiste"
@@ -7768,6 +7844,14 @@
         "options": {
           "home": "Nur auf der Startseite",
           "all": "Auf allen Seiten"
+        }
+      },
+      "cockpit_layout": {
+        "label": "Darstellung der Konsole",
+        "help": "Kompakt: eine Zeile mit Begrüßung, Status und Buttons, darunter die Server, ohne die 3 Panels.",
+        "options": {
+          "full": "Vollständig (mit Panels)",
+          "compact": "Kompakt (eine Zeile und die Server)"
         }
       },
       "cockpit_left": {
@@ -7965,7 +8049,8 @@
       "onlineDay": "Wer war online (24 h)",
       "groupLegend": "Gruppenlegende",
       "ranking": "Rangliste",
-      "guestCta": "Gästeblock"
+      "guestCta": "Gästeblock",
+      "rankingTop": "{period, select, day {Top des Tages} week {Top der Woche} month {Top des Monats} year {Top des Jahres} other {Top aller Zeiten}}"
     },
     "forums": {
       "stats": "Statistiken",
@@ -7992,7 +8077,9 @@
       "lastDonor": "Letzter Spender",
       "donorCount": "Anzahl der Spender",
       "rare": "Welche Abzeichen",
-      "group": "Nur Mitglieder der Gruppe"
+      "group": "Nur Mitglieder der Gruppe",
+      "tabs": "Tabs der Rangliste",
+      "layout": "Darstellung"
     },
     "periods": {
       "week": "diese woche",
@@ -8028,7 +8115,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Mix-Matches, die gerade laufen: Teams, Spielstand, Karte und Runde."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8042,7 +8130,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Live-Matches"
     },
     "games": {
       "all": "All games",
@@ -8082,7 +8171,22 @@
       "empty": "Noch keine Erfolge.",
       "received": "erhielt"
     },
-    "ratingAria": "{avg} von 5, {count, plural, one {# Stimme} other {# Stimmen}}"
+    "ratingAria": "{avg} von 5, {count, plural, one {# Stimme} other {# Stimmen}}",
+    "tabs": {
+      "forum": "Forum (Beiträge, Themen, Reputation, Online-Zeit)",
+      "community": "Community (Poster, Spieler, Clans), ohne Zeiträume"
+    },
+    "layouts": {
+      "full": "Vollständig (Adresse, Buttons, Auslastung)",
+      "compact": "Kompakt (Name, Spieler, Balken)"
+    },
+    "home": {
+      "activity": "Aktivität",
+      "all": "Alle",
+      "allCount": "Alle ({count})",
+      "players": "{count, plural, one {# Spieler} other {# Spieler}}",
+      "more": "und {count} weitere"
+    }
   },
   "pageEditor": {
     "title": "Seite bearbeiten",
@@ -10155,6 +10259,14 @@
         "pageEditor": "Seite bearbeiten",
         "acp": "Administrationsbereich (ACP)"
       },
+      "tiles": {
+        "attachments": "Anhänge",
+        "privacy": "Privatsphäre",
+        "player": "Spielerprofil"
+      },
+      "line": {
+        "posts": "{count, plural, one {Beitrag} other {Beiträge}}"
+      },
       "theme": {
         "label": "Theme",
         "dark": "Dunkel",
@@ -10176,7 +10288,8 @@
       "cta": {
         "online": "Wer ist online",
         "vip": "VIP werden"
-      }
+      },
+      "quick": "Schnelllinks"
     },
     "live": {
       "servers": "{count, plural, one {# Server online} other {# Server online}}",
@@ -10314,7 +10427,9 @@
       "offline": "{name}, offline",
       "off": "offline",
       "playNow": "Jetzt spielen"
-    }
+    },
+    "newTopic": "Neues Thema",
+    "status": "Dein Community-Status"
   },
   "groups": {
     "pill": {

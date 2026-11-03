@@ -78,13 +78,22 @@ test("antetul Esports: rândurile, crestătura, starea compactă la derulare, me
     await expect(header).not.toHaveAttribute("data-compact", "");
   });
 
-  await test.step("mega meniul: 2 coloane, descrierea, insigna live, rândul de jos cu „Joacă acum”", async () => {
+  await test.step("mega meniul: grila cu descrieri, insigna live, rândul de jos cu „Joacă acum”, săgeata deasupra butonului", async () => {
     const servers = header.getByTestId("gcs-hb-nav").getByRole("button", { name: "Servere" }).or(header.getByTestId("gcs-hb-nav-right").getByRole("button", { name: "Servere" }));
     await servers.first().click();
     const panel = page.getByRole("menu", { name: "Servere" });
     await expect(panel).toBeVisible();
     await expect(panel.getByTestId("gcs-mega-item").first()).toContainText("Toate serverele");
-    await expect(panel).toContainText("Status live, jucători, conectare dintr-un click");
+    await expect(panel.getByTestId("gcs-mega-item").first().getByTestId("gcs-mega-desc")).toHaveText("Status live, jucători, conectare dintr-un click");
+    // Meniul împărțit (Esports): și din jumătatea dreaptă, panoul rămâne în ecran, cu săgeata deasupra butonului.
+    await panel.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
+    const panelBox = (await panel.boundingBox())!;
+    expect(panelBox.x).toBeGreaterThanOrEqual(0);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(1440);
+    const arrowBox = (await panel.getByTestId("gcs-mega-arrow").boundingBox())!;
+    const triggerBox = (await servers.first().boundingBox())!;
+    expect(arrowBox.x + arrowBox.width / 2).toBeGreaterThanOrEqual(triggerBox.x);
+    expect(arrowBox.x + arrowBox.width / 2).toBeLessThanOrEqual(triggerBox.x + triggerBox.width);
     await expect(panel.getByTestId("gcs-mega-badge").first()).toHaveText("3 ONLINE");
     await expect(panel.getByTestId("gcs-mega-cta")).toHaveText("Joacă acum");
     await expect(panel.getByTestId("gcs-mega-cta")).toHaveAttribute("href", /^steam:\/\/connect\//);
@@ -175,13 +184,28 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("link", { name: `Contul${id}` })).toBeVisible();
   await expect(menu.getByTestId("gcs-account-group").first()).toHaveAttribute("href", /\/members\?group=\d+$/);
+  // Un nume de grup lung se taie cu „…” și nu intră sub comutatorul de status.
+  const groupFit = await menu.getByTestId("gcs-account-group").first().evaluate((pill) => {
+    pill.querySelector(".gcs-am__groupText")!.textContent = "GAMINGCOMMUNITYSUITE COMMUNITY";
+    const status = pill.closest(".gcs-am__idRow")!.querySelector(".gcs-am__status")!.getBoundingClientRect();
+    return { pillRight: pill.getBoundingClientRect().right, statusLeft: status.left };
+  });
+  expect(groupFit.pillRight).toBeLessThanOrEqual(groupFit.statusLeft);
   await expect(menu.getByTestId("gcs-account-section-content")).toContainText("Profilul meu");
-  await expect(menu.getByTestId("gcs-account-section-settings")).toContainText("Confidențialitate și ignorați");
-  await expect(menu.getByTestId("gcs-account-section-staff")).toContainText("Panoul de administrare (ACP)");
-  await expect(menu.getByTestId("gcs-account-section-staff")).toContainText("Coada de moderare");
+  // Plăcile cu eticheta scurtă păstrează textul întreg în tooltip.
+  await expect(menu.getByTestId("gcs-account-section-settings")).toContainText("Confidențialitate");
+  await expect(menu.getByTestId("gcs-account-privacy")).toHaveAttribute("title", "Confidențialitate și ignorați");
   await expect(menu.getByTestId("gcs-account-section-gaming")).toContainText("Conturi legate");
   await expect(menu.getByTestId("gcs-account-remaining")).toContainText("până la rangul");
+  // „Staff”: un singur rând; submeniul are linkurile staff-ului.
+  await menu.getByTestId("gcs-account-staff").click();
+  const staffMenu = menu.getByTestId("gcs-account-staff-menu");
+  await expect(staffMenu).toBeVisible();
+  await expect(staffMenu).toContainText("Panoul de administrare (ACP)");
+  await expect(staffMenu).toContainText("Coada de moderare");
   await shot(page, "06-account-menu");
+  await menu.getByTestId("gcs-account-staff").click();
+  await expect(staffMenu).toBeHidden();
 
   // Statusul „Invizibil” = „Arată când sunt online” oprit (confidențialitatea).
   await menu.getByTestId("gcs-account-status-invisible").click();
@@ -203,6 +227,7 @@ test("meniul contului: cardul de rang, statusul, secțiunile după drepturi și 
   const m2 = p2.getByTestId("gcs-account-menu");
   await expect(m2.getByTestId("gcs-account-section-content")).toBeVisible();
   await expect(m2.getByTestId("gcs-account-section-staff")).toHaveCount(0);
+  await expect(m2.getByTestId("gcs-account-staff")).toHaveCount(0);
   await ctx.close();
 });
 
@@ -249,7 +274,8 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
   });
 
   await test.step("pornită pe pagina principală: banda personală, feed-ul, meciul live, topul cu trofee, benzile serverelor", async () => {
-    await patchNova({ cockpit: { enabled: true, pages: "home", left: "feed", center: "live", right: "top" } });
+    // Aspectul complet (cu panourile); temele incluse livrează aspectul compact (vezi `home-a.spec.ts`).
+    await patchNova({ cockpit: { enabled: true, pages: "home", layout: "full", left: "feed", center: "live", right: "top" } });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("/");
     const cockpit = page.getByTestId("gcs-cockpit");
@@ -300,11 +326,15 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
   });
 
   await test.step("widget-ul „Clasament” în coloana laterală: măsurile, perioada, trofeele, mesajul, locul tău", async () => {
-    await sql(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '[]')`);
+    // Widget-ul cu tab-urile forumului (pagina principală implicită are deja topul săptămânii, cu tab-urile comunității):
+    // rândul adăugat aici se șterge după id, ca amplasarea implicită să rămână.
+    const [added] = await sql<{ id: number }>(
+      `INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ranking', '{"metric":"posts","period":"day"}', '[]') RETURNING id`,
+    );
     await clearWidgetCache();
     await page.goto("/");
     // Widgeturile vin în flux (streaming): rezerva ascunsă rămâne în pagină, deci doar copia vizibilă.
-    const widget = page.getByTestId("gcs-ranking-widget").filter({ visible: true }).first();
+    const widget = page.locator(`section[aria-labelledby="gcs-widget-${added!.id}"]`).filter({ visible: true }).getByTestId("gcs-ranking-widget");
     await expect(widget).toBeVisible();
     await expect(widget.getByTestId("gcs-ranking-widget-row").first()).toHaveAttribute("data-medal", "gold");
     await expect(widget.getByTestId("gcs-ranking-widget-trophy")).toHaveCount(3);
@@ -313,7 +343,7 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await widget.getByTestId("gcs-ranking-widget-metric-online").click();
     await expect(widget.getByTestId("gcs-ranking-widget-metric-online")).toHaveAttribute("aria-selected", "true");
     await shot(page, "08-ranking-widget");
-    await sql(`DELETE FROM widget_placements WHERE type = 'core.ranking'`);
+    await sql(`DELETE FROM widget_placements WHERE id = $1`, [added!.id]);
     await clearWidgetCache();
   });
 });
@@ -338,7 +368,7 @@ test("mobil (375 px): antetul compact, cardul LIVE, cardurile cu puncte, bara de
   await patchNova({
     header: { layout: await preset("cockpit") },
     mobileNav: { placement: "bottom", labels: true, items: ["forum", "servers", "create", "messages", "notifications"] },
-    cockpit: { enabled: true, pages: "home", left: "feed", center: "live", right: "top" },
+    cockpit: { enabled: true, pages: "home", layout: "full", left: "feed", center: "live", right: "top" },
   });
   await page.goto("/");
   const header = page.getByTestId("gcs-header-builder");

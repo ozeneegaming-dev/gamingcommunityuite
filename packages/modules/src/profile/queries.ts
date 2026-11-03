@@ -53,8 +53,11 @@ export type GcsProfileView = {
 export type GcsCardView = {
   /** `cover`: URL-ul copertei; `coverPositionY`: poziția ei verticală salvată (0–100 %), ca pe profil. */
   user: GcsUserDisplay & { slug: string; bio: string; accentColor: string | null; cover: string | null; coverPositionY: number };
-  /** `points`: XP-ul (nivelul din hover card v2); opțional pentru intrările vechi din cache. */
-  stats: { posts: number; reputation: number; followers: number; joinedAt: string; points?: number };
+  /**
+   * `points`: XP-ul (nivelul din hover card); `badges`: câte insigne are în total (contorul cardului v3). Opționale
+   * pentru intrările vechi din cache.
+   */
+  stats: { posts: number; reputation: number; followers: number; joinedAt: string; points?: number; badges?: number };
   online: GcsOnline;
   badges: GcsBadgeView[];
   fields: { label: string; value: string }[];
@@ -209,8 +212,8 @@ export class GcsProfileQueries {
   /** Datele comune ale cardului (fără partea care depinde de viewer), cache 60 s pe tag-ul `user:{id}`. */
   private async cardBase(userId: string): Promise<CardBase | null> {
     const { db, cache } = this.deps;
-    // `v3`: ultimele 5 insigne și XP-ul (hover card v2); intrările vechi din cache nu le au.
-    const key = `profile:card:v3:${userId}`;
+    // `v4`: ultimele 5 insigne, XP-ul și numărul tuturor insignelor (hover card v3); intrările vechi nu le au.
+    const key = `profile:card:v4:${userId}`;
     const cached = await cache.get<CardBase>(key);
     if (cached) return cached;
     const user = await db.user.findUnique({
@@ -229,6 +232,7 @@ export class GcsProfileQueries {
         lastActiveAt: true,
         points: true,
         badges: { include: { badge: true }, orderBy: { createdAt: "desc" }, take: 5 },
+        _count: { select: { badges: true } },
         profileValues: { where: { field: { showOnCard: true, visibility: "PUBLIC" } }, include: { field: true } },
       },
     });
@@ -253,7 +257,7 @@ export class GcsProfileQueries {
       primaryGroupId: user.primaryGroupId,
       lastActiveAt: user.lastActiveAt?.toISOString() ?? null,
       privacy: user.privacy,
-      stats: { posts: user.postsCount, reputation: user.reputation, followers: user.followersCount, joinedAt: user.createdAt.toISOString(), points: user.points },
+      stats: { posts: user.postsCount, reputation: user.reputation, followers: user.followersCount, joinedAt: user.createdAt.toISOString(), points: user.points, badges: user._count.badges },
       badges: user.badges.map(badgeView),
       fields: user.profileValues
         .filter((v) => v.value !== "")

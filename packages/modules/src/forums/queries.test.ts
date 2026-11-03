@@ -2,6 +2,7 @@ import { GcsForbidden, GcsNotFound, type GcsActor } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createForumWorld, doc, type GcsForumWorld } from "../../test/world";
+import { forumPreviewTarget } from "./cardPreview";
 import { GcsForumQueries } from "./queries";
 
 let w: GcsForumWorld;
@@ -79,6 +80,127 @@ describe("index", () => {
     await q.index(w.member);
     await w.forums.update(tree.forum.id, { name: "CS2" }, w.root);
     expect((await q.index(w.member))[0]!.forums[0]!.name).toBe("CS2");
+  });
+
+  test("subforumurile au `unread` pentru membrul cu mesaje noi în ele (dosarul plin din carduri)", async () => {
+    const quiet = await w.forums.create({ parentId: tree.forum.id, type: "FORUM", name: "Liniștit" }, w.root);
+    await w.topics.create(w.root, { forumId: tree.subforum!.id, title: "Nou", content: doc("x") });
+    const subs = async (actor: GcsActor) => (await q.index(actor))[0]!.forums.find((f) => f.id === tree.forum.id)!.subforums;
+    const mine = await subs(w.member);
+    expect(mine.find((s) => s.id === tree.subforum!.id)!.unread).toBe(true);
+    expect(mine.find((s) => s.id === quiet.id)!.unread).toBe(false);
+    expect((await subs(w.guest)).every((s) => s.unread === false)).toBe(true);
+  });
+});
+
+describe("index: cardurile din grilă (`previews`)", () => {
+  /** Un PNG de 120 × 40 (o culoare). */
+  const PNG = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAHgAAAAoCAYAAAA16j4lAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAA2klEQVR4nO2VwREDMRDCrhxa2P57oJ2kigxw0UN/D7Lsx7oP3Gs3eNIHgEMwl+AomEtwPNH+wy+BP1h5CQguGMqjULDyEhBcMJRHoWDlJSC4YCiPQsHKS0BwwVAehYKVl4DggqE8CgUrLwHBBUN5FApWXgKCC4byKBSsvAQEFwzlUShYeQkILhjKo1Cw8hIQXDCUR6Fg5SUguGAoj0LByktAcMFQHoWClZeA4IKhPAoFKy8BwQVDeRQKVl4CgguG8igUrLwEBBcM5VEoWHkJCC4YyqNQsPISfskXUMR26J4zmrwAAAAASUVORK5CYII=",
+    "base64",
+  );
+  const p = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+  const content = (...nodes: unknown[]) => ({ type: "doc", content: nodes });
+  const img = (src: string) => ({ type: "image", attrs: { src } });
+  const forumOf = async (actor: GcsActor, id: number) => (await q.index(actor, { previews: true })).flatMap((c) => c.forums).find((f) => f.id === id)!;
+
+  test("cele patru stări: imaginea din ACP, prima poză a ultimei postări, previzualizarea generată, forumul gol", async () => {
+    const make = (name: string) => w.forums.create({ parentId: tree.category.id, type: "FORUM", name }, w.root);
+    const acp = await make("Cu imagine");
+    const photo = await make("Cu poză");
+    const text = await make("Doar text");
+    const empty = await make("Gol");
+    const file = await w.attachments.storeDecorImage(w.root.userId, { name: "card.png", bytes: PNG }, { maxBytes: 1 << 20, maxSide: 1600, animated: false, target: forumPreviewTarget(acp.id) });
+    await w.forums.update(acp.id, { preview: { mode: "image", imageId: file.id, focusX: 30, focusY: 60 } }, w.root);
+    await w.topics.create(w.root, { forumId: acp.id, title: "Ignorat", content: content(p("text"), img("https://img.example/ignorata.jpg")) });
+    await w.clearFlood(w.root);
+    await w.topics.create(w.root, { forumId: photo.id, title: "Poza zilei", content: content(p("salut"), img("https://img.example/emoji/1f600.png"), img("https://img.example/poza.jpg")) });
+    await w.clearFlood(w.root);
+    await w.topics.create(w.root, { forumId: text.id, title: "Doar text aici", content: content(p("Primele rânduri ale postării.")) });
+
+    expect((await forumOf(w.member, acp.id)).media).toEqual({ kind: "image", source: "acp", src: `/files/${file.id}`, position: "30% 60%" });
+    expect((await forumOf(w.member, photo.id)).media).toEqual({ kind: "image", source: "post", src: "https://img.example/poza.jpg", position: null });
+    expect((await forumOf(w.guest, text.id)).media).toMatchObject({ kind: "generated", title: "Doar text aici", text: "Primele rânduri ale postării.", user: { name: "Fondator" } });
+    expect((await forumOf(w.member, empty.id)).media).toEqual({ kind: "empty" });
+    // „Doar culoarea forumului”: gradientul, chiar cu postări și cu imaginea încărcată.
+    await w.forums.update(acp.id, { preview: { mode: "color", imageId: file.id, focusX: 50, focusY: 50 } }, w.root);
+    expect((await forumOf(w.member, acp.id)).media).toEqual({ kind: "empty" });
+    // Fără `previews` (vederea pe rânduri), rândurile nu primesc zona de imagine.
+    expect((await q.index(w.member)).flatMap((c) => c.forums).every((f) => f.media === undefined)).toBe(true);
+  });
+
+  test("ACP: imaginea trebuie să fie încărcată pentru forum; „Imaginea mea” cere o imagine; focalizarea 0–100; doar staff-ul", async () => {
+    const other = await w.attachments.storeDecorImage(w.root.userId, { name: "alt.png", bytes: PNG }, { maxBytes: 1 << 20, maxSide: 1600, animated: false, target: "forum:999999:preview" });
+    const id = tree.forum.id;
+    await expect(w.forums.update(id, { preview: { mode: "auto", imageId: other.id, focusX: 50, focusY: 50 } }, w.root)).rejects.toMatchObject({ fields: { previewImageId: "invalid" } });
+    await expect(w.forums.update(id, { preview: { mode: "image", imageId: null, focusX: 50, focusY: 50 } }, w.root)).rejects.toMatchObject({ fields: { previewImageId: "preview_image" } });
+    await expect(w.forums.update(id, { preview: { mode: "x", imageId: null, focusX: 101, focusY: -1 } }, w.root)).rejects.toMatchObject({
+      fields: { previewMode: "invalid_choice", previewFocusX: "invalid_range", previewFocusY: "invalid_range" },
+    });
+    await expect(w.forums.update(id, { preview: { mode: "color", imageId: null, focusX: 50, focusY: 50 } }, w.member)).rejects.toBeInstanceOf(GcsForbidden);
+    const saved = await w.forums.update(id, { preview: { mode: "color", imageId: null, focusX: 20, focusY: 80 } }, w.root);
+    expect(saved).toMatchObject({ previewMode: "color", previewImageId: null, previewFocusX: 20, previewFocusY: 80 });
+  });
+
+  test("o poză atașată apare doar cu `forums.download` pe forumul postării; altfel previzualizarea generată", async () => {
+    const file = await w.attachments.importFile(w.root.userId, { name: "poza.png", bytes: PNG }, { maxBytes: 1 << 20 });
+    await w.topics.create(w.root, { forumId: tree.forum.id, title: "Atașament", content: content(p("Vezi poza"), { type: "image", attrs: { attachmentId: file.id, width: file.width, height: file.height } }) });
+    expect((await forumOf(w.guest, tree.forum.id)).media).toEqual({ kind: "image", source: "post", src: `/files/${file.id}`, position: null });
+    await revoke(tree.forum.id, "guest", ["forums.download"]);
+    expect((await forumOf(w.guest, tree.forum.id)).media).toMatchObject({ kind: "generated", title: "Atașament", text: "Vezi poza" });
+    expect((await forumOf(w.member, tree.forum.id)).media).toMatchObject({ kind: "image", source: "post" });
+  });
+
+  test("previzualizarea urmează ultima postare: editarea și un răspuns nou o schimbă (cache-ul invalidat de tag-uri)", async () => {
+    const t = await w.topics.create(w.root, { forumId: tree.forum.id, title: "Schimbări", content: content(p("Prima variantă"), img("https://img.example/a.jpg")) });
+    expect((await forumOf(w.member, tree.forum.id)).media).toMatchObject({ kind: "image", src: "https://img.example/a.jpg" });
+    await w.posts.edit(w.root, t.postId, { content: content(p("Fără poză acum")) });
+    expect((await forumOf(w.member, tree.forum.id)).media).toMatchObject({ kind: "generated", title: "Schimbări", text: "Fără poză acum" });
+    await w.clearFlood(w.root);
+    await w.posts.reply(w.root, { topicId: t.topicId, content: content(p("Răspuns"), img("https://img.example/b.jpg")) });
+    expect((await forumOf(w.member, tree.forum.id)).media).toMatchObject({ kind: "image", src: "https://img.example/b.jpg" });
+    // Conținutul ascuns (blocul „doar membrii”) și citatele nu ajung pe card.
+    await w.clearFlood(w.root);
+    await w.posts.reply(w.root, {
+      topicId: t.topicId,
+      content: content({ type: "gcsHidden", attrs: { mode: "members" }, content: [p("secret"), img("https://img.example/secret.jpg")] }, p("Public")),
+    });
+    expect((await forumOf(w.guest, tree.forum.id)).media).toMatchObject({ kind: "generated", text: "Public" });
+  });
+
+  test("fără N+1: postările lipsă din cache se citesc într-o singură interogare, oricâte forumuri are pagina", async () => {
+    let count = 0;
+    const counting = w.db.$extends({
+      query: {
+        $allOperations({ args, query }) {
+          count++;
+          return query(args);
+        },
+      },
+    }) as unknown as PrismaClient;
+    const cq = new GcsForumQueries({ ...w.queries.deps, db: counting });
+    const forums: { id: number }[] = [];
+    for (let i = 0; i < 4; i++) forums.push(await w.forums.create({ parentId: tree.category.id, type: "FORUM", name: `Forum ${i}` }, w.root));
+    const post = async () => {
+      for (const f of forums) {
+        await w.clearFlood(w.root);
+        await w.topics.create(w.root, { forumId: f.id, title: `Topic ${f.id}`, content: content(p("text"), img(`https://img.example/${f.id}.jpg`)) });
+      }
+    };
+    await post();
+    await cq.index(w.member, { previews: true }); // încălzește arborele, permisiunile și previzualizările
+    await post(); // ultimele postări noi: previzualizările lor lipsesc din cache
+    await cq.index(w.member); // arborele reconstruit
+    count = 0;
+    await cq.index(w.member);
+    const rows = count;
+    count = 0;
+    const cards = (await cq.index(w.member, { previews: true })).flatMap((c) => c.forums).filter((f) => forums.some((x) => x.id === f.id));
+    expect(count).toBe(rows + 1);
+    expect(cards.map((f) => f.media)).toEqual(forums.map((f) => ({ kind: "image", source: "post", src: `https://img.example/${f.id}.jpg`, position: null })));
+    count = 0;
+    await cq.index(w.member, { previews: true });
+    expect(count).toBe(rows);
   });
 });
 

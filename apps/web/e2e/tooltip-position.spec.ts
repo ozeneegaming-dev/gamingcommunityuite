@@ -23,7 +23,7 @@ test.beforeAll(async ({ request }) => {
   // Membri noi (rândurile „s-a alăturat comunității” din Activitate) și un topic lung (derularea pentru bandă).
   for (const n of ["Ana", "Bogdan", "Cris"]) {
     await sql(
-      `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), now())`,
+      `INSERT INTO users (id, name, "nameNormalized", email, "primaryGroupId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, (SELECT id FROM groups WHERE key = 'member'), (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'))`,
       [`e2etip${n}${id}`, `${n}${id}`, `${n.toLowerCase()}${id}`, `tip-${n.toLowerCase()}-${id}@example.com`],
     );
   }
@@ -32,13 +32,14 @@ test.beforeAll(async ({ request }) => {
   topicUrl = (await topicWithReplies(request, tree.forum.id, `tip-ana-${id}@example.com`, `Topic tooltip ${id}`, 14)).url;
 });
 
-async function guest(browser: Browser, opts: { width: number; height?: number; motion: "reduce" | "no-preference"; light?: boolean; grid?: boolean; ip: string }) {
+async function guest(browser: Browser, opts: { width: number; height?: number; motion: "reduce" | "no-preference"; light?: boolean; ip: string }) {
   const context = await browser.newContext({ reducedMotion: opts.motion, viewport: { width: opts.width, height: opts.height ?? (opts.width < 400 ? 812 : 900) } });
   await useFreshIp(context, opts.ip);
   const url = new URL(test.info().project.use.baseURL ?? "http://localhost:3100");
   await context.addCookies([
     { name: "gcs-skin", value: opts.light ? "gcs-white" : "gcs-dark", domain: url.hostname, path: "/" },
-    ...(opts.grid ? [{ name: "gcs-forum-view", value: "grid", domain: url.hostname, path: "/" }] : []),
+    // Butonul statisticilor e al vederii pe rânduri (în grilă, contoarele stau pe rândul titlului cardului).
+    { name: "gcs-forum-view", value: "rows", domain: url.hostname, path: "/" },
   ]);
   return { context, page: await context.newPage() };
 }
@@ -185,10 +186,10 @@ test("tema luminoasă: tooltip-ul lângă element, text lizibil", async ({ brows
 });
 
 for (const width of [1440, 375]) {
-  test(`statisticile forumului în grilă (${width} px): bula de pe primul card e în stratul tooltip-urilor, întreagă și lângă buton`, async ({ browser }) => {
-    const { context, page } = await guest(browser, { width, motion: "reduce", grid: true, ip: `100.96.${width === 375 ? 30 : 31}` });
+  test(`statisticile forumului pe rânduri (${width} px): bula de pe primul rând e în stratul tooltip-urilor, întreagă și lângă buton`, async ({ browser }) => {
+    const { context, page } = await guest(browser, { width, motion: "reduce", ip: `100.96.${width === 375 ? 30 : 31}` });
     await page.goto("/");
-    await expect(page.locator(".gcs-forumIndex")).toHaveAttribute("data-view", "grid");
+    await expect(page.locator(".gcs-forumIndex")).toHaveAttribute("data-view", "rows");
     const card = page.locator(".gcs-category").filter({ has: page.getByRole("heading", { name: categoryName }) }).getByTestId("gcs-forum-row").first();
     const btn = (await card.getByTestId("gcs-forum-stats-btn").elementHandle())!;
     await settled(btn);
@@ -196,7 +197,7 @@ for (const width of [1440, 375]) {
     const bubble = page.getByTestId("gcs-forum-bubble");
     await expect(bubble).toBeVisible();
     await expect(bubble).toContainText(/[0-9]+ topic/);
-    // În `<body>` (nu în cardul sau caseta categoriei, care taie conținutul), întreagă în ecran, lângă buton.
+    // În `<body>` (nu în rândul sau caseta categoriei, care taie conținutul), întreagă în ecran, lângă buton.
     expect(await bubble.evaluate((el) => el.parentElement === document.body)).toBe(true);
     const box = (await bubble.boundingBox())!;
     const anchor = (await btn.boundingBox())!;
@@ -204,7 +205,7 @@ for (const width of [1440, 375]) {
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(width);
     expectNear(box, anchor);
-    await shot(page, `stats-grid-${width}`);
+    await shot(page, `stats-rows-${width}`);
     await page.keyboard.press("Escape");
     await expect(bubble).toBeHidden();
     await context.close();
