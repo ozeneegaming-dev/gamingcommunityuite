@@ -92,6 +92,7 @@ export async function GcsSiteHeader() {
       icon: i.icon ? <GcsIcon name={i.icon} /> : null,
       iconName: i.icon,
       description: description(i.description),
+      shortLink: i.shortLink ?? false,
       badge: i.badge,
       children: entries(i.children),
     }));
@@ -109,7 +110,7 @@ export async function GcsSiteHeader() {
   const hidden = new Set((await communityRules(settings)) ? [] : [RULES_HREF]);
   const menu: GcsHeaderNavItem[] = [
     ...withoutHrefs(entries(tree), hidden),
-    ...pluginMenus.site.map((m, i): GcsHeaderNavItem => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, iconName: m.icon, description: null, badge: null, children: [] })),
+    ...pluginMenus.site.map((m, i): GcsHeaderNavItem => ({ id: -1000 - i, label: m.label, href: m.href, newTab: false, icon: <GcsIcon name={m.icon} />, iconName: m.icon, description: null, shortLink: false, badge: null, children: [] })),
   ];
 
   // Antetul SISTEMULUI, în orice temă (Clasic, GCS Dark / White, pachetele importate): constructorul de antet, în

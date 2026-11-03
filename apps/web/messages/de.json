@@ -2272,6 +2272,11 @@
         "languages": "Sprachen",
         "labelIn": "Bezeichnung ({lang})",
         "descriptionIn": "Beschreibung im Mega-Menü ({lang})",
+        "descriptionHint": "Eine Zeile unter dem Titel, im Untermenü der Kopfzeile und im Handy-Menü (höchstens 100 Zeichen).",
+        "descriptionAuto": "Leer = die automatische Beschreibung: „{text}“",
+        "shortLink": "Kurzlink (rechte Spalte)",
+        "shortLinkHint": "Im Untermenü der Kopfzeile erscheint der Eintrag als Kachel in der rechten Spalte (Symbol und Titel, ohne Beschreibung).",
+        "shortChip": "kurz",
         "hrefOptional": "Link (optional für eine Gruppe)",
         "badgeTitle": "Abzeichen und Hervorhebung",
         "badgeText": "Festes Abzeichen",
@@ -10137,7 +10142,8 @@
       "cta": {
         "online": "Wer ist online",
         "vip": "VIP werden"
-      }
+      },
+      "quick": "Schnelllinks"
     },
     "live": {
       "servers": "{count, plural, one {# Server online} other {# Server online}}",

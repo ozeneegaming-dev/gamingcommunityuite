@@ -260,9 +260,10 @@ function conditionalRules(s: GcsThemeSettings): string[] {
   if (s.boxes.shadow !== "none") rules.push(`.gcs-card:where(:not(.gcs-acp *)) {\n  box-shadow: var(--gcs-box-shadow);\n}`);
   if (!s.scheme.toggle) rules.push(`html:root .gcs-siteFooter__scheme {\n  display: none;\n}`);
   if (s.logo.textMobile) rules.push(`@media (max-width: 640px) {\n  html:root .gcs-brand__text {\n    display: flex;\n  }\n}`);
+  // Fără iconițe în meniul principal: nici pătratul de 40 px al iconiței (bara constructorului de antet).
   if (!s.header.navIcons) {
     rules.push(
-      `html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret) {\n  display: none;\n}`,
+      `html:root .gcs-navbar__menu .gcs-nav__link > .gcs-icon:not(.gcs-navbar__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-icon:not(.gcs-hb__caret),\nhtml:root .gcs-hb__navBar .gcs-hb__nav > .gcs-hb__navIcon {\n  display: none;\n}`,
     );
   }
   if (!s.header.sticky) rules.push(`html:root .gcs-siteHeader {\n  position: relative;\n}`);
@@ -271,7 +272,8 @@ function conditionalRules(s: GcsThemeSettings): string[] {
       `html:root .gcs-drawer__panel {\n  inset: 0 0 0 auto;\n  border-right: 0;\n  border-left: 1px solid var(--gcs-border);\n  animation-name: gcs-drawer-in-right;\n}`,
     );
   }
-  if (!s.mobileNav.icons) rules.push(`html:root .gcs-drawer__link > .gcs-icon {\n  display: none;\n}`);
+  // Fără iconițe în sertar: nici căsuța iconiței de pe subitemii cu descriere.
+  if (!s.mobileNav.icons) rules.push(`html:root .gcs-drawer__link > .gcs-icon,\nhtml:root .gcs-drawer__link > .gcs-drawer__icon {\n  display: none;\n}`);
   if (s.boxes.clickableRows) {
     rules.push(
       `html:root .gcs-forumRow {\n  position: relative;\n  cursor: pointer;\n}`,

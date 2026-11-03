@@ -2272,6 +2272,11 @@
         "languages": "Limbi",
         "labelIn": "Eticheta ({lang})",
         "descriptionIn": "Descrierea din mega meniu ({lang})",
+        "descriptionHint": "Un rând sub titlu, în submeniul din antet și în meniul de pe telefon (cel mult 100 de caractere).",
+        "descriptionAuto": "Gol = descrierea automată: „{text}”",
+        "shortLink": "Link scurt (coloana din dreapta)",
+        "shortLinkHint": "În submeniul din antet, itemul apare ca plăcuță în coloana din dreapta (iconiță și titlu, fără descriere).",
+        "shortChip": "scurt",
         "hrefOptional": "Link (opțional pentru un grup)",
         "badgeTitle": "Insignă și evidențiere",
         "badgeText": "Insignă fixă",
@@ -10137,7 +10142,8 @@
       "cta": {
         "online": "Vezi cine e online",
         "vip": "Devino VIP"
-      }
+      },
+      "quick": "Linkuri rapide"
     },
     "live": {
       "servers": "{count, plural, one {# server online} few {# servere online} other {# de servere online}}",

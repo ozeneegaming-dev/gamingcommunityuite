@@ -171,6 +171,17 @@ for (const theme of THEMES) {
     const mega = page.getByRole("menu", { name });
     await expect(mega).toBeVisible();
     await expect(mega.getByRole("menuitem").first()).toBeVisible();
+    // Panoul (în orice temă): în ecran, cu săgeata de sus deasupra butonului care l-a deschis.
+    await mega.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => null))));
+    const megaBox = (await mega.boundingBox())!;
+    expect(megaBox.x).toBeGreaterThanOrEqual(0);
+    expect(megaBox.x + megaBox.width).toBeLessThanOrEqual(1366);
+    const arrowBox = await mega.getByTestId("gcs-mega-arrow").boundingBox();
+    if (arrowBox) {
+      const triggerBox = (await trigger.boundingBox())!;
+      expect(arrowBox.x + arrowBox.width / 2).toBeGreaterThanOrEqual(triggerBox.x);
+      expect(arrowBox.x + arrowBox.width / 2).toBeLessThanOrEqual(triggerBox.x + triggerBox.width);
+    }
     await shot(page, `${theme.label}-desktop-mega`);
     await page.keyboard.press("Escape");
     await expect(mega).toBeHidden();

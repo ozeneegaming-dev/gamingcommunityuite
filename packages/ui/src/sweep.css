@@ -11,6 +11,8 @@
  * - Fișierul se încarcă ultimul (`globals.css`), iar `:root body` dă regulilor specificitatea de care au nevoie peste
  *   fundalurile componentelor (`.gcs-root a.gcs-btn--primary`) și tranzițiile designurilor (`.gcs-nova .gcs-btn`).
  * - Cu „reduced motion”, sweep-ul e oprit.
+ * - Itemii mega meniurilor (`.gcs-mega__item`, plăcuțele linkurilor scurte) nu au sweep: hover-ul lor e fundalul de
+ *   accent cu căsuța iconiței plină, 0,3 s (`header-menus.css`, macheta „Submeniurile din antet”).
  */
 :root body
   :is(
@@ -38,7 +40,6 @@
     .gcs-hb__sq,
     .gcs-hb__nav,
     .gcs-hb__menuItem,
-    .gcs-mega__item,
     .gcs-hbSeg__btn,
     .gcs-sp__scope,
     .gcs-sp__result,
@@ -89,7 +90,6 @@
     .gcs-hb__sq,
     .gcs-hb__nav,
     .gcs-hb__menuItem,
-    .gcs-mega__item,
     .gcs-hbSeg__btn,
     .gcs-sp__scope,
     .gcs-sp__result,
@@ -139,7 +139,6 @@
       .gcs-hb__sq,
       .gcs-hb__nav,
       .gcs-hb__menuItem,
-      .gcs-mega__item,
       .gcs-hbSeg__btn,
       .gcs-sp__scope,
       .gcs-sp__result,

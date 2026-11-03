@@ -1398,11 +1398,12 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-drawer__toggle {
   color: var(--gcs-drawer-text, var(--gcs-text));
 }
+/* Iconițele itemilor de pe primul nivel, în pătrate de 34 px (macheta „Submeniurile din antet”). */
 .gcs-nova .gcs-drawer__link > svg:first-child {
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
-  padding: 7px;
+  width: 34px;
+  height: 34px;
+  padding: 9px;
   border-radius: 6px;
   background: color-mix(in srgb, var(--gcs-text) 7%, transparent);
   transition: background-color var(--gcs-ease), color var(--gcs-ease);
@@ -1420,6 +1421,11 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-drawer__toggle.gcs-drawer__link--active {
   background: transparent;
   border-color: transparent;
+}
+/* Grupul deschis: pătratul iconiței ia accentul. */
+.gcs-nova .gcs-drawer__toggle[aria-expanded="true"] > svg:first-child {
+  background: linear-gradient(145deg, var(--gcs-accent-fill, var(--gcs-accent)), color-mix(in srgb, var(--gcs-accent-fill, var(--gcs-accent)) 70%, #000));
+  color: #fff;
 }
 .gcs-nova .gcs-drawer__sub {
   border-left-color: color-mix(in srgb, var(--gcs-accent) 40%, var(--gcs-border));
