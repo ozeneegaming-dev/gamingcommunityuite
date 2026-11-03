@@ -31,6 +31,7 @@ describe("zonele ACP ale aplicației", () => {
             "system.settings_terms",
             "system.settings_rules",
             "system.settings_posting",
+            "system.settings_uploads",
             "system.settings_email",
             "system.settings_languages",
             "system.settings_auth",

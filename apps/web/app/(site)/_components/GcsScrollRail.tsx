@@ -2,21 +2,37 @@
 
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { GcsIconSvg } from "@gcs/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 type Labels = { group: string; up: string; upHint: string; down: string; downHint: string };
 
 /** Pragul de la care iese banda (o derulare mică) și toleranța capetelor paginii. */
 const SHOW_AFTER = 240;
 const END = 4;
+/** Lățimea benzii (cu chenarul), distanța până la conținut și marginea minimă față de ecran. */
+const RAIL_W = 38;
+const GAP = 8;
+const EDGE = 8;
 
 /**
- * Banda „Sus / Jos” (macheta HomeComplete), a sistemului, în orice temă: lipită în stânga de marginea conținutului,
- * iese după o mică derulare; fiecare buton e estompat la capătul lui de pagină. Tooltip-urile „Sus” / „Jos” vin din
- * tooltip-ul sistemului (`data-tip`). Setarea temei „Banda Sus / Jos” o ascunde (`data-gcs-rail="off"`).
+ * Locul benzii: în marginea din stânga a conținutului (`main`), lipită de el, când are loc acolo întreagă; altfel
+ * (`null`) se andochează în colțul de jos, ca să nu iasă din ecran și să nu acopere conținutul.
+ */
+export function railLeft(contentLeft: number): number | null {
+  const left = Math.round(contentLeft - GAP - RAIL_W);
+  return left >= EDGE ? left : null;
+}
+
+/**
+ * Banda „Sus / Jos” (macheta HomeComplete), a sistemului, în orice temă: lipită în stânga de marginea conținutului (sau
+ * andocată jos când nu are loc), iese după o mică derulare; fiecare buton e estompat la capătul lui de pagină.
+ * Tooltip-urile „Sus” / „Jos” vin din tooltip-ul sistemului (`data-tip`). Setarea temei „Banda Sus / Jos” o ascunde
+ * (`data-gcs-rail="off"`).
  */
 export function GcsScrollRail({ labels }: { labels: Labels }) {
   const [state, setState] = useState({ show: false, top: true, bottom: false });
+  // `undefined` = încă nemăsurat (rezerva din CSS), `null` = andocată.
+  const [left, setLeft] = useState<number | null | undefined>(undefined);
 
   useEffect(() => {
     let frame = 0;
@@ -26,6 +42,8 @@ export function GcsScrollRail({ labels }: { labels: Labels }) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const next = { show: y > SHOW_AFTER, top: y <= END, bottom: y >= max - END };
       setState((s) => (s.show === next.show && s.top === next.top && s.bottom === next.bottom ? s : next));
+      const main = document.querySelector(".gcs-siteMain");
+      if (main) setLeft(railLeft(main.getBoundingClientRect().left));
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(read);
@@ -60,7 +78,13 @@ export function GcsScrollRail({ labels }: { labels: Labels }) {
   };
 
   return (
-    <div className={`gcs-scrollRail${state.show ? " gcs-scrollRail--show" : ""}`} role="group" aria-label={labels.group} data-testid="gcs-scroll-rail">
+    <div
+      className={`gcs-scrollRail${state.show ? " gcs-scrollRail--show" : ""}${left === null ? " gcs-scrollRail--dock" : ""}`}
+      style={typeof left === "number" ? ({ "--gcs-rail-left": `${left}px` } as CSSProperties) : undefined}
+      role="group"
+      aria-label={labels.group}
+      data-testid="gcs-scroll-rail"
+    >
       <button
         type="button"
         className="gcs-scrollRail__btn"

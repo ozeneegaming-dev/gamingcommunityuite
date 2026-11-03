@@ -31,8 +31,16 @@ export function tooltipContainer(el: Element): HTMLElement {
 /**
  * Așază bula (deja în pagină, `position: fixed`) lângă element. Un strămoș cu `transform` (ex. un dialog care intră cu
  * scalare) mută originea coordonatelor fixe: poziția se corectează după măsurare.
+ *
+ * Măsurătoarea citește poziția REALĂ a bulei, deci bula se așază fără tranziții (cu „animații reduse” în sistem, regula
+ * globală dă oricărei proprietăți o tranziție de 0.01ms: s-ar citi poziția veche și corecția ar dubla coordonatele) și,
+ * la prima așezare, fără animația de intrare (transformarea ei de început mută bula cu câțiva px); animația pornește
+ * apoi din poziția finală.
  */
 export function positionTooltip(el: Element, bubble: HTMLElement, prefer: "top" | "bottom" = "top"): void {
+  const first = !bubble.dataset.side;
+  bubble.style.transition = "none";
+  if (first) bubble.style.animation = "none";
   const r = el.getBoundingClientRect();
   const size = bubble.getBoundingClientRect();
   const p = placeTooltip({ left: r.left, top: r.top, width: r.width, height: r.height }, { width: size.width, height: size.height }, { width: window.innerWidth, height: window.innerHeight }, prefer);
@@ -49,4 +57,5 @@ export function positionTooltip(el: Element, bubble: HTMLElement, prefer: "top" 
   bubble.dataset.side = p.side;
   bubble.classList.toggle("gcs-tooltip--top", p.side === "top");
   bubble.classList.toggle("gcs-tooltip--bottom", p.side === "bottom");
+  if (first) bubble.style.removeProperty("animation");
 }

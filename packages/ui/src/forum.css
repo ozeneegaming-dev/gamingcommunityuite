@@ -302,6 +302,21 @@
   margin: 0 0 12px;
   border-radius: 10px;
 }
+/* O imagine de pe alt site afișată ca link (ACP → Setări → Încărcări și imagini: imaginile externe blocate). */
+.gcs-root a.gcs-remoteImage {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: 8px;
+  color: var(--gcs-link, var(--gcs-accentInk));
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.gcs-root a.gcs-remoteImage:hover {
+  color: var(--gcs-accent);
+}
 .gcs-embed {
   position: relative;
   margin: 0 0 12px;
@@ -467,6 +482,26 @@
 .gcs-forumRow__title {
   font-weight: 700;
   font-size: 15px;
+}
+/*
+ * Tot rândul (sau cardul, în grilă) duce în forum: linkul titlului se întinde peste rând, iar celelalte linkuri și
+ * butoane (subforumurile, ultimul mesaj, statisticile) și elementele cu tooltip sau card la hover stau deasupra lui și
+ * își păstrează destinația. Fără script: un singur link, deci merge din tastatură și pentru cititoarele de ecran.
+ */
+.gcs-forumRow:has(.gcs-forumRow__link) {
+  position: relative;
+  cursor: pointer;
+}
+.gcs-forumRow__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.gcs-forumRow:has(.gcs-forumRow__link) :is(a, button, [role="button"], [tabindex], [title], [data-tip], .gcs-avatar):not(.gcs-forumRow__link) {
+  position: relative;
+  z-index: 1;
 }
 .gcs-root .gcs-forumRow__title a,
 .gcs-root .gcs-topicRow__title > a {

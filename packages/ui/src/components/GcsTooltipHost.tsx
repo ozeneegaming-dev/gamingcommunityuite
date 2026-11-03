@@ -108,13 +108,17 @@ export function GcsTooltipHost() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") hide();
     };
+    // Doar derularea paginii sau a unei zone care conține elementul mută bula (nu și un chat derulat alături).
+    const onScroll = (e: Event) => {
+      if (current && (!(e.target instanceof Node) || e.target === document || e.target.contains(current))) hide();
+    };
     document.addEventListener("pointerover", onOver, true);
     document.addEventListener("pointerout", onOut, true);
     document.addEventListener("pointerdown", hide, true);
     document.addEventListener("focusin", onFocus, true);
     document.addEventListener("focusout", onBlur, true);
     document.addEventListener("keydown", onKey, true);
-    window.addEventListener("scroll", hide, true);
+    window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", hide);
     return () => {
       hide();
@@ -124,7 +128,7 @@ export function GcsTooltipHost() {
       document.removeEventListener("focusin", onFocus, true);
       document.removeEventListener("focusout", onBlur, true);
       document.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", hide);
     };
   }, [id]);

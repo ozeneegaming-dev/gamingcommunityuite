@@ -47,7 +47,7 @@ export default async function AttachmentsSettingsPage() {
             <li key={f.id} className="gcs-attachList__item">
               {f.mime.startsWith("image/") ? (
                 <a href={`/files/${f.id}`} target="_blank" rel="noopener" className="gcs-attachList__thumb">
-                  <img src={`/files/${f.id}`} alt="" loading="lazy" />
+                  <img src={`/files/${f.id}?thumb=1`} alt="" loading="lazy" />
                 </a>
               ) : (
                 <span className="gcs-attachList__thumb" aria-hidden="true">

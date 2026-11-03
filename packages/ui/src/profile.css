@@ -208,12 +208,51 @@
 .gcs-hoverCard__stats .gcs-rep--neg {
   color: var(--gcs-accentInk);
 }
+/*
+ * Acțiunile (`GcsHoverCardActions`), în orice temă și în cardul din șablonul temei: rândul membrului — acțiunea
+ * principală cu eticheta (Mesaj), care ia restul rândului și se strânge cu „…” doar dacă nu mai are loc, apoi
+ * butoanele-iconiță cu tooltip (Urmărește, Conținutul lui, Ignoră), care nu se strâng — și, sub el, rândurile
+ * extensiilor (ex. moderarea din chat). Nimic nu iese din card și niciun buton nu rămâne singur pe un rând.
+ */
 .gcs-hoverCard__actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
-.gcs-hoverCard__actions > * {
-  flex: 1;
+.gcs-hoverCard__actionRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gcs-hoverCard__actions .gcs-btn.gcs-hoverCard__primary {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  padding-inline: 10px;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.gcs-hoverCard__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-hoverCard__actions .gcs-btn.gcs-hoverCard__iconBtn {
+  flex: none;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  gap: 0;
+  font-size: 13px;
+}
+.gcs-hoverCard__actions .gcs-hoverCard__iconBtn[aria-pressed="true"] {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  border-color: color-mix(in srgb, var(--gcs-accent) 55%, transparent);
 }
 /* Stratul: coordonate de viewport (`position: fixed`), așezat după mărimea măsurată (ascuns până atunci). */
 .gcs-hoverCardLayer {

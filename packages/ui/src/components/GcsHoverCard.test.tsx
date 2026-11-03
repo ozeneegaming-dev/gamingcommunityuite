@@ -1,6 +1,8 @@
 import { render, within } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, test } from "vitest";
-import { GcsHoverCard, type GcsHoverCardData, type GcsHoverCardV2Labels } from "./GcsHoverCard";
+import { GcsButton } from "./GcsButton";
+import { GcsHoverCard, GcsHoverCardActions, GcsHoverCardIconAction, type GcsHoverCardData, type GcsHoverCardV2Labels } from "./GcsHoverCard";
 
 const data: GcsHoverCardData = {
   user: {
@@ -90,5 +92,94 @@ describe("GcsHoverCard v2", () => {
     expect(card.querySelector(".gcs-hoverCard__meta [data-testid=gcs-hover-clan]")).not.toBeNull();
     expect(card.querySelector(".gcs-hoverCard__online")).not.toBeNull();
     expect(within(container).queryByTestId("gcs-hover-level")).toBeNull();
+  });
+});
+
+describe("acțiunile cardului (încap în card la orice lățime)", () => {
+  const icon = <svg />;
+  const card = (actions: ReactNode) => render(<GcsHoverCard data={{ ...data, v2 }} labels={labels} v2Labels={v2Labels} format={format} actions={actions} />);
+
+  test("Mesaj cu eticheta; Urmărește / Conținutul lui / Ignoră ca iconițe cu aria-label și tooltip, pe același rând; moderarea pe rândul ei", () => {
+    const { container } = card(
+      <GcsHoverCardActions
+        primary={
+          <GcsButton variant="primary" size="sm" asChild className="gcs-hoverCard__primary" icon={icon}>
+            <a href="/messages/new?to=u1" data-testid="msg">
+              <span className="gcs-hoverCard__label">Mesaj</span>
+            </a>
+          </GcsButton>
+        }
+        tools={[
+          <GcsHoverCardIconAction key="follow" label="Urmărește" icon={icon} aria-pressed={false} data-testid="follow" />,
+          <GcsHoverCardIconAction key="content" label="Conținutul lui" icon={icon} asChild>
+            <a href="/members/u1-bl1ng?tab=activity" data-testid="content" />
+          </GcsHoverCardIconAction>,
+          <GcsHoverCardIconAction key="ignore" label="Ignoră" icon={icon} aria-pressed={false} data-testid="ignore" />,
+        ]}
+        extra={
+          <span className="gcs-hoverCard__chatMod" data-testid="staff">
+            {["Mute", "Kick din chat", "Avertisment"].map((l) => (
+              <GcsHoverCardIconAction key={l} label={l} icon={icon} />
+            ))}
+          </span>
+        }
+      />,
+    );
+    const actions = container.querySelector<HTMLElement>(".gcs-hoverCard__actions")!;
+    const row = within(actions).getByTestId("gcs-hover-actions");
+    // Primul rând: acțiunea principală, apoi cele trei iconițe; rândul de moderare e separat, după el.
+    expect(row.className).toBe("gcs-hoverCard__actionRow");
+    expect([...row.children].map((c) => c.getAttribute("data-testid"))).toEqual(["msg", "follow", "content", "ignore"]);
+    expect(within(row).getByTestId("msg").textContent).toBe("Mesaj");
+    expect(within(row).getByTestId("msg").className).toContain("gcs-hoverCard__primary");
+    for (const [id, label] of [
+      ["follow", "Urmărește"],
+      ["content", "Conținutul lui"],
+      ["ignore", "Ignoră"],
+    ] as const) {
+      const b = within(row).getByTestId(id);
+      expect(b.className).toContain("gcs-hoverCard__iconBtn");
+      expect(b.getAttribute("aria-label")).toBe(label);
+      expect(b.getAttribute("data-tip")).toBe(label);
+      // Fără text vizibil: doar iconița, ascunsă cititoarelor de ecran.
+      expect(b.textContent).toBe("");
+      expect(b.querySelector(".gcs-btn__icon")?.getAttribute("aria-hidden")).toBe("true");
+    }
+    // Butoanele rămân accesibile din tastatură după nume; „Conținutul lui” e un link.
+    expect(within(row).getByRole("button", { name: "Urmărește" }).getAttribute("aria-pressed")).toBe("false");
+    expect(within(row).getByRole("link", { name: "Conținutul lui" }).getAttribute("href")).toBe("/members/u1-bl1ng?tab=activity");
+    expect(within(row).getByRole("button", { name: "Ignoră" })).toBeTruthy();
+    const staff = within(actions).getByTestId("staff");
+    expect(staff.parentElement).toBe(actions);
+    expect(within(staff).getAllByRole("button").map((b) => [b.getAttribute("aria-label"), b.getAttribute("data-tip"), b.textContent])).toEqual([
+      ["Mute", "Mute", ""],
+      ["Kick din chat", "Kick din chat", ""],
+      ["Avertisment", "Avertisment", ""],
+    ]);
+  });
+
+  test("fără acțiunile membrului nu rămâne un rând gol (doar extensiile)", () => {
+    const { container } = card(<GcsHoverCardActions primary={null} tools={[false, null]} extra={<span data-testid="ext" />} />);
+    expect(container.querySelector(".gcs-hoverCard__actionRow")).toBeNull();
+    expect(within(container).getByTestId("ext").parentElement?.className).toBe("gcs-hoverCard__actions");
+  });
+});
+
+describe("avatarul cardului", () => {
+  test("rama VIP a membrului: aceeași componentă și aceleași props ca în profil și în postbit", () => {
+    const { container } = render(<GcsHoverCard data={{ ...data, user: { ...data.user, image: "/files/a1", frameKey: "gold" }, v2 }} labels={labels} v2Labels={v2Labels} format={format} />);
+    const frame = container.querySelector(".gcs-hoverCard__avatar > .gcs-avatarFrame");
+    expect(frame?.classList.contains("gcs-avatarFrame--gold")).toBe(true);
+    // Avatarul din ramă poartă id-ul membrului: și rama publicată de un plugin (Studio VIP) se pune peste el.
+    expect(frame?.querySelector(".gcs-avatar")?.getAttribute("data-avatar-user")).toBe("u1");
+    expect(frame?.querySelector("img")?.getAttribute("src")).toBe("/files/a1");
+    // Inelul grupului rămâne pe învelișul avatarului.
+    expect((container.querySelector(".gcs-hoverCard__avatar") as HTMLElement).style.getPropertyValue("--gcs-hoverCard-ring")).toBe("#FF4D57");
+  });
+
+  test("fără ramă: avatarul simplu, tot cu id-ul membrului (rama pluginului)", () => {
+    const { container } = render(<GcsHoverCard data={{ ...data, v2 }} labels={labels} v2Labels={v2Labels} format={format} />);
+    expect(container.querySelector(".gcs-hoverCard__avatar .gcs-avatarFrame")).toBeNull();
+    expect(container.querySelector(".gcs-hoverCard__avatar > .gcs-avatar")?.getAttribute("data-avatar-user")).toBe("u1");
   });
 });

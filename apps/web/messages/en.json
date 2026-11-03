@@ -490,7 +490,15 @@
       "invalid_svg": "The SVG isn't valid or can't be cleaned.",
       "password_needs_mix": "The password must contain both letters and digits.",
       "password_too_long": "The password can have at most 128 characters.",
-      "password_policy_length": "The password is too short for the site rule (see below the field)."
+      "password_policy_length": "The password is too short for the site rule (see below the field).",
+      "extension_not_allowed": "This file extension is not allowed on this site.",
+      "dangerous_type": "This type of file cannot be uploaded (programs, scripts, web pages).",
+      "type_mismatch": "The extension does not match the real file type.",
+      "dangerous_extension": "The list contains a dangerous extension (programs, scripts, web pages, SVG).",
+      "unknown_extension": "The list contains an extension the platform does not accept.",
+      "invalid_domain": "Only domains (e.g. example.com), one per line.",
+      "page_placeholder": "The format must contain '{page}' exactly once, without angle brackets.",
+      "invalid_token": "Invalid code: only the value from content=\"…\" or the whole meta tag."
     }
   },
   "acp": {
@@ -583,6 +591,7 @@
         "update": "Update",
         "cron": "Cron",
         "bot": "Community bot",
+        "settings_uploads": "Uploads & images",
         "license": "Licence"
       },
       "members": {
@@ -1441,7 +1450,9 @@
         "donations": "Donations",
         "warnings": "Warnings",
         "2fa": "Security",
-        "terms": "Terms and privacy"
+        "terms": "Terms and privacy",
+        "uploads": "Uploads & images",
+        "seo": "SEO"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -4893,6 +4904,70 @@
         "edit": "Change"
       }
     },
+    "seo": {
+      "title": "SEO",
+      "intro": "How the community appears in search engines and when it is shared: titles, robots.txt, the sitemap, IndexNow, site verification and external links.",
+      "save": "Save",
+      "meta": {
+        "title": "Title and metadata",
+        "hint": "The title in the browser bar, the default description and the image shown when a page is shared.",
+        "image": "Share image",
+        "imageHint": "PNG, JPEG, WebP or GIF, max 5 MB; 1200 × 630 px recommended. Converted to WebP.",
+        "upload": "Upload",
+        "replace": "Replace",
+        "uploading": "Uploading…",
+        "remove": "Remove"
+      },
+      "robots": {
+        "title": "robots.txt",
+        "hint": "Which pages search engine robots may read.",
+        "preview": "What robots get now:"
+      },
+      "sitemap": {
+        "title": "Sitemap",
+        "hint": "The list of public pages for search engines: only what a guest can see, with the last modification date.",
+        "status": "Files in the index: {files}.",
+        "off": "The sitemap is off (/sitemap.xml answers 404)."
+      },
+      "indexNow": {
+        "title": "IndexNow",
+        "hint": "Tells search engines (Bing, Yandex and the others using the protocol) about new content right away. The key is generated automatically.",
+        "key": "Key",
+        "noKey": "generated when enabled",
+        "keyFile": "key file",
+        "lastRun": "Last batch: {at}",
+        "lastSent": "sent: {count}, at {at}",
+        "lastError": "error: {error}",
+        "retryAt": "next attempt: {at}",
+        "never": "never",
+        "regenerate": "New key",
+        "regenerateConfirm": "The current key will no longer be served; search engines get the new one with the next batch."
+      },
+      "verification": {
+        "title": "Site verification",
+        "hint": "The codes from the search engines’ consoles; added as meta tags in the head of every page."
+      },
+      "links": {
+        "title": "External links",
+        "hint": "Applied when content is shown, also to content written earlier: posts, signatures, profiles, private messages and chat."
+      }
+    },
+    "uploads": {
+      "storageTitle": "File storage",
+      "driver": "Driver",
+      "drivers": {
+        "local": "Local disk",
+        "s3": "S3 / MinIO",
+        "unknown": "Unknown"
+      },
+      "driverHint": "Chosen in the server environment (S3_ENDPOINT for S3 / MinIO, otherwise the uploads folder), not in the ACP.",
+      "limitsTitle": "Maximum size per group",
+      "limitsHint": "The “upload.max_mb” group setting, changed on each group (ACP → Groups).",
+      "unlimited": "unlimited",
+      "mb": "{mb} MB",
+      "none": "cannot upload",
+      "unattached": "Files uploaded and not yet attached to content: {count}."
+    },
     "license": {
       "title": "Licence",
       "description": "This site’s GamingCommunitySuite licence: what it includes, the online check and changing the key.",
@@ -4978,7 +5053,12 @@
       "all_devices": "All devices",
       "poll": "Polling only (hosts that cut long connections)",
       "backup_codes": "Backup codes only",
-      "email_code": "Backup codes or an email code"
+      "email_code": "Backup codes or an email code",
+      "default": "Default (generated by the platform)",
+      "custom": "Custom",
+      "allow": "Shown",
+      "https_only": "HTTPS only",
+      "block": "Blocked (shown as a link)"
     },
     "forums": {
       "posts_per_page": "Posts per page",
@@ -5614,6 +5694,60 @@
       "plugin_log_days_hint": "Plugin errors and messages.",
       "sessions_days": "Expired sessions (days)",
       "sessions_days_hint": "Sessions and verification codes expired for this many days."
+    },
+    "seo": {
+      "robots_mode": "robots.txt",
+      "robots_mode_hint": "Default: the whole site is open except the ACP, API, installer, sign-in, search and members' private pages.",
+      "robots_custom": "Custom text",
+      "robots_custom_hint": "Used only with “Custom” (at most 10,000 characters). The Sitemap line is added automatically if missing.",
+      "sitemap_enabled": "Sitemap enabled",
+      "sitemap_pages": "Home page and public pages",
+      "sitemap_forums": "Forums",
+      "sitemap_topics": "Topics",
+      "sitemap_members": "Member profiles",
+      "sitemap_clans": "Clans",
+      "sitemap_servers": "Game servers",
+      "sitemap_max_urls": "URLs per content type (maximum)",
+      "sitemap_max_urls_hint": "The index is split into files of at most 10,000 URLs (the protocol limit is 50,000).",
+      "indexnow_enabled": "IndexNow enabled",
+      "indexnow_enabled_hint": "New public topics and topics with new replies are announced to search engines, in batches, every 10 minutes.",
+      "indexnow_key": "IndexNow key",
+      "title_format": "Title format",
+      "title_format_hint": "'{page}' = the page title (required), '{site}' = the site name. E.g.: '{page} · {site}'",
+      "description": "Site description",
+      "description_hint": "Used as the meta description on pages without their own description (max 300 characters). Empty = a generic text with the site name.",
+      "share_image": "Share image (URL)",
+      "share_image_hint": "An https:// URL or an image uploaded below; shown when a page without an image is shared (OpenGraph, X).",
+      "x_handle": "X (Twitter) account",
+      "x_handle_hint": "E.g.: @my_community — shown in the X cards of the pages.",
+      "google_verification": "Google Search Console",
+      "google_verification_hint": "Only the code from content=\"…\" or the whole meta tag copied from the console.",
+      "bing_verification": "Bing Webmaster Tools",
+      "yandex_verification": "Yandex Webmaster",
+      "nofollow_external": "rel=\"nofollow\" on external links",
+      "nofollow_external_hint": "Links in member content to other sites get rel=\"nofollow ugc noopener\". Internal links don't.",
+      "nofollow_exclude": "Domains without nofollow",
+      "nofollow_exclude_hint": "One domain per line (e.g. the community's game-server sites). Subdomains are included.",
+      "index_profiles": "Index member profiles",
+      "index_profiles_hint": "Off: profiles get noindex and are left out of the sitemap."
+    },
+    "uploads": {
+      "allowed_extensions": "Allowed attachment extensions",
+      "allowed_extensions_hint": "Comma separated. Both the extension and the real file type are checked; programs, scripts, web pages and SVGs are always refused.",
+      "image_max_side": "Maximum image side (px)",
+      "image_max_side_hint": "Larger images are scaled down on upload (320–10,000).",
+      "image_quality": "Image quality (%)",
+      "image_quality_hint": "For JPEG and WebP (30–100). Also applies to avatars and covers.",
+      "convert_webp": "Convert images to WebP",
+      "convert_webp_hint": "Smaller files at the same quality; animated GIFs stay animated.",
+      "strip_metadata": "Remove metadata (EXIF, GPS)",
+      "strip_metadata_hint": "Recommended: phone photos contain the location and the camera model.",
+      "thumbnail_side": "Thumbnail side (px)",
+      "thumbnail_side_hint": "0 = no thumbnails; otherwise 64–1200. Created only for larger images.",
+      "remote_images": "Images from other sites",
+      "remote_images_hint": "In posts, signatures, profiles and messages. Blocked = shown as a link to the image.",
+      "orphan_days": "Delete unused files after (days)",
+      "orphan_days_hint": "Files uploaded and never attached to a post or message, daily, in batches. 0 = off. Recommended: at least 7."
     }
   },
   "permissions": {
@@ -7023,6 +7157,7 @@
       "profile": "View profile",
       "history": "Their chat history",
       "card": "Moderation record",
+      "quickTitle": "Chat moderation",
       "warn": "Warning",
       "mute": "Mute",
       "kick": "Kick from chat",

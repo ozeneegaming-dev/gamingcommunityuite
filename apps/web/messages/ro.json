@@ -490,7 +490,15 @@
       "invalid_svg": "SVG-ul nu e valid sau nu se poate curăța.",
       "password_needs_mix": "Parola trebuie să conțină și litere, și cifre.",
       "password_too_long": "Parola poate avea cel mult 128 de caractere.",
-      "password_policy_length": "Parola e prea scurtă pentru regula site-ului (vezi sub câmp)."
+      "password_policy_length": "Parola e prea scurtă pentru regula site-ului (vezi sub câmp).",
+      "extension_not_allowed": "Extensia fișierului nu e permisă pe acest site.",
+      "dangerous_type": "Acest tip de fișier nu se poate încărca (programe, scripturi, pagini web).",
+      "type_mismatch": "Extensia nu se potrivește cu tipul real al fișierului.",
+      "dangerous_extension": "Lista conține o extensie periculoasă (programe, scripturi, pagini web, SVG).",
+      "unknown_extension": "Lista conține o extensie pe care platforma nu o acceptă.",
+      "invalid_domain": "Doar domenii (ex. exemplu.ro), câte unul pe rând.",
+      "page_placeholder": "Formatul trebuie să conțină '{page}' o singură dată, fără paranteze unghiulare.",
+      "invalid_token": "Cod invalid: doar valoarea din content=\"…\" sau tot tag-ul meta."
     }
   },
   "acp": {
@@ -583,6 +591,7 @@
         "update": "Actualizare",
         "cron": "Cron",
         "bot": "Botul comunității",
+        "settings_uploads": "Încărcări și imagini",
         "license": "Licență"
       },
       "members": {
@@ -1441,7 +1450,9 @@
         "donations": "Donații",
         "warnings": "Avertismente",
         "2fa": "Securitate",
-        "terms": "Termeni și confidențialitate"
+        "terms": "Termeni și confidențialitate",
+        "uploads": "Încărcări și imagini",
+        "seo": "SEO"
       },
       "save": "Salvează setările",
       "secretSet": "•••• salvat (lasă gol ca să păstrezi valoarea)",
@@ -4893,6 +4904,70 @@
         "edit": "Schimbă"
       }
     },
+    "seo": {
+      "title": "SEO",
+      "intro": "Cum apare comunitatea în motoarele de căutare și când e distribuită: titlurile, robots.txt, sitemap-ul, IndexNow, verificarea site-ului și linkurile externe.",
+      "save": "Salvează",
+      "meta": {
+        "title": "Titlu și metadate",
+        "hint": "Titlul din bara browserului, descrierea implicită și imaginea arătată când o pagină e distribuită.",
+        "image": "Imaginea de distribuire",
+        "imageHint": "PNG, JPEG, WebP sau GIF, max 5 MB; recomandat 1200 × 630 px. Devine WebP.",
+        "upload": "Încarcă",
+        "replace": "Înlocuiește",
+        "uploading": "Se încarcă…",
+        "remove": "Scoate"
+      },
+      "robots": {
+        "title": "robots.txt",
+        "hint": "Ce pagini pot citi roboții motoarelor de căutare.",
+        "preview": "Ce primesc roboții acum:"
+      },
+      "sitemap": {
+        "title": "Sitemap",
+        "hint": "Lista paginilor publice pentru motoarele de căutare: doar ce vede un vizitator, cu data ultimei modificări.",
+        "status": "Fișiere în index: {files}.",
+        "off": "Sitemap-ul e oprit (/sitemap.xml răspunde 404)."
+      },
+      "indexNow": {
+        "title": "IndexNow",
+        "hint": "Anunță imediat motoarele de căutare (Bing, Yandex și celelalte care folosesc protocolul) despre conținutul nou. Cheia se generează automat.",
+        "key": "Cheia",
+        "noKey": "se generează la pornire",
+        "keyFile": "fișierul cheii",
+        "lastRun": "Ultimul lot: {at}",
+        "lastSent": "trimise: {count}, la {at}",
+        "lastError": "eroare: {error}",
+        "retryAt": "următoarea încercare: {at}",
+        "never": "niciodată",
+        "regenerate": "Cheie nouă",
+        "regenerateConfirm": "Cheia de acum nu va mai fi servită; motoarele o vor primi pe cea nouă la următorul lot."
+      },
+      "verification": {
+        "title": "Verificarea site-ului",
+        "hint": "Codurile din consolele motoarelor de căutare; apar ca tag-uri meta în antetul tuturor paginilor."
+      },
+      "links": {
+        "title": "Linkuri externe",
+        "hint": "Se aplică la afișare, și conținutului scris deja: postări, semnături, profiluri, mesaje private și chat."
+      }
+    },
+    "uploads": {
+      "storageTitle": "Stocarea fișierelor",
+      "driver": "Driver",
+      "drivers": {
+        "local": "Disc local",
+        "s3": "S3 / MinIO",
+        "unknown": "Necunoscut"
+      },
+      "driverHint": "Se alege din mediul serverului (variabila S3_ENDPOINT pentru S3 / MinIO, altfel folderul de încărcări), nu din ACP.",
+      "limitsTitle": "Mărimea maximă pe grup",
+      "limitsHint": "Setarea de grup „upload.max_mb”, schimbată la fiecare grup (ACP → Grupuri).",
+      "unlimited": "nelimitat",
+      "mb": "{mb} MB",
+      "none": "nu poate încărca",
+      "unattached": "Fișiere încărcate și încă nelegate de conținut: {count}."
+    },
     "license": {
       "title": "Licență",
       "description": "Licența GamingCommunitySuite a acestui site: ce include, verificarea online și schimbarea cheii.",
@@ -4978,7 +5053,12 @@
       "all_devices": "Toate dispozitivele",
       "poll": "Doar polling (gazde care taie conexiunile lungi)",
       "backup_codes": "Doar codurile de rezervă",
-      "email_code": "Codurile de rezervă sau un cod pe email"
+      "email_code": "Codurile de rezervă sau un cod pe email",
+      "default": "Implicit (generat de platformă)",
+      "custom": "Personalizat",
+      "allow": "Afișate",
+      "https_only": "Doar cele HTTPS",
+      "block": "Blocate (arătate ca link)"
     },
     "forums": {
       "posts_per_page": "Postări pe pagină",
@@ -5614,6 +5694,60 @@
       "plugin_log_days_hint": "Erorile și mesajele pluginurilor.",
       "sessions_days": "Sesiunile expirate (zile)",
       "sessions_days_hint": "Sesiunile și codurile de verificare expirate de atâtea zile."
+    },
+    "seo": {
+      "robots_mode": "robots.txt",
+      "robots_mode_hint": "Implicit: tot site-ul e deschis, în afară de ACP, API, installer, autentificare, căutare și paginile private ale membrilor.",
+      "robots_custom": "Textul personalizat",
+      "robots_custom_hint": "Folosit doar cu „Personalizat” (cel mult 10 000 de caractere). Linia Sitemap se adaugă automat dacă lipsește.",
+      "sitemap_enabled": "Sitemap pornit",
+      "sitemap_pages": "Pagina principală și paginile publice",
+      "sitemap_forums": "Forumurile",
+      "sitemap_topics": "Topicurile",
+      "sitemap_members": "Profilurile membrilor",
+      "sitemap_clans": "Clanurile",
+      "sitemap_servers": "Serverele de joc",
+      "sitemap_max_urls": "Adrese pe tip de conținut (maxim)",
+      "sitemap_max_urls_hint": "Indexul se împarte în fișiere de cel mult 10 000 de adrese (limita protocolului e 50 000).",
+      "indexnow_enabled": "IndexNow pornit",
+      "indexnow_enabled_hint": "Topicurile publice noi și cele cu răspunsuri noi sunt anunțate motoarelor de căutare, în loturi, la 10 minute.",
+      "indexnow_key": "Cheia IndexNow",
+      "title_format": "Formatul titlului",
+      "title_format_hint": "'{page}' = titlul paginii (obligatoriu), '{site}' = numele site-ului. Ex.: '{page} · {site}'",
+      "description": "Descrierea site-ului",
+      "description_hint": "Folosită ca meta descriere pe paginile fără descriere proprie (max 300 de caractere). Goală = un text generic cu numele site-ului.",
+      "share_image": "Imaginea de distribuire (adresă)",
+      "share_image_hint": "O adresă https:// sau o imagine încărcată mai jos; apare când o pagină fără imagine e distribuită (OpenGraph, X).",
+      "x_handle": "Contul X (Twitter)",
+      "x_handle_hint": "Ex.: @comunitatea_mea — apare în cardurile X ale paginilor.",
+      "google_verification": "Google Search Console",
+      "google_verification_hint": "Doar codul din content=\"…\" sau tot tag-ul meta copiat din consolă.",
+      "bing_verification": "Bing Webmaster Tools",
+      "yandex_verification": "Yandex Webmaster",
+      "nofollow_external": "rel=\"nofollow\" pe linkurile externe",
+      "nofollow_external_hint": "Linkurile din conținutul membrilor spre alte site-uri primesc rel=\"nofollow ugc noopener\". Linkurile interne nu.",
+      "nofollow_exclude": "Domenii fără nofollow",
+      "nofollow_exclude_hint": "Un domeniu pe rând (ex. site-urile serverelor comunității). Se aplică și subdomeniilor.",
+      "index_profiles": "Profilurile membrilor se indexează",
+      "index_profiles_hint": "Oprit: profilurile primesc noindex și lipsesc din sitemap."
+    },
+    "uploads": {
+      "allowed_extensions": "Extensii permise la atașamente",
+      "allowed_extensions_hint": "Separate prin virgulă. Se verifică extensia și tipul real al fișierului; programele, scripturile, paginile web și SVG-urile sunt refuzate mereu.",
+      "image_max_side": "Latura maximă a imaginilor (px)",
+      "image_max_side_hint": "Imaginile mai mari se micșorează la încărcare (320–10 000).",
+      "image_quality": "Calitatea imaginilor (%)",
+      "image_quality_hint": "Pentru JPEG și WebP (30–100). Se aplică și avatarurilor și cover-urilor.",
+      "convert_webp": "Convertește imaginile în WebP",
+      "convert_webp_hint": "Fișiere mai mici, la aceeași calitate; GIF-urile animate rămân animate.",
+      "strip_metadata": "Șterge metadatele (EXIF, GPS)",
+      "strip_metadata_hint": "Recomandat: fotografiile de pe telefon conțin locația și modelul aparatului.",
+      "thumbnail_side": "Latura miniaturilor (px)",
+      "thumbnail_side_hint": "0 = fără miniaturi; altfel 64–1200. Se creează doar pentru imaginile mai mari.",
+      "remote_images": "Imaginile de pe alte site-uri",
+      "remote_images_hint": "În postări, semnături, profiluri și mesaje. Blocate = arătate ca link spre imagine.",
+      "orphan_days": "Șterge fișierele nefolosite după (zile)",
+      "orphan_days_hint": "Fișierele încărcate și nelegate de nicio postare sau mesaj, zilnic, pe loturi. 0 = oprit. Recomandat: cel puțin 7."
     }
   },
   "permissions": {
@@ -7023,6 +7157,7 @@
       "profile": "Vezi profilul",
       "history": "Istoricul lui în chat",
       "card": "Fișa de moderare",
+      "quickTitle": "Moderare chat",
       "warn": "Avertisment",
       "mute": "Mute",
       "kick": "Kick din chat",

@@ -7,37 +7,28 @@ import type { GcsRateLimiter } from "../../auth/rateLimit";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../../errors";
 import type { GcsPermissionService } from "../../permissions/service";
 import type { GcsActor, GcsContainerRef } from "../../permissions/types";
+import { GCS_IMAGE_DEFAULTS, processImage, thumbnailOf, type GcsImageFormat, type GcsUploadPolicy } from "./images";
 import type { GcsFileStore } from "./store";
 import { looksLikeSvg, sanitizeSvg, SVG_MAX_BYTES } from "./svg";
+import { fileExtension, GCS_BINARY_TYPES, GCS_KNOWN_EXTENSIONS, GCS_TEXT_EXTENSIONS, uploadTypeError } from "./uploadPolicy";
 
 /** Imaginile decorative (iconițe, fundaluri ale forumurilor și widget-urilor): publice, legate de ținta lor. */
 export const DECOR_CONTENT_TYPE = "decor.image";
 
-/** Imaginile se recodează (fără EXIF, max 4096 px). */
+/** Imaginile se recodează (fără EXIF, latura maximă și formatul din setările încărcărilor). */
 const IMAGE_FORMATS = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as const;
 type ImageMime = keyof typeof IMAGE_FORMATS;
+const FORMAT_EXT: Record<GcsImageFormat, string> = { jpeg: "jpg", png: "png", webp: "webp", gif: "gif" };
 
-/** Tipurile binare acceptate, recunoscute după magic bytes (nu după extensie). */
-const BINARY_MIMES = new Set([
-  "application/pdf",
-  "application/zip",
-  "application/x-7z-compressed",
-  "application/x-rar-compressed",
-  "video/mp4",
-  "video/webm",
-  "audio/mpeg",
-  "audio/ogg",
-  // Mesajele vocale din chat (MediaRecorder: WebM/Opus în Chrome și Firefox, MP4/AAC în Safari).
-  "audio/webm",
-  "audio/mp4",
-  "audio/x-m4a",
-]);
-
-/** Fișierele text (configuri de joc, loguri) nu au magic bytes; se acceptă după extensie, doar dacă sunt UTF-8 valid. */
-const TEXT_EXTENSIONS = new Set(["txt", "cfg", "ini", "log", "json", "md", "csv", "yml", "yaml"]);
-
-const MAX_IMAGE_SIDE = 4096;
+/** Recodarea fără setările încărcărilor (ex. emoticoanele Chat Pro, care au limitele lor): formatul original, max 4096 px. */
+const ORIGINAL_IMAGE = { maxSide: 4096, quality: 85 };
 const UPLOAD_LIMIT = { window: 3600, max: 30 };
+
+/** Fără setări (teste, scripturi): valorile implicite ale ACP → Setări → Încărcări și imagini. */
+export const GCS_DEFAULT_UPLOAD_POLICY: GcsUploadPolicy = { allowedExtensions: GCS_KNOWN_EXTENSIONS, image: GCS_IMAGE_DEFAULTS };
+
+/** Cheia miniaturii unei imagini, lângă fișier (`2026/11/<uuid>.thumb.webp`). */
+export const thumbnailKey = (storageKey: string) => `${storageKey.replace(/\.[a-z0-9]+$/i, "")}.thumb.webp`;
 
 export type GcsUploadedFile = { name: string; bytes: Buffer };
 /**
@@ -70,13 +61,24 @@ export type GcsOpenedAttachment = {
 export type GcsAttachmentAccess = (actor: GcsActor, contentId: string) => Promise<boolean>;
 
 type Tx = Prisma.TransactionClient;
-/** Un fișier verificat (și, pentru imagini, recodat), gata de salvat. */
-type GcsPreparedFile = { bytes: Buffer; mime: string; ext: string; width: number | null; height: number | null };
+/** Un fișier verificat (și, pentru imagini, recodat), gata de salvat; `thumb` = miniatura imaginii, dacă are una. */
+type GcsPreparedFile = { bytes: Buffer; mime: string; ext: string; width: number | null; height: number | null; thumb?: Buffer | null };
 
 function cleanFilename(name: string): string {
   const base = path.basename(name.replace(/\\/g, "/"));
   const clean = base.replace(/[\u0000-\u001f\u007f"<>|:*?/\\]/g, "").trim().slice(0, 120);
   return clean || "fisier";
+}
+
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "jpe", "jfif", "png", "gif", "webp"]);
+
+/** Numele afișat al unei imagini recodate în alt format (ex. `poza.jpg` → `poza.webp`); celelalte fișiere rămân. */
+function withExtension(filename: string, ext: string): string {
+  const m = /^(.+)\.([A-Za-z0-9]{1,8})$/.exec(filename);
+  if (!m) return filename;
+  const current = m[2]!.toLowerCase();
+  if (!IMAGE_EXTS.has(current) || current === ext || (current === "jpeg" && ext === "jpg")) return filename;
+  return `${m[1]}.${ext}`;
 }
 
 function isUtf8Text(bytes: Buffer): boolean {
@@ -102,8 +104,14 @@ export class GcsAttachmentService {
       store: GcsFileStore;
       permissions: GcsPermissionService;
       rateLimiter: GcsRateLimiter;
+      /** Setările încărcărilor (extensiile permise, imaginile), citite la fiecare upload; lipsă = valorile implicite. */
+      policy?: () => Promise<GcsUploadPolicy>;
     },
   ) {}
+
+  private async policy(): Promise<GcsUploadPolicy> {
+    return this.deps.policy ? this.deps.policy().catch(() => GCS_DEFAULT_UPLOAD_POLICY) : GCS_DEFAULT_UPLOAD_POLICY;
+  }
 
   /** Un modul își înregistrează verificarea pentru `contentType` (ex. `forums.post`). */
   registerAccess(contentType: string, check: GcsAttachmentAccess): void {
@@ -124,18 +132,21 @@ export class GcsAttachmentService {
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
 
     const filename = cleanFilename(file.name);
-    return this.save(actor.userId, filename, await this.prepare(file.bytes, filename));
+    const prepared = await this.prepare(file.bytes, filename, await this.policy());
+    return this.save(actor.userId, withExtension(filename, prepared.ext), prepared);
   }
 
   /**
    * Un fișier adus de importul din altă platformă: aceeași verificare ca un upload nou (tipul real din magic bytes,
-   * recodarea imaginilor), fără permisiunile și limitele de grup ale unui membru (dreptul îl verifică ACP-ul care
-   * pornește importul). Rămâne nelegat până când importul îl leagă de postare sau de mesaj.
+   * extensiile permise, recodarea imaginilor după setări), fără permisiunile și limitele de grup ale unui membru (dreptul
+   * îl verifică ACP-ul care pornește importul). Rămâne nelegat până când importul îl leagă de postare sau de mesaj.
+   * `original`: imaginea păstrează formatul (ex. emoticoanele Chat Pro, cu limitele lor), fără lista de extensii.
    */
-  async importFile(ownerId: string | null, file: GcsUploadedFile, opts: { maxBytes: number }): Promise<GcsAttachmentInfo> {
+  async importFile(ownerId: string | null, file: GcsUploadedFile, opts: { maxBytes: number; original?: boolean }): Promise<GcsAttachmentInfo> {
     if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" });
     const filename = cleanFilename(file.name);
-    return this.save(ownerId, filename, await this.prepare(file.bytes, filename));
+    const prepared = await this.prepare(file.bytes, filename, opts.original ? null : await this.policy());
+    return this.save(ownerId, withExtension(filename, prepared.ext), prepared);
   }
 
   private async save(ownerId: string | null, filename: string, prepared: GcsPreparedFile): Promise<GcsAttachmentInfo> {
@@ -144,6 +155,7 @@ export class GcsAttachmentService {
     const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${prepared.ext}`;
 
     await store.put(key, prepared.bytes, prepared.mime);
+    if (prepared.thumb) await store.put(thumbnailKey(key), prepared.thumb, "image/webp");
     const row = await db.attachment.create({
       data: {
         ownerId,
@@ -167,35 +179,43 @@ export class GcsAttachmentService {
     };
   }
 
-  /** Tipul real și, pentru imagini, recodarea. */
-  private async prepare(bytes: Buffer, filename: string): Promise<GcsPreparedFile> {
+  /**
+   * Tipul real (magic bytes) și extensia (`uploadTypeError`), apoi, pentru imagini, recodarea cu setările încărcărilor:
+   * latura maximă, calitatea, WebP, metadatele și miniatura. Fără setări (`null`): formatul original, max 4096 px,
+   * fără EXIF și fără lista de extensii (doar tipurile cunoscute, fără cele periculoase).
+   */
+  private async prepare(bytes: Buffer, filename: string, policy: GcsUploadPolicy | null): Promise<GcsPreparedFile> {
     const detected = await fileTypeFromBuffer(bytes);
+    const sniffed = detected ? { mime: detected.mime, ext: detected.ext } : null;
+    // UTF-8 se verifică doar pentru extensiile de text (un binar mare fără magic bytes nu se decodează degeaba).
+    const text = !detected && GCS_TEXT_EXTENSIONS.includes(fileExtension(filename)) && isUtf8Text(bytes);
+    const error = uploadTypeError(filename, sniffed, policy ? policy.allowedExtensions : GCS_KNOWN_EXTENSIONS, text);
+    if (error) throw new GcsValidationError({ file: error });
 
     if (detected && detected.mime in IMAGE_FORMATS) {
-      const mime = detected.mime as ImageMime;
-      const format = IMAGE_FORMATS[mime];
-      const animated = format === "gif" || format === "webp";
-      let img = sharp(bytes, { animated, limitInputPixels: 100_000_000 });
-      if (!animated) img = img.rotate();
-      img = img.resize({ width: MAX_IMAGE_SIDE, height: MAX_IMAGE_SIDE, fit: "inside", withoutEnlargement: true });
-      let out: Buffer;
-      try {
-        out = await (format === "jpeg" ? img.jpeg({ quality: 85, mozjpeg: true }) : format === "png" ? img.png() : format === "webp" ? img.webp({ quality: 85 }) : img.gif()).toBuffer();
-      } catch {
-        // Antet valid, conținut stricat (sau prea mare): e o eroare a fișierului, nu a serverului.
-        throw new GcsValidationError({ file: "invalid_image" });
-      }
-      const meta = await sharp(out).metadata();
-      return { bytes: out, mime, ext: detected.ext, width: meta.width ?? null, height: meta.pageHeight ?? meta.height ?? null };
+      const source = IMAGE_FORMATS[detected.mime as ImageMime];
+      const image = policy?.image;
+      const format: GcsImageFormat = image?.webp ? "webp" : source;
+      const side = image?.maxSide ?? ORIGINAL_IMAGE.maxSide;
+      const out = await processImage(bytes, {
+        width: side,
+        height: side,
+        fit: "inside",
+        format,
+        quality: image?.quality ?? ORIGINAL_IMAGE.quality,
+        animated: source === "gif" || source === "webp",
+        stripMetadata: image?.stripMetadata ?? true,
+      });
+      // Miniatura doar pentru imaginile mai mari decât ea (altfel imaginea însăși e destul de mică).
+      const thumbSide = image?.thumbnailSide ?? 0;
+      const big = thumbSide > 0 && Math.max(out.width ?? 0, out.height ?? 0) > thumbSide;
+      const thumb = big ? (await thumbnailOf(out.bytes, thumbSide).catch(() => null))?.bytes ?? null : null;
+      return { bytes: out.bytes, mime: `image/${format}`, ext: FORMAT_EXT[format], width: out.width, height: out.height, thumb };
     }
-    if (detected && BINARY_MIMES.has(detected.mime)) {
+    if (detected && GCS_BINARY_TYPES[detected.mime]) {
       return { bytes, mime: detected.mime, ext: detected.ext, width: null, height: null };
     }
-    const ext = path.extname(filename).slice(1).toLowerCase();
-    if (!detected && TEXT_EXTENSIONS.has(ext) && isUtf8Text(bytes)) {
-      return { bytes, mime: "text/plain", ext, width: null, height: null };
-    }
-    throw new GcsValidationError({ file: "unsupported_type" });
+    return { bytes, mime: "text/plain", ext: path.extname(filename).slice(1).toLowerCase(), width: null, height: null };
   }
 
   /**
@@ -224,19 +244,16 @@ export class GcsAttachmentService {
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
     const animatedSource = detected.mime === "image/gif" || detected.mime === "image/webp";
     const animated = opts.animated && animatedSource;
-    let out: Buffer;
-    try {
-      let img = sharp(file.bytes, { animated, limitInputPixels: 100_000_000 });
-      if (!animated) img = img.rotate();
-      img =
-        opts.kind === "avatar"
-          ? img.resize({ width: 512, height: 512, fit: "cover", position: "attention" })
-          : img.resize({ width: 1920, height: 1080, fit: "inside", withoutEnlargement: true });
-      out = await img.webp({ quality: 85 }).toBuffer();
-    } catch {
-      throw new GcsValidationError({ file: "invalid_image" });
-    }
-    const meta = await sharp(out).metadata();
+    // Mărimile proprii (avatar 512×512 decupat, cover max 1920×1080); calitatea și metadatele din setările încărcărilor.
+    const image = (await this.policy()).image;
+    const processed = await processImage(file.bytes, {
+      ...(opts.kind === "avatar" ? { width: 512, height: 512, fit: "cover" as const } : { width: 1920, height: 1080, fit: "inside" as const }),
+      format: "webp",
+      quality: image.quality,
+      animated,
+      stripMetadata: image.stripMetadata,
+    });
+    const out = processed.bytes;
     const contentType = `user.${opts.kind}`;
     const now = new Date();
     const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.webp`;
@@ -249,8 +266,8 @@ export class GcsAttachmentService {
         filename: `${opts.kind}.webp`,
         mime: "image/webp",
         size: out.length,
-        width: meta.width ?? null,
-        height: meta.pageHeight ?? meta.height ?? null,
+        width: processed.width,
+        height: processed.height,
         contentType,
         contentId: actor.userId,
       },
@@ -283,23 +300,13 @@ export class GcsAttachmentService {
     if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
-    let out: Buffer;
-    try {
-      const img = sharp(file.bytes, { limitInputPixels: 100_000_000 }).rotate();
-      out = await img
-        .resize(opts.fit === "cover" ? { width: opts.width, height: opts.height, fit: "cover", position: "attention" } : { width: opts.width, height: opts.height, fit: "inside", withoutEnlargement: true })
-        .webp({ quality: 88 })
-        .toBuffer();
-    } catch {
-      throw new GcsValidationError({ file: "invalid_image" });
-    }
-    const meta = await sharp(out).metadata();
+    const out = await processImage(file.bytes, { width: opts.width, height: opts.height, fit: opts.fit, format: "webp", quality: 88 });
     return this.save(ownerId, `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`, {
-      bytes: out,
+      bytes: out.bytes,
       mime: "image/webp",
       ext: "webp",
-      width: meta.width ?? null,
-      height: meta.height ?? null,
+      width: out.width,
+      height: out.height,
     });
   }
 
@@ -314,29 +321,19 @@ export class GcsAttachmentService {
     if (file.bytes.length > opts.maxBytes) throw new GcsValidationError({ file: "too_large" }, { maxKb: String(Math.floor(opts.maxBytes / 1024)) });
     if (!/^[a-z][a-z0-9_.:-]{0,80}$/.test(opts.target)) throw new GcsValidationError({ target: "invalid" });
     const detected = await fileTypeFromBuffer(file.bytes);
-    let out: Buffer;
-    try {
-      if (detected && detected.mime in IMAGE_FORMATS) {
-        const animated = opts.animated && (detected.mime === "image/gif" || detected.mime === "image/webp");
-        let img = sharp(file.bytes, { animated, limitInputPixels: 100_000_000 });
-        if (!animated) img = img.rotate();
-        out = await img.resize({ width: opts.maxSide, height: opts.maxSide, fit: "inside", withoutEnlargement: true }).webp({ quality: 88 }).toBuffer();
-      } else if (!detected && file.bytes.length <= SVG_MAX_BYTES && looksLikeSvg(file.bytes)) {
-        const clean = sanitizeSvg(file.bytes.toString("utf8"));
-        if (!clean) throw new GcsValidationError({ file: "invalid_svg" });
-        // Desenul vectorial se rasterizează la latura maximă (iconițele rămân clare pe ecranele dense).
-        out = await sharp(Buffer.from(clean), { density: 300, limitInputPixels: 100_000_000 })
-          .resize({ width: opts.maxSide, height: opts.maxSide, fit: "inside" })
-          .webp({ quality: 90 })
-          .toBuffer();
-      } else {
-        throw new GcsValidationError({ file: "unsupported_type" });
-      }
-    } catch (error) {
-      if (error instanceof GcsValidationError) throw error;
-      throw new GcsValidationError({ file: "invalid_image" });
+    let processed;
+    if (detected && detected.mime in IMAGE_FORMATS) {
+      const animated = opts.animated && (detected.mime === "image/gif" || detected.mime === "image/webp");
+      processed = await processImage(file.bytes, { width: opts.maxSide, height: opts.maxSide, fit: "inside", format: "webp", quality: 88, animated });
+    } else if (!detected && file.bytes.length <= SVG_MAX_BYTES && looksLikeSvg(file.bytes)) {
+      const clean = sanitizeSvg(file.bytes.toString("utf8"));
+      if (!clean) throw new GcsValidationError({ file: "invalid_svg" });
+      // Desenul vectorial se rasterizează la latura maximă (iconițele rămân clare pe ecranele dense).
+      processed = await processImage(Buffer.from(clean), { width: opts.maxSide, height: opts.maxSide, fit: "inside", enlarge: true, density: 300, format: "webp", quality: 90 });
+    } else {
+      throw new GcsValidationError({ file: "unsupported_type" });
     }
-    const meta = await sharp(out).metadata();
+    const out = processed.bytes;
     const now = new Date();
     const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.webp`;
     await store.put(key, out, "image/webp");
@@ -347,8 +344,8 @@ export class GcsAttachmentService {
         filename: `${cleanFilename(file.name).replace(/\.[a-z0-9]+$/i, "") || "imagine"}.webp`,
         mime: "image/webp",
         size: out.length,
-        width: meta.width ?? null,
-        height: meta.pageHeight ?? meta.height ?? null,
+        width: processed.width,
+        height: processed.height,
         contentType: DECOR_CONTENT_TYPE,
         contentId: opts.target,
       },
@@ -370,18 +367,15 @@ export class GcsAttachmentService {
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
     const favicon = opts.kind === "favicon";
-    let out: Buffer;
-    try {
-      const img = sharp(file.bytes, { limitInputPixels: 100_000_000 }).rotate();
-      out = favicon
-        ? await img.resize({ width: 64, height: 64, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+    const processed = await processImage(
+      file.bytes,
+      favicon
+        ? { width: 64, height: 64, fit: "contain", format: "png", quality: 100 }
         : opts.kind === "header"
-          ? await img.resize({ width: 2560, height: 800, fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toBuffer()
-          : await img.resize({ width: 800, height: 240, fit: "inside", withoutEnlargement: true }).webp({ quality: 90 }).toBuffer();
-    } catch {
-      throw new GcsValidationError({ file: "invalid_image" });
-    }
-    const meta = await sharp(out).metadata();
+          ? { width: 2560, height: 800, fit: "inside", format: "webp", quality: 82 }
+          : { width: 800, height: 240, fit: "inside", format: "webp", quality: 90 },
+    );
+    const out = processed.bytes;
     const [mime, ext] = favicon ? (["image/png", "png"] as const) : (["image/webp", "webp"] as const);
     const now = new Date();
     const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${ext}`;
@@ -393,8 +387,8 @@ export class GcsAttachmentService {
         filename: `${opts.kind}.${ext}`,
         mime,
         size: out.length,
-        width: meta.width ?? null,
-        height: meta.height ?? null,
+        width: processed.width,
+        height: processed.height,
         contentType: `theme.${opts.kind}`,
         contentId: opts.themeKey,
       },
@@ -447,7 +441,11 @@ export class GcsAttachmentService {
 
   private async deleteRows(rows: { id: string; storageKey: string }[]): Promise<void> {
     if (rows.length === 0) return;
-    for (const row of rows) await this.deps.store.delete(row.storageKey).catch(() => {});
+    for (const row of rows) {
+      await this.deps.store.delete(row.storageKey).catch(() => {});
+      // Miniatura imaginii, dacă are una (lipsa ei nu e o eroare).
+      await this.deps.store.delete(thumbnailKey(row.storageKey)).catch(() => {});
+    }
     await this.deps.db.attachment.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
   }
 
@@ -465,8 +463,11 @@ export class GcsAttachmentService {
     await tx.attachment.updateMany({ where: { id: { in: unique } }, data: { contentType: ref.contentType, contentId: ref.contentId } });
   }
 
-  /** Deschide un atașament pentru descărcare. Orice lipsă de acces arată ca „nu există” (nu dezvăluim fișierul). */
-  async open(actor: GcsActor, id: string): Promise<GcsOpenedAttachment> {
+  /**
+   * Deschide un atașament pentru descărcare. Orice lipsă de acces arată ca „nu există” (nu dezvăluim fișierul). Cu
+   * `thumb`, miniatura imaginii (WebP), dacă are una; altfel fișierul întreg.
+   */
+  async open(actor: GcsActor, id: string, opts: { thumb?: boolean } = {}): Promise<GcsOpenedAttachment> {
     const row = await this.deps.db.attachment.findUnique({ where: { id } });
     if (!row) throw new GcsNotFound();
     const allowed = row.contentType === null || row.contentId === null
@@ -474,9 +475,27 @@ export class GcsAttachmentService {
       : ((await this.access.get(row.contentType)?.(actor, row.contentId)) ?? false);
     if (!allowed) throw new GcsNotFound();
 
+    const image = row.mime in IMAGE_FORMATS;
+    if (opts.thumb && image) {
+      const thumb = await this.deps.store.get(thumbnailKey(row.storageKey)).catch(() => null);
+      if (thumb) return { body: thumb.body, size: thumb.size, mime: "image/webp", filename: row.filename.replace(/\.[a-z0-9]+$/i, "") + ".webp", inline: true };
+    }
     const file = await this.deps.store.get(row.storageKey);
     if (!file) throw new GcsNotFound();
-    return { body: file.body, size: file.size, mime: row.mime, filename: row.filename, inline: row.mime in IMAGE_FORMATS };
+    return { body: file.body, size: file.size, mime: row.mime, filename: row.filename, inline: image };
+  }
+
+  /**
+   * Fișierele încărcate și nelegate de niciun conținut, mai vechi decât `before` (curățenia fișierelor orfane), cel mult
+   * `limit`, cele mai vechi primele; `after` = id-ul de după care continuă lotul următor.
+   */
+  async unattachedBefore(before: Date, limit: number, after: string | null = null): Promise<{ id: string; storageKey: string; size: number }[]> {
+    return this.deps.db.attachment.findMany({
+      where: { contentType: null, createdAt: { lt: before }, ...(after ? { id: { gt: after } } : {}) },
+      orderBy: { id: "asc" },
+      take: limit,
+      select: { id: true, storageKey: true, size: true },
+    });
   }
 
   /** Șterge din store fișierele unui conținut șters (după commit-ul tranzacției). */

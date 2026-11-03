@@ -31,7 +31,7 @@ test("o instalare nouă: antetul de pe preview, contoarele la hover, fără deru
     const row = page.locator(".gcs-forumRow").first();
     await expect(row.locator(".gcs-forumRow__stats")).toBeHidden();
     await row.hover();
-    await expect(row.locator(".gcs-forumRow__bubble")).toBeVisible();
+    await expect(page.locator(".gcs-forumRow__bubble")).toBeVisible();
     await page.waitForTimeout(400);
     if (SHOTS) await page.locator(".gcs-category").first().screenshot({ path: path.join(SHOTS, `new-forum-${skin}-hover.png`) });
     await page.mouse.move(0, 0);
@@ -40,8 +40,14 @@ test("o instalare nouă: antetul de pe preview, contoarele la hover, fără deru
     await page.waitForTimeout(500);
     await page.mouse.wheel(0, -200);
     await shot(page, `forum-${skin}-scrolled`);
+    // Logo-ul din crestătura antetului duce la prima pagină (nimic nu-l acoperă).
+    await page.goto("/activity");
+    await page.locator("a.gcs-hb__logo").filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(/\/$/);
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
+    await page.goto("/activity");
+    await page.locator("a.gcs-hb__logo").filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(/\/$/);
     // Pe telefon, antetul (meniul, logo-ul, „Înregistrare / Autentificare”) încape fără derulare orizontală.
     await shot(page, `forum-${skin}-375`);
     const wide = await page.evaluate(() => {

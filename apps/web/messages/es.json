@@ -490,7 +490,15 @@
       "invalid_svg": "El SVG no es válido o no se puede limpiar.",
       "password_needs_mix": "La contraseña debe contener letras y números.",
       "password_too_long": "La contraseña puede tener como máximo 128 caracteres.",
-      "password_policy_length": "La contraseña es demasiado corta para la regla del sitio (mira debajo del campo)."
+      "password_policy_length": "La contraseña es demasiado corta para la regla del sitio (mira debajo del campo).",
+      "extension_not_allowed": "Esta extensión de archivo no está permitida en este sitio.",
+      "dangerous_type": "Este tipo de archivo no se puede subir (programas, scripts, páginas web).",
+      "type_mismatch": "La extensión no coincide con el tipo real del archivo.",
+      "dangerous_extension": "La lista contiene una extensión peligrosa (programas, scripts, páginas web, SVG).",
+      "unknown_extension": "La lista contiene una extensión que la plataforma no acepta.",
+      "invalid_domain": "Solo dominios (p. ej., ejemplo.es), uno por línea.",
+      "page_placeholder": "El formato debe contener '{page}' una sola vez, sin corchetes angulares.",
+      "invalid_token": "Código no válido: solo el valor de content=\"…\" o toda la etiqueta meta."
     }
   },
   "acp": {
@@ -583,6 +591,7 @@
         "update": "Actualización",
         "cron": "Cron",
         "bot": "Bot de la comunidad",
+        "settings_uploads": "Subidas e imágenes",
         "license": "Licencia"
       },
       "members": {
@@ -1441,7 +1450,9 @@
         "donations": "Donaciones",
         "warnings": "Advertencias",
         "2fa": "Seguridad",
-        "terms": "Términos y privacidad"
+        "terms": "Términos y privacidad",
+        "uploads": "Subidas e imágenes",
+        "seo": "SEO"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -4893,6 +4904,70 @@
         "edit": "Cambiar"
       }
     },
+    "seo": {
+      "title": "SEO",
+      "intro": "Cómo aparece la comunidad en los buscadores y al compartirse: títulos, robots.txt, sitemap, IndexNow, verificación del sitio y enlaces externos.",
+      "save": "Guardar",
+      "meta": {
+        "title": "Título y metadatos",
+        "hint": "El título de la barra del navegador, la descripción predeterminada y la imagen que se muestra al compartir una página.",
+        "image": "Imagen para compartir",
+        "imageHint": "PNG, JPEG, WebP o GIF, máx. 5 MB; recomendado 1200 × 630 px. Se convierte a WebP.",
+        "upload": "Subir",
+        "replace": "Reemplazar",
+        "uploading": "Subiendo…",
+        "remove": "Quitar"
+      },
+      "robots": {
+        "title": "robots.txt",
+        "hint": "Qué páginas pueden leer los robots de los buscadores.",
+        "preview": "Lo que reciben ahora los robots:"
+      },
+      "sitemap": {
+        "title": "Sitemap",
+        "hint": "La lista de páginas públicas para los buscadores: solo lo que ve un visitante, con la fecha de la última modificación.",
+        "status": "Archivos en el índice: {files}.",
+        "off": "El sitemap está desactivado (/sitemap.xml responde 404)."
+      },
+      "indexNow": {
+        "title": "IndexNow",
+        "hint": "Avisa enseguida a los buscadores (Bing, Yandex y los demás que usan el protocolo) del contenido nuevo. La clave se genera automáticamente.",
+        "key": "Clave",
+        "noKey": "se genera al activarlo",
+        "keyFile": "archivo de la clave",
+        "lastRun": "Último lote: {at}",
+        "lastSent": "enviadas: {count}, a las {at}",
+        "lastError": "error: {error}",
+        "retryAt": "próximo intento: {at}",
+        "never": "nunca",
+        "regenerate": "Nueva clave",
+        "regenerateConfirm": "La clave actual dejará de servirse; los buscadores recibirán la nueva con el próximo lote."
+      },
+      "verification": {
+        "title": "Verificación del sitio",
+        "hint": "Los códigos de las consolas de los buscadores; se añaden como etiquetas meta en la cabecera de todas las páginas."
+      },
+      "links": {
+        "title": "Enlaces externos",
+        "hint": "Se aplica al mostrar, también al contenido ya escrito: mensajes, firmas, perfiles, mensajes privados y chat."
+      }
+    },
+    "uploads": {
+      "storageTitle": "Almacenamiento de archivos",
+      "driver": "Controlador",
+      "drivers": {
+        "local": "Disco local",
+        "s3": "S3 / MinIO",
+        "unknown": "Desconocido"
+      },
+      "driverHint": "Se elige en el entorno del servidor (S3_ENDPOINT para S3 / MinIO, si no la carpeta de subidas), no en el ACP.",
+      "limitsTitle": "Tamaño máximo por grupo",
+      "limitsHint": "El ajuste de grupo «upload.max_mb», que se cambia en cada grupo (ACP → Grupos).",
+      "unlimited": "ilimitado",
+      "mb": "{mb} MB",
+      "none": "no puede subir",
+      "unattached": "Archivos subidos y aún no adjuntados a ningún contenido: {count}."
+    },
     "license": {
       "title": "Licencia",
       "description": "La licencia de GamingCommunitySuite de este sitio: qué incluye, la verificación en línea y el cambio de clave.",
@@ -4978,7 +5053,12 @@
       "all_devices": "Todos los dispositivos",
       "poll": "Solo polling (proveedores que cortan conexiones largas)",
       "backup_codes": "Solo códigos de respaldo",
-      "email_code": "Códigos de respaldo o un código por correo"
+      "email_code": "Códigos de respaldo o un código por correo",
+      "default": "Predeterminado (generado por la plataforma)",
+      "custom": "Personalizado",
+      "allow": "Mostradas",
+      "https_only": "Solo HTTPS",
+      "block": "Bloqueadas (mostradas como enlace)"
     },
     "forums": {
       "posts_per_page": "Puestos por página",
@@ -5614,6 +5694,60 @@
       "plugin_log_days_hint": "Errores y mensajes de los plugins.",
       "sessions_days": "Sesiones caducadas (días)",
       "sessions_days_hint": "Sesiones y códigos de verificación caducados desde hace tantos días."
+    },
+    "seo": {
+      "robots_mode": "robots.txt",
+      "robots_mode_hint": "Predeterminado: todo el sitio está abierto salvo el ACP, la API, el instalador, el inicio de sesión, la búsqueda y las páginas privadas de los miembros.",
+      "robots_custom": "Texto personalizado",
+      "robots_custom_hint": "Solo con «Personalizado» (como máximo 10 000 caracteres). La línea Sitemap se añade automáticamente si falta.",
+      "sitemap_enabled": "Sitemap activado",
+      "sitemap_pages": "Página principal y páginas públicas",
+      "sitemap_forums": "Foros",
+      "sitemap_topics": "Temas",
+      "sitemap_members": "Perfiles de miembros",
+      "sitemap_clans": "Clanes",
+      "sitemap_servers": "Servidores de juego",
+      "sitemap_max_urls": "URL por tipo de contenido (máximo)",
+      "sitemap_max_urls_hint": "El índice se divide en archivos de 10 000 URL como máximo (el límite del protocolo es 50 000).",
+      "indexnow_enabled": "IndexNow activado",
+      "indexnow_enabled_hint": "Los temas públicos nuevos y los que tienen respuestas nuevas se anuncian a los buscadores, por lotes, cada 10 minutos.",
+      "indexnow_key": "Clave de IndexNow",
+      "title_format": "Formato del título",
+      "title_format_hint": "'{page}' = título de la página (obligatorio), '{site}' = nombre del sitio. Ej.: '{page} · {site}'",
+      "description": "Descripción del sitio",
+      "description_hint": "Se usa como meta descripción en las páginas sin descripción propia (máx. 300 caracteres). Vacía = un texto genérico con el nombre del sitio.",
+      "share_image": "Imagen para compartir (URL)",
+      "share_image_hint": "Una dirección https:// o una imagen subida abajo; aparece cuando se comparte una página sin imagen (OpenGraph, X).",
+      "x_handle": "Cuenta de X (Twitter)",
+      "x_handle_hint": "Ej.: @mi_comunidad — aparece en las tarjetas de X de las páginas.",
+      "google_verification": "Google Search Console",
+      "google_verification_hint": "Solo el código de content=\"…\" o toda la etiqueta meta copiada de la consola.",
+      "bing_verification": "Bing Webmaster Tools",
+      "yandex_verification": "Yandex Webmaster",
+      "nofollow_external": "rel=\"nofollow\" en enlaces externos",
+      "nofollow_external_hint": "Los enlaces del contenido de los miembros hacia otros sitios reciben rel=\"nofollow ugc noopener\". Los internos no.",
+      "nofollow_exclude": "Dominios sin nofollow",
+      "nofollow_exclude_hint": "Un dominio por línea (p. ej., los sitios de los servidores de la comunidad). Incluye los subdominios.",
+      "index_profiles": "Indexar los perfiles de miembros",
+      "index_profiles_hint": "Desactivado: los perfiles reciben noindex y no aparecen en el sitemap."
+    },
+    "uploads": {
+      "allowed_extensions": "Extensiones permitidas en adjuntos",
+      "allowed_extensions_hint": "Separadas por comas. Se comprueban la extensión y el tipo real del archivo; los programas, scripts, páginas web y SVG se rechazan siempre.",
+      "image_max_side": "Lado máximo de las imágenes (px)",
+      "image_max_side_hint": "Las imágenes más grandes se reducen al subirlas (320–10 000).",
+      "image_quality": "Calidad de las imágenes (%)",
+      "image_quality_hint": "Para JPEG y WebP (30–100). También se aplica a avatares y portadas.",
+      "convert_webp": "Convertir las imágenes a WebP",
+      "convert_webp_hint": "Archivos más pequeños con la misma calidad; los GIF animados siguen animados.",
+      "strip_metadata": "Eliminar metadatos (EXIF, GPS)",
+      "strip_metadata_hint": "Recomendado: las fotos del móvil contienen la ubicación y el modelo de la cámara.",
+      "thumbnail_side": "Lado de las miniaturas (px)",
+      "thumbnail_side_hint": "0 = sin miniaturas; si no, 64–1200. Solo para imágenes más grandes.",
+      "remote_images": "Imágenes de otros sitios",
+      "remote_images_hint": "En mensajes, firmas, perfiles y mensajes privados. Bloqueadas = mostradas como enlace a la imagen.",
+      "orphan_days": "Eliminar archivos sin usar después de (días)",
+      "orphan_days_hint": "Archivos subidos y nunca adjuntados a un mensaje, a diario, por lotes. 0 = desactivado. Recomendado: al menos 7."
     }
   },
   "permissions": {
@@ -7023,6 +7157,7 @@
       "profile": "Ver perfil",
       "history": "Su historial en el chat",
       "card": "Ficha de moderación",
+      "quickTitle": "Moderación del chat",
       "warn": "Advertencia",
       "mute": "Silenciar",
       "kick": "Expulsar del chat",

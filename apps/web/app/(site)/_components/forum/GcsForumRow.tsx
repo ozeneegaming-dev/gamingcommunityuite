@@ -45,12 +45,15 @@ export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent
       <div className="gcs-forumRow__main">
         <span className="gcs-forumRow__title">
           {external ? (
-            <a href={href} rel="noopener nofollow" target="_blank">
+            <a href={href} rel="noopener nofollow" target="_blank" className="gcs-forumRow__link">
               {forum.name}
               <span className="gcs-srOnly"> ({t("external")})</span>
             </a>
           ) : (
-            <Link href={href}>{forum.name}</Link>
+            // Linkul titlului se întinde peste tot rândul (`.gcs-forumRow__link::after`): click oriunde → forumul.
+            <Link href={href} className="gcs-forumRow__link">
+              {forum.name}
+            </Link>
           )}
           {forum.unread && <span className="gcs-dot gcs-dot--unread" role="img" aria-label={t("unread")} data-testid="gcs-unread-dot" />}
           {titleSlot}
@@ -88,11 +91,10 @@ export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent
       {counts && (
         // Butonul pătrat și bula statisticilor (carduri separate; „Statistici forum: La hover”).
         <span className="gcs-forumRow__statsTool">
-          <GcsForumStatsButton label={t("statsOf", { name: forum.name })} bubbleId={`gcs-forum-stats-${forum.id}`} />
-          <span className="gcs-forumRow__bubble" id={`gcs-forum-stats-${forum.id}`} role="note" data-testid="gcs-forum-bubble">
+          <GcsForumStatsButton label={t("statsOf", { name: forum.name })} bubbleId={`gcs-forum-stats-${forum.id}`}>
             <span>{t.rich("statsTopics", { count: forum.topicsCount, b: (c) => <b>{c}</b> })}</span>
             <span>{t.rich("statsPosts", { count: forum.postsCount, b: (c) => <b>{c}</b> })}</span>
-          </span>
+          </GcsForumStatsButton>
         </span>
       )}
       {counts && (

@@ -6,6 +6,8 @@ import { testDbUrl } from "@gcs/db/test/helpers";
 import { afterAll, beforeAll, describe, expect, inject, test } from "vitest";
 import { HEARTBEAT_JOB } from "./jobs";
 import { RETENTION_JOB } from "./security/retention";
+import { INDEXNOW_JOB } from "./seo/indexnow";
+import { ORPHANS_JOB } from "./uploads/orphans";
 import { ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB } from "./profile/achievements";
 import { VIP_SWEEP_JOB } from "./vip/vip";
 import { closeGcsServices, createGcsServices, PRESENCE_RECORD_SETTING, type GcsServices } from "./services";
@@ -30,7 +32,7 @@ afterAll(async () => {
 describe("createGcsServices", () => {
   test("înregistrează modulele aplicației și joburile", () => {
     expect(services.registry.all().map((m) => m.key)).toEqual(expect.arrayContaining(["core", "forums"]));
-    expect(services.jobs.registered().map((j) => j.name)).toEqual(expect.arrayContaining([HEARTBEAT_JOB, ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB, VIP_SWEEP_JOB, RETENTION_JOB]));
+    expect(services.jobs.registered().map((j) => j.name)).toEqual(expect.arrayContaining([HEARTBEAT_JOB, ACHIEVEMENTS_JOB, MEMBERS_DAILY_JOB, VIP_SWEEP_JOB, RETENTION_JOB, INDEXNOW_JOB, ORPHANS_JOB]));
   });
 
   test("jobul de heartbeat marchează worker-ul ca pornit", async () => {

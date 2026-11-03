@@ -11,7 +11,7 @@ import { currentActor } from "@/lib/actor";
 import { forumQuery, moveTargets, pageParam } from "@/lib/forum-page";
 import { forumHref, memberHref, newTopicHref, tagHref, tint, topicHref } from "@/lib/forum-urls";
 import { services } from "@/lib/services";
-import { excerpt, firstImage, guestActor } from "@/lib/seo";
+import { excerpt, firstImage, guestActor, pageMetadata, userContentHtml } from "@/lib/seo";
 import { GcsGuestCta } from "../../_components/GcsGuestCta";
 import { registerTopicView } from "@/lib/topic-views";
 import { GcsBreadcrumb } from "../../_components/forum/GcsBreadcrumb";
@@ -54,13 +54,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const image = firstImage(html);
   const description = excerpt(html);
   const publicRead = !closed && (await permissions.can(await guestActor(), "forums.read", { type: "forum", id: String(topic.forumId) }));
-  return {
-    title: topic.title,
-    description,
-    alternates: { canonical: topicHref(topic, page) },
-    openGraph: { title: topic.title, description, type: "article", url: topicHref(topic, page), ...(image ? { images: [image] } : {}) },
-    ...(publicRead ? {} : { robots: { index: false } }),
-  };
+  return pageMetadata({ title: topic.title, description, path: topicHref(topic, page), image, type: "article", noindex: !publicRead });
 }
 
 const has = (powers: string[], power: string) => powers.includes("*") || powers.includes(power);
@@ -109,7 +103,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
   }
   // Mențiunile din conținutul salvat: stilul numelui de acum (grupul afișat, efectul VIP pe litere).
   const all = data.recommended ? [...data.posts, data.recommended] : data.posts;
-  const postHtml = await namesHtml(all.map((p) => p.html));
+  // Linkurile și imaginile externe după ACP → SEO / Încărcări și imagini, apoi numele membrilor.
+  const postHtml = await namesHtml(await userContentHtml(all.map((p) => p.html)));
   all.forEach((p, i) => (p.html = postHtml[i]!));
 
   const visibleIds = data.posts.filter((p) => p.visibility === "VISIBLE").map((p) => p.id);

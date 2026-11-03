@@ -179,9 +179,9 @@ html.gcs-nova .gcs-dropdown__item--active {
   color: var(--rl-cyan);
 }
 html.gcs-nova .gcs-tooltip {
-  background: #0d0a1c;
-  border-color: color-mix(in srgb, var(--rl-purple) 50%, #1e1a33);
-  color: #eeeaff;
+  --gcs-tooltip-bg: color-mix(in srgb, var(--rl-purple) 14%, #34304a);
+  --gcs-tooltip-border: color-mix(in srgb, var(--rl-purple) 55%, #3e3958);
+  --gcs-tooltip-text: #f6f4ff;
   box-shadow: 0 8px 22px rgb(0 0 0 / 0.45), 0 0 14px -6px var(--rl-glow-purple);
 }
 html.gcs-nova .gcs-modal {

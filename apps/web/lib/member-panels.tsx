@@ -55,7 +55,7 @@ async function panelContent({ panel, userId, surface, viewer }: { panel: GcsMemb
     const host = await pluginHost();
     const html = await host.renderMemberPanel(panel.plugin, panel.key.slice(panel.plugin.length + 1), { userId, surface }, { actor: viewer, locale: await getLocale() });
     // HTML-ul sanitizat al pluginului, cu numele membrilor aduse la stilul comun.
-    return html ? <GcsNamedHtml html={html} className="gcs-pluginHook gcs-memberPanel__plugin" /> : empty;
+    return html ? <GcsNamedHtml html={html} className="gcs-pluginHook gcs-memberPanel__plugin" userContent={false} /> : empty;
   }
   const date = (d: Date) => format.dateTime(d, { dateStyle: "medium" });
   switch (panel.key) {

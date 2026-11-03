@@ -543,27 +543,39 @@
   margin-left: auto;
 }
 
-/* Acțiunile rapide din cardul membrului (deschis din chat): pe un rând al lor, sub „Urmărește” / „Mesaj”. */
-.gcs-hoverCard__actions:has(.gcs-hoverCard__chatMod) {
-  flex-wrap: wrap;
-}
-.gcs-hoverCard__actions > .gcs-hoverCard__chatMod {
-  flex: 1 0 100%;
+/*
+ * Acțiunile rapide din cardul membrului (deschis din chat): un rând al lor, sub acțiunile membrului — eticheta
+ * „Moderare chat” (se strânge cu „…”) și butoanele-iconiță cu tooltip (Mute / Kick / Avertisment), care nu se strâng.
+ */
+.gcs-hoverCard__chatMod {
   display: flex;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
   padding-top: 8px;
   border-top: 1px solid var(--gcs-border);
 }
-.gcs-hoverCard__chatMod .gcs-btn {
+.gcs-hoverCard__staffLabel {
+  display: inline-flex;
   flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
-  justify-content: center;
-  gap: 5px;
-  padding-inline: 6px;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+}
+.gcs-hoverCard__staffLabel > svg {
+  flex: none;
+  color: var(--cm-warn);
+}
+.gcs-hoverCard__staffLabel > span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

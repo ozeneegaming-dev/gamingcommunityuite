@@ -25,6 +25,7 @@ import { GcsTranslateButton } from "../../_components/GcsTranslateButton";
 import { GcsDeletedMember } from "../../_components/GcsDeletedMember";
 import { translateLabels } from "@/lib/translate";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
+import { pageMetadata, seoMeta } from "@/lib/seo";
 import { GcsGroupLink } from "@/lib/group-pills";
 import { GcsMemberPanelBody, GcsProfilePanelCard, memberPanels } from "@/lib/member-panels";
 
@@ -59,13 +60,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
   const { user, stats } = data.profile;
   const url = `/members/${user.id}-${user.slug}`;
-  return {
-    title: user.name,
-    alternates: { canonical: url },
-    openGraph: { title: user.name, url, ...(user.image ? { images: [user.image] } : {}), ...(user.bio ? { description: user.bio } : {}) },
-    // Profilurile fără conținut public nu ajung în motoarele de căutare.
-    ...(stats.posts === 0 ? { robots: { index: false } } : {}),
-  };
+  // Profilurile fără conținut public nu ajung în motoarele de căutare; nici unul, dacă ACP → SEO oprește indexarea lor.
+  const indexed = (await seoMeta()).indexProfiles && stats.posts > 0;
+  return pageMetadata({ title: user.name, description: user.bio, path: url, image: user.image, type: "profile", noindex: !indexed });
 }
 
 /** Profilul „player card” (macheta Profil, specul etapei 3 §8). */

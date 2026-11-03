@@ -2,6 +2,8 @@ import { GcsSqlKv, PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
 import { BOT_SCHEDULED_JOB, BOT_WELCOME_JOB } from "./bot/settings";
 import { RETENTION_JOB } from "./security/retention";
+import { INDEXNOW_EVERY_MS, INDEXNOW_JOB } from "./seo/indexnow";
+import { ORPHANS_JOB } from "./uploads/orphans";
 
 /** Jobul care dovedește că worker-ul procesează coada (nu doar că procesul trăiește). */
 export const HEARTBEAT_JOB = "system.heartbeat";
@@ -43,6 +45,10 @@ export function registerAppJobs(s: GcsServices): void {
   // Perioadele de păstrare a datelor (ACP → Setări → Termeni și confidențialitate): jurnalele, autentificările, sesiunile
   // expirate; zilnic, pe loturi.
   s.jobs.register({ name: RETENTION_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.retention.run()) });
+  // IndexNow (ACP → Promovare → SEO): topicurile publice noi sau cu răspunsuri noi, un lot la 10 minute (oprit implicit).
+  s.jobs.register({ name: INDEXNOW_JOB, everyMs: INDEXNOW_EVERY_MS, handler: async () => void (await s.indexNow.run()) });
+  // Fișierele încărcate și nelegate de nimic de N zile (ACP → Setări → Încărcări și imagini; 0 = oprit), zilnic, pe loturi.
+  s.jobs.register({ name: ORPHANS_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.orphanFiles.run()) });
   s.notificationProducers.registerJobs(s.jobs);
   s.chat.registerJobs(s.jobs);
   // Moderarea chat-ului: expirarea accesului de moderator, a mute-urilor și a sancțiunilor (la minut).
