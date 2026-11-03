@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { forumTree, uid } from "./forum-fixtures";
+import { fixture, forumTree, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, groupId, register, resetSetting, sql, userId, useFreshIp } from "./helpers";
 import { e2eKv } from "./kv";
 
@@ -487,5 +487,58 @@ test("Căutare: termenii căutați apar în ACP; setarea „doar membri” opre�
     await ctx.close();
   } finally {
     await resetSetting("search.config");
+  }
+});
+
+/** Un PNG de 1 × 1 pixel (iconița de test a aplicației). */
+const PNG_1PX = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+
+test("RSS, Distribuire și Web App: setările schimbă fluxurile, meniul topicului și manifestul", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Rss${id}`, `rss-${id}@example.com`);
+  const t = await forumTree(request);
+  const topic = await fixture<{ topicId: number }>(request, { action: "topic", forumId: t.forum.id, title: `Distribuire ${id}`, text: "Despre RSS", authorEmail: `rss-${id}@example.com` });
+  try {
+    // RSS: fluxul general există; oprit, dispare.
+    await page.goto("/admin/system/rss");
+    await expect(page.getByRole("heading", { name: "RSS", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    expect((await page.request.get("/rss.xml")).status()).toBe(200);
+    await page.getByTestId("gcs-rss-settings-open").click();
+    await page.getByTestId("gcs-rss-settings").getByLabel("Fluxul general /rss.xml").uncheck();
+    await page.getByTestId("gcs-rss-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-rss-settings")).toHaveCount(0);
+    expect((await page.request.get("/rss.xml")).status()).toBe(404);
+
+    // Distribuire: fără Facebook, cu Reddit, în meniul topicului.
+    await page.goto("/admin/system/share");
+    await page.getByTestId("gcs-share-settings-open").click();
+    const share = page.getByTestId("gcs-share-settings");
+    await share.getByLabel("Facebook").uncheck();
+    await share.getByLabel("Reddit").check();
+    await share.getByRole("button", { name: "Salvează" }).click();
+    await expect(page.locator('[data-network="reddit"] [data-state]')).toHaveAttribute("data-state", "on");
+    await page.goto(`/topic/${topic.topicId}`);
+    await page.getByTestId("gcs-share-menu").click();
+    await expect(page.getByRole("menuitem", { name: "Reddit" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Facebook" })).toHaveCount(0);
+
+    // Web App: numele scurt în manifest și iconița încărcată.
+    await page.goto("/admin/settings/pwa");
+    await page.getByTestId("gcs-pwa-settings-open").click();
+    await page.getByTestId("gcs-pwa-settings").getByLabel("Numele scurt").fill("GcsTest");
+    await page.getByTestId("gcs-pwa-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-pwa-short")).toHaveText("GcsTest");
+    const up = await page.request.post("/api/acp/pwa/icon", { multipart: { file: { name: "icon.png", mimeType: "image/png", buffer: PNG_1PX } }, headers: { origin: new URL(page.url()).origin } });
+    expect(up.ok(), await up.text()).toBe(true);
+    const manifest = (await (await page.request.get("/manifest.webmanifest")).json()) as { short_name: string; icons?: { src: string; sizes: string }[] };
+    expect(manifest.short_name).toBe("GcsTest");
+    expect(manifest.icons?.[0]?.sizes).toBe("512x512");
+    const icon = await page.request.get(manifest.icons![0]!.src);
+    expect(icon.headers()["content-type"]).toBe("image/png");
+    await page.reload();
+    await shot(page, "pwa-acp");
+  } finally {
+    for (const key of ["rss.config", "share.config", "pwa.config"]) await resetSetting(key);
   }
 });
