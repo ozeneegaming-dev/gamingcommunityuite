@@ -7448,7 +7448,7 @@
       "none": "Sin imagen",
       "upload": "Subir",
       "remove": "Quitar",
-      "headerImage": "Header background",
+      "headerImage": "Tu imagen (tiene prioridad)",
       "cockpitImage": "Fondo de la consola"
     },
     "tokens": {
@@ -7684,8 +7684,8 @@
         "help": "Transitions and the slight zoom of pill buttons. Without them only the colour changes remain."
       },
       "header_overlay": {
-        "label": "Image darkening",
-        "help": "How dark the layer over the header image is, so the text stays readable."
+        "label": "Oscurecer el arte de GCS",
+        "help": "Lo oscura que es la capa sobre el arte predeterminado de la cabecera Estándar."
       },
       "header_pattern": {
         "label": "Tech pattern",
@@ -7694,6 +7694,38 @@
       "header_crumbs": {
         "label": "Breadcrumb and search row",
         "help": "Below the menu: where you are on the site and the search field."
+      },
+      "header_art": {
+        "label": "Imagen incluida",
+        "help": "Dibujada para GCS con los colores del tema. Una imagen subida tiene prioridad.",
+        "options": {
+          "none": "Ninguna",
+          "forja": "Forja",
+          "arena": "Arena"
+        }
+      },
+      "header_imageArea": {
+        "label": "Zona de la imagen",
+        "options": {
+          "all": "Toda la cabecera",
+          "top": "Solo la fila superior"
+        }
+      },
+      "header_imageDim": {
+        "label": "Oscurecer la imagen",
+        "help": "Cuánto cubre el color de la cabecera la imagen, para que el menú se lea bien."
+      },
+      "header_imageTint": {
+        "label": "Tono de acento",
+        "help": "Tiñe la imagen con el color de acento del tema."
+      },
+      "header_imageFade": {
+        "label": "Difuminar abajo",
+        "help": "El borde inferior de la imagen se funde con el fondo de la página (toda la cabecera)."
+      },
+      "header_imageMobile": {
+        "label": "También en el móvil",
+        "help": "La imagen también aparece en la cabecera del móvil."
       },
       "header_rowTop": {
         "label": "Altura de la barra superior"

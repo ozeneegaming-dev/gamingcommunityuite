@@ -5,6 +5,7 @@ import { GcsIconSvg } from "@gcs/ui";
 import { faArrowDown, faArrowUp, faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { HEADER_ART_THUMBS } from "./header-art";
 import { fieldKey, type GcsStudioColorRef, type GcsStudioImageSlot } from "./studio-panels";
 
 type Translator = ReturnType<typeof useTranslations>;
@@ -77,9 +78,11 @@ export function GcsStudioSettingRow({
         <input id={id} type="checkbox" role="switch" className="gcs-themeStudio__switch" checked={value === true} onChange={(e) => onChange(e.target.checked)} data-testid={testId} />
       );
       break;
-    case "enum":
+    case "enum": {
+      // Imaginea antetului: fiecare variantă cu miniatura ei (imaginile incluse în GCS).
+      const thumbs = path === "header.art" ? HEADER_ART_THUMBS : null;
       control = (
-        <div className="gcs-themeStudio__choices" role="radiogroup" aria-labelledby={`${id}-label`} data-testid={testId}>
+        <div className={thumbs ? "gcs-themeStudio__choices gcs-themeStudio__choices--thumbs" : "gcs-themeStudio__choices"} role="radiogroup" aria-labelledby={`${id}-label`} data-testid={testId}>
           {field.options.map((o) => (
             <button
               key={o}
@@ -90,12 +93,14 @@ export function GcsStudioSettingRow({
               onClick={() => onChange(o)}
               data-value={o}
             >
+              {thumbs && <span className="gcs-themeStudio__choiceThumb" style={thumbs[o] ? { backgroundImage: `url("${thumbs[o]}")` } : undefined} aria-hidden="true" />}
               {t(`fields.${key}.options.${o}`)}
             </button>
           ))}
         </div>
       );
       break;
+    }
     case "font":
       control = (
         <select id={id} className="gcs-themeStudio__input" value={String(value)} onChange={(e) => onChange(e.target.value)} data-testid={testId}>

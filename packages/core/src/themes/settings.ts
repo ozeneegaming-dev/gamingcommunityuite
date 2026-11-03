@@ -77,6 +77,13 @@ export const THEME_BAND_ICONS = ["circle", "rounded", "none"] as const;
 /** Constructorul de antet (Nova): cum se deschid meniurile și unde se aliniază meniul. */
 export const THEME_DROPDOWN_MODES = ["click", "hover"] as const;
 export const THEME_NAV_ALIGNS = ["left", "center", "right"] as const;
+/**
+ * Imaginea antetului (sistemul): imaginile desenate pentru GCS, livrate cu aplicația (`none` = fără imagine inclusă).
+ * O imagine încărcată (`header.image`) are prioritate.
+ */
+export const THEME_HEADER_ARTS = ["none", "forja", "arena"] as const;
+/** Unde stă imaginea antetului: în spatele întregului antet sau doar al primului rând (cel cu logo-ul). */
+export const THEME_HEADER_IMAGE_AREAS = ["all", "top"] as const;
 /** Navigarea pe mobil: iconițele în antet sau într-o bară jos. */
 export const THEME_MOBILE_PLACEMENTS = ["header", "bottom"] as const;
 /** Consola de sub antet (Hero Cockpit): doar pe pagina principală sau pe toate paginile. */
@@ -177,8 +184,23 @@ export type GcsThemeSettings = {
     heightMobile: number;
     navIcons: boolean;
     sticky: boolean;
-    /** Nova: imaginea de fundal a antetului (`/files/<id>`); `null` = grafica GCS (gradient cu model tehnic). */
+    /**
+     * Imaginea de fundal a antetului, încărcată (`/files/<id>`), în orice temă; are prioritate față de `art`. `null` =
+     * imaginea inclusă aleasă sau, fără ea, fundalul temei (în designul GCS, grafica cu model tehnic).
+     */
     image: string | null;
+    /** Imaginea inclusă în GCS din spatele antetului (`none` = niciuna). */
+    art: (typeof THEME_HEADER_ARTS)[number];
+    /** Imaginea stă în spatele întregului antet sau doar al primului rând. */
+    imageArea: (typeof THEME_HEADER_IMAGE_AREAS)[number];
+    /** Cât de mult se acoperă imaginea cu culoarea antetului (%), ca meniul să rămână lizibil. */
+    imageDim: number;
+    /** Cât de mult se colorează imaginea în culoarea accentului (%). */
+    imageTint: number;
+    /** Imaginea se estompează jos, în fundalul paginii (doar pe tot antetul). */
+    imageFade: boolean;
+    /** Imaginea apare și în antetul de pe telefon. */
+    imageMobile: boolean;
     /** Nova: cât de închis e stratul peste imagine (%). */
     overlay: number;
     /** Nova: modelul tehnic (grila de circuite) peste grafica implicită. */
@@ -328,6 +350,12 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
     navIcons: true,
     sticky: true,
     image: null,
+    art: "none",
+    imageArea: "all",
+    imageDim: 15,
+    imageTint: 0,
+    imageFade: true,
+    imageMobile: true,
     overlay: 70,
     pattern: true,
     crumbs: true,
@@ -450,11 +478,11 @@ export function themeDefaults(preset: GcsThemePreset | undefined | null): GcsThe
 
 /**
  * Setările care sunt DOAR decor al designului GCS (`preset: "nova"`): stilul benzilor, iconița din bandă și grafica
- * antetului (imaginea, stratul, modelul tehnic, rândul vechi cu breadcrumb). Editorul vizual le arată doar pe acest
- * design (în rest ar fi opțiuni „moarte”). Tot ce e funcție (constructorul de antet, consola, bara de jos, modul
- * meniurilor, efectele de hover, modurile listelor) ține de sistem și merge în orice temă.
+ * antetului (stratul peste grafica GCS, modelul tehnic, rândul vechi cu breadcrumb). Editorul vizual le arată doar pe
+ * acest design (în rest ar fi opțiuni „moarte”). Tot ce e funcție (constructorul de antet, imaginea antetului, consola,
+ * bara de jos, modul meniurilor, efectele de hover, modurile listelor) ține de sistem și merge în orice temă.
  */
-export const NOVA_ONLY_FIELDS: readonly string[] = ["header.image", "header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon"];
+export const NOVA_ONLY_FIELDS: readonly string[] = ["header.overlay", "header.pattern", "header.crumbs", "bands.style", "bands.icon"];
 
 /** Designul are decor propriu (benzile, grafica antetului): editorul îi arată setările din `NOVA_ONLY_FIELDS`. */
 export const themeHasDesignDecor = (preset: string | undefined | null): boolean => preset === "nova";
@@ -595,6 +623,12 @@ function buildFields(): Record<string, GcsThemeField> {
     "header.navIcons": BOOL,
     "header.sticky": BOOL,
     "header.image": { kind: "file" },
+    "header.art": choice(THEME_HEADER_ARTS),
+    "header.imageArea": choice(THEME_HEADER_IMAGE_AREAS),
+    "header.imageDim": int(0, 80, "%", 5),
+    "header.imageTint": int(0, 100, "%", 5),
+    "header.imageFade": BOOL,
+    "header.imageMobile": BOOL,
     "header.overlay": int(0, 95, "%", 5),
     "header.pattern": BOOL,
     "header.crumbs": BOOL,
