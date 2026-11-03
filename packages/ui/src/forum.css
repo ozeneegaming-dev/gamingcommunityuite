@@ -303,16 +303,19 @@
   border-radius: 10px;
 }
 /* O imagine de pe alt site afișată ca link (ACP → Setări → Încărcări și imagini: imaginile externe blocate). */
-.gcs-remoteImage {
+.gcs-root a.gcs-remoteImage {
   display: inline-block;
   max-width: 100%;
   margin: 0 0 12px;
   padding: 6px 10px;
   border: 1px dashed var(--gcs-border);
   border-radius: 8px;
-  color: var(--gcs-accent);
+  color: var(--gcs-link, var(--gcs-accentInk));
   text-decoration: underline;
   overflow-wrap: anywhere;
+}
+.gcs-root a.gcs-remoteImage:hover {
+  color: var(--gcs-accent);
 }
 .gcs-embed {
   position: relative;
