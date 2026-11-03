@@ -1226,6 +1226,15 @@ html.gcs-nova[data-theme="light"] {
   border-radius: 12px;
   border-color: var(--gcs-box-border, var(--gcs-border));
 }
+/* Decorul GCS pe coperta-degrade a cardului de membru (fără imagine): dungi fine, ca pe cardurile forumurilor. */
+.gcs-nova .gcs-hoverCard--v3 .gcs-hoverCard__cover:not(.gcs-hoverCard__cover--image)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--gcs-text) 5%, transparent) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+}
 .gcs-nova .gcs-groupCard__band {
   border-bottom-width: 1px;
 }

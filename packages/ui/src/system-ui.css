@@ -315,10 +315,13 @@
     --gcs-ease: 0s;
   }
   /* Doar opacitatea: panourile apar fără alunecare, itemii nu se măresc (sweep-ul e oprit în `sweep.css`). */
-  :root .gcs-hoverCard,
-  :root .gcs-groupCard,
   :root .gcs-mentionList {
     animation-name: gcs-motion-fade;
+  }
+  /* Hover card-urile (membru, grup) apar direct, fără nicio animație: nici alunecare, nici fade. */
+  :root .gcs-hoverCard,
+  :root .gcs-groupCard {
+    animation: none;
   }
   :root .gcs-dropdown__item:is(:hover, :focus-visible),
   :root .gcs-mentionList__item:hover {

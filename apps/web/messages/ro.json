@@ -6841,6 +6841,15 @@
       "content": "Conținutul lui",
       "ignore": "Ignoră",
       "unignore": "Nu mai ignora"
+    },
+    "v3": {
+      "registered": "Înregistrat pe {date}",
+      "otherGroups": "Alte grupuri",
+      "rank": "Rang",
+      "badgeEarned": "Obținută pe {date}",
+      "allBadges": "Toate insignele",
+      "findContent": "Găsește conținutul lui",
+      "close": "Închide"
     }
   },
   "messages": {

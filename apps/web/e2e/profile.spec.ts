@@ -57,7 +57,7 @@ test.describe("ignorare și mesaje", () => {
 });
 
 test.describe("hover card", () => {
-  test("apare după 300 ms de hover, cu grupul, rangul și badge-urile; „Urmărește” crește contorul; al doilea hover nu mai cere nimic", async ({ page, request, browser }) => {
+  test("apare după 300 ms de hover, cu grupul, rangul și badge-urile; „Urmărește” își schimbă starea; al doilea hover nu mai cere nimic", async ({ page, request, browser }) => {
     const id = uid();
     const { forum } = await forumTree(request);
     const author = await memberInNewContext(browser, `Krypt${id}`, `krypt-${id}@example.com`, "198.51.100");
@@ -86,9 +86,11 @@ test.describe("hover card", () => {
     await expect(card.getByText("VIP Legend")).toBeVisible();
     await expect(card.getByTestId("gcs-hover-rank")).toHaveText("Recrut");
     await expect(card.locator("img.gcs-badgeArt")).not.toHaveCount(0);
-    await expect(card.getByTestId("gcs-hover-followers")).toHaveText("0");
+    // Cardul v3 nu mai are contorul de urmăritori (Postări / Reputație / Insigne): butonul își schimbă starea doar după
+    // ce serverul a confirmat urmărirea.
+    await expect(card.getByTestId("gcs-hover-follow")).toHaveAttribute("aria-pressed", "false");
     await card.getByTestId("gcs-hover-follow").click();
-    await expect(card.getByTestId("gcs-hover-followers")).toHaveText("1");
+    await expect(card.getByTestId("gcs-hover-follow")).toHaveAttribute("aria-pressed", "true");
     // „Urmărește” e un buton-iconiță: eticheta e numele accesibil și tooltip-ul.
     await expect(card.getByTestId("gcs-hover-follow")).toHaveAttribute("aria-label", "Nu mai urmări");
 

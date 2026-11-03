@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { placeHoverCard } from "./hoverCardPosition";
+import { hoverCardArrowX, placeHoverCard } from "./hoverCardPosition";
 
 /** Un nume de 90×20 px la (x, y) — dreptunghiul din `getBoundingClientRect()`. */
 const name = (x: number, y: number) => ({ top: y, bottom: y + 20, left: x, right: x + 90 });
@@ -41,6 +41,22 @@ describe("placeHoverCard (hover card-ul lângă nume, după mărimea măsurată)
     expect(placeHoverCard(name(4, 100), { width: 340, height: 200 }, viewport).left).toBe(12);
     // Telefonul (375 px): cardul are 351 px (100vw − 24px).
     expect(placeHoverCard(name(200, 100), { width: 351, height: 200 }, { width: 375, height: 700 }).left).toBe(12);
+  });
+
+  test("un card mai lat decât ecranul fără margini (370 px, cel mult 100vw − 16 px) stă centrat", () => {
+    // 375 px: cardul are 359 px → 8 px de fiecare parte, oriunde ar fi numele.
+    expect(placeHoverCard(name(200, 100), { width: 359, height: 200 }, { width: 375, height: 700 }).left).toBe(8);
+    expect(placeHoverCard(name(4, 100), { width: 359, height: 200 }, { width: 375, height: 700 }).left).toBe(8);
+  });
+
+  test("săgeata stă la mijlocul numelui, dar nu în colțurile rotunjite ale cardului", () => {
+    // Numele 200–290, cardul de la 200 (lat de 370): mijlocul numelui e la 45 px în card.
+    expect(hoverCardArrowX({ left: 200, right: 290 }, 200, 370)).toBe(45);
+    // Cardul centrat pe telefon (de la 8 px): numele 12–60 → 28 px în card.
+    expect(hoverCardArrowX({ left: 12, right: 60 }, 8, 359)).toBe(28);
+    // Un nume foarte scurt la margine sau un nume dincolo de card: săgeata rămâne la 20 px de colțuri.
+    expect(hoverCardArrowX({ left: 0, right: 10 }, 8, 359)).toBe(20);
+    expect(hoverCardArrowX({ left: 1300, right: 1360 }, 900, 370)).toBe(350);
   });
 
   test("valorile sunt întregi (fără margini neclare)", () => {
