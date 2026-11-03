@@ -1,4 +1,5 @@
 import {
+  DECOR_CONTENT_TYPE,
   GcsConflict,
   GcsNotFound,
   GcsValidationError,
@@ -13,6 +14,7 @@ import {
   type GcsRendered,
 } from "@gcs/core";
 import { Prisma, type Forum, type ForumType, type PrismaClient } from "@gcs/db";
+import { forumPreviewTarget, isForumPreviewMode } from "./cardPreview";
 import { isTopicSort } from "./queries";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { GcsForumCounters } from "./counters";
@@ -35,7 +37,12 @@ export type GcsForumInput = {
   /** Pe câte coloane apar subforumurile în listă (1–5). */
   subforumColumns?: number;
 };
-export type GcsForumPatch = Partial<Omit<GcsForumInput, "parentId">>;
+/**
+ * Cardurile din grilă: imaginea de previzualizare (ACP › Forumuri › Editează). `imageId`: fișierul decorativ încărcat
+ * pentru forum (`forum:{id}:preview`) sau `null`; focalizarea decupajului 16 : 7 în procente (0–100).
+ */
+export type GcsForumPreviewInput = { mode: string; imageId: string | null; focusX: number; focusY: number };
+export type GcsForumPatch = Partial<Omit<GcsForumInput, "parentId">> & { preview?: GcsForumPreviewInput };
 
 /** Forum v2: conținutul unui nod „Pagină / Anunț”. `content`: documentul editorului (cu blocuri) sau `null` (gol). */
 export type GcsForumPageInput = {
@@ -177,6 +184,7 @@ export class GcsForumService {
     // Tipul se poate schimba între forum, Q&A și link; o categorie rămâne categorie.
     if ((type === "CATEGORY") !== (before.type === "CATEGORY")) errors.type = "invalid_type";
     if (type === "LINK" && before.type !== "LINK" && (await db.forum.count({ where: { parentId: id } })) > 0) errors.type = "invalid_type";
+    if (patch.preview !== undefined) Object.assign(errors, await this.previewErrors(id, patch.preview));
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
 
     const data: Prisma.ForumUpdateInput = { type };
@@ -189,6 +197,12 @@ export class GcsForumService {
     if (patch.color !== undefined) data.color = patch.color;
     if (patch.requireApproval !== undefined) data.requireApproval = patch.requireApproval;
     if (patch.subforumColumns !== undefined) data.subforumColumns = patch.subforumColumns;
+    if (patch.preview !== undefined) {
+      data.previewMode = patch.preview.mode;
+      data.previewImageId = patch.preview.imageId;
+      data.previewFocusX = patch.preview.focusX;
+      data.previewFocusY = patch.preview.focusY;
+    }
     data.linkUrl = type === "LINK" ? (patch.linkUrl ?? before.linkUrl) : null;
 
     const forum = await db.$transaction(async (tx) => {
@@ -422,6 +436,27 @@ export class GcsForumService {
       });
     });
     await this.changed([id, ...(target === null ? [] : [target])], true);
+  }
+
+  /**
+   * Imaginea de previzualizare, validată: modul cunoscut, focalizarea 0–100, iar imaginea e un fișier decorativ încărcat
+   * pentru acest forum (nu un atașament oarecare, al altui conținut). „Imaginea mea” cere o imagine.
+   */
+  private async previewErrors(forumId: number, input: GcsForumPreviewInput): Promise<Record<string, string>> {
+    const errors: Record<string, string> = {};
+    if (!isForumPreviewMode(input.mode)) errors.previewMode = "invalid_choice";
+    for (const [key, value] of [["previewFocusX", input.focusX], ["previewFocusY", input.focusY]] as const) {
+      if (!Number.isInteger(value) || value < 0 || value > 100) errors[key] = "invalid_range";
+    }
+    if (input.imageId !== null) {
+      const file = /^[A-Za-z0-9_-]{1,40}$/.test(input.imageId)
+        ? await this.deps.db.attachment.findUnique({ where: { id: input.imageId }, select: { contentType: true, contentId: true } })
+        : null;
+      if (!file || file.contentType !== DECOR_CONTENT_TYPE || file.contentId !== forumPreviewTarget(forumId)) errors.previewImageId = "invalid";
+    } else if (input.mode === "image") {
+      errors.previewImageId = "preview_image";
+    }
+    return errors;
   }
 
   /** Permisiunile unui container nou de la rădăcină: `default` al permisiunilor pe container ale modulelor. */

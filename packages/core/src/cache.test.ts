@@ -23,6 +23,26 @@ describe("GcsCache", () => {
     await expect(cache.get("lipsa")).resolves.toBeNull();
   });
 
+  test("getMany: mai multe chei dintr-o citire, în ordine, cu null pentru cele lipsă; invalidarea pe tag-uri rămâne", async () => {
+    await expect(cache.getMany([])).resolves.toEqual([]);
+    await cache.set("m:1", { a: 1 }, { ttlSec: 60, tags: ["topic:1"] });
+    await cache.set("m:3", "trei", { ttlSec: 60, tags: ["topic:3"] });
+    await expect(cache.getMany(["m:1", "m:2", "m:3"])).resolves.toEqual([{ a: 1 }, null, "trei"]);
+    await cache.invalidateTags(["topic:3"]);
+    await expect(cache.getMany(["m:3", "m:1"])).resolves.toEqual([null, { a: 1 }]);
+  });
+
+  test("getMany ține minte ratările: o valoare citită înaintea unei invalidări nu se mai scrie", async () => {
+    let clock = 2_000_000;
+    const c = new GcsCache(kv, "cursaMulti", () => clock);
+    await expect(c.getMany(["p:1"])).resolves.toEqual([null]);
+    clock += 10;
+    await c.invalidateTags(["topic:1"]);
+    clock += 10;
+    await c.set("p:1", "vechi", { ttlSec: 60, tags: ["topic:1"] });
+    await expect(c.get("p:1")).resolves.toBeNull();
+  });
+
   test("invalidateTags(['group:5']) șterge doar cheile etichetate group:5", async () => {
     await cache.set("a", 1, { ttlSec: 60, tags: ["group:5"] });
     await cache.set("b", 2, { ttlSec: 60, tags: ["group:5", "group:6"] });
