@@ -625,3 +625,36 @@ test("Fluxuri: un flux propriu devine tab pe pagina Activitate", async ({ page, 
     await resetSetting("streams.config");
   }
 });
+
+test("Webhooks: o adresă internă e refuzată; un webhook Discord se adaugă, se editează și se șterge", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Hook${id}`, `hook-${id}@example.com`);
+  const name = `Discord ${id}`;
+  try {
+    await page.goto("/admin/system/webhooks");
+    await expect(page.getByRole("heading", { name: "Webhooks", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-webhook-new-open").click();
+    const add = page.getByTestId("gcs-webhook-new");
+    await add.getByLabel("Numele").fill(name);
+    await add.getByLabel("Adresa (URL)").fill("https://127.0.0.1/hook");
+    await add.getByRole("button", { name: "Adaugă webhook-ul" }).click();
+    await expect(add.getByRole("alert")).toContainText("nu e publică");
+
+    await add.getByLabel("Adresa (URL)").fill("https://discord.com/api/webhooks/123/abc");
+    await add.getByLabel("Formatul").selectOption("discord");
+    await add.getByLabel("Membru nou").check();
+    await add.getByRole("button", { name: "Adaugă webhook-ul" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-webhook-row"][data-name="${name}"]`);
+    await expect(row).toContainText("2 evenimente");
+    await shot(page, "webhooks-acp");
+
+    await row.getByTestId("gcs-webhook-edit-open").click();
+    await page.getByTestId("gcs-webhook-edit").getByRole("button", { name: "Șterge" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(row).toHaveCount(0);
+  } finally {
+    await sql(`DELETE FROM webhook_endpoints WHERE name = $1`, [name]);
+  }
+});

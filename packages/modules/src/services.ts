@@ -184,6 +184,7 @@ import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
 import { GcsStatsReportService } from "./stats/reports";
 import { GcsTagsAdmin } from "./forums/tagsAdmin";
 import { GcsAdService } from "./community/ads";
+import { GcsWebhookService } from "./system/webhooks";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -284,6 +285,8 @@ export type GcsServices = {
   tagsAdmin: GcsTagsAdmin;
   /** Reclamele (ACP › Promovare › Reclame) și widget-ul lor. */
   ads: GcsAdService;
+  /** Webhook-urile (ACP › Funcții site › Webhooks): endpointurile, livrările prin coadă și jurnalul. */
+  webhooks: GcsWebhookService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -693,6 +696,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     canView: async (userId) => (await acp.usersWith("system.status", "view", 500)).includes(userId),
     describe: async (id) => ({ title: id.startsWith("job:") ? id.slice(4) : id, href: "/admin/system/status" }),
   });
+  // Webhook-urile: evenimentele publice alese pleacă prin coadă spre endpointuri (JSON semnat sau Discord).
+  const webhooks = new GcsWebhookService({ db, kv, jobs, acp, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
+  webhooks.listen(bus);
   // Contact: mesajele primite; notificarea duce la cutia din ACP, cu mesajul deschis.
   const contact = new GcsContactService({ db, settings, acp, notifications, mailer, rateLimiter, antispam, siteName: () => settings.get<string>("site.name") });
   // Recomandări: notificarea duce la pagina membrului cu invitațiile lui.
@@ -1042,6 +1048,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     statsReports: new GcsStatsReportService({ db, acp, settings }),
     tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
     ads: new GcsAdService({ db, kv, acp }),
+    webhooks,
     bulkMail: new GcsBulkMailService({
       db,
       acp,

@@ -598,6 +598,22 @@ model AdUnit {
   @@map("ad_units")
 }
 
+/// Webhook-urile (ACP › Sistem › Funcții site › Webhooks): la evenimentele alese, un POST spre `url` — JSON semnat cu
+/// `secret` (HMAC SHA-256, antetul `X-GCS-Signature`) sau mesajul unui webhook Discord (`format` = discord).
+/// Jurnalul ultimelor livrări stă în stocarea cheilor (`gcs:webhooks:log:<id>`).
+model WebhookEndpoint {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  format    String   @default("json")
+  secret    String
+  events    Json     @default("[]")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("webhook_endpoints")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

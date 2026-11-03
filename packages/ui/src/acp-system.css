@@ -918,3 +918,15 @@
   display: inline-flex;
   gap: 2px;
 }
+
+/* ── Webhooks: secretul de semnare ── */
+.gcs-webhookSecret {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 8px;
+  background: var(--gcs-surface2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
