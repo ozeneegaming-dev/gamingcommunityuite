@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, test } from "vitest";
-import { hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT, openMemberCard } from "./hover-anchor";
+import { avatarAnchorOf, hoverAnchorKey, hoverAnchorOf, OPEN_CARD_EVENT, openMemberCard } from "./hover-anchor";
 
 function html(markup: string): HTMLElement {
   const box = document.createElement("div");
@@ -63,5 +63,37 @@ describe("deschiderea cardului la click", () => {
     document.removeEventListener(OPEN_CARD_EVENT, listen);
     expect(seen).toHaveLength(1);
     expect(hoverAnchorKey(seen[0]!)).toBe("u:u7");
+  });
+});
+
+describe("avatarul atins pe telefon (cardul ca foaie de jos)", () => {
+  const avatar = (user: string) => `<span class="gcs-avatar gcs-avatar--l" data-avatar-user="${user}"><img class="gcs-avatar__img" alt="Ana"></span>`;
+
+  test("avatarul din postbit (fără link), din ramă și din linkul spre profilul aceluiași membru deschide cardul lui", () => {
+    const box = html(
+      `<div id="postbit">${avatar("u1")}</div>` +
+        `<span id="frame" class="gcs-avatarFrame gcs-avatarFrame--gold">${avatar("u2")}</span>` +
+        `<a id="chat" href="/members/u3-ana?tab=activity">${avatar("u3")}</a>` +
+        `<a id="plain" href="/members/u4">${avatar("u4")}</a>`,
+    );
+    expect(hoverAnchorKey(avatarAnchorOf(box.querySelector("#postbit img"))!)).toBe("u:u1");
+    // Atingerea pe marginea ramei (în afara avatarului) găsește avatarul din ea.
+    expect(hoverAnchorKey(avatarAnchorOf(box.querySelector("#frame"))!)).toBe("u:u2");
+    expect(hoverAnchorKey(avatarAnchorOf(box.querySelector("#chat img"))!)).toBe("u:u3");
+    expect(hoverAnchorKey(avatarAnchorOf(box.querySelector("#plain img"))!)).toBe("u:u4");
+  });
+
+  test("atingerea își păstrează rostul: linkul spre altceva, butoanele, meniurile, dialogurile, zonele refuzate, cardul", () => {
+    const box = html(
+      `<a id="notif" href="/notifications/7">${avatar("u1")}</a>` +
+        `<a id="other" href="/members/u9-bogdan">${avatar("u1")}</a>` +
+        `<button id="menu" type="button" aria-haspopup="dialog">${avatar("u1")}</button>` +
+        `<div id="dialog" role="dialog">${avatar("u1")}</div>` +
+        `<div id="off" data-gcs-card-off>${avatar("u1")}</div>` +
+        `<div id="card" class="gcs-hoverCardLayer">${avatar("u1")}</div>` +
+        '<p id="text">text</p>',
+    );
+    for (const id of ["notif", "other", "menu", "dialog", "off", "card", "text"]) expect([id, avatarAnchorOf(box.querySelector(`#${id} img`) ?? box.querySelector(`#${id}`))]).toEqual([id, null]);
+    expect(avatarAnchorOf(null)).toBeNull();
   });
 });

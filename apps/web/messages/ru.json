@@ -6876,6 +6876,15 @@
       "content": "Его материалы",
       "ignore": "Игнорировать",
       "unignore": "Перестать игнорировать"
+    },
+    "v3": {
+      "registered": "Регистрация: {date}",
+      "otherGroups": "Другие группы",
+      "rank": "Ранг",
+      "badgeEarned": "Получено {date}",
+      "allBadges": "Все значки",
+      "findContent": "Найти его материалы",
+      "close": "Закрыть"
     }
   },
   "messages": {

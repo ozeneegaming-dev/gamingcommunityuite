@@ -6876,6 +6876,15 @@
       "content": "Their content",
       "ignore": "Ignore",
       "unignore": "Stop ignoring"
+    },
+    "v3": {
+      "registered": "Joined {date}",
+      "otherGroups": "Other groups",
+      "rank": "Rank",
+      "badgeEarned": "Earned on {date}",
+      "allBadges": "All badges",
+      "findContent": "Find their content",
+      "close": "Close"
     }
   },
   "messages": {

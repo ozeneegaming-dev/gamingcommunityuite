@@ -1,7 +1,9 @@
 import type { GcsActor, GcsPermissionService } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
+import { badgeArtSrc } from "@gcs/ui/badge-art";
 import { pickRank } from "./achievements";
 import { levelProgress, type GcsLadderRank } from "./level";
+import { rankEmblemArt, type GcsRankEmblemFields } from "./rankLadder";
 import type { GcsCardView, GcsOnline, GcsProfileQueries } from "./queries";
 import { actorOf, type GcsSocialService } from "./social";
 
@@ -55,6 +57,8 @@ export type GcsCardContribution<T> = { app: string; load: (viewer: GcsActor, use
 
 export type GcsHoverCardV2 = GcsCardView & {
   level: { level: number; rank: string | null; percent: number; next: { level: number; name: string } | null; xp: number };
+  /** Emblema rangului (insigna desenată din treaptă / formă / iconiță sau imaginea încărcată): plăcuța din cardul v3. */
+  rankEmblem: { art: string; image: string | null } | null;
   status: GcsMemberStatus;
   chips: GcsMemberChip[];
   viewer: GcsCardView["viewer"] & { isIgnored: boolean; canIgnore: boolean };
@@ -64,6 +68,20 @@ export type GcsHoverCardV2 = GcsCardView & {
 };
 
 const CHIP_ORDER: GcsMemberChip["kind"][] = ["clan", "elo", "vip"];
+
+/** O treaptă din scara rangurilor, cu câmpurile emblemei (plăcuța rangului din card). */
+type GcsCardLadderRank = GcsLadderRank & Partial<GcsRankEmblemFields> & { imageAttachmentId?: string | null };
+
+/** Emblema rangului atins: imaginea încărcată în ACP sau insigna desenată pentru locul lui în scară (ca în ACP). */
+export function rankEmblemOf(ladder: readonly GcsCardLadderRank[], rankId: number | null): { art: string; image: string | null } | null {
+  if (rankId === null) return null;
+  const sorted = [...ladder].sort((a, b) => a.position - b.position || a.id - b.id);
+  const index = sorted.findIndex((r) => r.id === rankId);
+  const rank = sorted[index];
+  if (!rank) return null;
+  const fields: GcsRankEmblemFields = { name: rank.name, icon: rank.icon ?? null, emblemTier: rank.emblemTier ?? null, emblemShape: rank.emblemShape ?? null, emblemIcon: rank.emblemIcon ?? null, color: rank.color ?? null };
+  return { art: badgeArtSrc(rankEmblemArt(fields, index)), image: rank.imageAttachmentId ? `/files/${rank.imageAttachmentId}` : null };
+}
 
 export class GcsHoverCardLoader {
   private readonly chips: GcsCardContribution<GcsMemberChip>[] = [];
@@ -89,8 +107,10 @@ export class GcsHoverCardLoader {
     this.playing.push(c);
   }
 
-  private async ladder(): Promise<GcsLadderRank[]> {
-    return this.deps.db.rank.findMany({ select: { id: true, name: true, position: true, minPosts: true, minPoints: true, minReputation: true } });
+  private async ladder(): Promise<GcsCardLadderRank[]> {
+    return this.deps.db.rank.findMany({
+      select: { id: true, name: true, position: true, minPosts: true, minPoints: true, minReputation: true, icon: true, emblemTier: true, emblemShape: true, emblemIcon: true, color: true, imageAttachmentId: true },
+    });
   }
 
   /** Cardul v2; `null` = membrul nu există sau viewer-ul nu-i vede profilul. */
@@ -113,11 +133,13 @@ export class GcsHoverCardLoader {
       target ? permissions.can(target, "profile.moderate") : Promise.resolve(true),
     ]);
     const stats = { postsCount: card.stats.posts, reputation: card.stats.reputation, points: card.stats.points ?? 0 };
-    const progress = levelProgress({ ...stats, rankId: card.rankId ?? pickRank(ladder, stats) }, ladder);
+    const rankId = card.rankId ?? pickRank(ladder, stats);
+    const progress = levelProgress({ ...stats, rankId }, ladder);
     const profileHref = `/members/${card.user.id}-${card.user.slug}`;
     return {
       ...card,
       level: { level: progress.level, rank: progress.rank, percent: progress.percent, next: progress.next ? { level: progress.next.level, name: progress.next.name } : null, xp: progress.xp },
+      rankEmblem: rankEmblemOf(ladder, rankId),
       status: memberStatus(card.online, playing[0] ?? null),
       chips: [...chips].sort((a, b) => CHIP_ORDER.indexOf(a.kind) - CHIP_ORDER.indexOf(b.kind)),
       viewer: { ...card.viewer, isIgnored, canIgnore: viewer.userId !== null && !isSelf && !targetIsStaff },
