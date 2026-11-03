@@ -6149,6 +6149,46 @@
         "startUrl": "Start page",
         "startHint": "An address on the site, e.g. / or /forum."
       }
+    },
+    "ads": {
+      "title": "Ads",
+      "description": "Banners with an image and a link or HTML blocks, hidden from chosen groups (e.g. VIP), with scheduling, impressions and clicks.",
+      "add": "New ad",
+      "create": "Add the ad",
+      "save": "Save",
+      "placeHint": "Place ads from “Edit page” (home page, forums, topics) with the “Ad” widget.",
+      "empty": "No ads yet.",
+      "secBasics": "Ad",
+      "secImage": "Image with a link",
+      "secHtml": "Or an HTML block",
+      "secAudience": "Who sees it and when",
+      "name": "Name (ACP only)",
+      "kind": "Type",
+      "kinds": {
+        "image": "Image with a link",
+        "html": "HTML"
+      },
+      "enabled": "On",
+      "image": "Image",
+      "link": "Link",
+      "alt": "Alternative text",
+      "html": "HTML",
+      "htmlHint": "Cleaned like posts: no scripts or iframes.",
+      "hideHint": "Checked groups do NOT see the ad (VIP by default).",
+      "startsAt": "From",
+      "endsAt": "Until",
+      "impressions": "{count, plural, one {# impression} other {# impressions}}",
+      "clicks": "{count, plural, one {# click} other {# clicks}}",
+      "states": {
+        "live": "Live",
+        "scheduled": "Scheduled",
+        "ended": "Ended",
+        "off": "Off"
+      },
+      "resetStats": "Reset statistics",
+      "resetConfirm": "Start impressions and clicks from zero?",
+      "delete": "Delete",
+      "confirmDelete": "Delete the ad? Widgets that showed it stay empty."
     }
   },
   "settings": {
@@ -9237,7 +9277,8 @@
       "groupLegend": "Group legend",
       "ranking": "Ranking",
       "guestCta": "Guest block",
-      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}"
+      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}",
+      "ad": "Ad"
     },
     "forums": {
       "stats": "Statistics",
@@ -9266,7 +9307,8 @@
       "rare": "Which badges",
       "group": "Only members of the group",
       "tabs": "Leaderboard tabs",
-      "layout": "Layout"
+      "layout": "Layout",
+      "adUnit": "Ad"
     },
     "periods": {
       "week": "this week",
@@ -9286,7 +9328,8 @@
         "groupLegend": "The community groups, with their name styles.",
         "newMembers": "The newest registered members.",
         "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time.",
-        "guestCta": "Sign up, sign in and one-click login. Only guests see it."
+        "guestCta": "Sign up, sign in and one-click login. Only guests see it.",
+        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one)."
       },
       "forums": {
         "stats": "The number of topics, posts and members.",
@@ -9373,7 +9416,8 @@
       "allCount": "All ({count})",
       "players": "{count, plural, one {# player} other {# players}}",
       "more": "and {count} more"
-    }
+    },
+    "adLabel": "Ad"
   },
   "pageEditor": {
     "title": "Edit page",
@@ -9436,7 +9480,8 @@
     "dropHere": "Drag widgets here",
     "done": "Finish editing",
     "defaultGoal": "First active goal",
-    "allGroups": "All groups"
+    "allGroups": "All groups",
+    "randomAd": "Random (among active ones)"
   },
   "stats": {
     "title": "Community statistics",

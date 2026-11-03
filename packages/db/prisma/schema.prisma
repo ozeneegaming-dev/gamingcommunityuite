@@ -578,6 +578,26 @@ model Referral {
   @@map("referrals")
 }
 
+/// Reclamele (ACP › Promovare › Reclame): o imagine cu link sau un bloc HTML (curățat), plasate prin widget-ul „Reclamă”
+/// în zonele paginilor. `hideGroups` = grupurile care nu le văd (ex. VIP); `startsAt` / `endsAt` = programarea.
+/// Afișările și click-urile se numără în stocarea cheilor (`gcs:ads:stats`).
+model AdUnit {
+  id         Int       @id @default(autoincrement())
+  name       String
+  kind       String    @default("image")
+  imageUrl   String    @default("")
+  linkUrl    String    @default("")
+  alt        String    @default("")
+  html       String    @default("")
+  enabled    Boolean   @default(true)
+  hideGroups Json      @default("[]")
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("ad_units")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

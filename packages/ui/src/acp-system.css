@@ -872,3 +872,43 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* ── Reclame: unitatea pe site (widget-ul „Reclamă”) și câmpul HTML din ACP ── */
+.gcs-adUnit {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: var(--gcs-surface);
+}
+.gcs-adUnit img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.gcs-adUnit__link {
+  display: block;
+}
+.gcs-adUnit__html {
+  width: 100%;
+  padding: 12px 14px;
+}
+.gcs-adUnit__tag {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gcs-codeInput {
+  font-family: var(--gcs-font-mono, ui-monospace, monospace);
+  font-size: 12.5px;
+}

@@ -6149,6 +6149,46 @@
         "startUrl": "Pagina de pornire",
         "startHint": "O adresă din site, ex. / sau /forum."
       }
+    },
+    "ads": {
+      "title": "Reclame",
+      "description": "Bannere cu imagine și link sau blocuri HTML, ascunse grupurilor alese (ex. VIP), cu programare, afișări și click-uri.",
+      "add": "Reclamă nouă",
+      "create": "Adaugă reclama",
+      "save": "Salvează",
+      "placeHint": "Plasează reclamele din „Editează pagina” (pagina principală, forumuri, topicuri) cu widget-ul „Reclamă”.",
+      "empty": "Nicio reclamă încă.",
+      "secBasics": "Reclama",
+      "secImage": "Imagine cu link",
+      "secHtml": "Sau un bloc HTML",
+      "secAudience": "Cine o vede și când",
+      "name": "Numele (doar în ACP)",
+      "kind": "Tipul",
+      "kinds": {
+        "image": "Imagine cu link",
+        "html": "HTML"
+      },
+      "enabled": "Pornită",
+      "image": "Imaginea",
+      "link": "Linkul",
+      "alt": "Textul alternativ",
+      "html": "HTML-ul",
+      "htmlHint": "Se curăță ca postările: fără scripturi sau iframe-uri.",
+      "hideHint": "Grupurile bifate NU văd reclama (implicit VIP-urile).",
+      "startsAt": "De la",
+      "endsAt": "Până la",
+      "impressions": "{count, plural, one {# afișare} few {# afișări} other {# de afișări}}",
+      "clicks": "{count, plural, one {# click} few {# click-uri} other {# de click-uri}}",
+      "states": {
+        "live": "Activă",
+        "scheduled": "Programată",
+        "ended": "Încheiată",
+        "off": "Oprită"
+      },
+      "resetStats": "Resetează statisticile",
+      "resetConfirm": "Pornești afișările și click-urile de la zero?",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi reclama? Widget-urile care o arătau rămân goale."
     }
   },
   "settings": {
@@ -9237,7 +9277,8 @@
       "groupLegend": "Legenda grupurilor",
       "ranking": "Clasament",
       "guestCta": "Bloc pentru vizitatori",
-      "rankingTop": "{period, select, day {Topul zilei} week {Topul săptămânii} month {Topul lunii} year {Topul anului} other {Topul tuturor timpurilor}}"
+      "rankingTop": "{period, select, day {Topul zilei} week {Topul săptămânii} month {Topul lunii} year {Topul anului} other {Topul tuturor timpurilor}}",
+      "ad": "Reclamă"
     },
     "forums": {
       "stats": "Statistici",
@@ -9266,7 +9307,8 @@
       "rare": "Ce badge-uri",
       "group": "Doar membrii grupului",
       "tabs": "Tab-urile clasamentului",
-      "layout": "Aspectul"
+      "layout": "Aspectul",
+      "adUnit": "Reclama"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -9286,7 +9328,8 @@
         "groupLegend": "Grupurile comunității, cu stilul numelor lor.",
         "newMembers": "Cei mai noi membri înregistrați.",
         "ranking": "Top membri după postări, topicuri, reputație sau timp online, pe zi, săptămână, lună, an sau tot timpul.",
-        "guestCta": "Înregistrarea, autentificarea și conectarea dintr-un click. Doar vizitatorii îl văd."
+        "guestCta": "Înregistrarea, autentificarea și conectarea dintr-un click. Doar vizitatorii îl văd.",
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
       },
       "forums": {
         "stats": "Numărul de topicuri, postări și membri.",
@@ -9373,7 +9416,8 @@
       "allCount": "Toate ({count})",
       "players": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
       "more": "și încă {count}"
-    }
+    },
+    "adLabel": "Reclamă"
   },
   "pageEditor": {
     "title": "Editează pagina",
@@ -9436,7 +9480,8 @@
     "dropHere": "Trage widget-urile aici",
     "done": "Termină editarea",
     "defaultGoal": "Primul obiectiv activ",
-    "allGroups": "Toate grupurile"
+    "allGroups": "Toate grupurile",
+    "randomAd": "La întâmplare (dintre cele active)"
   },
   "stats": {
     "title": "Statisticile comunității",

@@ -542,3 +542,57 @@ test("RSS, Distribuire și Web App: setările schimbă fluxurile, meniul topicul
     for (const key of ["rss.config", "share.config", "pwa.config"]) await resetSetting(key);
   }
 });
+
+test("Reclame: o reclamă din ACP apare prin widget pe prima pagină, se ascunde VIP-urilor, iar click-ul se numără", async ({ page, browser }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Ads${id}`, `ads-${id}@example.com`);
+  const name = `Sponsor ${id}`;
+  let placement: number | null = null;
+  const clearLayout = async () => {
+    const kv = await e2eKv();
+    try {
+      const keys = await kv.keys("gcs:k:layout*");
+      if (keys.length > 0) await kv.del(...keys);
+    } finally {
+      kv.disconnect();
+    }
+  };
+  try {
+    await page.goto("/admin/system/ads");
+    await expect(page.getByRole("heading", { name: "Reclame", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-ad-new-open").click();
+    const add = page.getByTestId("gcs-ad-new");
+    await add.getByLabel("Numele (doar în ACP)").fill(name);
+    await add.getByTestId("gcs-ad-image-url").fill("https://placehold.co/300x250.png");
+    await add.getByLabel("Linkul").fill("https://sponsor.example.com/oferta");
+    await add.getByRole("button", { name: "Adaugă reclama" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-ad-row"][data-name="${name}"]`);
+    await expect(row.locator("[data-state]")).toHaveAttribute("data-state", "live");
+    const [ad] = await sql<{ id: number }>(`SELECT id FROM ad_units WHERE name = $1`, [name]);
+
+    // Widget-ul pe prima pagină (vizitator): imaginea, cu linkul de click numărat.
+    const [placed] = await sql<{ id: number }>(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ad', $1, '[]') RETURNING id`, [JSON.stringify({ unit: String(ad!.id) })]);
+    placement = placed?.id ?? null;
+    await clearLayout();
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto("/");
+    const shown = guest.locator(`[data-testid="gcs-ad"][data-ad="${ad!.id}"]`);
+    await expect(shown).toBeVisible();
+    await expect(shown.locator("a")).toHaveAttribute("href", `/go/ad/${ad!.id}`);
+    const go = await guest.request.get(`/go/ad/${ad!.id}`, { maxRedirects: 0 });
+    expect(go.status()).toBe(302);
+    expect(go.headers().location).toBe("https://sponsor.example.com/oferta");
+    await ctx.close();
+
+    await page.reload();
+    await expect(row).toContainText("1 click");
+    await shot(page, "ads-acp");
+  } finally {
+    if (placement !== null) await sql(`DELETE FROM widget_placements WHERE id = $1`, [placement]);
+    await sql(`DELETE FROM ad_units WHERE name = $1`, [name]);
+    await clearLayout();
+  }
+});

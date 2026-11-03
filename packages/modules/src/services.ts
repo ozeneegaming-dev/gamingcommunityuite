@@ -183,6 +183,7 @@ import { GcsBulkMailService } from "./notifications/bulkMail";
 import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
 import { GcsStatsReportService } from "./stats/reports";
 import { GcsTagsAdmin } from "./forums/tagsAdmin";
+import { GcsAdService } from "./community/ads";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -281,6 +282,8 @@ export type GcsServices = {
   statsReports: GcsStatsReportService;
   /** ACP › Descoperire › Etichete: lista, redenumirea, unirea, ștergerea și setările etichetelor. */
   tagsAdmin: GcsTagsAdmin;
+  /** Reclamele (ACP › Promovare › Reclame) și widget-ul lor. */
+  ads: GcsAdService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -1038,6 +1041,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     referrals,
     statsReports: new GcsStatsReportService({ db, acp, settings }),
     tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
+    ads: new GcsAdService({ db, kv, acp }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,
