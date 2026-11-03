@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { forumTree, uid } from "./forum-fixtures";
-import { enterAcpAsRoot, groupId, resetSetting, sql, userId, useFreshIp } from "./helpers";
+import { enterAcpAsRoot, groupId, register, resetSetting, sql, userId, useFreshIp } from "./helpers";
 import { e2eKv } from "./kv";
 
 /**
@@ -335,5 +335,46 @@ test("Email în masă: ciorna, testul, trimiterea pe loturi de job și dezabonar
   } finally {
     await sql(`DELETE FROM bulk_mails WHERE subject = $1`, [subject]);
     await sql(`DELETE FROM user_groups WHERE "userId" = $1 AND "groupId" = $2`, [me, legend]);
+  }
+});
+
+test("Recomandări: setările din ACP, linkul membrului, înregistrarea prin link și lista din ACP", async ({ page, browser }) => {
+  const id = uid();
+  const email = `ref-${id}@example.com`;
+  await enterAcpAsRoot(page, `Ref${id}`, email);
+  const me = await userId(email);
+  const friend = `Prieten${id}`;
+  try {
+    await page.goto("/admin/members/settings/referral");
+    await expect(page.getByRole("heading", { name: "Recomandări", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-referral-settings-open").click();
+    const cfg = page.getByTestId("gcs-referral-settings");
+    await cfg.getByLabel("Postări necesare").fill("0");
+    await cfg.getByLabel("Puncte pentru cel care a invitat").fill("15");
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(cfg).toHaveCount(0);
+    await expect(page.getByTestId("gcs-referral-summary")).toContainText("+15 puncte");
+
+    // Linkul membrului, în Setări → Invită prieteni.
+    await page.goto("/settings/referral");
+    await expect(page.getByTestId("gcs-referral-link")).toHaveValue(new RegExp(`/r/${me}$`));
+
+    // Un prieten deschide linkul și își face cont: recomandarea se notează.
+    const ctx = await browser.newContext();
+    await useFreshIp(ctx, "198.18.73");
+    const guest = await ctx.newPage();
+    await guest.goto(`/r/${me}`);
+    await expect(guest).toHaveURL(//register$/);
+    await register(guest, friend, `prieten-${id}@example.com`);
+    await expect.poll(async () => (await sql(`SELECT 1 FROM referrals WHERE "referrerId" = $1`, [me])).length, { timeout: 20_000 }).toBe(1);
+    await ctx.close();
+
+    await page.goto("/admin/members/settings/referral");
+    await expect(page.locator(`[data-testid="gcs-referral-row"][data-referred="${friend}"]`)).toBeVisible();
+    await shot(page, "referral-acp");
+  } finally {
+    await sql(`DELETE FROM referrals WHERE "referrerId" = $1`, [me]);
+    await resetSetting("referral.config");
   }
 });

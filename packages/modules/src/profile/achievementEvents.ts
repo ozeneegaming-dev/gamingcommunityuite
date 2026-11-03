@@ -41,6 +41,15 @@ export const coreAchievementEvents: GcsAchievementEventDef[] = [
     current: async ({ db }, userId) => ((await db.account.count({ where: { userId, providerId: "steam" } })) > 0 ? 1 : 0),
   },
   {
+    // Recomandări: câți membri aduși prin invitație s-au calificat (jobul `members.referrals`).
+    key: "core.referrals",
+    labelKey: "achievements.events.core.referrals",
+    icon: "fa-solid fa-user-plus",
+    kind: "value",
+    sources: [{ event: "referral.qualified", map: (e) => (typeof e.payload.referrerId === "string" ? [{ userId: e.payload.referrerId, ref: "value" }] : []) }],
+    current: async ({ db }, userId) => db.referral.count({ where: { referrerId: userId, qualifiedAt: { not: null } } }),
+  },
+  {
     key: "core.birthday",
     labelKey: "achievements.events.core.birthday",
     icon: "fa-solid fa-cake-candles",

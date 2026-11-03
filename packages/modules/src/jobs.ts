@@ -3,6 +3,7 @@ import type { GcsServices } from "./services";
 import { STATUS_CHECK_EVERY_MS, STATUS_CHECK_JOB } from "./system/status";
 import { CONTACT_PRUNE_JOB } from "./community/contact";
 import { BULK_MAIL_JOB } from "./notifications/bulkMail";
+import { REFERRAL_JOB } from "./profile/referrals";
 import { BOT_SCHEDULED_JOB, BOT_WELCOME_JOB } from "./bot/settings";
 import { RETENTION_JOB } from "./security/retention";
 import { INDEXNOW_EVERY_MS, INDEXNOW_JOB } from "./seo/indexnow";
@@ -34,6 +35,8 @@ export function registerAppJobs(s: GcsServices): void {
   // Contact: mesajele mai vechi decât păstrarea aleasă în ACP › Setări › Contact (zilnic).
   // Email în masă: lotul următor al fiecărei trimiteri în curs (cel mult `bulk_mail.per_minute` emailuri).
   s.jobs.register({ name: BULK_MAIL_JOB, everyMs: 60_000, handler: async () => void (await s.bulkMail.tick()) });
+  // Recomandări: membrii aduși care îndeplinesc acum condițiile (postări, email confirmat), la oră.
+  s.jobs.register({ name: REFERRAL_JOB, everyMs: 3_600_000, handler: async () => void (await s.referrals.qualifyDue()) });
   s.jobs.register({ name: CONTACT_PRUNE_JOB, everyMs: 24 * 3_600_000, handler: async () => void (await s.contact.prune()) });
   if (s.edition === "lite") {
     s.jobs.register({

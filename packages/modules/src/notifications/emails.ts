@@ -88,6 +88,11 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, t, n, d) => (n > 1 ? `${n} mesaje noi prin formularul de contact` : `Mesaj nou de la ${String(d.from ?? "")} prin formularul de contact: ${t}`),
     en: (_a, t, n, d) => (n > 1 ? `${n} new contact form messages` : `New contact form message from ${String(d.from ?? "")}: ${t}`),
   },
+  // Recomandări: membrul adus s-a calificat (`data.points` = punctele primite).
+  "core.referral": {
+    ro: (a, _t, _n, d) => `${a} s-a alăturat prin invitația ta${Number(d.points) ? ` (+${Number(d.points)} puncte)` : ""}`,
+    en: (a, _t, _n, d) => `${a} joined through your invitation${Number(d.points) ? ` (+${Number(d.points)} points)` : ""}`,
+  },
   // Stare sistem: discul aproape plin (`data.freePct`) sau un job picat (`data.job`, `data.error`).
   "core.system_alert": {
     ro: (_a, _t, _n, d) => (d.kind === "disk" ? `Spațiu pe disc scăzut: doar ${Number(d.freePct) || 0}% liber` : `Jobul programat „${String(d.job ?? "")}” a picat${d.error ? `: ${String(d.error)}` : ""}`),
