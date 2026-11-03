@@ -6,16 +6,23 @@ import { currentActor } from "@/lib/actor";
 import { services } from "@/lib/services";
 import { GcsEmailForm } from "../../_components/settings/GcsSettingsV2";
 import { SETTINGS_ICONS } from "../../_components/settings/sections";
+import { GcsAdminMailToggle } from "./GcsAdminMailToggle";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("settings"))("nav.email") };
 }
 
-/** Setări → Email (setările contului v2): adresa curentă și schimbarea ei, cu confirmarea pe adresa nouă. */
+/**
+ * Setări → Email (setările contului v2): adresa curentă și schimbarea ei, cu confirmarea pe adresa nouă, apoi
+ * „Emailuri de la administratori” (Email în masă; dezabonarea din linkul emailului oprește tot acest comutator).
+ */
 export default async function EmailSettingsPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
   const actor = await currentActor();
   const [t, ta] = await Promise.all([getTranslations("settings.email"), getTranslations("settings.account")]);
-  const user = await services().db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { email: true } });
+  const [user, adminMailOff] = await Promise.all([
+    services().db.user.findUniqueOrThrow({ where: { id: actor.userId! }, select: { email: true } }),
+    services().bulkMail.optedOut(actor.userId!),
+  ]);
   const email = user.email.endsWith(STEAM_PLACEHOLDER_DOMAIN) ? null : user.email;
   const result = (await searchParams).email;
   return (
@@ -33,6 +40,7 @@ export default async function EmailSettingsPage({ searchParams }: { searchParams
         email={email}
         labels={{ current: email ? ta("currentEmail", { email }) : "", none: ta("noEmail"), newEmail: ta("newEmail"), send: ta("sendLink"), sent: ta("emailSent"), hint: t("hint") }}
       />
+      <GcsAdminMailToggle receive={!adminMailOff} />
     </div>
   );
 }

@@ -57,7 +57,7 @@ function FooterTitle({ id, title, accent }: { id: string; title: string; accent:
  */
 export async function GcsSiteFooter() {
   const actor = await currentActor();
-  const [t, tf, locale, mode, locales, siteName, view, skins, viewer, toggle, legalDocs] = await Promise.all([
+  const [t, tf, locale, mode, locales, siteName, view, skins, viewer, toggle, legalDocs, contactCfg] = await Promise.all([
     getTranslations("site"),
     getTranslations("footer"),
     getLocale(),
@@ -73,6 +73,10 @@ export async function GcsSiteFooter() {
     viewerThemeToggle(),
     // Termenii și confidențialitatea din ACP → Setări → Termeni și confidențialitate (dacă există).
     legalLinks(services().settings).catch(() => ({ terms: null, privacy: null })),
+    // Formularul de contact (ACP › Setări › Contact): linkul implicit „Contact” din bara de jos.
+    services()
+      .contact.config()
+      .catch(() => null),
   ]);
   const { config, socials } = view;
   const year = new Date().getFullYear();
@@ -250,11 +254,11 @@ export async function GcsSiteFooter() {
       </ul>
     ) : null;
   // Linkurile legale și „Conținut necitit” (doar pentru membri). Confidențialitatea: adresa din subsol, altfel pagina din
-  // ACP → Setări → Termeni și confidențialitate.
+  // ACP → Setări → Termeni și confidențialitate; contactul: adresa din subsol, altfel `/contact` (dacă e pornit).
   const legal = [
     { key: "terms", href: legalDocs.terms ?? "", icon: "fa-solid fa-file-contract" },
     { key: "privacy", href: bottom.privacy || (legalDocs.privacy ?? ""), icon: "fa-solid fa-user-shield" },
-    { key: "contact", href: bottom.contact, icon: "fa-solid fa-envelope" },
+    { key: "contact", href: bottom.contact || (contactCfg?.enabled ? "/contact" : ""), icon: "fa-solid fa-envelope" },
     { key: "cookies", href: bottom.cookies, icon: "fa-solid fa-cookie-bite" },
   ].filter((l) => l.href);
   const links = (

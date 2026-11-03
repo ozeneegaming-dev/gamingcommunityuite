@@ -1,12 +1,15 @@
 import { FOOTER_SETTING, SOCIAL_NETWORKS, footerConfigError } from "../community/footer";
 import { ANNOUNCEMENT_SETTING, announcementConfigError } from "../community/announcement";
 import { communityRulesSetting } from "../community/rules";
+import { CONTACT_NOTIFICATION, contactSetting } from "../community/contact";
+import { bulkMailRateSetting } from "../notifications/bulkMail";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
 import { LEGAL_SETTING_DEFS, RETENTION_SETTING_DEFS, SECURITY_SETTING_DEFS } from "../security/settings";
 import { SEO_SETTING_DEFS } from "../seo/settings";
 import { UPLOAD_SETTING_DEFS } from "../uploads/settings";
+import { DEFAULT_STATUS_ALERTS, STATUS_ALERT_TYPE, STATUS_ALERTS_SETTING, statusAlertsError } from "../system/status";
 import { DEFAULT_THEME_TOGGLE, THEME_TOGGLE_SETTING, WARNINGS_ACK_SETTING, themeTogglePairError, APP_SETTING_DEFS, type GcsAcpApp, type GcsAcpArea, type GcsAcpMenuSection, type GcsModule, type GcsPermissionDef, type GcsSettingDef } from "@gcs/core";
 
 /** Grupurile create la instalare (spec §6.1). */
@@ -113,9 +116,15 @@ const settings: GcsSettingDef[] = [
   ...NOTIFICATION_SETTING_DEFS,
   // Regulile comunității (pagina `/rules`), editate cu editorul postărilor în ACP → Setări → Reguli comunitate.
   communityRulesSetting,
+  // Formularul de contact (ACP › Setări › Contact): pagina, cine îl folosește, subiectele, copiile pe email, păstrarea.
+  contactSetting,
+  // Email în masă (ACP › Membri › Comunicare): câte emailuri pleacă pe minut.
+  bulkMailRateSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
+  // Alertele de stare (ACP › Sistem › Stare sistem): discul aproape plin și joburile picate, anunțate administratorilor.
+  setting(STATUS_ALERTS_SETTING, "json", DEFAULT_STATUS_ALERTS, "status", statusAlertsError),
   // Anti-spam (ACP › Moderare › Anti-spam): captcha-ul la înregistrare, întrebarea, membrii noi, phishing-ul și lista publică de spammeri.
   { ...setting("antispam.captcha", "string", "pow", "antispam", oneOf(["none", "pow", "turnstile"])), options: ["none", "pow", "turnstile"] },
   setting("antispam.pow_difficulty", "number", 15, "antispam", range(8, 24)),
@@ -413,6 +422,10 @@ export const coreModule: GcsModule = {
     { key: "core.warning_appeal", labelKey: "notifications.type.core.warning_appeal", important: true, defaultEmail: "INSTANT", category: "moderation" },
   // Unelte IP: un cont nou cu IP-ul altor conturi (staff-ul cu acces la Unelte IP).
   { key: "core.multi_account", labelKey: "notifications.type.core.multi_account", important: false, defaultEmail: "OFF", category: "moderation" },
+  // Stare sistem: discul aproape plin sau un job programat picat (administratorii cu acces la Stare sistem).
+  // Contact: un mesaj nou prin formularul de contact (staff-ul cu acces la Setări › Contact).
+  { key: CONTACT_NOTIFICATION, labelKey: "notifications.type.core.contact_message", important: false, defaultEmail: "OFF", category: "moderation" },
+  { key: STATUS_ALERT_TYPE, labelKey: "notifications.type.core.system_alert", important: true, defaultEmail: "INSTANT", category: "moderation" },
     // Mențiuni v2: un membru a menționat un grup din care faci parte (postare sau mesaj privat).
     { key: "core.group_mention", labelKey: "notifications.type.core.group_mention", important: false, defaultEmail: "DIGEST" },
     // Membri v2: un grup secundar temporar a expirat (jobul `groups.secondary_expiry`).

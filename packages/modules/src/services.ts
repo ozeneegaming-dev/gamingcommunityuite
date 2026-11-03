@@ -175,6 +175,11 @@ import { loadContentPolicy } from "./seo/meta";
 import { GcsIndexNowService } from "./seo/indexnow";
 import { GcsSitemapService } from "./seo/sitemap";
 import { GcsOrphanFilesService } from "./uploads/orphans";
+import { GcsFileAdminService } from "./uploads/admin";
+import { GcsCacheAdminService } from "./system/cache";
+import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
+import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
+import { GcsBulkMailService } from "./notifications/bulkMail";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -257,6 +262,16 @@ export type GcsServices = {
   indexNow: GcsIndexNowService;
   /** Curățarea fișierelor încărcate și nelegate de nimic (jobul zilnic `uploads.orphans`). */
   orphanFiles: GcsOrphanFilesService;
+  /** ACP › Sistem › Fișiere: toate fișierele încărcate, cu filtre, unde sunt folosite și ștergerea. */
+  fileAdmin: GcsFileAdminService;
+  /** ACP › Sistem › Stare sistem: serviciile, joburile programate și alertele trimise administratorilor. */
+  systemStatus: GcsSystemStatusService;
+  /** ACP › Sistem › Cache: zonele cache-ului și golirea lor. */
+  cacheAdmin: GcsCacheAdminService;
+  /** Formularul de contact (`/contact`) și mesajele lui din ACP › Setări › Contact. */
+  contact: GcsContactService;
+  /** Email în masă (ACP › Membri › Comunicare) și dezabonarea membrilor de la emailurile adminilor. */
+  bulkMail: GcsBulkMailService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -658,6 +673,21 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     const staff = (await acp.usersWith(IP_TOOLS_ACP_SECTION, "view")).filter((id) => id !== userId);
     if (staff.length > 0) await notifications.notify({ userIds: staff, type: "core.multi_account", targetType: "core.multi_account", targetId: userId, actorId: null, data: { others, banned } });
   });
+  // Stare sistem: alertele (disc, joburi picate) trimise administratorilor; linkul duce la pagina de stare.
+  const systemStatus = new GcsSystemStatusService({ db, kv, jobs, settings, acp, notifications, edition: infra.edition });
+  notifications.registerTarget(STATUS_ALERT_TYPE, {
+    canView: async (userId) => (await acp.usersWith("system.status", "view", 500)).includes(userId),
+    describe: async (id) => ({ title: id.startsWith("job:") ? id.slice(4) : id, href: "/admin/system/status" }),
+  });
+  // Contact: mesajele primite; notificarea duce la cutia din ACP, cu mesajul deschis.
+  const contact = new GcsContactService({ db, settings, acp, notifications, mailer, rateLimiter, antispam, siteName: () => settings.get<string>("site.name") });
+  notifications.registerTarget(CONTACT_NOTIFICATION, {
+    canView: async (userId) => (await acp.usersWith(CONTACT_ACP_SECTION, "view", 500)).includes(userId),
+    describe: async (id) => {
+      const msg = await db.contactMessage.findUnique({ where: { id: Number(id) || 0 }, select: { subject: true } });
+      return msg ? { title: msg.subject, href: `/admin/settings/contact?open=${id}` } : null;
+    },
+  });
   const notificationProducers = new GcsNotificationProducers({
     db,
     kv,
@@ -980,6 +1010,18 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       changedTopics: (since, limit) => sitemap.changedTopics(since, limit),
     }),
     orphanFiles: new GcsOrphanFilesService({ db, settings, attachments }),
+    fileAdmin: new GcsFileAdminService({ db, acp, attachments, settings }),
+    systemStatus,
+    cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
+    contact,
+    bulkMail: new GcsBulkMailService({
+      db,
+      acp,
+      settings,
+      mailer,
+      secret: () => process.env.GCS_SECRET ?? "gcs-dev-secret-not-for-production-use",
+      baseUrl: async () => baseUrl(await settings.get<string>("site.url")),
+    }),
     files,
     attachments,
     forums,

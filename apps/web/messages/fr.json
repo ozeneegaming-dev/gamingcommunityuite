@@ -1755,7 +1755,18 @@
       "reply": "Réponse en conserve (facultatif)",
       "save": "Enregistrer l' action",
       "delete": "Supprimer",
-      "steps": "Étapes"
+      "steps": "Étapes",
+      "description": "Pașii de moderare aplicați dintr-un singur click pe topicuri: blocare, fixare, evidențiere, mutare și un răspuns predefinit.",
+      "add": "Acțiune nouă",
+      "saveChanges": "Salvează",
+      "secBasics": "Acțiunea",
+      "forumsTitle": "Unde se poate folosi",
+      "forumsHint": "Niciun forum bifat = în toate forumurile.",
+      "noCategory": "Fără categorie",
+      "replyChip": "Răspuns predefinit",
+      "allForums": "În toate forumurile",
+      "inForums": "În: {forums}",
+      "confirmDelete": "Ștergi acțiunea salvată? Topicurile deja moderate cu ea rămân cum sunt."
     },
     "achievements": {
       "ranksTitle": "Rangs",
@@ -5013,7 +5024,12 @@
         },
         "open": "Ouvrir le sujet",
         "cancel": "Annuler",
-        "cancelConfirm": "La publication planifiée est supprimée et ne sera pas publiée."
+        "cancelConfirm": "La publication planifiée est supprimée et ne sera pas publiée.",
+        "new": "Postare nouă",
+        "save": "Salvează",
+        "noCategory": "Fără categorie",
+        "secPost": "Postarea",
+        "secWhen": "Publicarea"
       }
     },
     "bans": {
@@ -5394,6 +5410,375 @@
         "submit": "Changer de licence",
         "submitFirst": "Activer la licence"
       }
+    },
+    "status": {
+      "title": "Stare sistem",
+      "description": "Serviciile platformei, serverul și joburile programate. Alertele anunță administratorii când ceva nu merge.",
+      "refresh": "Verifică din nou",
+      "allOk": "Totul funcționează",
+      "problems": "{count, plural, one {O problemă} many {# de probleme} other {# de probleme}}",
+      "checkedAt": "Verificat la {time}",
+      "services": "Servicii",
+      "server": "Server",
+      "never": "niciodată",
+      "lastBeat": "ultimul semnal {when}",
+      "realtimeLite": "fără websocket (ediția Lite: polling)",
+      "cronLast": "ultima rulare {when}",
+      "emailOn": "SMTP configurat",
+      "emailOff": "SMTP neconfigurat: emailurile nu pleacă",
+      "levels": {
+        "ok": "Funcționează",
+        "warn": "Atenție",
+        "down": "Problemă",
+        "off": "Oprit"
+      },
+      "names": {
+        "db": "Bază de date",
+        "kv": "Stocarea cheilor",
+        "worker": "Worker (joburi)",
+        "realtime": "Timp real",
+        "cron": "Cron-ul gazdei",
+        "email": "Email",
+        "storage": "Stocarea fișierelor",
+        "translate": "Traduceri"
+      },
+      "engines": {
+        "postgresql": "PostgreSQL",
+        "mysql": "MySQL"
+      },
+      "kvDrivers": {
+        "redis": "Redis",
+        "sql": "Tabelă în baza de date"
+      },
+      "storageDrivers": {
+        "s3": "S3 / MinIO",
+        "local": "Folder local"
+      },
+      "providers": {
+        "google": "Google Translate",
+        "deepl": "DeepL",
+        "libretranslate": "LibreTranslate",
+        "off": "Oprite"
+      },
+      "editions": {
+        "vps": "ediția VPS",
+        "lite": "ediția Lite"
+      },
+      "facts": {
+        "version": "Versiune",
+        "node": "Node.js",
+        "platform": "Platformă",
+        "uptime": "Pornit",
+        "memory": "Memorie",
+        "timezone": "Fus orar",
+        "disk": "Disc"
+      },
+      "memoryValue": "{rss} folosită ({heap} heap)",
+      "diskValue": "{free} libere din {total} ({pct}% liber)",
+      "diskUnknown": "Sistemul nu raportează spațiul pe disc",
+      "jobsTitle": "Joburi programate",
+      "jobsCount": "{count, plural, one {# job} many {# de joburi} other {# de joburi}}",
+      "col": {
+        "job": "Job",
+        "interval": "Rulează",
+        "last": "Ultima rulare",
+        "duration": "Durată",
+        "state": "Stare",
+        "actions": "Acțiuni"
+      },
+      "cron": "cron {pattern}",
+      "onDemand": "la cerere",
+      "everyMinutes": "{n, plural, one {la fiecare minut} many {la # de minute} other {la # de minute}}",
+      "everyHours": "{n, plural, one {la fiecare oră} many {la # de ore} other {la # de ore}}",
+      "everyDays": "{n, plural, one {zilnic} many {la # de zile} other {la # de zile}}",
+      "ms": "{ms} ms",
+      "failures": "({count} din {runs} picate)",
+      "runNow": "Rulează acum",
+      "save": "Salvează",
+      "jobs": {
+        "system_heartbeat": "Semnalul worker-ului",
+        "system_status_check": "Verificarea stării (alerte)",
+        "system_lite_sweep": "Curățenia ediției Lite",
+        "license_check": "Verificarea licenței",
+        "warnings_expiry": "Expirarea avertismentelor",
+        "groups_secondary_expiry": "Grupuri secundare expirate",
+        "members_ip_retention": "Ștergerea IP-urilor vechi",
+        "system_retention": "Păstrarea datelor",
+        "seo_indexnow": "IndexNow",
+        "uploads_orphans": "Fișiere orfane",
+        "translate_cleanup": "Curățenia traducerilor",
+        "chat_pro_finalize": "Câștigătorul clasamentului Chat Pro"
+      },
+      "alerts": {
+        "title": "Alerte",
+        "secGeneral": "General",
+        "secChecks": "Ce se verifică",
+        "enabled": "Trimite alerte administratorilor",
+        "enabledHint": "Clopoțelul și emailul, pentru cine are acces la Stare sistem. Verificarea rulează la 10 minute.",
+        "repeatHours": "Repetă alerta după (ore)",
+        "repeatHint": "Aceeași problemă se anunță din nou după atâtea ore, cât timp durează.",
+        "disk": "Disc aproape plin",
+        "diskHint": "Alertă când spațiul liber scade sub prag.",
+        "diskMinFreePct": "Prag spațiu liber (%)",
+        "jobs": "Joburi picate",
+        "jobsHint": "Alertă când ultima rulare a unui job programat a eșuat.",
+        "summaryOn": "Alerte pornite: disc sub {pct}%, joburi picate, repetate la {hours} h",
+        "summaryOff": "Alertele sunt oprite"
+      }
+    },
+    "cache": {
+      "title": "Cache",
+      "description": "Datele ținute în memorie ca paginile să se încarce repede. Golirea nu pierde nimic: paginile recitesc din baza de date.",
+      "clearAll": "Golește tot",
+      "clearAllConfirm": "Golești tot cache-ul? Primele pagini după golire se vor încărca puțin mai încet.",
+      "keys": "chei în cache",
+      "areasCount": "zone",
+      "driver": "stocare",
+      "drivers": {
+        "redis": "Redis",
+        "sql": "Bază de date"
+      },
+      "areasTitle": "Zone",
+      "areaKeys": "{count, plural, one {# cheie} many {# de chei} other {# de chei}}",
+      "clear": "Golește",
+      "empty": "Cache-ul e gol acum.",
+      "tagsTitle": "Tag-uri",
+      "tagsHint": "Un tag leagă datele care se schimbă împreună. Invalidarea lui are același efect ca o editare.",
+      "noTags": "Niciun tag activ.",
+      "invalidate": "Invalidează",
+      "logTitle": "Ultimele goliri",
+      "logEmpty": "Nicio golire încă.",
+      "logAll": "Tot cache-ul",
+      "logTag": "Tag-ul {tag}",
+      "logArea": "Zona {area}",
+      "areas": {
+        "settings": "Setări",
+        "perm": "Permisiuni",
+        "themes": "Teme",
+        "nav": "Meniu",
+        "apps": "Aplicații",
+        "groups": "Grupuri",
+        "forums": "Forumuri",
+        "stats": "Statistici",
+        "servers": "Servere",
+        "chat_pro": "Chat Pro",
+        "reactions": "Reacții",
+        "notif": "Notificări",
+        "profile": "Profiluri",
+        "user": "Membri",
+        "widgets": "Widget-uri",
+        "templates": "Șabloane",
+        "layout": "Aspect"
+      }
+    },
+    "files": {
+      "title": "Fișiere",
+      "description": "Toate fișierele încărcate pe site: imagini din postări, avatare, emoticoane, bannere, teme. Vezi unde e folosit fiecare și șterge ce nu mai trebuie.",
+      "settings": "Setări încărcări",
+      "tiles": {
+        "files": "fișiere · {size}",
+        "kind": "{kind} · {size}",
+        "unattached": "nelegate · {size}"
+      },
+      "orphansOn": "Fișierele nelegate de nimic se șterg automat după {days} zile.",
+      "orphansOff": "Ștergerea automată a fișierelor nelegate e oprită.",
+      "orphansChange": "Schimbă",
+      "search": "Caută",
+      "searchPlaceholder": "Numele fișierului sau id-ul",
+      "allKinds": "Toate tipurile",
+      "allAreas": "Toate zonele",
+      "areaNone": "Nelegat",
+      "sort": "Ordine",
+      "sorts": {
+        "new": "Cele mai noi",
+        "old": "Cele mai vechi",
+        "big": "Cele mai mari"
+      },
+      "filter": "Filtrează",
+      "reset": "Resetează",
+      "total": "{count, plural, one {# fișier} many {# de fișiere} other {# de fișiere}}",
+      "empty": "Niciun fișier nu se potrivește filtrelor.",
+      "col": {
+        "file": "Fișier",
+        "owner": "Încărcat de",
+        "area": "Zonă",
+        "size": "Mărime",
+        "date": "Încărcat",
+        "type": "Tip",
+        "actions": "Acțiuni"
+      },
+      "kinds": {
+        "image": "Imagine",
+        "video": "Video",
+        "audio": "Audio",
+        "archive": "Arhivă",
+        "document": "Document",
+        "other": "Altul"
+      },
+      "dimensions": "Dimensiuni",
+      "noOwner": "—",
+      "ownerFiles": "Doar fișierele lui",
+      "usedIn": "Folosit în",
+      "unused": "Nu e folosit nicăieri",
+      "download": "Descarcă",
+      "open": "Detalii",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi definitiv fișierul?",
+      "confirmDeleteUsed": "Fișierul e folosit. După ștergere, locurile care îl arată rămân fără el. Ștergi definitiv?",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "areas": {
+        "forums_post": "Postare",
+        "forums_topic": "Topic",
+        "user_avatar": "Avatar",
+        "user_cover": "Copertă profil",
+        "theme_logo": "Logo temă",
+        "theme_favicon": "Favicon temă",
+        "theme_header": "Imagine antet",
+        "theme_header_video": "Video antet",
+        "chat_message": "Mesaj chat",
+        "chat_file": "Fișier chat",
+        "chat_emote": "Emoticon",
+        "pm_message": "Mesaj privat",
+        "decor": "Decor",
+        "rank": "Rang",
+        "badge": "Badge",
+        "frame": "Ramă avatar",
+        "emote": "Emoticon",
+        "server": "Server",
+        "clan": "Clan",
+        "map": "Hartă",
+        "setting": "Setare"
+      },
+      "bulk": {
+        "title": "Ștergere în masă",
+        "selected": "{count, plural, =0 {Niciun fișier bifat} one {# fișier bifat} many {# de fișiere bifate} other {# de fișiere bifate}}",
+        "selectAll": "Bifează toate",
+        "select": "Bifează {name}",
+        "delete": "Șterge bifate",
+        "none": "Bifează cel puțin un fișier.",
+        "confirm": "{count, plural, one {Ștergi definitiv fișierul bifat?} many {Ștergi definitiv cele # de fișiere bifate?} other {Ștergi definitiv cele # de fișiere bifate?}}",
+        "done": "{count, plural, one {# fișier șters} many {# de fișiere șterse} other {# de fișiere șterse}}"
+      }
+    },
+    "forumChecks": {
+      "all": "Bifează tot",
+      "none": "Debifează tot",
+      "groupAll": "Toate din categorie",
+      "noCategory": "Fără categorie"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Mesajele primite prin formularul de contact al site-ului. Răspunde direct pe email, arhivează ce e rezolvat.",
+      "viewPage": "Vezi pagina",
+      "settings": "Setări",
+      "save": "Salvează",
+      "stateOn": "Formularul de contact e pornit",
+      "stateOff": "Formularul de contact e oprit",
+      "stateRedirect": "Pagina de contact trimite la o adresă externă",
+      "chipGuests": "vizitatori și membri",
+      "chipMembers": "doar membri",
+      "chipBell": "notificare staff",
+      "chipEmails": "{count, plural, one {copie la # adresă} many {copii la # de adrese} other {copii la # de adrese}}",
+      "filters": "Filtre",
+      "tabOpen": "Deschise ({count})",
+      "tabArchived": "Arhivate ({count})",
+      "tabAll": "Toate",
+      "total": "{count, plural, one {# mesaj} many {# de mesaje} other {# de mesaje}}",
+      "search": "Caută după nume, email sau subiect",
+      "empty": "Niciun mesaj aici.",
+      "status": {
+        "new": "Nou",
+        "read": "Citit",
+        "answered": "Răspuns",
+        "archived": "Arhivat"
+      },
+      "open": "Deschide",
+      "from": "De la",
+      "email": "Email",
+      "received": "Primit",
+      "ip": "IP",
+      "reply": "Răspunsul tău",
+      "replyHint": "Pleacă pe email la {email}, cu mesajul citat dedesubt.",
+      "sendReply": "Trimite răspunsul",
+      "markRead": "Marchează citit",
+      "archive": "Arhivează",
+      "unarchive": "Redeschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi definitiv mesajul?",
+      "pages": "Pagini",
+      "page": "Pagina {page} din {pages}",
+      "prev": "Înapoi",
+      "next": "Înainte",
+      "cfg": {
+        "secPage": "Pagina /contact",
+        "secDelivery": "Livrare și păstrare",
+        "enabled": "Pagina de contact pornită",
+        "enabledHint": "Oprită, adresa /contact dă „pagina nu există”.",
+        "guests": "Și vizitatorii pot scrie",
+        "guestsHint": "Vizitatorii trec prin captcha-ul invizibil din Anti-spam. Altfel, doar membrii autentificați.",
+        "intro": "Textul de deasupra formularului",
+        "introPlaceholder": "Scrie-ne și îți răspundem pe email cât mai repede.",
+        "subjects": "Subiectele (unul pe rând)",
+        "subjectsHint": "Apar ca listă. Fără niciun subiect, expeditorul scrie unul liber.",
+        "redirectUrl": "Trimite la o adresă externă",
+        "redirectHint": "Opțional: /contact duce acolo (ex. un server Discord sau o pagină de suport) în loc de formular.",
+        "notifyStaff": "Anunță staff-ul în clopoțel",
+        "notifyHint": "Cine are acces la această pagină primește notificarea fiecărui mesaj nou.",
+        "emails": "Copii pe email",
+        "emailsHint": "Cel mult 10 adrese, câte una pe rând sau separate prin virgulă.",
+        "keepDays": "Păstrează mesajele (zile)"
+      }
+    },
+    "bulkMail": {
+      "title": "Email în masă",
+      "description": "Trimite un email tuturor membrilor sau doar anumitor grupuri. Pleacă pe loturi, în ritmul ales; fiecare email are link de dezabonare.",
+      "new": "Email nou",
+      "rate": "Ritm",
+      "perMinute": "Emailuri pe minut",
+      "perMinuteHint": "Gazdele de email limitează des trimiterea; un ritm mic evită blocarea.",
+      "save": "Salvează",
+      "create": "Salvează ciorna",
+      "secMessage": "Mesajul",
+      "secAudience": "Cui se trimite",
+      "subject": "Subiectul",
+      "body": "Conținutul",
+      "bodyHint": "{name} devine numele membrului, {site} numele site-ului.",
+      "groupsHint": "Niciun grup bifat = toți membrii.",
+      "primaryOnly": "Doar grupul principal (nu și grupurile secundare)",
+      "activeDays": "Doar activi în ultimele (zile)",
+      "activeAny": "oricând",
+      "countLoading": "Se numără destinatarii…",
+      "count": "{count, plural, =0 {Niciun destinatar} one {# destinatar} many {# de destinatari} other {# de destinatari}}",
+      "excludedHint": "Nu primesc: membrii dezabonați, cei banați, spammerii și conturile fără email confirmat.",
+      "empty": "Niciun email încă. Începe cu „Email nou”.",
+      "allMembers": "Toți membrii",
+      "primaryChip": "doar grupul principal",
+      "activeChip": "activi în ultimele {days} zile",
+      "progress": "{sent} din {total} trimise",
+      "failed": "{count, plural, one {# eșuat} many {# de eșuate} other {# de eșuate}}",
+      "status": {
+        "draft": "Ciornă",
+        "sending": "Se trimite",
+        "sent": "Trimis",
+        "cancelled": "Oprit"
+      },
+      "edit": "Editează",
+      "open": "Deschide",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi emailul din listă? Cele deja trimise rămân în căsuțele membrilor.",
+      "sendTest": "Trimite-mi un test",
+      "sendTestHint": "Doar la adresa ta, cu numele tău în locul {name}.",
+      "start": "Trimite acum",
+      "startConfirm": "Pornești trimiterea către toți destinatarii aleși? Nu se mai poate edita după.",
+      "cancel": "Oprește trimiterea",
+      "cancelConfirm": "Oprești trimiterea? Cei care l-au primit deja rămân cu el.",
+      "duplicate": "Duplică ca ciornă",
+      "audience": "Publicul",
+      "sentLabel": "Trimise",
+      "startedAt": "Pornit"
     }
   },
   "settings": {
@@ -5412,7 +5797,10 @@
       "smtp_pass": "Mot de passe SMTP",
       "from": "Adresse de l'expéditeur",
       "title": "E-mail",
-      "hint": "Nous envoyons un lien de confirmation à la nouvelle adresse ; l’ancienne reste jusqu’à ta confirmation."
+      "hint": "Nous envoyons un lien de confirmation à la nouvelle adresse ; l’ancienne reste jusqu’à ta confirmation.",
+      "adminMail": "Emailuri de la administratori",
+      "adminMailHint": "Anunțurile trimise de echipă tuturor membrilor (evenimente, noutăți). Notificările contului tău nu depind de asta.",
+      "adminMailSaved": "Salvat"
     },
     "auth": {
       "registration_open": "Inscription ouverte",
@@ -6159,6 +6547,12 @@
       "remote_images_hint": "Dans les messages, signatures, profils et messages privés. Bloquées = affichées comme lien vers l’image.",
       "orphan_days": "Supprimer les fichiers inutilisés après (jours)",
       "orphan_days_hint": "Fichiers envoyés et jamais joints à un message, chaque jour, par lots. 0 = désactivé. Recommandé : au moins 7."
+    },
+    "contact": {
+      "config": "Formularul de contact"
+    },
+    "bulk_mail": {
+      "per_minute": "Email în masă: emailuri pe minut"
     }
   },
   "permissions": {
@@ -7367,7 +7761,9 @@
         "group_expired": "Groupes temporaires expirés",
         "weekly_digest": "Résumé hebdomadaire « Ce que vous avez manqué »",
         "warning_appeal": "Décisions sur les contestations d'avertissements",
-        "multi_account": "Nouveaux comptes partageant l'IP d'autres comptes (équipe)"
+        "multi_account": "Nouveaux comptes partageant l'IP d'autres comptes (équipe)",
+        "system_alert": "Alerte de stare a sistemului (disc, joburi picate)",
+        "contact_message": "Mesaje noi prin formularul de contact (staff)"
       },
       "chat": {
         "mention": "Discussion mentions",
@@ -11186,5 +11582,29 @@
       "add": "Adaugă",
       "saved": "Salvat"
     }
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Scrie-ne și îți răspundem pe email cât mai repede.",
+    "name": "Numele tău",
+    "email": "Emailul tău",
+    "subject": "Subiectul",
+    "pickSubject": "Alege subiectul",
+    "message": "Mesajul",
+    "send": "Trimite mesajul",
+    "sending": "Se trimite…",
+    "as": "Trimiți ca {name} ({email}). Răspunsul vine pe acest email.",
+    "sentTitle": "Mesajul a fost trimis",
+    "sentBody": "Mulțumim! Echipa îți răspunde pe email.",
+    "loginRequired": "Formularul de contact e doar pentru membri.",
+    "login": "Intră în cont"
+  },
+  "unsubscribe": {
+    "title": "Dezabonare",
+    "done": "Te-ai dezabonat",
+    "doneBody": "Nu mai primești emailurile trimise de administratori. Le poți porni din nou oricând din setările contului.",
+    "invalid": "Link invalid",
+    "invalidBody": "Linkul de dezabonare nu e valid sau contul nu mai există.",
+    "settings": "Setările emailului"
   }
 }

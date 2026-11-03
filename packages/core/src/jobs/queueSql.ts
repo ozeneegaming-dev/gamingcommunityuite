@@ -123,7 +123,7 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
     const def = this.defs.get(job.name);
     try {
       if (!def) throw new Error(`Job necunoscut: ${job.name}`);
-      await def.handler(JSON.parse(job.data) as GcsJobData);
+      await this.runDef(def, JSON.parse(job.data) as GcsJobData);
       await this.db.gcsJob.deleteMany({ where: { id: job.id } });
       return true;
     } catch (error) {

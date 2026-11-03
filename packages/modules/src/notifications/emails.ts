@@ -83,6 +83,16 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, t, _n, d) => `Cont nou „${t}” cu IP-ul altor ${Number(d.others) || 0} conturi${Number(d.banned) ? ` (${Number(d.banned)} banate)` : ""}`,
     en: (_a, t, _n, d) => `New account “${t}” shares its IP with ${Number(d.others) || 0} other accounts${Number(d.banned) ? ` (${Number(d.banned)} banned)` : ""}`,
   },
+  // Contact: mesajul nou (`data.from` = numele expeditorului, titlul = subiectul).
+  "core.contact_message": {
+    ro: (_a, t, n, d) => (n > 1 ? `${n} mesaje noi prin formularul de contact` : `Mesaj nou de la ${String(d.from ?? "")} prin formularul de contact: ${t}`),
+    en: (_a, t, n, d) => (n > 1 ? `${n} new contact form messages` : `New contact form message from ${String(d.from ?? "")}: ${t}`),
+  },
+  // Stare sistem: discul aproape plin (`data.freePct`) sau un job picat (`data.job`, `data.error`).
+  "core.system_alert": {
+    ro: (_a, _t, _n, d) => (d.kind === "disk" ? `Spațiu pe disc scăzut: doar ${Number(d.freePct) || 0}% liber` : `Jobul programat „${String(d.job ?? "")}” a picat${d.error ? `: ${String(d.error)}` : ""}`),
+    en: (_a, _t, _n, d) => (d.kind === "disk" ? `Low disk space: only ${Number(d.freePct) || 0}% free` : `The scheduled job “${String(d.job ?? "")}” failed${d.error ? `: ${String(d.error)}` : ""}`),
+  },
   "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
   "clans.request": {
     ro: (a, t, n) => (n > 1 ? `${n} cereri noi de intrare în clanul „${t}”` : `${a} vrea să intre în clanul „${t}”`),

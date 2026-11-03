@@ -517,6 +517,50 @@ model SpamLog {
   @@map("spam_logs")
 }
 
+/// Mesajele primite prin formularul de contact (ACP › Setări › Contact). `userId` fără relație: mesajul (cu numele și
+/// emailul trimise) rămâne și după ștergerea contului, până la curățarea după `contact.keep_days`.
+/// `status`: new | read | answered | archived.
+model ContactMessage {
+  id          Int       @id @default(autoincrement())
+  userId      String?
+  name        String
+  email       String
+  subject     String
+  body        String
+  ip          String?
+  status      String    @default("new")
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+/// Email în masă (ACP › Membri › Comunicare): ciorna (subiect + documentul editorului), publicul (`audience`: grupuri,
+/// doar grupul principal, activi în ultimele N zile) și trimiterea pe loturi de jobul `members.bulk_mail`
+/// (`cursor` = ultimul id de membru procesat). `status`: draft | sending | sent | cancelled.
+model BulkMail {
+  id          Int       @id @default(autoincrement())
+  subject     String
+  bodyJson    Json
+  bodyHtml    String
+  audience    Json
+  status      String    @default("draft")
+  total       Int       @default(0)
+  sent        Int       @default(0)
+  failed      Int       @default(0)
+  cursor      String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  @@index([status])
+  @@map("bulk_mails")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique
@@ -1664,6 +1708,8 @@ model NotificationDefault {
 model NotificationMember {
   userId        String    @id
   emailsOff     Boolean   @default(false)
+  /// Email în masă: membrul nu mai vrea emailurile trimise de administratori (setările lui sau linkul de dezabonare).
+  adminMailOff  Boolean   @default(false)
   emailsOffAt   DateTime?
   emailsOffById String?
   weeklySentAt  DateTime?
