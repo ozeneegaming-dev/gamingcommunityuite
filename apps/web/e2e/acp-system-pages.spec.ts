@@ -365,7 +365,7 @@ test("Recomandări: setările din ACP, linkul membrului, înregistrarea prin lin
     await useFreshIp(ctx, "198.18.73");
     const guest = await ctx.newPage();
     await guest.goto(`/r/${me}`);
-    await expect(guest).toHaveURL(//register$/);
+    await expect(guest).toHaveURL(/\/register$/);
     await register(guest, friend, `prieten-${id}@example.com`);
     await expect.poll(async () => (await sql(`SELECT 1 FROM referrals WHERE "referrerId" = $1`, [me])).length, { timeout: 20_000 }).toBe(1);
     await ctx.close();
