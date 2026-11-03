@@ -7,7 +7,8 @@
  *   pnpm --filter @gcs/web exec tsx e2e/run-package.mts --zip <arhiva> [--db mysql|postgres] [argumente playwright]
  *
  * Pachetul trebuie să fie pentru platforma mașinii (pe Windows: `--target win32-x64` la release). Licența de test e
- * semnată cu o cheie de unică folosință, de încredere doar pentru această rulare (`GCS_LICENSE_TRUSTED_KEYS`).
+ * semnată cu o cheie de unică folosință, de încredere doar pentru această rulare (`GCS_LICENSE_TRUSTED_KEYS`); cheia
+ * scurtă se activează la un Data Center fals (`fake-datacenter.mts`).
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
@@ -16,6 +17,7 @@ import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { E2E_LICENSE_SHORT_KEY, startFakeDataCenter } from "./fake-datacenter.mts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDir = path.resolve(here, "..");
@@ -133,6 +135,9 @@ async function main(): Promise<number> {
   const spki = publicKey.export({ format: "der", type: "spki" });
   const licenseKeyFile = path.join(work, "license-key.pem");
   writeFileSync(licenseKeyFile, privateKey.export({ format: "pem", type: "pkcs8" }), { mode: 0o600 });
+  // Cheia scurtă a licenței: un Data Center fals (testele nu vorbesc niciodată cu cel real).
+  const dataCenter = await startFakeDataCenter(privateKey.export({ format: "pem", type: "pkcs8" }).toString());
+  cleanups.push(dataCenter.close);
   const port = await freePort();
   const url = `http://localhost:${port}`;
   const secret = "gcs-package-e2e-secret-0123456789abcdef0123456789abcdef";
@@ -142,7 +147,7 @@ async function main(): Promise<number> {
     HOSTNAME: "127.0.0.1",
     GCS_SECRET: secret,
     GCS_LICENSE_TRUSTED_KEYS: `e2e=${Buffer.from(spki.subarray(spki.length - 32)).toString("base64")}`,
-    GCS_LICENSE_SERVER: "off",
+    GCS_LICENSE_SERVER: dataCenter.url,
     GCS_TEST_ROUTES: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   };
@@ -212,6 +217,7 @@ async function main(): Promise<number> {
       GCS_E2E_INSTALL_URL: url,
       GCS_E2E_INSTALL_CODE: code,
       GCS_E2E_LICENSE_KEY: licenseKeyFile,
+      GCS_E2E_LICENSE_SHORT_KEY: E2E_LICENSE_SHORT_KEY,
       GCS_E2E_INSTALL_DATABASE_URL: databaseUrl,
       GCS_E2E_INSTALL_DB_URL: databaseUrl,
       DATABASE_URL: databaseUrl,

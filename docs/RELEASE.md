@@ -46,12 +46,26 @@ pnpm release:sign -- --key "../keys/gcs-plugins-ed25519.pem"
 
 ## 3. Licența unui client
 
-**Din Data Center (varianta obișnuită):** panoul Data Center → licența clientului → secțiunea „GamingCommunitySuite licence
-(GCS1)”: domeniile (câte unul pe rând, `*.domeniu.ro` pentru subdomenii), aplicațiile premium (ale planului sau alese),
-apoi „Issue GCS licence token”. Tokenul (`GCS1.…`) îl trimiți clientului. Site-urile verifică licența zilnic la
-`https://client.gamingcommunitysuite.com/api/license/verify`: suspendarea sau revocarea din panou se văd în ACP-ul
-clientului (avertisment), iar după 30 de zile de grație aplicațiile premium se opresc (forumul merge mai departe); o
-prelungire ajunge singură la client (tokenul nou se preia la verificarea următoare).
+**Din Data Center (varianta obișnuită):** creezi licența în panoul Data Center; **cheia scurtă** (`GCS-XXXX-XXXX-XXXX`)
+apare o singură dată, cu buton Copy (în bază stă doar amprenta ei). Pe pagina licenței, secțiunea „GamingCommunitySuite
+licence (GCS1)”: aplicațiile premium (ale planului sau alese) și, opțional, domeniile (câte unul pe rând,
+`*.domeniu.ro` pentru subdomenii). Clientul primește doar cheia scurtă și o introduce la pasul „Licență” al
+installer-ului (sau în ACP → Sistem → Licență); installer-ul o activează la
+`https://client.gamingcommunitysuite.com/api/license/activate`, care întoarce tokenul semnat.
+
+- **Domeniul:** dacă nu ai trecut domenii, **prima activare îl fixează** (câte permite planul, implicit unul); domeniile
+  trecute de tine sunt o listă fixă. „♻️ Reset domains” eliberează domeniile (clientul și-a mutat forumul): instalarea
+  veche intră în perioada de grație la verificarea următoare, iar următoarea activare fixează domeniul nou.
+- **Cheia pierdută** (sau o licență veche, a cărei cheie nu o mai știi): „🔑 Generate new key” — cheia veche nu mai
+  activează, instalările existente nu sunt atinse.
+- **Fără internet / urgențe:** tokenul lung (`GCS1.…`) rămâne pe pagina licenței (Copy / Download) și merge în același
+  câmp din installer.
+- Activările (reușite sau refuzate) apar în tabelul „Licence key activations”; prea multe încercări greșite de pe
+  același IP (10 / 15 minute) sau pe aceeași licență (30 / oră) primesc `rate_limited`.
+
+Site-urile verifică licența zilnic la `https://client.gamingcommunitysuite.com/api/license/verify`: suspendarea sau
+revocarea din panou se văd în ACP-ul clientului (avertisment), iar după 30 de zile de grație aplicațiile premium se opresc
+(forumul merge mai departe); o prelungire ajunge singură la client (tokenul nou se preia la verificarea următoare).
 
 **Offline, cu cheia ta (urgențe, fără Data Center):**
 
@@ -63,8 +77,9 @@ pnpm license:issue -- --key "../keys/gcs-licenses-ed25519.pem" --licensee "Comun
 - `--domain`: domeniul site-ului clientului (cu sau fără `www.`), sau `*.domeniu.ro` pentru subdomenii; repetabil.
 - `--apps`: aplicațiile premium incluse: `servers`, `shop`, `vip_studio`, `chat_pro`, `groups_pro` (fără = doar standard).
 - `--expires`: `AAAA-LL-ZZ` (valabilă până la sfârșitul zilei, UTC) sau `never`.
-- Tokenul (`GCS1.…`) îl trimiți clientului; îl introduce la pasul „Licență” al installer-ului.
+- Tokenul (`GCS1.…`) îl trimiți clientului; îl introduce la pasul „Licență” al installer-ului (în același câmp ca
+  cheia scurtă) sau în ACP → Sistem → Licență.
 
 O licență emisă offline nu se poate revoca înainte de expirare (nu are evidență în Data Center), deci e preferabilă o
 expirare (ex. un an) în loc de `never`. `GCS_LICENSE_SERVER` (pe site-ul clientului) schimbă adresa verificării online
-sau o oprește (`off`).
+și a activării cheilor scurte sau le oprește (`off`; rămâne doar tokenul lung).

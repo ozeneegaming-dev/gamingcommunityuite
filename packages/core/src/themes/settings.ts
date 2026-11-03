@@ -495,8 +495,8 @@ export const themeHasDesignDecor = (preset: string | undefined | null): boolean 
 /**
  * Antetul temelor incluse: cel de pe preview, ales de proprietar (2026-11-02). Presetarea Esports (rețelele sociale și
  * contul sus, meniul împărțit în jurul logo-ului, căutarea în dreapta), plus butonul chatului și limba pe rândul
- * principal, breadcrumb-ul și serverele live dedesubt; 120 px, compact și ascuns la derularea în jos. Imaginea de fundal
- * a preview-ului e un fișier al acelei instalări, deci rămâne grafica GCS; meniul se împarte jumătate-jumătate.
+ * principal, breadcrumb-ul și serverele live dedesubt; 120 px, compact și ascuns la derularea în jos; meniul se împarte
+ * jumătate-jumătate. În spatele antetului, imaginea inclusă „Forja” (proprietarul, 2026-11-03: și pe instalările noi).
  */
 function gcsHeaderLayout(): GcsHeaderBuilder {
   const layout = headerPreset("esports");
@@ -507,6 +507,7 @@ function gcsHeaderLayout(): GcsHeaderBuilder {
 }
 const GCS_HEADER: GcsThemeSettings["header"] = {
   ...NOVA_THEME_SETTINGS.header,
+  art: "forja",
   height: 120,
   heightMobile: 60,
   navIcons: true,

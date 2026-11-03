@@ -255,6 +255,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["files", "/admin/system/files", "fa-solid fa-folder-open"],
     ["status", "/admin/system/status", "fa-solid fa-heart-pulse"],
     ["update", "/admin/system/update", "fa-solid fa-arrows-rotate"],
+    ["license", "/admin/system/license", "fa-solid fa-key"],
     ["cron", "/admin/system/cron", "fa-solid fa-clock"],
   ]),
   // „Integrări”: Aplicații și pluginuri stă doar în zona Aplicații (mai jos), nu și aici.

@@ -31,11 +31,13 @@ describe("setările imaginii antetului", () => {
     }
   });
 
-  test("implicit: fără imagine, pe tot antetul, 15% întunecare, fără nuanță, estompată, și pe telefon", () => {
-    for (const s of [DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS, GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) {
-      expect([s.header.image, s.header.art, s.header.imageArea, s.header.imageDim, s.header.imageTint, s.header.imageFade, s.header.imageMobile]).toEqual([null, "none", "all", 15, 0, true, true]);
-    }
-    // O temă salvată înainte de setări le primește pe cele implicite.
+  test("implicit: pe tot antetul, 15% întunecare, fără nuanță, estompată, și pe telefon; Forja doar la temele incluse", () => {
+    const of = (s: GcsThemeSettings) => [s.header.image, s.header.art, s.header.imageArea, s.header.imageDim, s.header.imageTint, s.header.imageFade, s.header.imageMobile];
+    for (const s of [DEFAULT_THEME_SETTINGS, NOVA_THEME_SETTINGS]) expect(of(s)).toEqual([null, "none", "all", 15, 0, true, true]);
+    // GCS Dark și GCS White (instalările noi) pornesc cu imaginea „Forja” (proprietarul, 2026-11-03).
+    for (const s of [GCS_DARK_THEME_SETTINGS, GCS_WHITE_THEME_SETTINGS]) expect(of(s)).toEqual([null, "forja", "all", 15, 0, true, true]);
+    // O temă salvată înainte de setări le primește pe cele implicite ale designului: fără imagine (o instalare existentă
+    // nu se schimbă singură).
     expect(normalizeThemeSettings({ preset: "nova", header: { image: null } }).header.art).toBe("none");
   });
 
@@ -96,6 +98,8 @@ describe("fișierele", () => {
     expect(sheet).toContain(':root[data-gcs-header-image="all"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact])');
     expect(sheet).toContain(':root[data-gcs-header-image="top"] .gcs-hb:not([data-compact], [data-device="mobile"]) > .gcs-hb__row:first-child');
     expect(sheet).toContain("background-blend-mode: normal, normal, color, normal;");
+    // Estomparea merge spre culoarea antetului (închisă și pe GCS White), nu spre pagina deschisă.
+    expect(sheet).toContain("transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)");
     // Doar fundaluri: un pseudo-element poziționat ar acoperi rândurile statice ale antetului Esports.
     expect(sheet).not.toMatch(/data-gcs-header-image[^{]*::(before|after)/);
   });

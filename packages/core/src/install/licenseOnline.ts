@@ -2,7 +2,18 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { GCS_PREMIUM_APPS } from "./apps";
-import { checkLicenseOnline, installDomain, licenseServerFor, verifyLicense, type GcsLicenseOnlineResult } from "./license";
+import {
+  activateLicenseKey,
+  checkLicenseOnline,
+  installDomain,
+  licenseActivationServer,
+  licenseServerFor,
+  normalizeLicenseKey,
+  verifyLicense,
+  type GcsLicense,
+  type GcsLicenseActivationError,
+  type GcsLicenseOnlineResult,
+} from "./license";
 import type { GcsInstallState } from "./state";
 
 /** Cât rămân pornite aplicațiile premium după ce platforma-mamă declară licența invalidă. */
@@ -26,6 +37,10 @@ export type GcsLicenseOnlineState = {
 
 const FILE = "license_online.json";
 
+export type GcsLicenseKeyActivation =
+  | { ok: true; key: string; token: string; license: GcsLicense }
+  | { ok: false; error: GcsLicenseActivationError };
+
 /**
  * Verificarea zilnică a licenței la platforma-mamă (Data Center): doar pentru licențele emise de ea
  * (`licenseServerFor`). O licență declarată invalidă păstrează aplicațiile premium încă `GCS_LICENSE_GRACE_DAYS` zile
@@ -41,6 +56,7 @@ export class GcsLicenseOnline {
       version?: string;
       edition?: string;
       check?: typeof checkLicenseOnline;
+      activate?: typeof activateLicenseKey;
       now?: () => number;
       env?: NodeJS.ProcessEnv;
     },
@@ -77,13 +93,44 @@ export class GcsLicenseOnline {
     await rename(tmp, this.file());
   }
 
+  private fresh(): GcsLicenseOnlineState {
+    return { instanceUuid: randomUUID(), status: "disabled", checkedAt: null, invalidSince: null, tokenUpdatedAt: null };
+  }
+
+  /**
+   * Activarea unei chei scurte (installer-ul și ACP › Sistem › Licență): Data Center-ul dă tokenul semnat, verificat
+   * aici offline pentru domeniul instalării. Activarea trimite identificatorul instanței (același ca verificările
+   * zilnice); reușita pornește starea online de la „validă”, fără perioadă de grație. Nimic nu salvează licența:
+   * apelantul păstrează tokenul (și cheia).
+   */
+  async activate(input: string): Promise<GcsLicenseKeyActivation> {
+    const key = normalizeLicenseKey(input);
+    if (!key) return { ok: false, error: "format" };
+    const env = this.deps.env ?? process.env;
+    const domain = installDomain(env);
+    const prev = (await this.read()) ?? this.fresh();
+    const result = await (this.deps.activate ?? activateLicenseKey)(key, {
+      domain,
+      server: licenseActivationServer(env),
+      instanceUuid: prev.instanceUuid,
+      ...(this.deps.version ? { version: this.deps.version } : {}),
+      ...(this.deps.edition ? { edition: this.deps.edition } : {}),
+    });
+    if (!result.ok) return result;
+    const offline = verifyLicense(result.token, { domain, premiumApps: GCS_PREMIUM_APPS });
+    if (!offline.ok || offline.license.dev) return { ok: false, error: "invalid_token" };
+    const at = new Date(this.now()).toISOString();
+    await this.write({ ...prev, status: "valid", checkedAt: at, invalidSince: null, tokenUpdatedAt: at });
+    return { ok: true, key, token: result.token, license: offline.license };
+  }
+
   /** O verificare (jobul zilnic). Întoarce starea nouă sau `null` fără licență (încă neinstalat). */
   async run(): Promise<GcsLicenseOnlineState | null> {
     const token = await this.deps.state.readLicense();
     if (!token) return null;
     const env = this.deps.env ?? process.env;
     const domain = installDomain(env);
-    const prev = (await this.read()) ?? { instanceUuid: randomUUID(), status: "disabled", checkedAt: null, invalidSince: null, tokenUpdatedAt: null };
+    const prev = (await this.read()) ?? this.fresh();
     const offline = verifyLicense(token, { domain, premiumApps: GCS_PREMIUM_APPS });
     const server = licenseServerFor(token, env);
     if ((offline.ok && offline.license.dev) || !server) {
