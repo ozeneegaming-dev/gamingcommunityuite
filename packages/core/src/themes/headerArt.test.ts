@@ -98,6 +98,8 @@ describe("fișierele", () => {
     expect(sheet).toContain(':root[data-gcs-header-image="all"][data-gcs-header-image-mobile="on"] .gcs-hb[data-device="mobile"]:not([data-compact])');
     expect(sheet).toContain(':root[data-gcs-header-image="top"] .gcs-hb:not([data-compact], [data-device="mobile"]) > .gcs-hb__row:first-child');
     expect(sheet).toContain("background-blend-mode: normal, normal, color, normal;");
+    // Estomparea merge spre culoarea antetului (închisă și pe GCS White), nu spre pagina deschisă.
+    expect(sheet).toContain("transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)");
     // Doar fundaluri: un pseudo-element poziționat ar acoperi rândurile statice ale antetului Esports.
     expect(sheet).not.toMatch(/data-gcs-header-image[^{]*::(before|after)/);
   });

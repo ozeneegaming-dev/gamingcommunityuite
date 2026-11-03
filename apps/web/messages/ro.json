@@ -7721,7 +7721,7 @@
       },
       "header_imageFade": {
         "label": "Estompare jos",
-        "help": "Marginea de jos a imaginii trece lin în fundalul paginii (pe tot antetul)."
+        "help": "Marginea de jos a imaginii se estompează lin în culoarea antetului (pe tot antetul)."
       },
       "header_imageMobile": {
         "label": "Și pe telefon",

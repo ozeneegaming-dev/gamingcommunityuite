@@ -7721,7 +7721,7 @@
       },
       "header_imageFade": {
         "label": "Fondu en bas",
-        "help": "Le bord inférieur de l'image se fond dans le fond de la page (tout l'en-tête)."
+        "help": "Le bord inférieur de l'image se fond dans la couleur de l'en-tête (tout l'en-tête)."
       },
       "header_imageMobile": {
         "label": "Aussi sur mobile",
