@@ -1226,6 +1226,15 @@ html.gcs-nova[data-theme="light"] {
   border-radius: 12px;
   border-color: var(--gcs-box-border, var(--gcs-border));
 }
+/* Decorul GCS pe coperta-degrade a cardului de membru (fără imagine): dungi fine, ca pe cardurile forumurilor. */
+.gcs-nova .gcs-hoverCard--v3 .gcs-hoverCard__cover:not(.gcs-hoverCard__cover--image)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--gcs-text) 5%, transparent) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+}
 .gcs-nova .gcs-groupCard__band {
   border-bottom-width: 1px;
 }
@@ -1398,11 +1407,12 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-drawer__toggle {
   color: var(--gcs-drawer-text, var(--gcs-text));
 }
+/* Iconițele itemilor de pe primul nivel, în pătrate de 34 px (macheta „Submeniurile din antet”). */
 .gcs-nova .gcs-drawer__link > svg:first-child {
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
-  padding: 7px;
+  width: 34px;
+  height: 34px;
+  padding: 9px;
   border-radius: 6px;
   background: color-mix(in srgb, var(--gcs-text) 7%, transparent);
   transition: background-color var(--gcs-ease), color var(--gcs-ease);
@@ -1420,6 +1430,11 @@ html.gcs-nova[data-theme="light"] {
 .gcs-nova .gcs-drawer__toggle.gcs-drawer__link--active {
   background: transparent;
   border-color: transparent;
+}
+/* Grupul deschis: pătratul iconiței ia accentul. */
+.gcs-nova .gcs-drawer__toggle[aria-expanded="true"] > svg:first-child {
+  background: linear-gradient(145deg, var(--gcs-accent-fill, var(--gcs-accent)), color-mix(in srgb, var(--gcs-accent-fill, var(--gcs-accent)) 70%, #000));
+  color: #fff;
 }
 .gcs-nova .gcs-drawer__sub {
   border-left-color: color-mix(in srgb, var(--gcs-accent) 40%, var(--gcs-border));
@@ -1595,7 +1610,8 @@ html.gcs-nova[data-theme="light"] {
   --gcs-ui-well-60: rgb(11 15 23 / 0.6);
   --gcs-ui-well-70: rgb(11 15 23 / 0.7);
   --gcs-hb-compact-bg: rgb(27 31 38 / 0.96);
-  --gcs-am-card-tint: color-mix(in srgb, var(--gcs-accent) 7%, transparent);
+  /* Antetul meniului contului: o nuanță plată a accentului (fără gradient). */
+  --gcs-am-card-tint: color-mix(in srgb, var(--gcs-accent) 6%, transparent);
   --gcs-ck-feature-alt: color-mix(in srgb, var(--gcs-accent) 16%, transparent);
   --gcs-ui-ok-40: rgb(61 220 151 / 0.4);
   --gcs-ui-ok-15: rgb(61 220 151 / 0.15);

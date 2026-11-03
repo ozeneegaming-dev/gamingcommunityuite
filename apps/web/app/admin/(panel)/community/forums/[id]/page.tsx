@@ -1,6 +1,6 @@
 import { jsonInts } from "@gcs/db";
 import { DEFAULT_THEME_TOGGLE } from "@gcs/core";
-import { allowedBlocks, FORUMS_ACP_SECTION, GCS_TOPIC_SORTS, type GcsForumTabView } from "@gcs/modules";
+import { allowedBlocks, FORUMS_ACP_SECTION, forumPreviewOf, GCS_FORUM_PREVIEW_MODES, GCS_TOPIC_SORTS, type GcsForumTabView } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
 import type { JSONContent } from "@tiptap/core";
 import type { Metadata } from "next";
@@ -19,6 +19,7 @@ import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { deleteForum, resetForumRatings, saveForumExtensionTab, saveForumOptions, saveForumPage, setForumPrefixes, updateForum } from "../actions";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { GcsAcpDocInput } from "./GcsAcpDocInput";
+import { GcsForumPreviewField, type GcsForumPreviewLabels } from "./GcsForumPreviewField";
 import { GcsAspectPreview } from "../../../_components/GcsAspectPreview";
 import { GcsExtFields } from "../../../_components/GcsExtFields";
 
@@ -166,6 +167,8 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
                 {t("form.requireApproval")}
               </label>
             )}
+            {/* Cardurile din grilă: imaginea de previzualizare (categoriile nu sunt carduri). */}
+            {!isCategory && <PreviewField />}
           </GcsActionForm>
         </GcsCard>
 
@@ -207,6 +210,32 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
           </GcsActionForm>
         </GcsCard>
       </>
+    );
+  }
+
+  async function PreviewField() {
+    const tp = await getTranslations("acp.forums.form.preview");
+    const preview = forumPreviewOf(forum!);
+    const modes = Object.fromEntries(GCS_FORUM_PREVIEW_MODES.map((m) => [m, { label: tp(`modes.${m}.label`), help: tp(`modes.${m}.help`) }])) as GcsForumPreviewLabels["modes"];
+    return (
+      <GcsForumPreviewField
+        forumId={forum!.id}
+        initial={preview}
+        labels={{
+          legend: tp("legend"),
+          hint: tp("hint"),
+          modes,
+          upload: tp("upload"),
+          replace: tp("replace"),
+          remove: tp("remove"),
+          uploading: tp("uploading"),
+          empty: tp("empty"),
+          crop: tp("crop"),
+          cropHint: tp("cropHint"),
+          result: tp("result"),
+          autoNote: tp("autoNote"),
+        }}
+      />
     );
   }
 

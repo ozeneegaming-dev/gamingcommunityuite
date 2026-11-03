@@ -372,6 +372,7 @@
       "not_vip": "Выбранная группа не является VIP-уровнем.",
       "permanent": "Постоянный VIP не может быть продлен.",
       "image": "Загрузите изображение для рамки изображения.",
+      "preview_image": "Загрузите изображение для «Моё изображение».",
       "signature_media": "Подпись не может содержать изображения или видео.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Поиск значка (например, геймпад, щит)",
         "iconNone": "Нет иконы",
         "iconNoResults": "Иконы не найдены.",
-        "subforumColumns": "Колонки субфорума"
+        "subforumColumns": "Колонки субфорума",
+        "preview": {
+          "legend": "Изображение превью",
+          "hint": "Изображение вверху карточки в виде сетки. Загрузите изображение и обрежьте его под форму карточки (16:7). Без изображения карточка сама создаёт превью.",
+          "modes": {
+            "auto": {
+              "label": "Автоматически из последнего сообщения (рекомендуется)",
+              "help": "Первое изображение последнего сообщения, видимого посетителям; иначе заголовок, первые строки и автор поверх цвета форума. Обновляется с каждым новым сообщением, из кэша."
+            },
+            "image": {
+              "label": "Моё изображение",
+              "help": "Загруженное ниже изображение, всегда одно и то же."
+            },
+            "color": {
+              "label": "Только цвет форума",
+              "help": "Градиент с большой иконкой, как у форума без сообщений."
+            }
+          },
+          "upload": "Загрузить изображение",
+          "replace": "Заменить изображение",
+          "remove": "Убрать изображение",
+          "uploading": "Загрузка…",
+          "empty": "Изображение не загружено",
+          "crop": "Видимая часть на карточке",
+          "cropHint": "Перетащите рамку (или двигайте её стрелками), чтобы выбрать видимую часть карточки; остальное обрезается.",
+          "result": "Как это выглядит на карточке",
+          "autoNote": "Если изображение загружено, карточка использует его и в автоматическом режиме; уберите его, чтобы вернуться к превью из последнего сообщения."
+        }
       },
       "icons": {
         "chat": "Обсуждения",
@@ -2272,6 +2300,11 @@
         "languages": "Языки",
         "labelIn": "Название ({lang})",
         "descriptionIn": "Описание в мега-меню ({lang})",
+        "descriptionHint": "Одна строка под заголовком, в подменю шапки и в меню на телефоне (не более 100 символов).",
+        "descriptionAuto": "Пусто = автоматическое описание: «{text}»",
+        "shortLink": "Короткая ссылка (правая колонка)",
+        "shortLinkHint": "В подменю шапки пункт показывается плиткой в правой колонке (значок и название, без описания).",
+        "shortChip": "короткая",
         "hrefOptional": "Ссылка (необязательна для группы)",
         "badgeTitle": "Значок и выделение",
         "badgeText": "Постоянный значок",
@@ -6323,6 +6356,8 @@
     "statsOf": "Статистика форума {name}",
     "statsTopics": "{count, plural, one {<b>#</b> тема} few {<b>#</b> темы} many {<b>#</b> тем} other {<b>#</b> темы}}",
     "statsPosts": "{count, plural, one {<b>#</b> ответ} few {<b>#</b> ответа} many {<b>#</b> ответов} other {<b>#</b> ответа}}",
+    "cardStats": "{topics, plural, one {<b>#</b> тема} few {<b>#</b> темы} many {<b>#</b> тем} other {<b>#</b> темы}} / {posts, plural, one {<b>#</b> сообщение} few {<b>#</b> сообщения} many {<b>#</b> сообщений} other {<b>#</b> сообщения}}",
+    "cardLastBy": "Последний ответ: <name></name>, <when></when>",
     "pageHint": "Страница",
     "archived": "В архиве",
     "popularNow": "Популярно сейчас",
@@ -6841,6 +6876,15 @@
       "content": "Его материалы",
       "ignore": "Игнорировать",
       "unignore": "Перестать игнорировать"
+    },
+    "v3": {
+      "registered": "Регистрация: {date}",
+      "otherGroups": "Другие группы",
+      "rank": "Ранг",
+      "badgeEarned": "Получено {date}",
+      "allBadges": "Все значки",
+      "findContent": "Найти его материалы",
+      "close": "Закрыть"
     }
   },
   "messages": {
@@ -7731,6 +7775,14 @@
           "all": "На всех страницах"
         }
       },
+      "cockpit_layout": {
+        "label": "Вид консоли",
+        "help": "Компактный: одна строка с приветствием, статусом и кнопками, затем серверы, без 3 панелей.",
+        "options": {
+          "full": "Полный (с панелями)",
+          "compact": "Компактный (строка и серверы)"
+        }
+      },
       "cockpit_left": {
         "label": "Левая панель",
         "options": {
@@ -7926,7 +7978,8 @@
       "onlineDay": "Кто был онлайн (24 часа)",
       "groupLegend": "Легенда группы",
       "ranking": "Рейтинг",
-      "guestCta": "Блок для гостей"
+      "guestCta": "Блок для гостей",
+      "rankingTop": "{period, select, day {Топ дня} week {Топ недели} month {Топ месяца} year {Топ года} other {Топ за всё время}}"
     },
     "forums": {
       "stats": "Статистика",
@@ -7953,7 +8006,9 @@
       "lastDonor": "Последний жертвователь",
       "donorCount": "Число жертвователей",
       "rare": "Какие значки",
-      "group": "Только участники группы"
+      "group": "Только участники группы",
+      "tabs": "Вкладки рейтинга",
+      "layout": "Вид"
     },
     "periods": {
       "week": "на этой неделе",
@@ -7989,7 +8044,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Микс-матчи, которые идут сейчас: команды, счёт, карта и раунд."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8003,7 +8059,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Матчи в эфире"
     },
     "games": {
       "all": "All games",
@@ -8043,7 +8100,22 @@
       "empty": "Достижений пока нет.",
       "received": "получил(а)"
     },
-    "ratingAria": "{avg} из 5, {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}"
+    "ratingAria": "{avg} из 5, {count, plural, one {# голос} few {# голоса} many {# голосов} other {# голоса}}",
+    "tabs": {
+      "forum": "Форум (сообщения, темы, репутация, время онлайн)",
+      "community": "Сообщество (авторы, игроки, кланы), без периодов"
+    },
+    "layouts": {
+      "full": "Полный (адрес, кнопки, заполненность)",
+      "compact": "Компактный (название, игроки, полоса)"
+    },
+    "home": {
+      "activity": "Активность",
+      "all": "Все",
+      "allCount": "Все ({count})",
+      "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
+      "more": "и ещё {count}"
+    }
   },
   "pageEditor": {
     "title": "Редактировать страницу",
@@ -10116,6 +10188,14 @@
         "pageEditor": "Изменить страницу",
         "acp": "Панель администратора (ACP)"
       },
+      "tiles": {
+        "attachments": "Вложения",
+        "privacy": "Приватность",
+        "player": "Профиль игрока"
+      },
+      "line": {
+        "posts": "{count, plural, one {сообщение} few {сообщения} many {сообщений} other {сообщения}}"
+      },
       "theme": {
         "label": "Тема",
         "dark": "Тёмная",
@@ -10137,7 +10217,8 @@
       "cta": {
         "online": "Кто в сети",
         "vip": "Стать VIP"
-      }
+      },
+      "quick": "Быстрые ссылки"
     },
     "live": {
       "servers": "{count, plural, one {# сервер в сети} few {# сервера в сети} many {# серверов в сети} other {# сервера в сети}}",
@@ -10275,7 +10356,9 @@
       "offline": "{name}, не в сети",
       "off": "не в сети",
       "playNow": "Играть сейчас"
-    }
+    },
+    "newTopic": "Новая тема",
+    "status": "Твой статус в сообществе"
   },
   "groups": {
     "pill": {

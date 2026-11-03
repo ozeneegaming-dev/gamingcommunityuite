@@ -8,6 +8,7 @@ import { forumRowVars } from "@/lib/template-data";
 import { siteTemplate } from "@/lib/templates";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { CSSProperties } from "react";
+import { GcsForumCard } from "./GcsForumCard";
 import { GcsForumIcon } from "./GcsForumIcon";
 import { GcsForumStatsButton } from "./GcsForumStatsButton";
 import { GcsRelTime } from "./GcsRelTime";
@@ -22,17 +23,22 @@ export const PAGE_ICON = "fa-solid fa-bullhorn";
  * Forum v2: sloturile extensiilor (`forum.row.title` lângă titlu, `forum.row.meta` sub descriere) și stilul lor pe
  * rădăcina rândului (clase + variabile CSS, peste `--gcs-forum-color`). O pagină („Pagină / Anunț”) apare ca un forum,
  * cu iconița ei (implicit un megafon); contoarele și ultimul mesaj doar dacă pagina are topicuri dedesubt.
+ *
+ * `card` (vederea în grilă a indexului): forumul e un card (`GcsForumCard`), cu zona de imagine; un șablon `forum.row`
+ * modificat de temă are în continuare prioritate.
  */
-export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent: string | null; slots?: GcsForumSlotBundle | undefined }) {
+export async function GcsForumRow({ forum, accent, slots, card = false }: { forum: Row; accent: string | null; slots?: GcsForumSlotBundle | undefined; card?: boolean }) {
   const titleSlot = <GcsSlot slot="forum.row.title" items={slots?.title} as="span" />;
   const metaSlot = <GcsSlot slot="forum.row.meta" items={slots?.meta} />;
   const custom = await siteTemplate("forum.row", forumRowVars(forum, accent, slots?.style), { title_extra: titleSlot, meta: metaSlot });
   if (custom) return custom;
+  const external = forum.type === "LINK";
+  const page = forum.type === "PAGE";
+  const icon = external ? "fa-solid fa-link" : page ? (forum.icon ?? PAGE_ICON) : forum.icon;
+  if (card) return <GcsForumCard forum={forum} accent={accent} slots={slots} icon={icon} titleSlot={titleSlot} metaSlot={metaSlot} />;
   const t = await getTranslations("forum");
   const color = forum.color ?? accent ?? "#FF6B74";
   const href = forum.type === "LINK" ? (forum.linkUrl ?? "#") : forumHref(forum);
-  const external = forum.type === "LINK";
-  const page = forum.type === "PAGE";
   const counts = !external && (!page || forum.pageTopics);
   const base = forum.color || accent ? ({ "--gcs-forum-color": forum.color ?? accent } as CSSProperties) : undefined;
 
@@ -40,7 +46,7 @@ export async function GcsForumRow({ forum, accent, slots }: { forum: Row; accent
     // `--gcs-forum-color`: bara mică din stânga, în aspectul „Carduri separate”.
     <div {...slotRootProps(slots?.style, { className: "gcs-forumRow", style: base })} data-testid="gcs-forum-row" data-forum-type={forum.type} data-forum-id={forum.id} {...(forum.unread ? { "data-unread": "" } : {})}>
       <span className="gcs-forumRow__icon" style={{ background: tint(color) }}>
-        <GcsForumIcon icon={external ? "fa-solid fa-link" : page ? (forum.icon ?? PAGE_ICON) : forum.icon} color={color} />
+        <GcsForumIcon icon={icon} color={color} />
       </span>
       <div className="gcs-forumRow__main">
         <span className="gcs-forumRow__title">

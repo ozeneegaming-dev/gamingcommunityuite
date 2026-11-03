@@ -1,6 +1,6 @@
 "use client";
 
-import { faArrowRight, faBolt, faPlay, faSatelliteDish, faServer, faTowerBroadcast, faTrophy, faTv } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faBolt, faBullseye, faPenToSquare, faPlay, faSatelliteDish, faServer, faTowerBroadcast, faTrophy, faTv } from "@fortawesome/free-solid-svg-icons";
 import type { GcsCockpitPanel } from "@gcs/core/themes";
 import type { GcsServerLive } from "@gcs/modules";
 import { GcsAvatar, GcsIconSvg, GcsMemberName } from "@gcs/ui";
@@ -229,14 +229,35 @@ function LivePanel({ data }: { data: GcsCockpitData["live"] }) {
   );
 }
 
-/** Benzile serverelor: lumina / umplerea = ocuparea, click = conectare; „Joacă acum” alege un server bun. */
-function ServerStrips({ servers, compact }: { servers: GcsCockpitData["servers"]; compact?: boolean }) {
+/** „Joacă acum”: conectarea la un server bun acum (online, cu locuri libere), altfel lista serverelor. */
+function PlayNow({ servers, className }: { servers: GcsCockpitData["servers"]; className: string }) {
+  const t = useTranslations("cockpit.servers");
+  const statuses = useServerStatuses();
+  const play = pickPlayNow(
+    servers.map((s) => {
+      const st = statuses[s.id] ?? null;
+      return { id: s.id, name: s.name, connectHref: s.connectHref, online: !!st?.online, players: st?.players ?? 0, maxPlayers: st?.maxPlayers ?? 0 };
+    }),
+  );
+  return (
+    <a href={play?.connectHref ?? "/servers"} className={className} data-testid="gcs-cockpit-play">
+      <GcsIconSvg icon={faPlay} />
+      {t("playNow")}
+    </a>
+  );
+}
+
+/**
+ * Benzile serverelor: lumina / umplerea = ocuparea, click = conectare; „Joacă acum” alege un server bun. În aspectul
+ * compact sunt pastile (numele, jucătorii; plin = roșu, offline = estompat), derulate orizontal când nu încap, iar
+ * „Joacă acum” stă în rândul salutului.
+ */
+function ServerStrips({ servers, variant = "full" }: { servers: GcsCockpitData["servers"]; variant?: "full" | "compact" }) {
   const t = useTranslations("cockpit.servers");
   const statuses = useServerStatuses();
   const list = servers.map((s) => ({ ...s, status: statuses[s.id] ?? null }));
-  const play = pickPlayNow(list.map((s) => ({ id: s.id, name: s.name, connectHref: s.connectHref, online: !!s.status?.online, players: s.status?.players ?? 0, maxPlayers: s.status?.maxPlayers ?? 0 })));
   return (
-    <div className={`gcs-ck__strips${compact ? " gcs-ck__strips--chips" : ""}`} data-testid="gcs-cockpit-servers">
+    <div className={`gcs-ck__strips${variant === "compact" ? " gcs-ck__strips--compact" : ""}`} data-testid="gcs-cockpit-servers">
       {list.map((s) => {
         const st: GcsServerLive | null = s.status;
         const occ = st?.online ? occupancy(st.players, st.maxPlayers) : { percent: 0, tone: "off" as const };
@@ -257,10 +278,7 @@ function ServerStrips({ servers, compact }: { servers: GcsCockpitData["servers"]
           </a>
         );
       })}
-      <a href={play?.connectHref ?? "/servers"} className="gcs-btn gcs-btn--primary gcs-btn--sm gcs-ck__play" data-testid="gcs-cockpit-play">
-        <GcsIconSvg icon={faPlay} />
-        {t("playNow")}
-      </a>
+      {variant === "full" && <PlayNow servers={servers} className="gcs-btn gcs-btn--primary gcs-btn--sm gcs-ck__play" />}
     </div>
   );
 }
@@ -399,6 +417,92 @@ function CockpitView({ data, siteName }: { data: GcsCockpitData; siteName: strin
 }
 
 /**
+ * Aspectul compact (prima pagină nouă, varianta A, 2026-11-03): un rând cu salutul, pastilele de stare (topicurile
+ * necitite, prietenii online, rangul cu progresul) și butoanele rapide („Topic nou”, „Joacă acum”), apoi pastilele
+ * serverelor. Vizitatorii văd bun venitul, o frază scurtă și intrarea / înregistrarea. Fără cutia cu panouri. Pe
+ * telefon: salutul, pastilele pe mai multe rânduri (fără rang și butoane), serverele derulate orizontal.
+ */
+function CompactView({ data, siteName }: { data: GcsCockpitData; siteName: string }) {
+  const t = useTranslations("cockpit");
+  const tg = useTranslations("guestCta");
+  const format = useFormatter();
+  const w = data.welcome;
+  const servers = data.servers.length > 0;
+  const level = w && w.level.level > 0 ? w.level : null;
+  return (
+    <section className="gcs-ck gcs-ck--compact" aria-label={t("label")} data-testid="gcs-cockpit" data-layout="compact">
+      <div className="gcs-ck__greet" data-testid="gcs-cockpit-greet">
+        <p className="gcs-ck__hello">
+          <span className="gcs-ck__helloKicker">{w ? t("welcome") : t("welcomeGuest")}</span>
+          <span className="gcs-ck__helloName">{w ? <GcsMemberName userId={w.user.id} name={w.user.name} nameKey={w.user.nameKey} href={memberHref(w.user)} /> : siteName}</span>
+        </p>
+        {w ? (
+          <ul className="gcs-ck__pills" aria-label={t("status")} data-testid="gcs-cockpit-welcome">
+            <li>
+              <Link href="/activity?unread=1" className="gcs-ck__pill" data-chip="unread" data-testid="gcs-cockpit-chip">
+                <i className="gcs-ck__factDot gcs-ck__factDot--accent" aria-hidden="true" />
+                {t("unread", { count: w.unread })}
+              </Link>
+            </li>
+            {w.friends && (
+              <li>
+                <span className="gcs-ck__pill" data-chip="friends" data-testid="gcs-cockpit-chip">
+                  <i className="gcs-ck__factDot gcs-ck__factDot--ok" aria-hidden="true" />
+                  {t("friends", { count: w.friends.online })}
+                </span>
+              </li>
+            )}
+            {level && (
+              <li className="gcs-ck__pillItem--rank">
+                <span className="gcs-ck__pill" data-chip="rank" data-testid="gcs-cockpit-chip">
+                  <GcsIconSvg icon={faBullseye} />
+                  {level.rank ?? t("level", { level: level.level })}
+                  {level.next && level.next.need > 0 && (
+                    <>
+                      {" · "}
+                      {format.number(level.next.have)} / {format.number(level.next.need)} {t(`units.${level.next.unit}`)}
+                    </>
+                  )}
+                </span>
+              </li>
+            )}
+          </ul>
+        ) : (
+          <p className="gcs-ck__guestText" data-testid="gcs-cockpit-guest">
+            {tg("widget.subtitle")}
+          </p>
+        )}
+        {w ? (
+          (w.newTopic || servers) && (
+            <div className="gcs-ck__go gcs-ck__go--member">
+              {w.newTopic && (
+                <Link href={w.newTopic} className="gcs-btn gcs-btn--ghost gcs-btn--sm" data-testid="gcs-cockpit-new-topic">
+                  <GcsIconSvg icon={faPenToSquare} />
+                  {t("newTopic")}
+                </Link>
+              )}
+              {servers && <PlayNow servers={data.servers} className="gcs-btn gcs-btn--primary gcs-btn--sm" />}
+            </div>
+          )
+        ) : (
+          <div className="gcs-ck__go">
+            <Link href="/login" className="gcs-btn gcs-btn--ghost gcs-btn--sm" data-testid="gcs-cockpit-login">
+              {tg("login.button")}
+            </Link>
+            {data.registration && (
+              <Link href="/register" className="gcs-btn gcs-btn--primary gcs-btn--sm" data-testid="gcs-cockpit-register">
+                {tg("register.button")}
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+      {servers && <ServerStrips servers={data.servers} variant="compact" />}
+    </section>
+  );
+}
+
+/**
  * Consola Hero Cockpit (specul 2026-10-10-hero-cockpit §4–7): sub antet, doar pe pagina principală (sau pe toate
  * paginile, din temă). Prima randare vine cu datele de pe server; după navigarea fără reîncărcare, datele se cer de la
  * `/api/cockpit`. Serverele se actualizează live (camerele `servers:<id>`), feed-ul și topul la activitate nouă.
@@ -420,10 +524,11 @@ export function GcsCockpit({ pages, initial, siteName, image }: { pages: "home" 
   }, [shown, data]);
   const style = useMemo(() => (image ? ({ "--ck-image": `url("${image}")` } as CSSProperties) : undefined), [image]);
   if (!shown || !data) return null;
+  const compact = data.layout === "compact";
   return (
-    <div className="gcs-ckWrap" style={style}>
+    <div className={`gcs-ckWrap${compact ? " gcs-ckWrap--compact" : ""}`} style={style}>
       <GcsServerLiveProvider initial={data.statuses} pollSeconds={data.pollSeconds}>
-        <CockpitView data={data} siteName={siteName} />
+        {compact ? <CompactView data={data} siteName={siteName} /> : <CockpitView data={data} siteName={siteName} />}
       </GcsServerLiveProvider>
     </div>
   );

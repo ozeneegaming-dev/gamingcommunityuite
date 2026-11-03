@@ -4,13 +4,15 @@ import { member, uid } from "./forum-fixtures";
 import { useFreshIp } from "./helpers";
 
 /**
- * Hover card-ul membrului, deschis de staff din chat (raportul proprietarului, 2026-11-03): avatarul are rama VIP a
- * membrului (ca în profil și în postbit), iar acțiunile încap în card la orice lățime — Mesaj cu eticheta, Urmărește /
- * Conținutul lui / Ignoră ca iconițe cu tooltip pe același rând, Mute / Kick / Avertisment ca iconițe pe rândul lor.
- * Niciun buton nu iese din card, nu e tăiat și nu rămâne singur pe un rând, la 1440 px și la 375 px.
+ * Hover card-ul membrului, deschis de staff din chat (raportul proprietarului, 2026-11-03; cardul v3): avatarul are rama
+ * VIP a membrului (ca în profil și în postbit), iar acțiunile încap în card la orice lățime — Mesaj cu eticheta,
+ * Urmărește / Ignoră ca iconițe cu tooltip pe același rând, „Găsește conținutul lui” pe toată lățimea dedesubt, Mute /
+ * Kick / Avertisment ca iconițe pe rândul lor. Niciun buton nu iese din card și nu e tăiat, la 1440 px și la 375 px.
  */
 
-const MEMBER_ACTIONS = ["gcs-hover-message", "gcs-hover-follow", "gcs-hover-content", "gcs-hover-ignore"];
+/** Rândul membrului (Mesaj + iconițele); „Găsește conținutul lui” are rândul lui, pe toată lățimea. */
+const ROW_ACTIONS = ["gcs-hover-message", "gcs-hover-follow", "gcs-hover-ignore"];
+const MEMBER_ACTIONS = [...ROW_ACTIONS, "gcs-hover-content"];
 const STAFF_ACTIONS = ["gcs-hover-chatmod-mute", "gcs-hover-chatmod-kick", "gcs-hover-chatmod-warn"];
 
 /** Datele de profil prin ruta de test (`/api/_test/profile`): VIP-ul și rama aleasă. */
@@ -58,10 +60,12 @@ async function expectActionsFit(card: Locator, width: number): Promise<void> {
         left: r.left,
         right: r.right,
         top: r.top,
+        width: r.width,
         clipped: b.scrollWidth > b.clientWidth + 1 || (label !== null && label.scrollWidth > label.clientWidth + 1),
       };
     });
-    return { left: box.left, right: box.right, buttons };
+    const actions = el.querySelector<HTMLElement>(".gcs-hoverCard__actions")!.getBoundingClientRect();
+    return { left: box.left, right: box.right, inner: actions.width, buttons };
   });
   expect(report.buttons.map((b) => b.id).sort(), `la ${width}px`).toEqual([...MEMBER_ACTIONS, ...STAFF_ACTIONS].sort());
   for (const b of report.buttons) {
@@ -69,10 +73,15 @@ async function expectActionsFit(card: Locator, width: number): Promise<void> {
     expect(b.left, `${b.id} iese din stânga cardului la ${width}px`).toBeGreaterThanOrEqual(report.left - 0.5);
     expect(b.clipped, `${b.id} are eticheta tăiată la ${width}px`).toBe(false);
   }
-  // Un singur rând pentru acțiunile membrului și unul pentru moderare: niciun buton rămas singur pe rândul următor.
+  // Un singur rând pentru Mesaj + iconițe și unul pentru moderare: niciun buton rămas singur pe rândul următor.
   const rows = (ids: string[]) => new Set(report.buttons.filter((b) => ids.includes(b.id)).map((b) => Math.round(b.top))).size;
-  expect(rows(MEMBER_ACTIONS), `acțiunile membrului pe un rând la ${width}px`).toBe(1);
+  expect(rows(ROW_ACTIONS), `Mesaj și iconițele pe un rând la ${width}px`).toBe(1);
   expect(rows(STAFF_ACTIONS), `moderarea pe un rând la ${width}px`).toBe(1);
+  // „Găsește conținutul lui”: sub rândul membrului, pe toată lățimea zonei acțiunilor.
+  const content = report.buttons.find((b) => b.id === "gcs-hover-content")!;
+  const message = report.buttons.find((b) => b.id === "gcs-hover-message")!;
+  expect(content.top, `„Găsește conținutul lui” sub Mesaj la ${width}px`).toBeGreaterThan(message.top);
+  expect(Math.abs(content.width - report.inner), `„Găsește conținutul lui” pe toată lățimea la ${width}px`).toBeLessThanOrEqual(1);
 }
 
 test.beforeEach(async ({ context }) => {
@@ -106,7 +115,8 @@ test("hover card din chat (staff): rama VIP pe avatar; acțiunile încap în car
     // Rama se desenează (regula generată din ACP, ca în postbit), nu doar clasa.
     expect(await frame.evaluate((el) => getComputedStyle(el, "::before").backgroundImage)).toContain("conic-gradient");
     await expect(card.getByTestId("gcs-hover-message")).toContainText("Mesaj");
-    for (const t of [...MEMBER_ACTIONS.slice(1), ...STAFF_ACTIONS]) {
+    await expect(card.getByTestId("gcs-hover-content")).toHaveText("Găsește conținutul lui");
+    for (const t of [...ROW_ACTIONS.slice(1), ...STAFF_ACTIONS]) {
       const button = card.getByTestId(t);
       const label = await button.getAttribute("aria-label");
       expect(label, `${t} are aria-label`).toBeTruthy();

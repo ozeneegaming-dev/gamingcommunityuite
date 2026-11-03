@@ -11,7 +11,7 @@ test.skip(onMysql, "pluginurile cu bază de date proprie rulează doar pe Postgr
 /**
  * Nume stilizate peste tot (specul 2026-10-10-nume-mentiuni-grupuri-peste-tot): un membru VIP cu efectul lui din
  * Studio VIP și un Root Admin al cărui grup are un gradient animat trebuie să arate la fel în ultimul mesaj din index,
- * în widget-ul „Topicuri recente”, în postbit, în lista de membri, în chat și în meniul userului, pe tema închisă și
+ * în widget-ul „Postări recente”, în postbit, în lista de membri, în chat și în meniul userului, pe tema închisă și
  * pe cea deschisă (stilul generat bate culorile linkurilor din temă). Cu `GCS_E2E_SHOTS=<folder>`, salvează și capturi
  * ale fiecărui loc (`<faza>-<loc>-<user>-<temă>.png`, faza din `GCS_E2E_SHOTS_PHASE`, implicit `after`).
  */
@@ -127,13 +127,14 @@ const PLACES: Place[] = [
     frame: (page, who) => page.getByTestId("gcs-forum-row").filter({ hasText: forumOf[who] }),
   },
   {
-    key: "recent-topics",
+    // Pagina principală implicită (varianta A): „Postări recente” în coloana din dreapta (autorul fiecărei postări).
+    key: "recent-posts",
     open: async (page) => {
       await page.goto("/");
-      await expect(page.locator('[data-widget="forums.recentTopics"]').filter({ visible: true })).toBeVisible();
+      await expect(page.locator('[data-widget="forums.recentPosts"]').filter({ visible: true })).toBeVisible();
     },
-    name: (page, who) => page.locator('[data-widget="forums.recentTopics"]').filter({ visible: true }).locator(NAME_LINK, { hasText: who }).first(),
-    frame: (page) => page.locator('[data-widget="forums.recentTopics"]').filter({ visible: true }),
+    name: (page, who) => page.locator('[data-widget="forums.recentPosts"]').filter({ visible: true }).locator(NAME_LINK, { hasText: who }).first(),
+    frame: (page) => page.locator('[data-widget="forums.recentPosts"]').filter({ visible: true }),
   },
   {
     key: "postbit",

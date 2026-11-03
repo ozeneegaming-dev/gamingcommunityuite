@@ -372,6 +372,7 @@
       "not_vip": "Le groupe choisi n'est pas un niveau VIP.",
       "permanent": "Un VIP permanent ne peut pas être prolongé.",
       "image": "Télécharger une image pour un cadre d'image.",
+      "preview_image": "Importer une image pour « Mon image ».",
       "signature_media": "La signature ne peut contenir d'images ou de vidéos.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Recherche d'une icône (p. ex. gamepad, shield)",
         "iconNone": "Aucune icône",
         "iconNoResults": "Aucune icône trouvée.",
-        "subforumColumns": "Colonnes du sous-Forum"
+        "subforumColumns": "Colonnes du sous-Forum",
+        "preview": {
+          "legend": "Image d'aperçu",
+          "hint": "L'image en haut de la carte dans la vue en grille. Importer une image et la recadrer au format de la carte (16:7). Sans image, la carte crée son propre aperçu.",
+          "modes": {
+            "auto": {
+              "label": "Automatique depuis le dernier message (recommandé)",
+              "help": "La première image du dernier message visible par les visiteurs ; sinon le titre, les premières lignes et l'auteur sur la couleur du forum. Se met à jour à chaque nouveau message, depuis le cache."
+            },
+            "image": {
+              "label": "Mon image",
+              "help": "L'image importée ci-dessous, toujours la même."
+            },
+            "color": {
+              "label": "Couleur du forum uniquement",
+              "help": "Le dégradé avec la grande icône, comme pour un forum sans messages."
+            }
+          },
+          "upload": "Importer une image",
+          "replace": "Changer l'image",
+          "remove": "Retirer l'image",
+          "uploading": "Importation…",
+          "empty": "Aucune image importée",
+          "crop": "Partie visible sur la carte",
+          "cropHint": "Faire glisser le cadre (ou le déplacer avec les flèches) pour choisir la partie visible sur la carte ; le reste est rogné.",
+          "result": "Rendu sur la carte",
+          "autoNote": "Avec une image importée, la carte l'utilise aussi en mode automatique ; la retirer pour revenir à l'aperçu du dernier message."
+        }
       },
       "icons": {
         "chat": "Débat",
@@ -2272,6 +2300,11 @@
         "languages": "Langues",
         "labelIn": "Libellé ({lang})",
         "descriptionIn": "Description du méga-menu ({lang})",
+        "descriptionHint": "Une ligne sous le titre, dans le sous-menu de l’en-tête et dans le menu du téléphone (100 caractères au plus).",
+        "descriptionAuto": "Vide = la description automatique : « {text} »",
+        "shortLink": "Lien court (colonne de droite)",
+        "shortLinkHint": "Dans le sous-menu de l’en-tête, l’élément s’affiche en tuile dans la colonne de droite (icône et titre, sans description).",
+        "shortChip": "court",
         "hrefOptional": "Lien (facultatif pour un groupe)",
         "badgeTitle": "Badge et mise en avant",
         "badgeText": "Badge fixe",
@@ -6323,6 +6356,8 @@
     "statsOf": "Statistiques du forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}}",
     "statsPosts": "{count, plural, one {<b>#</b> réponse} many {<b>#</b> réponses} other {<b>#</b> réponses}}",
+    "cardStats": "{topics, plural, one {<b>#</b> sujet} many {<b>#</b> sujets} other {<b>#</b> sujets}} / {posts, plural, one {<b>#</b> message} many {<b>#</b> messages} other {<b>#</b> messages}}",
+    "cardLastBy": "Dernière réponse de <name></name>, <when></when>",
     "pageHint": "Page",
     "archived": "Archivé",
     "popularNow": "Populaire en ce moment",
@@ -6841,6 +6876,15 @@
       "content": "Son contenu",
       "ignore": "Ignorer",
       "unignore": "Ne plus ignorer"
+    },
+    "v3": {
+      "registered": "Inscrit le {date}",
+      "otherGroups": "Autres groupes",
+      "rank": "Rang",
+      "badgeEarned": "Obtenu le {date}",
+      "allBadges": "Tous les badges",
+      "findContent": "Trouver son contenu",
+      "close": "Fermer"
     }
   },
   "messages": {
@@ -7731,6 +7775,14 @@
           "all": "Sur toutes les pages"
         }
       },
+      "cockpit_layout": {
+        "label": "Disposition de la console",
+        "help": "Compacte : une ligne avec l'accueil, le statut et les boutons, puis les serveurs, sans les 3 panneaux.",
+        "options": {
+          "full": "Complète (avec les panneaux)",
+          "compact": "Compacte (une ligne et les serveurs)"
+        }
+      },
       "cockpit_left": {
         "label": "Panneau de gauche",
         "options": {
@@ -7926,7 +7978,8 @@
       "onlineDay": "Qui était en ligne (24 h)",
       "groupLegend": "Légende du groupe",
       "ranking": "Classement",
-      "guestCta": "Bloc pour les visiteurs"
+      "guestCta": "Bloc pour les visiteurs",
+      "rankingTop": "{period, select, day {Top du jour} week {Top de la semaine} month {Top du mois} year {Top de l'année} other {Top de tous les temps}}"
     },
     "forums": {
       "stats": "Statistiques",
@@ -7953,7 +8006,9 @@
       "lastDonor": "Dernier donateur",
       "donorCount": "Nombre de donateurs",
       "rare": "Quels badges",
-      "group": "Seulement les membres du groupe"
+      "group": "Seulement les membres du groupe",
+      "tabs": "Onglets du classement",
+      "layout": "Disposition"
     },
     "periods": {
       "week": "cette semaine",
@@ -7989,7 +8044,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Les matchs mix en cours : les équipes, le score, la carte et la manche."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8003,7 +8059,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Matchs en direct"
     },
     "games": {
       "all": "All games",
@@ -8043,7 +8100,22 @@
       "empty": "Aucune réussite pour l’instant.",
       "received": "a reçu"
     },
-    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} many {# votes} other {# votes}}"
+    "ratingAria": "{avg} sur 5, {count, plural, one {# vote} many {# votes} other {# votes}}",
+    "tabs": {
+      "forum": "Forum (messages, sujets, réputation, temps en ligne)",
+      "community": "Communauté (posteurs, joueurs, clans), sans périodes"
+    },
+    "layouts": {
+      "full": "Complète (adresse, boutons, remplissage)",
+      "compact": "Compacte (nom, joueurs, barre)"
+    },
+    "home": {
+      "activity": "Activité",
+      "all": "Tous",
+      "allCount": "Tous ({count})",
+      "players": "{count, plural, one {# joueur} many {# joueurs} other {# joueurs}}",
+      "more": "et {count} de plus"
+    }
   },
   "pageEditor": {
     "title": "Modifier la page",
@@ -10116,6 +10188,14 @@
         "pageEditor": "Modifier la page",
         "acp": "Panneau d'administration (ACP)"
       },
+      "tiles": {
+        "attachments": "Pièces jointes",
+        "privacy": "Confidentialité",
+        "player": "Profil de joueur"
+      },
+      "line": {
+        "posts": "{count, plural, one {message} many {messages} other {messages}}"
+      },
       "theme": {
         "label": "Thème",
         "dark": "Sombre",
@@ -10137,7 +10217,8 @@
       "cta": {
         "online": "Voir qui est en ligne",
         "vip": "Devenir VIP"
-      }
+      },
+      "quick": "Liens rapides"
     },
     "live": {
       "servers": "{count, plural, one {# serveur en ligne} many {# serveurs en ligne} other {# serveurs en ligne}}",
@@ -10275,7 +10356,9 @@
       "offline": "{name}, hors ligne",
       "off": "hors ligne",
       "playNow": "Jouer maintenant"
-    }
+    },
+    "newTopic": "Nouveau sujet",
+    "status": "Ton statut dans la communauté"
   },
   "groups": {
     "pill": {

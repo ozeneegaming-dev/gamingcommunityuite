@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
 import { currentActor } from "@/lib/actor";
 import { viewerEditing } from "@/lib/appearance";
+import { foldsOnPhone } from "@/lib/home-widgets";
 import { services } from "@/lib/services";
 import { GcsPageEditor, type GcsPageEditorField, type GcsPageEditorItem } from "./GcsPageEditor";
 import { isPluginWidget, renderPluginWidget } from "./GcsPluginWidget";
@@ -16,7 +17,7 @@ async function renderPlacement(p: GcsWidgetPlacementView, actor: GcsActor, page:
   try {
     // Widget-urile pluginurilor (etapa 6) se randează prin gazda pluginurilor.
     if (!render) return await renderPluginWidget(p, actor, page);
-    return await render({ id: String(p.id), config: p.config, actor });
+    return await render({ id: String(p.id), config: p.config, actor, page, zone: p.zone });
   } catch (error) {
     console.error(`[GCS] widget ${p.type} (#${p.id}):`, error);
     return null;
@@ -64,11 +65,22 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   const base = await services().widgets.layout(page, actor);
   const layout = page === "index" ? await arrangeChat(base, actor) : base;
   const zone = (z: GcsWidgetZone) =>
-    layout[z].map((p) => (
-      <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
-        <GcsWidgetSlot placement={p} actor={actor} page={page} />
-      </Suspense>
-    ));
+    layout[z].map((p) => {
+      const slot = (
+        <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
+          <GcsWidgetSlot placement={p} actor={actor} page={page} />
+        </Suspense>
+      );
+      // Prima pagină pe telefon: widget-urile coloanei din dreapta devin rânduri strânse (banda + săgeata), în afară
+      // de servere și shoutbox. Învelișul nu contează în așezare (`display: contents`); doar CSS-ul telefonului îl citește.
+      return foldsOnPhone(page, z, p.type) ? (
+        <div key={p.id} className="gcs-widgetFold" data-phone-fold="" data-widget-fold={p.type}>
+          {slot}
+        </div>
+      ) : (
+        slot
+      );
+    });
   return (
     <div className="gcs-widgetPage" data-page={page}>
       {layout.top.length > 0 && (

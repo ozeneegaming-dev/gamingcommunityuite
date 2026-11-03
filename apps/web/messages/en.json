@@ -372,6 +372,7 @@
       "not_vip": "The chosen group is not a VIP tier.",
       "permanent": "A permanent VIP cannot be extended.",
       "image": "Upload an image for an image frame.",
+      "preview_image": "Upload an image for “My image”.",
       "signature_media": "The signature cannot contain images or video.",
       "format_not_allowed": "The content uses formatting that is not allowed here (e.g. images, video or headings).",
       "too_many_images": "Too many images.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Search for an icon (e.g. gamepad, shield)",
         "iconNone": "No icon",
         "iconNoResults": "No icons found.",
-        "subforumColumns": "Subforum columns"
+        "subforumColumns": "Subforum columns",
+        "preview": {
+          "legend": "Preview image",
+          "hint": "The image at the top of the card in the grid layout. Upload an image and crop it to the card's shape (16:7). Without an image, the card builds its own preview.",
+          "modes": {
+            "auto": {
+              "label": "Automatic from the latest post (recommended)",
+              "help": "The first image of the latest post visible to visitors; otherwise the title, first lines and author over the forum colour. Updates with every new post, from cache."
+            },
+            "image": {
+              "label": "My image",
+              "help": "The image uploaded below, always the same."
+            },
+            "color": {
+              "label": "Forum colour only",
+              "help": "The gradient with the large icon, like a forum with no posts."
+            }
+          },
+          "upload": "Upload an image",
+          "replace": "Change image",
+          "remove": "Remove image",
+          "uploading": "Uploading…",
+          "empty": "No image uploaded",
+          "crop": "Visible part on the card",
+          "cropHint": "Drag the frame (or move it with the arrow keys) to choose the part shown on the card; the rest is cropped.",
+          "result": "How it looks on the card",
+          "autoNote": "With an image uploaded, the card uses it in automatic mode too; remove it to go back to the preview from the latest post."
+        }
       },
       "icons": {
         "chat": "Discussions",
@@ -2272,6 +2300,11 @@
         "languages": "Languages",
         "labelIn": "Label ({lang})",
         "descriptionIn": "Mega-menu description ({lang})",
+        "descriptionHint": "One line under the title, in the header submenu and in the phone menu (up to 100 characters).",
+        "descriptionAuto": "Empty = the automatic description: “{text}”",
+        "shortLink": "Short link (right column)",
+        "shortLinkHint": "In the header submenu, the item shows as a tile in the right column (icon and title, no description).",
+        "shortChip": "short",
         "hrefOptional": "Link (optional for a group)",
         "badgeTitle": "Badge and highlight",
         "badgeText": "Fixed badge",
@@ -6323,6 +6356,8 @@
     "statsOf": "Statistics of the forum {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} other {<b>#</b> topics}}",
     "statsPosts": "{count, plural, one {<b>#</b> reply} other {<b>#</b> replies}}",
+    "cardStats": "{topics, plural, one {<b>#</b> topic} other {<b>#</b> topics}} / {posts, plural, one {<b>#</b> post} other {<b>#</b> posts}}",
+    "cardLastBy": "Last reply by <name></name>, <when></when>",
     "pageHint": "Page",
     "archived": "Archived",
     "popularNow": "Popular now",
@@ -6841,6 +6876,15 @@
       "content": "Their content",
       "ignore": "Ignore",
       "unignore": "Stop ignoring"
+    },
+    "v3": {
+      "registered": "Joined {date}",
+      "otherGroups": "Other groups",
+      "rank": "Rank",
+      "badgeEarned": "Earned on {date}",
+      "allBadges": "All badges",
+      "findContent": "Find their content",
+      "close": "Close"
     }
   },
   "messages": {
@@ -7731,6 +7775,14 @@
           "all": "Every page"
         }
       },
+      "cockpit_layout": {
+        "label": "Console layout",
+        "help": "Compact: one row with the greeting, status and buttons, then the servers, without the 3 panels.",
+        "options": {
+          "full": "Full (with the panels)",
+          "compact": "Compact (one row and the servers)"
+        }
+      },
       "cockpit_left": {
         "label": "Left panel",
         "options": {
@@ -7926,7 +7978,8 @@
       "onlineDay": "Who was online (24 h)",
       "groupLegend": "Group legend",
       "ranking": "Ranking",
-      "guestCta": "Guest block"
+      "guestCta": "Guest block",
+      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}"
     },
     "forums": {
       "stats": "Statistics",
@@ -7953,7 +8006,9 @@
       "lastDonor": "Latest donor",
       "donorCount": "Donor count",
       "rare": "Which badges",
-      "group": "Only members of the group"
+      "group": "Only members of the group",
+      "tabs": "Leaderboard tabs",
+      "layout": "Layout"
     },
     "periods": {
       "week": "this week",
@@ -7989,7 +8044,8 @@
       },
       "servers": {
         "list": "Live status of the game servers: players, map, address.",
-        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing."
+        "adminsOnline": "Game server admins online now: the name, the server and how long they have been playing.",
+        "liveMatches": "Mix matches in progress right now: the teams, score, map and round."
       },
       "clans": {
         "top": "The top clans in the ranking, with members and points."
@@ -8003,7 +8059,8 @@
     },
     "servers": {
       "list": "Servers",
-      "adminsOnline": "Admins online"
+      "adminsOnline": "Admins online",
+      "liveMatches": "Live matches"
     },
     "games": {
       "all": "All games",
@@ -8043,7 +8100,22 @@
       "empty": "No achievements yet.",
       "received": "earned"
     },
-    "ratingAria": "{avg} out of 5, {count, plural, one {# vote} other {# votes}}"
+    "ratingAria": "{avg} out of 5, {count, plural, one {# vote} other {# votes}}",
+    "tabs": {
+      "forum": "Forum (posts, topics, reputation, time online)",
+      "community": "Community (posters, players, clans), no periods"
+    },
+    "layouts": {
+      "full": "Full (address, buttons, fill)",
+      "compact": "Compact (name, players, bar)"
+    },
+    "home": {
+      "activity": "Activity",
+      "all": "All",
+      "allCount": "All ({count})",
+      "players": "{count, plural, one {# player} other {# players}}",
+      "more": "and {count} more"
+    }
   },
   "pageEditor": {
     "title": "Edit page",
@@ -10116,6 +10188,14 @@
         "pageEditor": "Edit page",
         "acp": "Admin panel (ACP)"
       },
+      "tiles": {
+        "attachments": "Attachments",
+        "privacy": "Privacy",
+        "player": "Player profile"
+      },
+      "line": {
+        "posts": "{count, plural, one {post} other {posts}}"
+      },
       "theme": {
         "label": "Theme",
         "dark": "Dark",
@@ -10137,7 +10217,8 @@
       "cta": {
         "online": "See who's online",
         "vip": "Become VIP"
-      }
+      },
+      "quick": "Quick links"
     },
     "live": {
       "servers": "{count, plural, one {# server online} other {# servers online}}",
@@ -10275,7 +10356,9 @@
       "offline": "{name}, offline",
       "off": "offline",
       "playNow": "Play now"
-    }
+    },
+    "newTopic": "New topic",
+    "status": "Your community status"
   },
   "groups": {
     "pill": {

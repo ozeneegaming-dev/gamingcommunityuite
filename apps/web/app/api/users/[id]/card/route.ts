@@ -4,9 +4,13 @@ import { services } from "@/lib/services";
 import { hoverCardVars } from "@/lib/template-data";
 import { siteTemplateHtml } from "@/lib/templates";
 import { groupPillProps } from "@/lib/group-pills";
+import { iconData } from "@/lib/group-mentions";
 import { namesHtml } from "@/lib/member-names";
 
 export const dynamic = "force-dynamic";
+
+/** Iconița unui grup fără iconiță aleasă (ca pe pastilele `@Grup` și pe cardul grupului). */
+const DEFAULT_GROUP_ICON = "fa-solid fa-users";
 
 /**
  * Datele hover card-ului (spec §8): `GET /api/users/{id}/card`. Partea comună e cache-uită în Redis 60 s;
@@ -26,11 +30,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const html = rawHtml === null ? null : await namesHtml(rawHtml);
   // Aspectul publicat de pluginuri (Studio VIP): banner-ul, fundalul copertei și arma, cu stilurile calculate de GCS.
   const look = await memberLook(card.user.id);
-  // Grupul afișat și grupurile secundare: pastile-link spre membrii grupului, cu tooltip-ul numărătorii.
+  // Grupul afișat și grupurile secundare: pastile-link spre membrii grupului, cu tooltip-ul numărătorii și iconița
+  // grupului (rândul grupului și „Alte grupuri” din cardul v3; datele SVG, registrul de iconițe rămâne pe server).
   const mg = (await services().groupDirectory.memberGroups([card.user.id])).get(card.user.id);
   const pill = async (groupId: number) => {
     const p = await groupPillProps(groupId);
-    return p ? { id: p.group.id, name: p.group.name, color: p.group.color, href: p.href ?? null, tooltip: p.tooltip ?? [], ariaLabel: p.ariaLabel ?? p.group.name } : null;
+    return p
+      ? { id: p.group.id, name: p.group.name, color: p.group.color, href: p.href ?? null, tooltip: p.tooltip ?? [], ariaLabel: p.ariaLabel ?? p.group.name, icon: iconData(p.ref.icon) ?? iconData(DEFAULT_GROUP_ICON) }
+      : null;
   };
   const shown = mg ? await pill(mg.shown.id) : null;
   const secondaryGroups = mg ? (await Promise.all(mg.secondary.map((g) => pill(g.id)))).filter((g) => g !== null) : [];

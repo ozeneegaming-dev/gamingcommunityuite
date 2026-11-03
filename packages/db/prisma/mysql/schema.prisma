@@ -692,6 +692,13 @@ model Forum {
   autoCloseDays   Int       @default(0)
   /// Forum v2: nota cu stele pe topicuri (serviciul `contentRating`).
   ratingEnabled   Boolean   @default(false)
+  /// Cardurile de forum (vederea în grilă): zona de imagine: auto (din ultima postare) | image (imaginea din ACP) | color.
+  previewMode     String @db.LongText    @default("auto")
+  /// Imaginea de previzualizare încărcată din ACP (fișierul decorativ `forum:{id}:preview`); null = fără imagine.
+  previewImageId  String? @db.LongText
+  /// Punctul de focalizare al decupajului 16 : 7 (procente, 0–100), aplicat cu `object-position`.
+  previewFocusX   Int       @default(50)
+  previewFocusY   Int       @default(50)
 
   parent      Forum?        @relation("ForumTree", fields: [parentId], references: [id], onDelete: Restrict)
   children    Forum[]       @relation("ForumTree")
@@ -1916,6 +1923,8 @@ model NavItem {
   counter     String? @db.LongText
   /// Stilul de evidențiere (`accent`, `glow`); `null` = normal.
   highlight   String? @db.LongText
+  /// „Link scurt” (doar subitemii): în mega meniu stă în coloana din dreapta, ca plăcuță (iconiță + titlu, fără descriere).
+  shortLink   Boolean @default(false)
 
   parent   NavItem?  @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
   children NavItem[] @relation("NavTree")

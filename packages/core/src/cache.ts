@@ -112,13 +112,36 @@ export class GcsCache {
     const at = this.now();
     const raw = await this.kv.get(this.key(key));
     if (raw === null) {
-      if (this.misses.size >= MISS_MEMO_MAX) this.misses.clear();
-      const pending = (this.misses.get(key) ?? []).filter((t) => at - t < INVALIDATED_TTL_MS);
-      pending.push(at);
-      this.misses.set(key, pending);
+      this.missed(key, at);
       return null;
     }
     return JSON.parse(raw) as T;
+  }
+
+  /**
+   * Mai multe chei dintr-o singură citire (`MGET`: o interogare și pe Lite, nu una pe cheie), în ordinea primită;
+   * ratările se țin minte ca la `get`, deci `set`-ul care urmează e la fel de protejat de cursă.
+   */
+  async getMany<T>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+    const at = this.now();
+    const raws = await this.kv.mget(keys.map((k) => this.key(k)));
+    return keys.map((key, i) => {
+      const raw = raws[i] ?? null;
+      if (raw === null) {
+        this.missed(key, at);
+        return null;
+      }
+      return JSON.parse(raw) as T;
+    });
+  }
+
+  /** Notează o citire ratată (momentul ei), pentru verificarea din `set`. */
+  private missed(key: string, at: number): void {
+    if (this.misses.size >= MISS_MEMO_MAX) this.misses.clear();
+    const pending = (this.misses.get(key) ?? []).filter((t) => at - t < INVALIDATED_TTL_MS);
+    pending.push(at);
+    this.misses.set(key, pending);
   }
 
   async set<T>(key: string, value: T, opts: { ttlSec: number; tags: string[] }): Promise<void> {

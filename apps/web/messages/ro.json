@@ -372,6 +372,7 @@
       "not_vip": "Grupul ales nu e un nivel VIP.",
       "permanent": "Un VIP permanent nu se prelungește.",
       "image": "Încarcă o imagine pentru rama de tip imagine.",
+      "preview_image": "Încarcă o imagine pentru „Imaginea mea”.",
       "signature_media": "Semnătura nu poate conține imagini sau video.",
       "format_not_allowed": "Conținutul folosește o formatare care nu e permisă aici (ex. imagini, video sau titluri).",
       "too_many_images": "Prea multe imagini.",
@@ -1496,7 +1497,34 @@
         "iconSearch": "Caută o iconiță (ex. gamepad, shield)",
         "iconNone": "Fără iconiță",
         "iconNoResults": "Nicio iconiță găsită.",
-        "subforumColumns": "Coloane pentru subforumuri"
+        "subforumColumns": "Coloane pentru subforumuri",
+        "preview": {
+          "legend": "Imagine de previzualizare",
+          "hint": "Imaginea de sus a cardului, în aspectul grilă. Încarci o imagine și o decupezi la forma cardului (16 : 7). Fără imagine, cardul își formează singur previzualizarea.",
+          "modes": {
+            "auto": {
+              "label": "Automat din ultima postare (recomandat)",
+              "help": "Prima imagine din ultima postare vizibilă vizitatorilor; altfel titlul, primele rânduri și autorul, peste culoarea forumului. Se actualizează la fiecare postare nouă, din cache."
+            },
+            "image": {
+              "label": "Imaginea mea",
+              "help": "Imaginea încărcată mai jos, mereu aceeași."
+            },
+            "color": {
+              "label": "Doar culoarea forumului",
+              "help": "Gradientul cu iconița mare, ca la un forum fără postări."
+            }
+          },
+          "upload": "Încarcă o imagine",
+          "replace": "Schimbă imaginea",
+          "remove": "Scoate imaginea",
+          "uploading": "Se încarcă…",
+          "empty": "Nicio imagine încărcată",
+          "crop": "Partea vizibilă pe card",
+          "cropHint": "Trage chenarul (sau mută-l din săgeți) ca să alegi partea vizibilă pe card; în afara lui, imaginea se taie.",
+          "result": "Cum arată pe card",
+          "autoNote": "Cu o imagine încărcată, cardul o folosește și în modul automat; scoate-o ca să revii la previzualizarea din ultima postare."
+        }
       },
       "icons": {
         "chat": "Discuții",
@@ -2272,6 +2300,11 @@
         "languages": "Limbi",
         "labelIn": "Eticheta ({lang})",
         "descriptionIn": "Descrierea din mega meniu ({lang})",
+        "descriptionHint": "Un rând sub titlu, în submeniul din antet și în meniul de pe telefon (cel mult 100 de caractere).",
+        "descriptionAuto": "Gol = descrierea automată: „{text}”",
+        "shortLink": "Link scurt (coloana din dreapta)",
+        "shortLinkHint": "În submeniul din antet, itemul apare ca plăcuță în coloana din dreapta (iconiță și titlu, fără descriere).",
+        "shortChip": "scurt",
         "hrefOptional": "Link (opțional pentru un grup)",
         "badgeTitle": "Insignă și evidențiere",
         "badgeText": "Insignă fixă",
@@ -6323,6 +6356,8 @@
     "statsOf": "Statisticile forumului {name}",
     "statsTopics": "{count, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}}",
     "statsPosts": "{count, plural, one {<b>#</b> răspuns} few {<b>#</b> răspunsuri} other {<b>#</b> de răspunsuri}}",
+    "cardStats": "{topics, plural, one {<b>#</b> topic} few {<b>#</b> topicuri} other {<b>#</b> de topicuri}} / {posts, plural, one {<b>#</b> postare} few {<b>#</b> postări} other {<b>#</b> de postări}}",
+    "cardLastBy": "Ultimul răspuns de <name></name>, <when></when>",
     "pageHint": "Pagină",
     "archived": "Arhivat",
     "popularNow": "Popular acum",
@@ -6841,6 +6876,15 @@
       "content": "Conținutul lui",
       "ignore": "Ignoră",
       "unignore": "Nu mai ignora"
+    },
+    "v3": {
+      "registered": "Înregistrat pe {date}",
+      "otherGroups": "Alte grupuri",
+      "rank": "Rang",
+      "badgeEarned": "Obținută pe {date}",
+      "allBadges": "Toate insignele",
+      "findContent": "Găsește conținutul lui",
+      "close": "Închide"
     }
   },
   "messages": {
@@ -7731,6 +7775,14 @@
           "all": "Pe toate paginile"
         }
       },
+      "cockpit_layout": {
+        "label": "Aspectul consolei",
+        "help": "Compact: un rând cu salutul, starea și butoanele, apoi serverele, fără cele 3 panouri.",
+        "options": {
+          "full": "Complet (cu panourile)",
+          "compact": "Compact (un rând și serverele)"
+        }
+      },
       "cockpit_left": {
         "label": "Panoul din stânga",
         "options": {
@@ -7926,7 +7978,8 @@
       "onlineDay": "Cine a fost online (24 h)",
       "groupLegend": "Legenda grupurilor",
       "ranking": "Clasament",
-      "guestCta": "Bloc pentru vizitatori"
+      "guestCta": "Bloc pentru vizitatori",
+      "rankingTop": "{period, select, day {Topul zilei} week {Topul săptămânii} month {Topul lunii} year {Topul anului} other {Topul tuturor timpurilor}}"
     },
     "forums": {
       "stats": "Statistici",
@@ -7953,7 +8006,9 @@
       "lastDonor": "Ultimul donator",
       "donorCount": "Numărul donatorilor",
       "rare": "Ce badge-uri",
-      "group": "Doar membrii grupului"
+      "group": "Doar membrii grupului",
+      "tabs": "Tab-urile clasamentului",
+      "layout": "Aspectul"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -7989,7 +8044,8 @@
       },
       "servers": {
         "list": "Statusul live al serverelor de joc: jucători, hartă, adresă.",
-        "adminsOnline": "Adminii din joc online acum: numele, serverul și de cât timp joacă."
+        "adminsOnline": "Adminii din joc online acum: numele, serverul și de cât timp joacă.",
+        "liveMatches": "Meciurile mix în desfășurare acum: echipele, scorul, harta și runda."
       },
       "clans": {
         "top": "Primele clanuri din clasament, cu membrii și punctele."
@@ -8003,7 +8059,8 @@
     },
     "servers": {
       "list": "Servere",
-      "adminsOnline": "Admini online"
+      "adminsOnline": "Admini online",
+      "liveMatches": "Meciuri live"
     },
     "games": {
       "all": "Toate jocurile",
@@ -8043,7 +8100,22 @@
       "empty": "Nicio realizare încă.",
       "received": "a primit"
     },
-    "ratingAria": "{avg} din 5, {count, plural, one {# vot} few {# voturi} other {# de voturi}}"
+    "ratingAria": "{avg} din 5, {count, plural, one {# vot} few {# voturi} other {# de voturi}}",
+    "tabs": {
+      "forum": "Forum (postări, topicuri, reputație, timp online)",
+      "community": "Comunitate (postatori, jucători, clanuri), fără perioade"
+    },
+    "layouts": {
+      "full": "Complet (adresa, butoanele, ocuparea)",
+      "compact": "Compact (numele, jucătorii, bara)"
+    },
+    "home": {
+      "activity": "Activitate",
+      "all": "Toate",
+      "allCount": "Toate ({count})",
+      "players": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
+      "more": "și încă {count}"
+    }
   },
   "pageEditor": {
     "title": "Editează pagina",
@@ -10116,6 +10188,14 @@
         "pageEditor": "Editează pagina",
         "acp": "Panoul de administrare (ACP)"
       },
+      "tiles": {
+        "attachments": "Atașamente",
+        "privacy": "Confidențialitate",
+        "player": "Profil jucător"
+      },
+      "line": {
+        "posts": "{count, plural, one {postare} few {postări} other {de postări}}"
+      },
       "theme": {
         "label": "Tema",
         "dark": "Întunecată",
@@ -10137,7 +10217,8 @@
       "cta": {
         "online": "Vezi cine e online",
         "vip": "Devino VIP"
-      }
+      },
+      "quick": "Linkuri rapide"
     },
     "live": {
       "servers": "{count, plural, one {# server online} few {# servere online} other {# de servere online}}",
@@ -10275,7 +10356,9 @@
       "offline": "{name}, offline",
       "off": "offline",
       "playNow": "Joacă acum"
-    }
+    },
+    "newTopic": "Topic nou",
+    "status": "Starea ta în comunitate"
   },
   "groups": {
     "pill": {

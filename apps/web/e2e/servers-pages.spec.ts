@@ -545,6 +545,7 @@ test("prezența adminilor: pagina, widget-ul „Admini online” și avertisment
   // Widget-ul în coloana din dreapta a paginii principale.
   await page.goto("/");
   await page.getByTestId("gcs-user-menu").click();
+  await page.getByTestId("gcs-account-staff").click();
   await page.getByTestId("gcs-menu-page-editor").click();
   await page.getByTestId("gcs-widget-add-sidebar").click();
   await page.getByTestId("gcs-widget-catalog-sidebar").getByRole("listitem").filter({ hasText: "Admini online" }).click();

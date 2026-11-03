@@ -17,6 +17,7 @@ import {
 } from "@gcs/core";
 import { type ContentVisibility, type ForumType, type Prisma, type PrismaClient, jsonInts, sql } from "@gcs/db";
 import { hiddenLabels, revealHidden } from "./blocks";
+import { cardMedia, DEFAULT_FORUM_PREVIEW, EMPTY_POST_PREVIEW, forumPreviewOf, needsPostPreview, postPreview, type GcsForumCardMedia, type GcsForumPreview, type GcsPostPreview } from "./cardPreview";
 import { isNoticeTone } from "./notices";
 import type { GcsPollService, GcsPollView } from "./polls";
 import { forumContainer, POST_CONTENT_TYPE } from "./posting";
@@ -56,13 +57,16 @@ export type GcsForumRow = {
   linkUrl: string | null;
   topicsCount: number;
   postsCount: number;
-  subforums: { id: number; name: string; slug: string; icon: string | null; topicsCount: number }[];
+  /** `unread`: subforumul (cu subforumurile lui) are mesaje noi pentru vizitator (dosarul plin din cardurile grilei). */
+  subforums: { id: number; name: string; slug: string; icon: string | null; topicsCount: number; unread?: boolean }[];
   /** Pe câte coloane apar subforumurile (setarea forumului, 1–5). */
   subforumColumns: number;
   last: GcsLastPost | null;
   unread: boolean;
   /** Forum v2: o pagină („Pagină / Anunț”) cu topicuri dedesubt (altfel rândul nu are contoare). */
   pageTopics: boolean;
+  /** Cardurile din grilă: zona de imagine (doar cu `index(actor, { previews: true })`). */
+  media?: GcsForumCardMedia;
 };
 /** O postare în widget-ul „Postări recente”. */
 /** Cel mai nou membru (panoul de statistici): referința, cu data înscrierii. */
@@ -271,6 +275,8 @@ type TreeForum = {
   options?: GcsForumPageOptions;
   /** Forum v2: pagina unui nod PAGE (topicurile de dedesubt și grupurile care o văd; gol = toți). */
   page?: { allowTopics: boolean; audience: number[] } | null;
+  /** Cardurile din grilă: imaginea de previzualizare din ACP (lipsește în arborii cache-uiți înainte: modul automat). */
+  preview?: GcsForumPreview;
   topicsCount: number;
   postsCount: number;
   lastPostId: number | null;
@@ -283,6 +289,9 @@ type TreeData = { forums: TreeForum[]; topics: Record<string, { title: string; s
 const TREE_KEY = "forums:tree";
 const TREE_TTL = 3600;
 const STATS_TTL = 300;
+/** Previzualizarea ultimei postări a unui forum (cardurile din grilă), pe postare; editarea o invalidează (`topic:{id}`). */
+const CARD_PREVIEW_KEY = (postId: number) => `forums:cardPreview:${postId}`;
+const CARD_PREVIEW_TTL = 86_400;
 export const userRefSelect = {
   id: true,
   name: true,
@@ -347,7 +356,11 @@ export class GcsForumQueries {
     return { OR: [{ visibility: "VISIBLE" }, { visibility: "PENDING", authorId: actor.userId }] };
   }
 
-  async index(actor: GcsActor): Promise<GcsIndexCategory[]> {
+  /**
+   * `previews` (vederea în grilă): fiecare forum primește și zona de imagine a cardului (`media`): conținutul ultimelor
+   * postări vine din cache, pe postare, iar ce lipsește se citește într-o singură interogare pentru toată pagina.
+   */
+  async index(actor: GcsActor, opts: { previews?: boolean } = {}): Promise<GcsIndexCategory[]> {
     const tree = await this.tree();
     const { viewable, readable } = await this.access(actor, tree);
     const unread = await this.deps.readMarkers.unreadForumIds(actor.userId, [...readable]);
@@ -357,7 +370,63 @@ export class GcsForumQueries {
       const forums = tree.childrenOf(cat.id).filter((f) => viewable.has(f.id)).map((f) => this.row(tree, f, viewable, readable, unread));
       if (forums.length > 0) categories.push({ id: cat.id, name: cat.name, slug: cat.slug, color: cat.color, icon: cat.icon, forums });
     }
+    if (opts.previews) await this.attachCardMedia(actor, tree, readable, categories.flatMap((c) => c.forums));
     return categories;
+  }
+
+  /**
+   * Cardurile din grilă: zona de imagine a fiecărui forum (`cardMedia`). Ultima postare e cea din rând (subarborele
+   * citibil, fără forumurile cu parolă sau „doar topicurile mele”), deci conținutul ei e vizibil vizitatorului; pozele
+   * atașate cer în plus `forums.download` pe forumul postării (altfel se sar). Fără interogări per forum: previzualizările
+   * din cache se citesc deodată (`getMany`), cele lipsă dintr-o singură interogare, iar dreptul de descărcare într-un apel.
+   */
+  private async attachCardMedia(actor: GcsActor, tree: GcsTree, readable: Set<number>, rows: GcsForumRow[]): Promise<void> {
+    const items = rows.map((row) => {
+      const node = tree.byId.get(row.id);
+      const preview = node?.preview ?? DEFAULT_FORUM_PREVIEW;
+      const latest = node && needsPostPreview(preview, row.last) ? this.latest(tree, node, readable) : null;
+      return { row, preview, latest };
+    });
+    const wanted = items.flatMap(({ row, latest }) => (latest && row.last ? [{ postId: row.last.postId, topicId: row.last.topicId, forumId: latest.id }] : []));
+    const forumIds = [...new Set(wanted.map((w) => w.forumId))];
+    const [posts, downloadable] = await Promise.all([
+      this.postPreviews(wanted),
+      forumIds.length > 0 ? this.deps.permissions.filterContainers(actor, "forums.download", forumIds.map(forumContainer)) : Promise.resolve(new Set<string>()),
+    ]);
+    for (const { row, preview, latest } of items) {
+      row.media = cardMedia({
+        preview,
+        last: row.last,
+        post: latest && row.last ? (posts.get(row.last.postId) ?? null) : null,
+        canDownload: latest !== null && downloadable.has(String(latest.id)),
+      });
+    }
+  }
+
+  /** Previzualizările ultimelor postări (pozele și începutul textului): din cache, iar ce lipsește într-o interogare. */
+  private async postPreviews(refs: { postId: number; topicId: number; forumId: number }[]): Promise<Map<number, GcsPostPreview>> {
+    const { cache, db } = this.deps;
+    const unique = [...new Map(refs.map((r) => [r.postId, r])).values()];
+    const out = new Map<number, GcsPostPreview>();
+    if (unique.length === 0) return out;
+    const cached = await cache.getMany<GcsPostPreview>(unique.map((r) => CARD_PREVIEW_KEY(r.postId)));
+    const missing = unique.filter((r, i) => {
+      const hit = cached[i];
+      if (hit) out.set(r.postId, hit);
+      return !hit;
+    });
+    if (missing.length === 0) return out;
+    const rows = await db.post.findMany({ where: { id: { in: missing.map((r) => r.postId) }, visibility: "VISIBLE" }, select: { id: true, contentJson: true } });
+    const content = new Map(rows.map((p) => [p.id, p.contentJson]));
+    await Promise.all(
+      missing.map((r) => {
+        // O postare care nu (mai) e vizibilă: fără conținut (cardul arată titlul și autorul); aprobarea invalidează tag-urile.
+        const value = content.has(r.postId) ? postPreview(content.get(r.postId)) : EMPTY_POST_PREVIEW;
+        out.set(r.postId, value);
+        return cache.set(CARD_PREVIEW_KEY(r.postId), value, { ttlSec: CARD_PREVIEW_TTL, tags: [`topic:${r.topicId}`, `forum:${r.forumId}`] });
+      }),
+    );
+    return out;
   }
 
   /**
@@ -970,6 +1039,7 @@ export class GcsForumQueries {
         linkUrl: f.linkUrl,
         subforumColumns: f.subforumColumns,
         page: f.type === "PAGE" ? { allowTopics: f.page?.allowTopics ?? false, audience: jsonInts(f.page?.audienceGroupIds) } : null,
+        preview: forumPreviewOf(f),
         options: {
           ownTopicsOnly: f.ownTopicsOnly,
           hasPassword: f.passwordHash !== null,
@@ -1046,11 +1116,19 @@ export class GcsForumQueries {
       .map((f) => ({ id: f.id, name: f.name, slug: f.slug, type: f.type }));
   }
 
+  /**
+   * Nodul cu ultimul mesaj din subarborele citibil al forumului (fără forumurile cu parolă sau „doar topicurile mele”,
+   * al căror conținut nu apare în liste).
+   */
+  private latest(tree: GcsTree, f: TreeForum, readable: Set<number>): TreeForum | null {
+    const shareable = tree.subtree(f.id).filter((n) => readable.has(n.id) && !nodeOptions(n).hasPassword && !nodeOptions(n).ownTopicsOnly);
+    return shareable.reduce<TreeForum | null>((best, n) => (n.lastPostId !== null && (best === null || n.lastPostId > best.lastPostId!) ? n : best), null);
+  }
+
   /** Un forum în listă: contoarele și ultimul mesaj, adunate din subarborele citibil de actor. */
   private row(tree: GcsTree, f: TreeForum, viewable: Set<number>, readable: Set<number>, unread: Set<number>): GcsForumRow {
     const nodes = tree.subtree(f.id).filter((n) => readable.has(n.id));
-    const shareable = nodes.filter((n) => !nodeOptions(n).hasPassword && !nodeOptions(n).ownTopicsOnly);
-    const latest = shareable.reduce<TreeForum | null>((best, n) => (n.lastPostId !== null && (best === null || n.lastPostId > best.lastPostId!) ? n : best), null);
+    const latest = this.latest(tree, f, readable);
     const topic = latest?.lastTopicId ? tree.data.topics[String(latest.lastTopicId)] : undefined;
     return {
       id: f.id,
@@ -1063,7 +1141,13 @@ export class GcsForumQueries {
       linkUrl: f.linkUrl,
       topicsCount: nodes.reduce((n, x) => n + x.topicsCount, 0),
       postsCount: nodes.reduce((n, x) => n + x.postsCount, 0),
-      subforums: tree.childrenOf(f.id).filter((c) => viewable.has(c.id)).map((c) => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon, topicsCount: tree.subtree(c.id).filter((n) => readable.has(n.id)).reduce((n, x) => n + x.topicsCount, 0) })),
+      subforums: tree
+        .childrenOf(f.id)
+        .filter((c) => viewable.has(c.id))
+        .map((c) => {
+          const sub = tree.subtree(c.id).filter((n) => readable.has(n.id));
+          return { id: c.id, name: c.name, slug: c.slug, icon: c.icon, topicsCount: sub.reduce((n, x) => n + x.topicsCount, 0), unread: sub.some((n) => unread.has(n.id)) };
+        }),
       subforumColumns: f.subforumColumns ?? 2,
       last:
         latest && topic

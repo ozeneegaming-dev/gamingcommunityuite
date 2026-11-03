@@ -1,7 +1,7 @@
 import type { GcsActor, GcsPermissionService } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { describe, expect, test, vi } from "vitest";
-import { eloTier, GcsHoverCardLoader, memberStatus, type GcsMemberChip } from "./hoverCard";
+import { eloTier, GcsHoverCardLoader, memberStatus, rankEmblemOf, type GcsMemberChip } from "./hoverCard";
 import type { GcsCardView } from "./queries";
 
 const viewer: GcsActor = { userId: "viewer00001", groupIds: [3], primaryGroupId: 3, isBanned: false, ip: "" };
@@ -68,6 +68,16 @@ describe("hover card v2: încărcarea datelor", () => {
     expect(data?.level).toEqual({ level: 3, rank: "Activ", percent: 35, next: { level: 4, name: "Veteran" }, xp: 300 });
     expect(data?.profileHref).toBe("/members/target00001-bl1ng");
     expect(data?.contentHref).toBe("/members/target00001-bl1ng?tab=activity");
+    // Emblema rangului atins (plăcuța din cardul v3): insigna desenată pentru locul lui în scară.
+    expect(data?.rankEmblem).toEqual({ art: expect.stringMatching(/^\/badge-art\/v1\/.+\.svg$/), image: null });
+  });
+
+  test("emblema rangului: imaginea încărcată în ACP are prioritate; fără rang (sau cu un rang șters), nimic", () => {
+    const withImage = [...ladder.slice(0, 2), { ...ladder[2]!, imageAttachmentId: "rankimg1" }, ladder[3]!];
+    expect(rankEmblemOf(withImage, 3)?.image).toBe("/files/rankimg1");
+    expect(rankEmblemOf(ladder, 1)).toEqual({ art: expect.stringMatching(/^\/badge-art\/v1\/.+\.svg$/), image: null });
+    expect(rankEmblemOf(ladder, null)).toBeNull();
+    expect(rankEmblemOf(ladder, 99)).toBeNull();
   });
 
   test("cipurile aplicațiilor, în ordinea fixă; o aplicație oprită nu-și arată cipul; o eroare nu strică cardul", async () => {

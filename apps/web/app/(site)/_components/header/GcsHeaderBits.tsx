@@ -7,7 +7,7 @@ import { GcsIconSvg, GcsTooltip } from "@gcs/ui";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import type { GcsThemeToggle as GcsThemeToggleState } from "@/lib/appearance";
 import { setSkinChoice, setThemeMode } from "../../actions";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
@@ -141,7 +141,7 @@ const BAR_HREF: Partial<Record<GcsMobileBarItem, string>> = {
 /**
  * Bara de jos de pe mobil (specul 2026-10-10-hero-cockpit §7, §9): elementele alese în temă (implicit Forum, Servere,
  * + Creează în centru, Mesaje, Notificări), cu textul sub iconiță (opțional) și numerele live de necitite.
- * Căutarea, meniul și „Creează” deschid panourile antetului.
+ * Căutarea, meniul și „Creează” deschid panourile antetului; „Cont” (membrii) deschide meniul contului ca foaie de jos.
  */
 export function GcsMobileBar({
   items,
@@ -208,6 +208,17 @@ export function GcsMobileBar({
         }
         const href = item === "forum" ? forumHref : item === "account" ? (accountHref ?? "/login") : (BAR_HREF[item] ?? "/");
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href.split("?")[0]!);
+        if (item === "account" && member) {
+          // Contul deschide meniul contului (foaia de jos); fără meniu montat în antet, linkul duce la profil.
+          const openMenu = (e: ReactMouseEvent) => {
+            if (!window.dispatchEvent(new CustomEvent(HEADER_EVENTS.account, { cancelable: true }))) e.preventDefault();
+          };
+          return (
+            <Link key={item} href={href} className={`gcs-mbar__item${active ? " gcs-mbar__item--active" : ""}`} aria-haspopup="dialog" onClick={openMenu} data-testid="gcs-mobile-bar-account">
+              {content}
+            </Link>
+          );
+        }
         return (
           <Link key={item} href={href} className={`gcs-mbar__item${active ? " gcs-mbar__item--active" : ""}`} aria-current={active ? "page" : undefined} data-testid={`gcs-mobile-bar-${item}`}>
             {content}
