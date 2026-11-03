@@ -181,6 +181,8 @@ import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
 import { CONTACT_ACP_SECTION, CONTACT_NOTIFICATION, GcsContactService } from "./community/contact";
 import { GcsBulkMailService } from "./notifications/bulkMail";
 import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
+import { GcsStatsReportService } from "./stats/reports";
+import { GcsTagsAdmin } from "./forums/tagsAdmin";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -275,6 +277,10 @@ export type GcsServices = {
   bulkMail: GcsBulkMailService;
   /** Recomandările (linkul de invitație, calificarea și recompensa). */
   referrals: GcsReferralService;
+  /** ACP › Statistici: rapoartele pe perioade (înregistrări, membri, conținut, online, clanuri, servere, VIP). */
+  statsReports: GcsStatsReportService;
+  /** ACP › Descoperire › Etichete: lista, redenumirea, unirea, ștergerea și setările etichetelor. */
+  tagsAdmin: GcsTagsAdmin;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -543,6 +549,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
+  // Iconița aplicației instalabile (PWA): publică, ca favicon-ul.
+  attachments.registerAccess("theme.appicon", async () => true);
   attachments.registerAccess("theme.header", async () => true);
   attachments.registerAccess(HEADER_VIDEO_CONTENT_TYPE, async () => true);
   // Aspect forumuri: iconițele și fundalurile forumurilor și ale widget-urilor sunt publice.
@@ -1028,6 +1036,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
     contact,
     referrals,
+    statsReports: new GcsStatsReportService({ db, acp, settings }),
+    tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,
@@ -1049,7 +1059,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     prefixes,
     reports,
     moderation: forumModeration,
-    search: new GcsForumSearch({ db, permissions, settings, rateLimiter }),
+    search: new GcsForumSearch({ db, permissions, settings, rateLimiter, kv }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
     forumSlots: new GcsForumSlotService({ db, cache, bus, registry, apps, acp }),

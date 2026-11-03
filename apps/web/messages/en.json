@@ -346,7 +346,9 @@
       "license_bad_signature": "The licence’s signature isn’t valid (the licence was changed).",
       "license_expired": "The licence has expired.",
       "license_domain": "The licence isn’t valid for this site’s domain.",
-      "license_revoked": "The licence has been revoked."
+      "license_revoked": "The licence has been revoked.",
+      "tag_exists": "A tag with this name already exists.",
+      "login_required": "You need to sign in."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -502,7 +504,12 @@
       "unknown_extension": "The list contains an extension the platform does not accept.",
       "invalid_domain": "Only domains (e.g. example.com), one per line.",
       "page_placeholder": "The format must contain '{page}' exactly once, without angle brackets.",
-      "invalid_token": "Invalid code: only the value from content=\"…\" or the whole meta tag."
+      "invalid_token": "Invalid code: only the value from content=\"…\" or the whole meta tag.",
+      "length": "Length not allowed",
+      "empty": "No recipients for the chosen audience",
+      "tag_not_allowed": "The tag is not on the list allowed by the admins",
+      "unknown_job": "This job cannot be run manually",
+      "invalid_area": "Invalid cache area"
     }
   },
   "acp": {
@@ -5833,6 +5840,315 @@
         "badgesHint": "Badges for invitations: a rule with the “Qualified referrals” event in",
         "badgesLink": "Achievements › Rules"
       }
+    },
+    "statsReports": {
+      "csv": "Export CSV",
+      "settings": "Settings",
+      "save": "Save",
+      "range": "Period",
+      "rangeDays": "{days, plural, one {# day} other {# days}}",
+      "from": "From",
+      "to": "To",
+      "group": "Grouping",
+      "groups": {
+        "day": "By day",
+        "week": "By week",
+        "month": "By month"
+      },
+      "apply": "Apply",
+      "previous": "Previous period: {value}",
+      "chartTitle": "{report}, {from} – {to}",
+      "noData": "No data in the chosen period.",
+      "unitHours": "{n} h",
+      "cfg": {
+        "title": "Reports",
+        "excludeStaff": "Exclude staff from activity reports",
+        "excludeStaffHint": "Admins and moderators are not counted in active members, posts, reactions and online time.",
+        "weekStart": "Week starts on",
+        "monday": "Monday",
+        "sunday": "Sunday",
+        "defaultDays": "Default period"
+      },
+      "registrations": {
+        "title": "Registrations",
+        "description": "New accounts by day, week or month and the sign-up method."
+      },
+      "members": {
+        "title": "Active members",
+        "description": "How many members posted and how many were online, compared with the previous period, plus the most active."
+      },
+      "content": {
+        "title": "Content",
+        "description": "New topics, posts and reactions, with the most active forums and topics."
+      },
+      "online": {
+        "title": "Online",
+        "description": "Members online each day and the hours spent on the site, with the presence record."
+      },
+      "clans": {
+        "title": "Clans",
+        "description": "New clans and clan joins, with the biggest clans."
+      },
+      "servers": {
+        "title": "Servers",
+        "description": "Peak players across all servers and matches played, with the top servers and maps."
+      },
+      "vip": {
+        "title": "VIP and donations",
+        "description": "New VIP subscriptions and confirmed donations, with the most generous donors."
+      },
+      "series": {
+        "registrations": {
+          "registrations": "Registrations"
+        },
+        "members": {
+          "posters": "Posted",
+          "online": "Were online"
+        },
+        "content": {
+          "topics": "Topics",
+          "posts": "Posts",
+          "reactions": "Reactions"
+        },
+        "online": {
+          "members": "Members online",
+          "hours": "Hours online"
+        },
+        "clans": {
+          "clans": "New clans",
+          "joins": "Clan joins"
+        },
+        "servers": {
+          "players": "Peak players",
+          "matches": "Matches"
+        },
+        "vip": {
+          "subscriptions": "New VIP subscriptions",
+          "donations": "Donations (amount)"
+        }
+      },
+      "tiles": {
+        "members": "members in total",
+        "active30": "active in 30 days",
+        "inactive90": "inactive for 90+ days",
+        "record": "online record",
+        "clans": "active clans",
+        "servers": "servers on",
+        "active": "active VIP subscriptions",
+        "expiring": "VIP expiring in 7 days"
+      },
+      "tops": {
+        "registrations": {
+          "methods": "Sign-up method"
+        },
+        "members": {
+          "posters": "Most active"
+        },
+        "content": {
+          "forums": "Active forums",
+          "topics": "Active topics"
+        },
+        "online": {
+          "online": "Most time online"
+        },
+        "clans": {
+          "clans": "Biggest clans"
+        },
+        "servers": {
+          "servers": "Servers (peak players)",
+          "maps": "Maps played"
+        },
+        "vip": {
+          "donors": "Donors"
+        }
+      },
+      "methods": {
+        "credential": "Email and password",
+        "discord": "Discord",
+        "google": "Google",
+        "steam": "Steam"
+      }
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "Topic tags: how many topics each one has, renaming, merging duplicates and the allowed list.",
+      "settings": "Settings",
+      "save": "Save",
+      "add": "New tag",
+      "create": "Add the tag",
+      "name": "Name",
+      "nameHint": "The address is made from the name: lowercase letters, digits and dashes (e.g. “CS2 Config” → cs2-config).",
+      "stateOpen": "Tags are on; members can create new tags",
+      "stateClosed": "Tags are on; only the listed ones",
+      "stateOff": "Tags are off on the whole site",
+      "counts": "{total, plural, one {# tag} other {# tags}} · {unused} unused",
+      "prune": "Delete unused ({count})",
+      "pruneConfirm": "Delete {count, plural, one {the unused tag} other {the # unused tags}}?",
+      "sort": "Order",
+      "sorts": {
+        "used": "Most used",
+        "name": "By name"
+      },
+      "search": "Search a tag",
+      "empty": "No tags.",
+      "topics": "{count, plural, =0 {no topics} one {# topic} other {# topics}}",
+      "delete": "Delete the tag",
+      "confirmDelete": "Delete the tag? {count, plural, =0 {It is not used.} one {It disappears from one topic.} other {It disappears from # topics.}}",
+      "renameTitle": "Name",
+      "mergeTitle": "Merge into another tag",
+      "mergeInto": "Target",
+      "pick": "Choose the tag",
+      "mergeHint": "This tag's topics get the chosen one, then this tag disappears.",
+      "merge": "Merge",
+      "mergeConfirm": "Merge the tag? {count, plural, =0 {It has no topics.} one {One topic moves to the chosen target.} other {# topics move to the chosen target.}}",
+      "pages": "Pages",
+      "page": "Page {page} of {pages} · {total}",
+      "prev": "Previous",
+      "next": "Next",
+      "cfg": {
+        "title": "Tags",
+        "enabled": "Tags on for the whole site",
+        "enabledHint": "Each forum can still turn them off in its options.",
+        "mode": "Who creates tags",
+        "open": "Members, when writing a topic",
+        "closed": "Only admins (the list below)",
+        "modeHint": "Closed list: members only choose existing tags."
+      }
+    },
+    "search": {
+      "title": "Search",
+      "description": "How members search and what they look for: the most searched terms and those without results, meaning content that is missing.",
+      "settings": "Settings",
+      "save": "Save",
+      "stateAll": "Search is open to everyone",
+      "stateMembers": "Search is for members only",
+      "chipMin": "at least {n} characters",
+      "chipRate": "{n} searches per minute",
+      "chipAge": "only the last {n} days",
+      "chipLog": "terms are logged anonymously",
+      "chipNoLog": "terms are not logged",
+      "period": "Period",
+      "lastDays": "Last {days} days",
+      "searches": "{count, plural, one {# search} other {# searches}}",
+      "zeroShare": "{count, plural, =0 {all with results} one {# without results} other {# without results}}",
+      "clear": "Clear the log",
+      "clearConfirm": "Clear the log of searched terms?",
+      "topTitle": "Most searched",
+      "zeroTitle": "No results",
+      "zeroHint": "Members searched for this and found nothing: ideas for topics, guides or tags.",
+      "noTerms": "No searches in the chosen period.",
+      "cfg": {
+        "secWho": "Who searches",
+        "secResults": "Results",
+        "secLog": "Log",
+        "guests": "Visitors can search too",
+        "guestsHint": "Otherwise search requires an account.",
+        "minLength": "Minimum term length",
+        "perMinute": "Searches per minute (per member or IP)",
+        "defaultType": "Searched by default",
+        "topics": "Topics",
+        "posts": "Posts",
+        "perPage": "Results per page",
+        "perPageHint": "0 = same as topic lists.",
+        "maxAgeDays": "Only content from the last (days)",
+        "maxAgeHint": "0 = all content. On very large forums a limit makes search faster.",
+        "logTerms": "Log searched terms",
+        "logHint": "Only the term, the number of results and the time (not who searched); the last 1000 searches."
+      }
+    },
+    "rss": {
+      "title": "RSS",
+      "description": "The site's RSS feeds (the general one and one per public forum) and importing feeds as topics.",
+      "settings": "Settings",
+      "save": "Save",
+      "stateOn": "{count, plural, =0 {No public feeds} one {# public feed} other {# public feeds}}",
+      "stateOff": "RSS feeds are off",
+      "chipItems": "{n} topics per feed",
+      "chipSnippets": "with excerpt",
+      "chipCache": "cache {n} min",
+      "feeds": "Site feeds",
+      "noFeeds": "No public forums yet.",
+      "siteFeed": "General feed (whole site)",
+      "open": "Open",
+      "importTitle": "RSS import",
+      "importBody": "News from other sites (RSS, Steam updates) becomes topics of the community bot, through the News bot plugin.",
+      "importOpen": "Open News bot",
+      "importDisabled": "News bot (off)",
+      "importInstall": "Install News bot from Applications",
+      "cfg": {
+        "secFeeds": "Feeds",
+        "secItems": "Content",
+        "enabled": "RSS feeds on",
+        "siteFeed": "General feed /rss.xml",
+        "siteFeedHint": "Topics with recent activity from every public forum.",
+        "items": "Topics per feed",
+        "cacheMinutes": "Cache (minutes)",
+        "snippets": "Excerpt of the first post",
+        "snippetsHint": "RSS readers show the start of the topic."
+      }
+    },
+    "share": {
+      "title": "Sharing",
+      "description": "The topics' “Share” menu: the networks shown, the phone's share sheet and the hashtags for X.",
+      "settings": "Settings",
+      "save": "Save",
+      "stateOn": "{count, plural, =0 {Copy link only} one {The menu is on, with # network} other {The menu is on, with # networks}}",
+      "stateOff": "The “Share” menu is off",
+      "chipNative": "native sheet on phones",
+      "chipTags": "hashtags: {tags}",
+      "chipNone": "no extra options",
+      "networksTitle": "Networks",
+      "copy": "Copy link",
+      "copyHint": "Copies the topic's address.",
+      "copyNative": "On phones it opens the system share sheet.",
+      "always": "Always",
+      "on": "On",
+      "off": "Off",
+      "networks": {
+        "x": "X (Twitter)",
+        "facebook": "Facebook",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "reddit": "Reddit",
+        "linkedin": "LinkedIn",
+        "email": "Email"
+      },
+      "cfg": {
+        "secMenu": "Menu",
+        "secNetworks": "Networks shown",
+        "enabled": "“Share” menu on topics",
+        "nativeShare": "Phone share sheet",
+        "nativeHint": "On phones, “Copy link” opens the list of apps (Discord, Messenger…).",
+        "hashtags": "Hashtags for X",
+        "hashtagsHint": "Comma separated, without #."
+      }
+    },
+    "pwa": {
+      "title": "Web App (PWA)",
+      "description": "The site can be installed as an app on phones or desktops. Choose the name, icon, colors and start page.",
+      "settings": "Settings",
+      "save": "Save",
+      "preview": "How it looks installed",
+      "icon": "App icon",
+      "iconHint": "A square image (PNG, WebP or JPG, up to 2 MB); it becomes a 512 × 512 PNG on a transparent background.",
+      "displays": {
+        "standalone": "As an app (no browser bar)",
+        "minimal-ui": "With a minimal browser bar",
+        "browser": "In the browser"
+      },
+      "cfg": {
+        "secName": "Name",
+        "secLook": "Look",
+        "name": "App name",
+        "shortName": "Short name",
+        "shortHint": "Under the icon on the screen; at most 12 characters.",
+        "description": "Description",
+        "themeColor": "Bar color",
+        "backgroundColor": "Start-up background color",
+        "display": "How it opens",
+        "startUrl": "Start page",
+        "startHint": "An address on the site, e.g. / or /forum."
+      }
     }
   },
   "settings": {
@@ -6626,6 +6942,24 @@
       "deleted": "deleted account",
       "statusQualified": "Qualified",
       "statusPending": "Pending"
+    },
+    "stats": {
+      "config": "Statistics"
+    },
+    "tags": {
+      "config": "Tags"
+    },
+    "search": {
+      "config": "Search"
+    },
+    "rss": {
+      "config": "RSS feeds"
+    },
+    "share": {
+      "config": "Sharing"
+    },
+    "pwa": {
+      "config": "Web app"
     }
   },
   "permissions": {
@@ -7712,9 +8046,10 @@
     "submit": "Search",
     "results": "{count, plural, one {# result} other {# results}} for “{q}”",
     "none": "No results for “{q}”.",
-    "tooShort": "Type at least 2 characters.",
+    "tooShort": "Type at least {min} characters.",
     "rateLimited": "Too many searches. Try again in a minute.",
-    "in": "in {forum}"
+    "in": "in {forum}",
+    "loginRequired": "Search is for members only: sign in to search."
   },
   "tags": {
     "title": "Tag: #{tag}",

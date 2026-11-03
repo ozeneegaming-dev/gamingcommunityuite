@@ -1,4 +1,4 @@
-import { allowedBlocks, parseRef, savedActionsForForum, TOPIC_RATING_TYPE } from "@gcs/modules";
+import { allowedBlocks, loadShareConfig, parseRef, savedActionsForForum, shareHashtags, TOPIC_RATING_TYPE } from "@gcs/modules";
 import { GcsBadge, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -137,6 +137,8 @@ export default async function TopicPage({ params, searchParams }: Props) {
     settings.get<string>("forums.summary_devices"),
     topicTools.modNamesPublic(),
   ]);
+  // ACP › Promovare › Distribuire: meniul pornit, rețelele, foaia nativă a telefonului, hashtag-urile pentru X.
+  const share = await loadShareConfig(services().settings);
   const summary = summaryOn && topic.repliesCount >= summaryMin ? await forumQueries.topicSummary(topic.id) : null;
   const summaryBlock = summary ? <GcsTopicSummaryBlock topicId={topic.id} summary={summary} devices={summaryDevices === "desktop" ? "desktop" : "all"} /> : null;
   const isTopicAuthor = actor.userId !== null && actor.userId === topic.author?.id;
@@ -235,7 +237,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         </div>
         <div className="gcs-pageHeader__actions">
           {actor.userId && <GcsFollowButton contentType="topic" contentId={topic.id} following={data.follow.following} count={data.follow.count} />}
-          <GcsShareMenu path={topicHref(topic)} title={topic.title} />
+          {share.enabled && <GcsShareMenu path={topicHref(topic)} title={topic.title} options={{ networks: share.networks, nativeShare: share.nativeShare, hashtags: shareHashtags(share.hashtags) }} />}
           {canCreate && hostsTopics && (
             <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-plus" />}>
               <Link href={newTopicHref(forum)} data-testid="gcs-topic-new">

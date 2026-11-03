@@ -1,5 +1,5 @@
 import { statfs } from "node:fs/promises";
-import { CRON_LAST_KEY, CRON_STALE_MS, GcsSqlKv, readJobStats, realtimeStatus, serviceStatus, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEdition, type GcsJobQueue, type GcsJobRunStat, type GcsKv, type GcsNotificationService, type GcsSettingsService, type GcsServiceStatus } from "@gcs/core";
+import { CRON_LAST_KEY, CRON_STALE_MS, GcsSqlKv, GcsValidationError, readJobStats, realtimeStatus, serviceStatus, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsEdition, type GcsJobQueue, type GcsJobRunStat, type GcsKv, type GcsNotificationService, type GcsSettingsService, type GcsServiceStatus } from "@gcs/core";
 import { isMysql, type PrismaClient } from "@gcs/db";
 
 /** Secțiunea ACP (ACP › Sistem › Stare sistem): `view` = pagina, `edit` = „Rulează acum” și alertele. */
@@ -180,7 +180,7 @@ export class GcsSystemStatusService {
   async runNow(actor: GcsActor, name: string): Promise<void> {
     await this.deps.acp.assert(actor, STATUS_ACP_SECTION, "edit");
     const def = this.deps.jobs.registered().find((d) => d.name === name);
-    if (!def || (!def.everyMs && !def.pattern)) throw new Error("unknown_job");
+    if (!def || (!def.everyMs && !def.pattern)) throw new GcsValidationError({ job: "unknown_job" });
     await this.deps.jobs.enqueue(name, {});
     await writeAudit(this.deps.db, { actorId: actor.userId ?? null, action: "system.job_run", targetType: "job", targetId: name, ip: actor.ip });
   }

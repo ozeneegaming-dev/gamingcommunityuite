@@ -18,8 +18,8 @@ const tone = (color: string | undefined): CSSProperties | undefined => (color &&
 
 /**
  * ACP → Statistici → Prezentare generală (specul 2026-10-09-acp-navigatie-aplicatii §1.2): cifrele de acum ale fiecărei
- * aplicații active (plăcile din `GcsModule.stats`), grupate pe aplicație. Rapoartele pe perioade sunt paginile „în curând”
- * din aceeași zonă.
+ * aplicații active (plăcile din `GcsModule.stats`), grupate pe aplicație. Rapoartele pe perioade sunt paginile
+ * `/admin/stats/<raport>` din aceeași zonă (graficul, comparația cu perioada anterioară, topurile, CSV).
  */
 export default async function AcpStatsOverviewPage() {
   await requireAcpSection("stats.overview");

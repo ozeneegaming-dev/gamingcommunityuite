@@ -1,4 +1,4 @@
-import { writeAudit, type GcsAcpRoleService, type GcsActor, type GcsCache, type GcsKv } from "@gcs/core";
+import { GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsCache, type GcsKv } from "@gcs/core";
 import type { PrismaClient } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 
@@ -49,7 +49,7 @@ export class GcsCacheAdminService {
   /** Golește o zonă (cheile `gcs:k:<zonă>` și `gcs:k:<zonă>:…`). Întoarce câte chei a șters. */
   async clearArea(actor: GcsActor, area: string): Promise<number> {
     await this.deps.acp.assert(actor, CACHE_ACP_SECTION, "edit");
-    if (!AREA_RE.test(area)) throw new Error("invalid_area");
+    if (!AREA_RE.test(area)) throw new GcsValidationError({ area: "invalid_area" });
     const removed = (await this.deps.kv.del(`${KEY_PREFIX}${area}`)) + (await this.deps.kv.delPrefix(`${KEY_PREFIX}${area}:`));
     await this.audit(actor, area, removed);
     return removed;
@@ -58,7 +58,7 @@ export class GcsCacheAdminService {
   /** Invalidează un tag (toate cheile legate de el, ca după o editare). */
   async clearTag(actor: GcsActor, tag: string): Promise<void> {
     await this.deps.acp.assert(actor, CACHE_ACP_SECTION, "edit");
-    if (!AREA_RE.test(tag)) throw new Error("invalid_area");
+    if (!AREA_RE.test(tag)) throw new GcsValidationError({ area: "invalid_area" });
     await this.deps.cache.invalidateTags([tag]);
     await this.audit(actor, `tag:${tag}`, 0);
   }

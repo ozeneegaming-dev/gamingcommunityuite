@@ -1,4 +1,5 @@
-import { GcsRateLimited, GcsValidationError } from "@gcs/core";
+import { GcsForbidden, GcsRateLimited, GcsValidationError } from "@gcs/core";
+import { loadSearchConfig } from "@gcs/modules";
 import { GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -24,7 +25,10 @@ export default async function SearchPage({ searchParams }: Props) {
   const t = await getTranslations("search");
   const actor = await currentActor();
   const q = one(sp.q).trim();
-  const type = one(sp.type) === "posts" ? "posts" : "topics";
+  // ACP › Căutare: ce caută implicit pagina (topicuri sau postări).
+  const searchCfg = await loadSearchConfig(services().settings);
+  const asked = one(sp.type);
+  const type = asked === "posts" || asked === "topics" ? asked : searchCfg.defaultType;
   const forumId = Number(one(sp.forum)) || undefined;
   const author = one(sp.author).trim();
   const since = one(sp.since);
@@ -44,7 +48,8 @@ export default async function SearchPage({ searchParams }: Props) {
         ...(since ? { since } : {}),
       });
     } catch (error) {
-      if (error instanceof GcsValidationError) message = t("tooShort");
+      if (error instanceof GcsValidationError) message = t("tooShort", { min: searchCfg.minLength });
+      else if (error instanceof GcsForbidden) message = t("loginRequired");
       else if (error instanceof GcsRateLimited) message = t("rateLimited");
       else throw error;
     }

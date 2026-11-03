@@ -76,7 +76,7 @@ describe("Stare sistem", () => {
     const member = await w.user("MembruRun");
     await w.s.systemStatus.runNow(root, "uploads.orphans");
     expect(await w.s.db.auditLog.count({ where: { action: "system.job_run", targetId: "uploads.orphans" } })).toBe(1);
-    await expect(w.s.systemStatus.runNow(root, "bot.welcome")).rejects.toThrow("unknown_job");
+    await expect(w.s.systemStatus.runNow(root, "bot.welcome")).rejects.toMatchObject({ fields: { job: "unknown_job" } });
     await expect(w.s.systemStatus.runNow(member, "uploads.orphans")).rejects.toThrow();
   });
 });
@@ -111,7 +111,7 @@ describe("Cache", () => {
     const root = await w.user("RootCache2", "root_admin");
     const member = await w.user("MembruCache");
     await expect(w.s.cacheAdmin.clearAll(member)).rejects.toThrow();
-    await expect(w.s.cacheAdmin.clearArea(root, "a*b")).rejects.toThrow("invalid_area");
+    await expect(w.s.cacheAdmin.clearArea(root, "a*b")).rejects.toMatchObject({ fields: { area: "invalid_area" } });
   });
 });
 

@@ -371,18 +371,20 @@ export class GcsAttachmentService {
    * (`theme.logo` / `theme.favicon`, legat de cheia temei); dreptul ACP îl verifică apelantul. Imaginea antetului
    * (designul Nova, `theme.header`) poate avea 5 MB și devine WebP de cel mult 2560×800.
    */
-  async uploadSiteImage(actor: GcsActor, file: GcsUploadedFile, opts: { kind: "logo" | "favicon" | "header"; themeKey: string }): Promise<GcsAttachmentInfo> {
+  async uploadSiteImage(actor: GcsActor, file: GcsUploadedFile, opts: { kind: "logo" | "favicon" | "header" | "appicon"; themeKey: string }): Promise<GcsAttachmentInfo> {
     const { db, store } = this.deps;
     if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
     const maxMb = opts.kind === "header" ? 5 : 2;
     if (file.bytes.length > maxMb * 1024 * 1024) throw new GcsValidationError({ file: "too_large" }, { maxMb: String(maxMb) });
     const detected = await fileTypeFromBuffer(file.bytes);
     if (!detected || !(detected.mime in IMAGE_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
-    const favicon = opts.kind === "favicon";
+    // Iconița aplicației (PWA, ACP › Setări › Web App): PNG pătrat 512 × 512, încadrat pe fundal transparent.
+    const favicon = opts.kind === "favicon" || opts.kind === "appicon";
+    const side = opts.kind === "appicon" ? 512 : 64;
     const processed = await processImage(
       file.bytes,
       favicon
-        ? { width: 64, height: 64, fit: "contain", format: "png", quality: 100 }
+        ? { width: side, height: side, fit: "contain", format: "png", quality: 100 }
         : opts.kind === "header"
           ? { width: 2560, height: 800, fit: "inside", format: "webp", quality: 82 }
           : { width: 800, height: 240, fit: "inside", format: "webp", quality: 90 },

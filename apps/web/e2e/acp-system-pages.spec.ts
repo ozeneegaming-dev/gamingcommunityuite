@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { forumTree, uid } from "./forum-fixtures";
+import { fixture, forumTree, uid } from "./forum-fixtures";
 import { enterAcpAsRoot, groupId, register, resetSetting, sql, userId, useFreshIp } from "./helpers";
 import { e2eKv } from "./kv";
 
@@ -376,5 +376,169 @@ test("Recomandări: setările din ACP, linkul membrului, înregistrarea prin lin
   } finally {
     await sql(`DELETE FROM referrals WHERE "referrerId" = $1`, [me]);
     await resetSetting("referral.config");
+  }
+});
+
+test("Statistici: toate rapoartele se deschid cu grafic și plăci, perioada și gruparea se schimbă, CSV-ul și setările", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Stat${id}`, `stat-${id}@example.com`);
+  try {
+    for (const [report, title] of [
+      ["registrations", "Înregistrări"],
+      ["members", "Membri activi"],
+      ["content", "Conținut"],
+      ["online", "Online"],
+      ["clans", "Clanuri"],
+      ["servers", "Servere"],
+      ["vip", "VIP și donații"],
+    ] as const) {
+      await page.goto(`/admin/stats/${report}`);
+      await expect(page.getByRole("heading", { name: title, level: 1 }), report).toBeVisible();
+      await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+      await expect(page.getByTestId("gcs-stats-chart")).toBeVisible();
+      await expect(page.getByTestId("gcs-stats-tiles").locator("[data-series]").first()).toBeVisible();
+    }
+    await shot(page, "stats-vip");
+
+    // Perioada de 7 zile pe zile: 7 intervale; înregistrarea adminului apare în total.
+    await page.goto("/admin/stats/registrations?days=7&group=day");
+    await expect(page.locator('[data-series="registrations"] .gcs-acpTile__value')).not.toHaveText("0");
+    await page.getByTestId("gcs-stats-group").selectOption("week");
+    await page.getByRole("button", { name: "Aplică" }).click();
+    await expect(page).toHaveURL(/group=week/);
+    await shot(page, "stats-registrations-week");
+
+    const csv = await page.request.get("/admin/stats/registrations/export.csv?days=7&group=day");
+    expect(csv.ok()).toBe(true);
+    const lines = (await csv.text()).trim().split("\n");
+    expect(lines[0]).toBe("period,registrations");
+    expect(lines.length).toBe(8);
+
+    await page.getByTestId("gcs-stats-settings-open").click();
+    const cfg = page.getByTestId("gcs-stats-settings");
+    await cfg.getByLabel("Exclude staff-ul din rapoartele de activitate").check();
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(cfg).toHaveCount(0);
+    expect((await sql<{ value: { excludeStaff: boolean } }>(`SELECT value FROM settings WHERE key = 'stats.config'`))[0]?.value.excludeStaff).toBe(true);
+  } finally {
+    await resetSetting("stats.config");
+  }
+});
+
+test("Etichete: lista cu topicuri, redenumirea, unirea și setările", async ({ page }) => {
+  const id = uid().toLowerCase();
+  await enterAcpAsRoot(page, `Tag${id}`, `tag-${id}@example.com`);
+  const [a, b] = [`eta-${id}`, `etb-${id}`];
+  await sql(`INSERT INTO tags (name, slug) VALUES ($1, $1), ($2, $2)`, [a, b]);
+  try {
+    await page.goto(`/admin/system/tags?q=${id}`);
+    await expect(page.getByRole("heading", { name: "Etichete", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-tag-row")).toHaveCount(2);
+
+    // Redenumirea primei etichete.
+    const rowA = page.locator(`[data-testid="gcs-tag-row"][data-slug="${a}"]`);
+    await rowA.getByTestId("gcs-tag-panel-open").click();
+    await page.getByTestId("gcs-tag-panel").getByLabel("Numele").fill(`Eta ${id} nou`);
+    await page.getByTestId("gcs-tag-panel").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.locator(`[data-testid="gcs-tag-row"][data-slug="eta-${id}-nou"]`)).toBeVisible();
+
+    // Unirea celei de-a doua în prima.
+    await page.locator(`[data-testid="gcs-tag-row"][data-slug="${b}"]`).getByTestId("gcs-tag-panel-open").click();
+    const panel = page.getByTestId("gcs-tag-panel");
+    await panel.getByLabel("Ținta").selectOption({ label: `#eta-${id}-nou` });
+    await panel.getByRole("button", { name: "Unește" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(page.getByTestId("gcs-tag-row")).toHaveCount(1);
+    await shot(page, "tags-acp");
+
+    await page.getByTestId("gcs-tags-settings-open").click();
+    await page.getByTestId("gcs-tags-settings").getByLabel("Cine creează etichete").selectOption("closed");
+    await page.getByTestId("gcs-tags-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-tags-summary")).toContainText("doar cele din listă");
+  } finally {
+    await sql(`DELETE FROM tags WHERE slug LIKE $1`, [`%${id}%`]);
+    await resetSetting("tags.config");
+  }
+});
+
+test("Căutare: termenii căutați apar în ACP; setarea „doar membri” oprește vizitatorii", async ({ page, browser }) => {
+  const id = uid().toLowerCase();
+  await enterAcpAsRoot(page, `Src${id}`, `src-${id}@example.com`);
+  const term = `inexistent${id}`;
+  try {
+    await page.goto(`/search?q=${term}`);
+    await page.goto("/admin/system/search");
+    await expect(page.getByRole("heading", { name: "Căutare", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-search-zero").locator(`[data-term="${term}"]`)).toBeVisible();
+
+    await page.getByTestId("gcs-search-settings-open").click();
+    const cfg = page.getByTestId("gcs-search-settings");
+    await cfg.getByLabel("Și vizitatorii pot căuta").uncheck();
+    await cfg.getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-search-summary")).toContainText("doar pentru membri");
+    await shot(page, "search-acp");
+
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto(`/search?q=orice${id}`);
+    await expect(guest.getByText("Căutarea e doar pentru membri")).toBeVisible();
+    await ctx.close();
+  } finally {
+    await resetSetting("search.config");
+  }
+});
+
+/** Un PNG de 1 × 1 pixel (iconița de test a aplicației). */
+const PNG_1PX = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+
+test("RSS, Distribuire și Web App: setările schimbă fluxurile, meniul topicului și manifestul", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Rss${id}`, `rss-${id}@example.com`);
+  const t = await forumTree(request);
+  const topic = await fixture<{ topicId: number }>(request, { action: "topic", forumId: t.forum.id, title: `Distribuire ${id}`, text: "Despre RSS", authorEmail: `rss-${id}@example.com` });
+  try {
+    // RSS: fluxul general există; oprit, dispare.
+    await page.goto("/admin/system/rss");
+    await expect(page.getByRole("heading", { name: "RSS", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    expect((await page.request.get("/rss.xml")).status()).toBe(200);
+    await page.getByTestId("gcs-rss-settings-open").click();
+    await page.getByTestId("gcs-rss-settings").getByLabel("Fluxul general /rss.xml").uncheck();
+    await page.getByTestId("gcs-rss-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-rss-settings")).toHaveCount(0);
+    expect((await page.request.get("/rss.xml")).status()).toBe(404);
+
+    // Distribuire: fără Facebook, cu Reddit, în meniul topicului.
+    await page.goto("/admin/system/share");
+    await page.getByTestId("gcs-share-settings-open").click();
+    const share = page.getByTestId("gcs-share-settings");
+    await share.getByLabel("Facebook").uncheck();
+    await share.getByLabel("Reddit").check();
+    await share.getByRole("button", { name: "Salvează" }).click();
+    await expect(page.locator('[data-network="reddit"] [data-state]')).toHaveAttribute("data-state", "on");
+    await page.goto(`/topic/${topic.topicId}`);
+    await page.getByTestId("gcs-share-menu").click();
+    await expect(page.getByRole("menuitem", { name: "Reddit" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Facebook" })).toHaveCount(0);
+
+    // Web App: numele scurt în manifest și iconița încărcată.
+    await page.goto("/admin/settings/pwa");
+    await page.getByTestId("gcs-pwa-settings-open").click();
+    await page.getByTestId("gcs-pwa-settings").getByLabel("Numele scurt").fill("GcsTest");
+    await page.getByTestId("gcs-pwa-settings").getByRole("button", { name: "Salvează" }).click();
+    await expect(page.getByTestId("gcs-pwa-short")).toHaveText("GcsTest");
+    const up = await page.request.post("/api/acp/pwa/icon", { multipart: { file: { name: "icon.png", mimeType: "image/png", buffer: PNG_1PX } }, headers: { origin: new URL(page.url()).origin } });
+    expect(up.ok(), await up.text()).toBe(true);
+    const manifest = (await (await page.request.get("/manifest.webmanifest")).json()) as { short_name: string; icons?: { src: string; sizes: string }[] };
+    expect(manifest.short_name).toBe("GcsTest");
+    expect(manifest.icons?.[0]?.sizes).toBe("512x512");
+    const icon = await page.request.get(manifest.icons![0]!.src);
+    expect(icon.headers()["content-type"]).toBe("image/png");
+    await page.reload();
+    await shot(page, "pwa-acp");
+  } finally {
+    for (const key of ["rss.config", "share.config", "pwa.config"]) await resetSetting(key);
   }
 });

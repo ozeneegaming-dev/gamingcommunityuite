@@ -4,6 +4,12 @@ import { communityRulesSetting } from "../community/rules";
 import { CONTACT_NOTIFICATION, contactSetting } from "../community/contact";
 import { bulkMailRateSetting } from "../notifications/bulkMail";
 import { REFERRAL_NOTIFICATION, referralSetting } from "../profile/referrals";
+import { statsSetting } from "../stats/reports";
+import { tagsSetting } from "../forums/tagsAdmin";
+import { searchSetting } from "../forums/searchConfig";
+import { rssSetting } from "../forums/rssConfig";
+import { shareSetting } from "../forums/shareConfig";
+import { pwaSetting } from "../community/pwa";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -123,6 +129,18 @@ const settings: GcsSettingDef[] = [
   bulkMailRateSetting,
   // Recomandări (ACP › Membri › Setări membri): condițiile calificării și punctele celui care a invitat.
   referralSetting,
+  // Statistici: staff-ul exclus din rapoarte, începutul săptămânii și perioada implicită.
+  statsSetting,
+  // Etichetele (ACP › Descoperire › Etichete): pornite pe tot site-ul, lista deschisă sau închisă.
+  tagsSetting,
+  // Căutarea (ACP › Descoperire › Căutare): vizitatorii, lungimea minimă, limitele, rezultatele, jurnalul termenilor.
+  searchSetting,
+  // RSS (ACP › Descoperire › RSS): câte topicuri, rezumatul, fluxul general și cache-ul.
+  rssSetting,
+  // Distribuirea (ACP › Promovare › Distribuire): meniul, rețelele, foaia nativă, hashtag-urile.
+  shareSetting,
+  // Web App (ACP › Setări › Web App): numele, culorile, deschiderea, pagina de pornire și iconița din manifest.
+  pwaSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
