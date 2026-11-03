@@ -11,7 +11,7 @@ Docker, root access or Redis. Data lives in a **MySQL / MariaDB** or **PostgreSQ
 |---|---|
 | Node.js | 20.9 or newer (22 or 24 recommended) |
 | Database | MySQL 8.0.13+ / MariaDB 10.6+ **or** PostgreSQL 14+ with the `unaccent` and `pg_trgm` extensions |
-| Disk space | 2 GB free (the app takes ~600 MB unpacked; the rest is for uploads) |
+| Disk space | 2 GB free (the app takes ~200 MB unpacked; the rest is for uploads) |
 | Memory | 1 GB for the Node.js process (the “LVE” / “Memory” limit in the panel) |
 | Cron | one scheduled task every 5 minutes |
 | System | Linux x64 (glibc) — regular cPanel / Plesk hosts |

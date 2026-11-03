@@ -11,7 +11,7 @@ Docker, fără acces root și fără Redis. Datele stau într-o bază **MySQL / 
 |---|---|
 | Node.js | 20.9 sau mai nou (recomandat 22 sau 24) |
 | Baza de date | MySQL 8.0.13+ / MariaDB 10.6+ **sau** PostgreSQL 14+ cu extensiile `unaccent` și `pg_trgm` |
-| Spațiu pe disc | 2 GB liberi (aplicația ocupă ~600 MB după dezarhivare; restul pentru fișierele încărcate) |
+| Spațiu pe disc | 2 GB liberi (aplicația ocupă ~200 MB după dezarhivare; restul pentru fișierele încărcate) |
 | Memorie | 1 GB pentru procesul Node.js (limita „LVE” / „Memory” din panou) |
 | Cron | o sarcină programată la 5 minute |
 | Sistem | Linux x64 (glibc) — gazdele cu cPanel / Plesk obișnuite |
