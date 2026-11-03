@@ -396,7 +396,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     title: "acp.menu.appearance.layout",
   }),
 
-  // ─── Statistici: prezentarea (pagina reală) și rapoartele care vin („în curând”); aplicațiile își aduc rapoartele ───
+  // ─── Statistici: prezentarea și rapoartele (perioadă, grupare, grafic, CSV); aplicațiile își aduc rapoartele ───
   menuSection("stats", "overview_group", "fa-solid fa-chart-pie", [["overview", "/admin/stats", "fa-solid fa-chart-pie"]]),
   menuSection("stats", "activity", "fa-solid fa-chart-line", [
     ["registrations", "/admin/stats/registrations", "fa-solid fa-user-plus"],
