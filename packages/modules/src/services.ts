@@ -11,6 +11,7 @@ import {
   GcsAcpSearch,
   GcsActorResolver,
   DECOR_CONTENT_TYPE,
+  HEADER_VIDEO_CONTENT_TYPE,
   GcsAttachmentService,
   GcsBanService,
   GcsCache,
@@ -525,6 +526,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
   attachments.registerAccess("theme.header", async () => true);
+  attachments.registerAccess(HEADER_VIDEO_CONTENT_TYPE, async () => true);
   // Aspect forumuri: iconițele și fundalurile forumurilor și ale widget-urilor sunt publice.
   attachments.registerAccess(DECOR_CONTENT_TYPE, async () => true);
   // Forum v2: paginile („Pagină / Anunț”) și regulile forumurilor se scriu cu editorul postărilor, cu blocurile staff-ului.

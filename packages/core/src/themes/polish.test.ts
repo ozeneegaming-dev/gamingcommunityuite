@@ -75,6 +75,7 @@ describe("atributele de pe <html>", () => {
       "data-gcs-snippet": "on",
       "data-gcs-header-image": "off",
       "data-gcs-header-image-mobile": "on",
+      "data-gcs-header-video": "off",
     });
     expect(Object.keys(themeHtmlAttrs(NOVA_THEME_SETTINGS)).sort()).toEqual([...THEME_HTML_ATTRS].sort());
   });

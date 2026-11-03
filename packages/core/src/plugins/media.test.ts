@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { describe, expect, test } from "vitest";
 import { GcsValidationError } from "../errors";
-import { mp4DurationMs, parseByteRange, pluginMediaMaxBytes, preparePluginMedia, webmDurationMs } from "./media";
+import { mp4DurationMs, parseByteRange, pluginMediaMaxBytes, preparePluginMedia, videoContainerOk, webmDurationMs } from "./media";
 
 /** O cutie MP4: mărimea (4 octeți), tipul și conținutul. */
 function box(type: string, ...parts: Buffer[]): Buffer {
@@ -63,6 +63,25 @@ describe("fișierele media ale pluginurilor", () => {
   test("durata unui WebM vine din Segment/Info", () => {
     expect(webmDurationMs(webm(42))).toBe(42_000);
     expect(webmDurationMs(Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0xff]))).toBeNull();
+  });
+
+  test("containerul video: `moov` la MP4 (oriunde sus), `Segment` după antetul EBML la WebM, fără să ceară durata", () => {
+    expect(videoContainerOk("video/mp4", mp4(4))).toBe(true);
+    // `moov` la sfârșit (fișierele ne-„faststart”), după `mdat`.
+    const late = Buffer.concat([box("ftyp", Buffer.from("isom\0\0\x02\0isom", "latin1")), box("mdat", Buffer.alloc(64)), box("moov", box("mvhd", Buffer.alloc(100)))]);
+    expect(videoContainerOk("video/mp4", late)).toBe(true);
+    expect(videoContainerOk("video/mp4", box("ftyp", Buffer.from("isom\0\0\x02\0isom", "latin1")))).toBe(false);
+    // O cutie cu mărime falsă (mai mare decât fișierul) oprește citirea.
+    const broken = mp4(4);
+    broken.writeUInt32BE(0x7fffffff, 0);
+    expect(videoContainerOk("video/mp4", broken)).toBe(false);
+    expect(videoContainerOk("video/webm", webm(3))).toBe(true);
+    // Înregistrat în browser (MediaRecorder): `Segment` de mărime necunoscută, fără `Duration`.
+    const recorded = Buffer.concat([ebml([0x1a, 0x45, 0xdf, 0xa3], ebml([0x42, 0x82], Buffer.from("webm"))), Buffer.from([0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]), Buffer.alloc(32)]);
+    expect(webmDurationMs(recorded)).toBeNull();
+    expect(videoContainerOk("video/webm", recorded)).toBe(true);
+    expect(videoContainerOk("video/webm", ebml([0x1a, 0x45, 0xdf, 0xa3], ebml([0x42, 0x82], Buffer.from("webm"))))).toBe(false);
+    expect(videoContainerOk("video/quicktime", mp4(4))).toBe(false);
   });
 
   test("imaginile se recodează în WebP, cu transparența și latura maximă", async () => {

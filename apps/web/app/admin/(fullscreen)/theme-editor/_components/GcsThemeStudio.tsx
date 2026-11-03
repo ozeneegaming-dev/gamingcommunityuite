@@ -2,6 +2,7 @@
 
 import {
   CUSTOM_CSS_FILE,
+  HEADER_VIDEO_MAX_MB,
   compileThemeCss,
   derivePalette,
   joinThemeCssFiles,
@@ -70,6 +71,8 @@ function imageUrl(v: GcsThemeStudioValue, slot: GcsStudioImageSlot): string | nu
       return v.settings.logo.imageMobileLight;
     case "headerImage":
       return v.settings.header.image;
+    case "headerVideo":
+      return v.settings.header.video;
     case "cockpitImage":
       return v.settings.cockpit.image;
   }
@@ -89,6 +92,7 @@ function headerOptions(s: GcsThemeSettings): Record<string, unknown> {
     mega: s.header.mega,
     navAlign: s.header.navAlign,
     placement: s.mobileNav.placement,
+    video: s.header.video,
   };
 }
 
@@ -96,6 +100,7 @@ function withImage(v: GcsThemeStudioValue, slot: GcsStudioImageSlot, url: string
   if (slot === "logo") return { ...v, logoUrl: url };
   if (slot === "favicon") return { ...v, faviconUrl: url };
   if (slot === "headerImage") return { ...v, settings: withThemePath(v.settings, "header.image", url) };
+  if (slot === "headerVideo") return { ...v, settings: withThemePath(v.settings, "header.video", url) };
   if (slot === "cockpitImage") return { ...v, settings: withThemePath(v.settings, "cockpit.image", url) };
   const key = slot === "logoLight" ? "imageLight" : slot === "logoMobile" ? "imageMobile" : "imageMobileLight";
   return { ...v, settings: withThemePath(v.settings, `logo.${key}`, url) };
@@ -362,8 +367,9 @@ export function GcsThemeStudio({
   };
 
   // ─── Imaginile ─────────────────────────────────────────────────────────────
-  /** Încărcarea din popupul imaginii (cu progres): `null` la succes sau textul erorii, arătat în popup. */
+  /** Încărcarea din popupul imaginii sau al videoului (cu progres): `null` la succes sau textul erorii, arătat în popup. */
   const upload = async (slot: GcsStudioImageSlot, file: File, onProgress: (fraction: number) => void): Promise<string | null> => {
+    const video = slot === "headerVideo";
     setUploading(slot);
     await flush();
     setStatus({ tone: "muted", text: t("status.uploading") });
@@ -371,7 +377,7 @@ export function GcsThemeStudio({
     body.set("file", file);
     body.set("kind", slot);
     body.set("theme", themeKey);
-    const res = await postUpload<{ url: string }>("/api/themes/images", body, onProgress);
+    const res = await postUpload<{ url: string }>(video ? "/api/themes/video" : "/api/themes/images", body, onProgress);
     setUploading(null);
     if (!res.ok) {
       setStatus({ tone: "error", text: res.error });

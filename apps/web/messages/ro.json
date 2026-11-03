@@ -373,6 +373,7 @@
       "invalid_parent": "Părinte nepermis",
       "cycle": "Un forum nu poate fi mutat sub propriul subforum",
       "invalid_image": "Imagine invalidă sau deteriorată",
+      "invalid_video": "Video invalid sau deteriorat",
       "invalid_number": "Valoarea trebuie să fie un număr.",
       "same_email": "Aceasta e deja adresa ta.",
       "taken": "Valoarea e deja folosită de alt cont.",
@@ -7862,9 +7863,13 @@
       "logoMobileLight": "Logo mobil (mod luminos)",
       "favicon": "Favicon",
       "none": "Nicio imagine",
+      "noVideo": "Niciun video",
       "upload": "Încarcă",
       "remove": "Șterge",
+      "videoTooLarge": "Videoul are peste {maxMb} MB. Încarcă unul mai mic.",
       "headerImage": "Imaginea ta (are prioritate)",
+      "headerVideo": "Videoul antetului (MP4 / WebM)",
+      "headerVideoHelp": "Pornește singur, fără sunet, în buclă, pe desktop și tabletă, până la 25 MB. Imaginea de mai sus rămâne de rezervă: pe telefon, pentru cine are animațiile reduse și până se încarcă videoul.",
       "cockpitImage": "Fundalul consolei"
     },
     "tokens": {

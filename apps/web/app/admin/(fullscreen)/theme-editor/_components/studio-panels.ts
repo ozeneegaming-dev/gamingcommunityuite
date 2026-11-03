@@ -23,8 +23,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { NOVA_ONLY_FIELDS, themeHasDesignDecor } from "@gcs/core/themes";
 
-/** Locurile imaginilor din temă (același nume ca `kind` din `/api/themes/images`). */
-export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon" | "headerImage" | "cockpitImage";
+/**
+ * Locurile fișierelor din temă: imaginile (același nume ca `kind` din `/api/themes/images`) și videoul antetului
+ * (`headerVideo`, încărcat prin `/api/themes/video`).
+ */
+export type GcsStudioImageSlot = "logo" | "logoLight" | "logoMobile" | "logoMobileLight" | "favicon" | "headerImage" | "headerVideo" | "cockpitImage";
 
 /** O culoare editabilă: un token al paletei (doar hex) sau o culoare de element (hex, token sau transparent). */
 export type GcsStudioColorRef = { kind: "token"; token: GcsThemeToken } | { kind: "element"; key: GcsThemeElementColor };
@@ -198,11 +201,13 @@ export const STUDIO_PANELS: Record<GcsStudioPanelId, GcsStudioPanel> = {
       "header.navIcons",
       "header.sticky",
       "header.crumbs",
-      // Imaginea antetului (sistemul, orice temă): una inclusă în GCS sau una încărcată (are prioritate), apoi unde
-      // stă și cum se îmbină cu antetul. Stratul și modelul tehnic sunt decorul graficii GCS (doar pe designul ei).
+      // Imaginea antetului (sistemul, orice temă): una inclusă în GCS sau una încărcată (are prioritate), videoul (peste
+      // imagine, care rămâne cea de rezervă), apoi unde stau și cum se îmbină cu antetul. Stratul și modelul tehnic sunt
+      // decorul graficii GCS (doar pe designul ei).
       { heading: "headerImage" },
       "header.art",
       { image: "headerImage" },
+      { image: "headerVideo" },
       "header.imageArea",
       "header.imageDim",
       "header.imageTint",

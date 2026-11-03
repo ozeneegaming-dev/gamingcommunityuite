@@ -188,6 +188,34 @@ export function webmDurationMs(bytes: Buffer): number | null {
   return null;
 }
 
+/**
+ * Containerul unui video are partea cu pistele, nu doar semnătura: cutia `moov` la MP4 (și la cele fragmentate, oriunde
+ * printre cutiile de sus), elementul `Segment` imediat după antetul EBML la WebM. Durata poate lipsi (WebM-urile
+ * înregistrate în browser nu o scriu), deci nu se cere.
+ */
+export function videoContainerOk(mime: string, bytes: Buffer): boolean {
+  if (mime === "video/mp4") {
+    let at = 0;
+    for (let n = 0; at + 8 <= bytes.length && n < 512; n++) {
+      let size = bytes.readUInt32BE(at);
+      if (size === 1) {
+        if (at + 16 > bytes.length) return false;
+        size = Number(bytes.readBigUInt64BE(at + 8));
+      } else if (size === 0) size = bytes.length - at;
+      if (size < 8 || at + size > bytes.length) return false;
+      if (bytes.toString("latin1", at + 4, at + 8) === "moov") return true;
+      at += size;
+    }
+    return false;
+  }
+  if (mime === "video/webm") {
+    const header = ebmlElement(bytes, 0);
+    if (!header || header.id !== 0x1a45dfa3 || header.dataEnd === null) return false;
+    return ebmlElement(bytes, header.dataEnd)?.id === 0x18538067;
+  }
+  return false;
+}
+
 // ─── Verificarea și recodarea ───
 
 /** Durata unui cadru GIF/WebP: sub 11 ms devine 100 ms, ca în browsere (altfel WebP-ul ar rula „cât de repede poate”). */

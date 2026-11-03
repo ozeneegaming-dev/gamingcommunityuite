@@ -1,7 +1,7 @@
 "use client";
 
-import { MOBILE_BAR_ITEMS, MOBILE_BAR_MAX, THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsMobileBarItem, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
-import { GcsIconSvg, GcsUploadDialog } from "@gcs/ui";
+import { HEADER_VIDEO_MAX_MB, MOBILE_BAR_ITEMS, MOBILE_BAR_MAX, THEME_FIELDS, THEME_TOKENS, isThemeHex, themeElementAllowsTransparent, type GcsMobileBarItem, type GcsThemePalette, type GcsThemeToken } from "@gcs/core/themes";
+import { GcsIconSvg, GcsUploadDialog, type GcsUploadRules } from "@gcs/ui";
 import { faArrowDown, faArrowUp, faArrowUpFromBracket, faCheck, faChevronRight, faClockRotateLeft, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type ReactNode } from "react";
@@ -385,7 +385,9 @@ export function GcsStudioColorSelector({
 }
 
 /** Mărimea maximă a fiecărei imagini (ca `uploadSiteImage`: antetul și consola 5 MB, logo-urile și favicon-ul 2 MB). */
-const IMAGE_MAX_MB: Record<GcsStudioImageSlot, number> = { logo: 2, logoLight: 2, logoMobile: 2, logoMobileLight: 2, favicon: 2, headerImage: 5, cockpitImage: 5 };
+const IMAGE_MAX_MB: Record<Exclude<GcsStudioImageSlot, "headerVideo">, number> = { logo: 2, logoLight: 2, logoMobile: 2, logoMobileLight: 2, favicon: 2, headerImage: 5, cockpitImage: 5 };
+/** Videoul din spatele antetului: MP4 sau WebM fără sunet, până la `HEADER_VIDEO_MAX_MB` (ca ruta `/api/themes/video`). */
+const VIDEO_RULES: GcsUploadRules = { accept: ["video/mp4", "video/webm"], typesLabel: "MP4, WebM", maxBytes: HEADER_VIDEO_MAX_MB * 1024 * 1024 };
 
 /**
  * O imagine a temei (logo-urile, favicon-ul, antetul): previzualizare, încărcare prin popupul sistemului (verificări,
@@ -408,17 +410,23 @@ export function GcsStudioImageRow({
   const t = useTranslations("themeStudio");
   const tu = useTranslations("ui");
   const [picking, setPicking] = useState(false);
+  const video = slot === "headerVideo";
+  const help = t.has(`images.${slot}Help`) ? t(`images.${slot}Help`) : null;
   return (
     <div className="gcs-themeStudio__image" data-testid={`gcs-studio-image-${slot}`}>
       <span className="gcs-themeStudio__label">{t(`images.${slot}`)}</span>
       <div className="gcs-themeStudio__imageBox">
-        {url ? (
+        {url && video ? (
+          // Videoul încărcat: primul cadru, fără redare automată (editorul respectă și animațiile reduse).
+          <video src={url} muted playsInline preload="metadata" className={`gcs-themeStudio__imagePreview gcs-themeStudio__imagePreview--${slot}`} />
+        ) : url ? (
           // Previzualizarea fișierului încărcat (un fișier public al site-ului).
           <img src={url} alt="" className={`gcs-themeStudio__imagePreview gcs-themeStudio__imagePreview--${slot}`} />
         ) : (
-          <span className="gcs-themeStudio__muted">{t("images.none")}</span>
+          <span className="gcs-themeStudio__muted">{t(video ? "images.noVideo" : "images.none")}</span>
         )}
       </div>
+      {help && <p className="gcs-themeStudio__help">{help}</p>}
       <div className="gcs-themeStudio__imageActions">
         <button
           type="button"
@@ -440,7 +448,7 @@ export function GcsStudioImageRow({
       {picking && (
         <GcsUploadDialog
           title={t(`images.${slot}`)}
-          rules={UPLOAD_RULES.image(IMAGE_MAX_MB[slot])}
+          rules={slot === "headerVideo" ? VIDEO_RULES : UPLOAD_RULES.image(IMAGE_MAX_MB[slot])}
           labels={uploadLabels(tu)}
           upload={onUpload}
           onAccept={() => setPicking(false)}

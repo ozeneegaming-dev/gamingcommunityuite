@@ -107,17 +107,18 @@ select option {
  * THIRD-PARTY-NOTICES.md). Bula stă în `<body>` cu poziție fixă (coordonatele vin din script), peste meniurile deschise
  * și panourile cu `overflow`; săgeata urmează centrul elementului (`--gcs-tip-arrow`).
  * Culorile vin din tokenurile temei (o temă le poate da direct: `--gcs-tooltip-bg`, `--gcs-tooltip-text`,
- * `--gcs-tooltip-border`): pe tema închisă bula e un ardezie mai deschis decât cardurile (se desprinde de pagină), pe
- * cea luminoasă un ardezie mai închis; textul alb are contrast ≥ 7:1 în ambele.
+ * `--gcs-tooltip-border`): pe tema închisă bula e deschisă (aproape albă, cu textul închis al paginii și marginea în
+ * culoarea accentului), deci se desprinde clar de cardurile și paginile închise; pe cea luminoasă e închisă, cu text alb.
+ * Contrastul textului e ≥ 7:1 în ambele.
  */
 .gcs-tooltipWrap {
   position: relative;
   display: inline-flex;
 }
 .gcs-tooltip {
-  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, var(--gcs-text) 20%, var(--gcs-surface2)));
-  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-text) 34%, var(--gcs-surface2)));
-  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-heading, #fff));
+  --gcs-tip-bg: var(--gcs-tooltip-bg, color-mix(in srgb, #fff 92%, var(--gcs-text)));
+  --gcs-tip-border: var(--gcs-tooltip-border, color-mix(in srgb, var(--gcs-accent) 65%, #fff));
+  --gcs-tip-text: var(--gcs-tooltip-text, var(--gcs-bg, #0b0f17));
   position: fixed;
   left: 0;
   top: 0;
@@ -136,7 +137,7 @@ select option {
   white-space: normal;
   overflow-wrap: anywhere;
   pointer-events: none;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 0.42);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.55);
   transition: none;
   transform-origin: bottom center;
   animation: gcs-tip-skew var(--gcs-motion-base, 0.22s) var(--gcs-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
