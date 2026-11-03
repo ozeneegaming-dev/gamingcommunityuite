@@ -1725,6 +1725,30 @@ html.gcs-nova[data-theme="light"] .gcs-ckWrap {
     radial-gradient(900px 320px at 70% 40%, rgb(90 60 160 / 0.42), transparent 60%),
     linear-gradient(180deg, #141821, #1b2130 60%, var(--gcs-body-bg, var(--gcs-bg)));
 }
+/*
+ * Consola compactă e scundă: estomparea de la jumătatea benzii ar lăsa salutul alb pe deschis (o instalare nouă, fără
+ * servere, are doar rândul salutului). Banda rămâne închisă sub tot conținutul și se estompează abia sub el, peste
+ * spațiul de 20 px de deasupra paginii; textul mic ia griul consolei, nu griul paginii luminoase.
+ */
+html.gcs-nova[data-theme="light"] .gcs-ckWrap--compact {
+  background:
+    var(--ck-image, none) center / cover no-repeat,
+    radial-gradient(900px 320px at 70% 40%, rgb(90 60 160 / 0.42), transparent 60%),
+    linear-gradient(180deg, #141821, #1b2130);
+}
+html.gcs-nova[data-theme="light"] .gcs-ckWrap--compact::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 20px;
+  background: linear-gradient(180deg, #1b2130, transparent);
+  pointer-events: none;
+}
+html.gcs-nova[data-theme="light"] .gcs-ckWrap--compact .gcs-ck__helloKicker {
+  color: var(--gcs-ck-sub);
+}
 
 /*
  * Antetul „Standard” (fostul antet al designului): grafica GCS, cu stratul închis. Imaginea antetului (încărcată sau

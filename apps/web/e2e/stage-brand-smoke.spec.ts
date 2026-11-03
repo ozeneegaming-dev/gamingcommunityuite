@@ -9,6 +9,36 @@ import { expect, test, type Page } from "@playwright/test";
  */
 const SHOTS = process.env.GCS_SHOTS_DIR;
 
+/**
+ * Contrastul WCAG dintre culoarea unui text și fundalul de lângă el: pixelul din marginea stângă a paginii, la mijlocul
+ * textului (spațiul lateral al benzii, fără text), citit din captură în browser (fără dependențe în spec).
+ */
+async function contrastBeside(page: Page, selector: string): Promise<number> {
+  const box = (await page.locator(selector).first().boundingBox())!;
+  const png = (await page.screenshot({ clip: { x: 4, y: Math.round(box.y + box.height / 2), width: 1, height: 1 } })).toString("base64");
+  return page.evaluate(
+    async ({ png, selector }) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${png}`;
+      await img.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const g = canvas.getContext("2d")!;
+      g.drawImage(img, 0, 0);
+      const bg = [...g.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+      const text = getComputedStyle(document.querySelector(selector)!).color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+      const channel = (x: number) => {
+        const v = x / 255;
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      };
+      const lum = (c: number[]) => 0.2126 * channel(c[0]!) + 0.7152 * channel(c[1]!) + 0.0722 * channel(c[2]!);
+      const [hi, lo] = [lum(bg), lum(text)].sort((a, b) => b - a);
+      return (hi! + 0.05) / (lo! + 0.05);
+    },
+    { png, selector },
+  );
+}
+
 async function shot(page: Page, name: string, full = false) {
   if (!SHOTS) return;
   mkdirSync(SHOTS, { recursive: true });
@@ -36,6 +66,10 @@ test("o instalare nouă: antetul de pe preview, consola compactă, cardurile în
     // forumurile în grilă, cu cardurile noi (zona de previzualizare, contoarele pe rândul titlului).
     await expect(page.locator('[data-testid="gcs-cockpit"][data-layout="compact"]')).toBeVisible();
     await expect(page.getByTestId("gcs-cockpit-feed")).toHaveCount(0);
+    // Salutul se citește pe banda consolei, și pe GCS White (banda închisă nu se mai estompează sub text).
+    for (const sel of [".gcs-ck__helloKicker", ".gcs-ck__helloName"]) {
+      expect(await contrastBeside(page, sel), `${skin}: contrastul ${sel}`).toBeGreaterThanOrEqual(4.5);
+    }
     await expect(page.getByTestId("gcs-forum-index")).toHaveAttribute("data-view", "grid");
     const card = page.locator(".gcs-forumCard").first();
     await expect(card.getByTestId("gcs-forum-card-media")).toBeVisible();
