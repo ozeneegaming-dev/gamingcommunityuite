@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
 import { member, uid } from "./forum-fixtures";
 import { useFreshIp } from "./helpers";
@@ -114,6 +115,7 @@ test("hover card din chat (staff): rama VIP pe avatar; acțiunile încap în car
       expect((await button.textContent())?.trim(), `${t} e doar iconiță`).toBe("");
     }
     await expectActionsFit(card, 1440);
+    if (process.env.GCS_E2E_SHOTS) await card.screenshot({ path: path.join(process.env.GCS_E2E_SHOTS, "hovercard-1440.png") });
     // Tooltip-ul sistemului pe o iconiță (cardul rămâne deschis cât mouse-ul e pe el).
     await card.getByTestId("gcs-hover-follow").hover();
     await expect(admin.getByTestId("gcs-auto-tooltip")).toHaveText("Urmărește");
@@ -126,6 +128,7 @@ test("hover card din chat (staff): rama VIP pe avatar; acțiunile încap în car
     const card = await openCard(admin, name);
     await expect(card.locator(".gcs-hoverCard__avatar .gcs-avatarFrame--gold")).toBeVisible();
     await expectActionsFit(card, 375);
+    if (process.env.GCS_E2E_SHOTS) await card.screenshot({ path: path.join(process.env.GCS_E2E_SHOTS, "hovercard-375.png") });
     const box = await card.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(375);
