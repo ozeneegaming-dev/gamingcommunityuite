@@ -398,24 +398,30 @@ export function GcsStudioImageRow({
   onRemove: () => void;
 }) {
   const t = useTranslations("themeStudio");
+  const video = slot === "headerVideo";
+  const help = t.has(`images.${slot}Help`) ? t(`images.${slot}Help`) : null;
   return (
     <div className="gcs-themeStudio__image" data-testid={`gcs-studio-image-${slot}`}>
       <span className="gcs-themeStudio__label">{t(`images.${slot}`)}</span>
       <div className="gcs-themeStudio__imageBox">
-        {url ? (
+        {url && video ? (
+          // Videoul încărcat: primul cadru, fără redare automată (editorul respectă și animațiile reduse).
+          <video src={url} muted playsInline preload="metadata" className={`gcs-themeStudio__imagePreview gcs-themeStudio__imagePreview--${slot}`} />
+        ) : url ? (
           // Previzualizarea fișierului încărcat (un fișier public al site-ului).
           <img src={url} alt="" className={`gcs-themeStudio__imagePreview gcs-themeStudio__imagePreview--${slot}`} />
         ) : (
-          <span className="gcs-themeStudio__muted">{t("images.none")}</span>
+          <span className="gcs-themeStudio__muted">{t(video ? "images.noVideo" : "images.none")}</span>
         )}
       </div>
+      {help && <p className="gcs-themeStudio__help">{help}</p>}
       <div className="gcs-themeStudio__imageActions">
         <label className={busy ? "gcs-themeStudio__btn gcs-themeStudio__btn--busy" : "gcs-themeStudio__btn"}>
           <GcsIconSvg icon={faArrowUpFromBracket} />
           {t("images.upload")}
           <input
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept={video ? "video/mp4,video/webm" : "image/png,image/jpeg,image/webp,image/gif"}
             className="gcs-srOnly"
             disabled={busy}
             onChange={(e) => {

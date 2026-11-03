@@ -7,8 +7,10 @@ import type { GcsRateLimiter } from "../../auth/rateLimit";
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError } from "../../errors";
 import type { GcsPermissionService } from "../../permissions/service";
 import type { GcsActor, GcsContainerRef } from "../../permissions/types";
+import { videoContainerOk } from "../../plugins/media";
+import { HEADER_VIDEO_MAX_MB } from "../../themes/settings";
 import { GCS_IMAGE_DEFAULTS, processImage, thumbnailOf, type GcsImageFormat, type GcsUploadPolicy } from "./images";
-import type { GcsFileStore } from "./store";
+import type { GcsByteRange, GcsFileStore } from "./store";
 import { looksLikeSvg, sanitizeSvg, SVG_MAX_BYTES } from "./svg";
 import { fileExtension, GCS_BINARY_TYPES, GCS_KNOWN_EXTENSIONS, GCS_TEXT_EXTENSIONS, uploadTypeError } from "./uploadPolicy";
 
@@ -19,6 +21,13 @@ export const DECOR_CONTENT_TYPE = "decor.image";
 const IMAGE_FORMATS = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as const;
 type ImageMime = keyof typeof IMAGE_FORMATS;
 const FORMAT_EXT: Record<GcsImageFormat, string> = { jpeg: "jpg", png: "png", webp: "webp", gif: "gif" };
+
+/**
+ * Videoul din spatele antetului unei teme: MP4 sau WebM (tipul citit din conținut, containerul verificat), cel mult
+ * 25 MB, păstrat așa cum e (fără recodare). E public, ca imaginile temei, și se servește cu `Range`.
+ */
+export const HEADER_VIDEO_CONTENT_TYPE = "theme.headerVideo";
+const VIDEO_FORMATS = { "video/mp4": "mp4", "video/webm": "webm" } as const;
 
 /** Recodarea fără setările încărcărilor (ex. emoticoanele Chat Pro, care au limitele lor): formatul original, max 4096 px. */
 const ORIGINAL_IMAGE = { maxSide: 4096, quality: 85 };
@@ -53,8 +62,11 @@ export type GcsOpenedAttachment = {
   size: number;
   mime: string;
   filename: string;
-  /** Imaginile se afișează în pagină; restul se descarcă (`Content-Disposition: attachment`). */
+  /** Imaginile (și videoul antetului) se afișează în pagină; restul se descarcă (`Content-Disposition: attachment`). */
   inline: boolean;
+  /** Fișierul răspunde la cererile `Range` ale player-ului (videoul antetului); `range` = partea trimisă, dacă s-a cerut. */
+  seekable?: boolean;
+  range?: GcsByteRange | null;
 };
 
 /** Verifică dacă actorul vede conținutul de care e legat un atașament (înregistrată de fiecare modul). */
@@ -397,6 +409,31 @@ export class GcsAttachmentService {
   }
 
   /**
+   * Videoul din spatele antetului unei teme (MP4 / WebM, cel mult 25 MB): tipul se citește din conținut (semnătura
+   * fișierului, nu extensia), iar containerul trebuie să aibă partea cu pistele (`moov` / `Segment`), altfel nu e un
+   * video adevărat.
+   * Fișierul rămâne cum e (fără recodare); e public (`theme.headerVideo`, legat de cheia temei). Dreptul ACP îl verifică
+   * apelantul.
+   */
+  async uploadSiteVideo(actor: GcsActor, file: GcsUploadedFile, opts: { themeKey: string }): Promise<GcsAttachmentInfo> {
+    const { db, store } = this.deps;
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
+    if (file.bytes.length > HEADER_VIDEO_MAX_MB * 1024 * 1024) throw new GcsValidationError({ file: "too_large" }, { maxMb: String(HEADER_VIDEO_MAX_MB) });
+    const detected = await fileTypeFromBuffer(file.bytes);
+    if (!detected || !(detected.mime in VIDEO_FORMATS)) throw new GcsValidationError({ file: "unsupported_type" });
+    const mime = detected.mime as keyof typeof VIDEO_FORMATS;
+    if (!videoContainerOk(mime, file.bytes)) throw new GcsValidationError({ file: "invalid_video" });
+    const ext = VIDEO_FORMATS[mime];
+    const now = new Date();
+    const key = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${randomUUID()}.${ext}`;
+    await store.put(key, file.bytes, mime);
+    const row = await db.attachment.create({
+      data: { ownerId: actor.userId, storageKey: key, filename: `header-video.${ext}`, mime, size: file.bytes.length, contentType: HEADER_VIDEO_CONTENT_TYPE, contentId: opts.themeKey },
+    });
+    return { id: row.id, url: `/files/${row.id}`, filename: row.filename, mime, size: row.size, isImage: false, width: null, height: null };
+  }
+
+  /**
    * Dacă imaginea de profil e animată, o înlocuiește cu primul cadru (ex. cover-ul unui VIP expirat).
    * Întoarce noul atașament, sau `null` dacă nu era nimic de schimbat.
    */
@@ -465,9 +502,10 @@ export class GcsAttachmentService {
 
   /**
    * Deschide un atașament pentru descărcare. Orice lipsă de acces arată ca „nu există” (nu dezvăluim fișierul). Cu
-   * `thumb`, miniatura imaginii (WebP), dacă are una; altfel fișierul întreg.
+   * `thumb`, miniatura imaginii (WebP), dacă are una; altfel fișierul întreg. Videoul antetului se derulează: `range`
+   * primește mărimea fișierului și alege partea de trimis (antetul `Range` al cererii).
    */
-  async open(actor: GcsActor, id: string, opts: { thumb?: boolean } = {}): Promise<GcsOpenedAttachment> {
+  async open(actor: GcsActor, id: string, opts: { thumb?: boolean; range?: (size: number) => GcsByteRange | null } = {}): Promise<GcsOpenedAttachment> {
     const row = await this.deps.db.attachment.findUnique({ where: { id } });
     if (!row) throw new GcsNotFound();
     const allowed = row.contentType === null || row.contentId === null
@@ -480,8 +518,11 @@ export class GcsAttachmentService {
       const thumb = await this.deps.store.get(thumbnailKey(row.storageKey)).catch(() => null);
       if (thumb) return { body: thumb.body, size: thumb.size, mime: "image/webp", filename: row.filename.replace(/\.[a-z0-9]+$/i, "") + ".webp", inline: true };
     }
-    const file = await this.deps.store.get(row.storageKey);
+    const video = row.contentType === HEADER_VIDEO_CONTENT_TYPE && row.mime in VIDEO_FORMATS;
+    const range = video && opts.range ? opts.range(row.size) : null;
+    const file = await this.deps.store.get(row.storageKey, range ?? undefined);
     if (!file) throw new GcsNotFound();
+    if (video) return { body: file.body, size: file.size, mime: row.mime, filename: row.filename, inline: true, seekable: true, range };
     return { body: file.body, size: file.size, mime: row.mime, filename: row.filename, inline: image };
   }
 

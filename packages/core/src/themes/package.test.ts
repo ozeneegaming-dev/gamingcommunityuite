@@ -73,8 +73,8 @@ describe("parseThemePackage", () => {
   });
 
   test("imaginile site-ului sursă nu trec în pachet", () => {
-    const res = parseThemePackage(pkg({ settings: { header: { image: "/files/abc" }, logo: { imageLight: "/files/def" } } }));
-    expect(res.ok && res.value.settings).toEqual({ header: { image: null }, logo: { imageLight: null, imageMobile: null, imageMobileLight: null } });
+    const res = parseThemePackage(pkg({ settings: { header: { image: "/files/abc", video: "/files/clip" }, logo: { imageLight: "/files/def" } } }));
+    expect(res.ok && res.value.settings).toEqual({ header: { image: null, video: null }, logo: { imageLight: null, imageMobile: null, imageMobileLight: null } });
   });
 });
 

@@ -84,6 +84,8 @@ export const THEME_NAV_ALIGNS = ["left", "center", "right"] as const;
 export const THEME_HEADER_ARTS = ["none", "forja", "arena"] as const;
 /** Unde stă imaginea antetului: în spatele întregului antet sau doar al primului rând (cel cu logo-ul). */
 export const THEME_HEADER_IMAGE_AREAS = ["all", "top"] as const;
+/** Mărimea maximă a videoului din spatele antetului (`header.video`, MP4 / WebM), verificată la încărcare. */
+export const HEADER_VIDEO_MAX_MB = 25;
 /** Navigarea pe mobil: iconițele în antet sau într-o bară jos. */
 export const THEME_MOBILE_PLACEMENTS = ["header", "bottom"] as const;
 /** Consola de sub antet (Hero Cockpit): doar pe pagina principală sau pe toate paginile. */
@@ -201,6 +203,13 @@ export type GcsThemeSettings = {
     imageFade: boolean;
     /** Imaginea apare și în antetul de pe telefon. */
     imageMobile: boolean;
+    /**
+     * Videoul din spatele antetului, încărcat (`/files/<id>`, MP4 / WebM până la 25 MB), în orice temă: pornește singur,
+     * fără sunet, în buclă, pe desktop și tabletă, în același loc și sub aceleași straturi ca imaginea (întunecarea,
+     * nuanța, estomparea). Imaginea antetului rămâne imaginea de rezervă: pe telefon, cu animațiile reduse din sistem,
+     * cu economizorul de date și până pornește videoul. `null` = fără video.
+     */
+    video: string | null;
     /** Nova: cât de închis e stratul peste imagine (%). */
     overlay: number;
     /** Nova: modelul tehnic (grila de circuite) peste grafica implicită. */
@@ -356,6 +365,7 @@ export const DEFAULT_THEME_SETTINGS: GcsThemeSettings = {
     imageTint: 0,
     imageFade: true,
     imageMobile: true,
+    video: null,
     overlay: 70,
     pattern: true,
     crumbs: true,
@@ -630,6 +640,7 @@ function buildFields(): Record<string, GcsThemeField> {
     "header.imageTint": int(0, 100, "%", 5),
     "header.imageFade": BOOL,
     "header.imageMobile": BOOL,
+    "header.video": { kind: "file" },
     "header.overlay": int(0, 95, "%", 5),
     "header.pattern": BOOL,
     "header.crumbs": BOOL,

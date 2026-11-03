@@ -37,7 +37,7 @@
  * întregului antet sau doar al primului rând (cel cu logo-ul). Straturile, de sus în jos: estomparea jos în culoarea
  * antetului (doar pe tot antetul; nu în fundalul paginii, care pe o temă luminoasă ar lăsa textul alb al antetului pe
  * deschis), acoperirea în culoarea antetului (meniul rămâne lizibil; pe un antet luminos imaginea se deschide), nuanța accentului (`background-blend-mode: color`), apoi imaginea, decupată pe mijloc și lipită sus.
- * Doar fundaluri, fără pseudo-elemente: antetul rămâne fără context de suprapunere propriu. Bara compactă își păstrează
+ * Doar fundaluri, fără pseudo-elemente (unul poziționat ar acoperi rândurile statice ale antetului). Bara compactă își păstrează
  * fundalul; pe telefon imaginea apare doar dacă tema o lasă (`data-gcs-header-image-mobile`).
  */
 :root[data-gcs-header-image="all"] .gcs-hb:not([data-compact], [data-device="mobile"]),
@@ -64,6 +64,63 @@
   background-position: center top;
   background-repeat: no-repeat;
   background-blend-mode: normal, color, normal;
+}
+/*
+ * Videoul antetului (`header.video`, componenta `GcsHeaderVideo`, doar pe desktop și tabletă): un strat cu
+ * `z-index: -1` în contextul de suprapunere pe care antetul îl are deja (`.gcs-hb`: poziționat, z-index 40), deci peste
+ * fundalul antetului (cu imaginea de rezervă) și sub rândurile statice, crestătura Esports și meniuri; antetul nu
+ * primește nicio regulă nouă. Apare lin abia când videoul rulează (până atunci se vede imaginea), pe tot antetul sau
+ * doar pe primul rând, ca imaginea; pe primul rând, fundalul cu imaginea se scoate cât rulează videoul (rândul e în
+ * flux, l-ar acoperi). Peste video, straturile imaginii: nuanța accentului (`::before`, `mix-blend-mode: color`),
+ * întunecarea și estomparea (`::after`). În bara compactă se ascunde (bara își păstrează fundalul).
+ */
+:root .gcs-hb__video {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--gcs-dur-slow) ease;
+}
+:root .gcs-hb__video[data-playing] {
+  opacity: 1;
+}
+:root .gcs-hb[data-compact] > .gcs-hb__video {
+  opacity: 0;
+  visibility: hidden;
+}
+:root[data-gcs-header-video="top"] .gcs-hb__video {
+  bottom: auto;
+  height: var(--hb-video-h, 100%);
+}
+:root .gcs-hb__video > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+:root .gcs-hb__video::before,
+:root .gcs-hb__video::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+:root .gcs-hb__video::before {
+  background: color-mix(in srgb, var(--gcs-accent) var(--gcs-header-image-tint, 0%), transparent);
+  mix-blend-mode: color;
+}
+:root .gcs-hb__video::after {
+  background:
+    linear-gradient(to bottom, transparent 55%, color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-fade, 85%), transparent)),
+    color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent);
+}
+:root[data-gcs-header-video="top"] .gcs-hb__video::after {
+  background: color-mix(in srgb, var(--gcs-header-bg, var(--gcs-chrome)) var(--gcs-header-image-dim, 15%), transparent);
+}
+:root .gcs-hb:has(> .gcs-hb__video[data-playing]):not([data-compact]) > .gcs-hb__row:first-child {
+  background: none;
 }
 :root .gcs-hb__row {
   transition:

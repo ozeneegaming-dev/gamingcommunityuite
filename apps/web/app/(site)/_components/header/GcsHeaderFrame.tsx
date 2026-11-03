@@ -1,9 +1,20 @@
 "use client";
 
-import { compactHeaderLayout, HEADER_ROWS, HEADER_ZONES, placedHeaderElements, type GcsHeaderBuilder, type GcsHeaderDeviceLayout, type GcsHeaderElement, type GcsHeaderRow } from "@gcs/core/themes";
+import {
+  compactHeaderLayout,
+  HEADER_ROWS,
+  HEADER_ZONES,
+  isThemeFileUrl,
+  placedHeaderElements,
+  type GcsHeaderBuilder,
+  type GcsHeaderDeviceLayout,
+  type GcsHeaderElement,
+  type GcsHeaderRow,
+} from "@gcs/core/themes";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { deviceForWidth, type GcsDevice } from "@/lib/header-device";
 import { HEADER_EVENTS, HeaderStateContext, type GcsHeaderState } from "./header-context";
+import { GcsHeaderVideo } from "./GcsHeaderVideo";
 
 export type GcsHeaderOptions = {
   rowTop: number;
@@ -17,6 +28,8 @@ export type GcsHeaderOptions = {
   navAlign: "left" | "center" | "right";
   /** Navigarea pe mobil: iconițele în antet sau în bara de jos. */
   placement: "header" | "bottom";
+  /** Videoul din spatele antetului (`/files/<id>`, setarea temei) sau `null`. */
+  video: string | null;
 };
 
 /** Pragul de la care antetul devine compact (specul §9: „~120px”). */
@@ -47,7 +60,8 @@ const rowHasItems = (layout: GcsHeaderDeviceLayout, row: GcsHeaderRow) => HEADER
  * Antetul construit (specul 2026-10-10-hero-cockpit §9): elementele (randate pe server) se așază în rândurile și zonele
  * aspectului pentru dispozitivul curent. La derulare, peste 120 px, antetul se strânge în bara compactă (Esports:
  * rândul de sus 76→0 cu fade, meniul 94→74, crestătura la 0,68 din centrul de sus, umbra; 0,3 s, cubic-bezier(.22,1,.36,1);
- * celelalte presetări: logo + meniul pe un rând + căutarea). Opțional, se ascunde la derularea în jos. În
+ * celelalte presetări: logo + meniul pe un rând + căutarea). Opțional, se ascunde la derularea în jos; videoul temei
+ * (`GcsHeaderVideo`) stă în spatele rândurilor și se oprește în bara compactă. În
  * previzualizarea editorului, aspectul se schimbă live (evenimentul `gcs:header-preview`).
  */
 export function GcsHeaderFrame({
@@ -142,7 +156,11 @@ export function GcsHeaderFrame({
     const onPreview = (e: Event) => {
       const d = (e as CustomEvent<{ layout?: GcsHeaderBuilder; options?: Partial<GcsHeaderOptions> }>).detail;
       if (d?.layout) setLayout(d.layout);
-      if (d?.options) setOptions((o) => ({ ...o, ...d.options }));
+      if (d?.options) {
+        // Adresa videoului ajunge într-un `<video src>`: doar un fișier al site-ului.
+        const { video, ...rest } = d.options;
+        setOptions((o) => ({ ...o, ...rest, ...(video === undefined ? {} : { video: isThemeFileUrl(video) ? video : null }) }));
+      }
     };
     window.addEventListener(HEADER_EVENTS.preview, onPreview);
     return () => window.removeEventListener(HEADER_EVENTS.preview, onPreview);
@@ -156,6 +174,8 @@ export function GcsHeaderFrame({
   if (placed.has("searchField")) placed.add("search");
   const helpers = HELPERS.filter((k) => !placed.has(k) && parts[k]);
   const notch = layout.preset === "esports" && device !== "mobile";
+  // Videoul antetului: pe desktop și tabletă (pe telefon ar costa datele vizitatorului; rămâne imaginea).
+  const video = device !== "mobile" ? options.video : null;
 
   const state = useMemo<GcsHeaderState>(() => ({ device, compact, dropdowns: options.dropdowns, mega: options.mega, preset: layout.preset, layout }), [device, compact, options.dropdowns, options.mega, layout]);
   const style = { "--hb-top": `${options.rowTop}px`, "--hb-main": `${options.rowMain}px`, "--hb-bottom": `${options.rowBottom}px` } as CSSProperties;
@@ -225,6 +245,8 @@ export function GcsHeaderFrame({
             ))}
           </div>
         )}
+        {/* Ultimul copil (rândurile rămân `:first-child` pentru imaginea de pe primul rând); pe telefon, doar imaginea. */}
+        {video && <GcsHeaderVideo key={video} src={video} row={HEADER_ROWS.find((r) => rowHasItems(deviceLayout, r))} paused={compact || hidden} />}
       </header>
       {device === "mobile" && options.placement === "bottom" && mobileBar}
     </HeaderStateContext.Provider>

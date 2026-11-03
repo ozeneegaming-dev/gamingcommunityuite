@@ -371,6 +371,7 @@
       "invalid_parent": "Parent non autorisé",
       "cycle": "Un forum ne peut pas être déplacé sous son propre sous-forum",
       "invalid_image": "Image non valide ou endommagée",
+      "invalid_video": "Vidéo non valide ou endommagée",
       "invalid_number": "La valeur doit être un nombre.",
       "same_email": "C'est déjà votre adresse.",
       "taken": "Cette valeur est déjà utilisée par un autre compte.",
@@ -7485,9 +7486,13 @@
       "logoMobileLight": "Logo mobile (mode léger)",
       "favicon": "Favicon",
       "none": "Aucune image",
+      "noVideo": "Aucune vidéo",
       "upload": "Envoi",
       "remove": "Retirer",
+      "videoTooLarge": "La vidéo dépasse {maxMb} Mo. Envoyez une vidéo plus légère.",
       "headerImage": "Votre image (prioritaire)",
+      "headerVideo": "Vidéo de l'en-tête (MP4 / WebM)",
+      "headerVideoHelp": "Se lance seule, sans son et en boucle, sur ordinateur et tablette, jusqu'à 25 Mo. L'image ci-dessus reste l'image de secours : sur téléphone, pour les visiteurs aux animations réduites et tant que la vidéo charge.",
       "cockpitImage": "Fond de la console"
     },
     "tokens": {
