@@ -64,6 +64,7 @@ export * from "./install/state";
 export * from "./jobs/heartbeat";
 export * from "./jobs/queue";
 export * from "./jobs/queueSql";
+export * from "./jobs/stats";
 export * from "./jobs/cron";
 export * from "./infra";
 export * from "./moderation/bans";

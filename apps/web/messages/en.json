@@ -5394,6 +5394,258 @@
         "submit": "Change the licence",
         "submitFirst": "Activate the licence"
       }
+    },
+    "status": {
+      "title": "System status",
+      "description": "The platform's services, the server and the scheduled jobs. Alerts tell administrators when something goes wrong.",
+      "refresh": "Check again",
+      "allOk": "Everything is working",
+      "problems": "{count, plural, one {One problem} other {# problems}}",
+      "checkedAt": "Checked at {time}",
+      "services": "Services",
+      "server": "Server",
+      "never": "never",
+      "lastBeat": "last signal {when}",
+      "realtimeLite": "no websocket (Lite edition: polling)",
+      "cronLast": "last run {when}",
+      "emailOn": "SMTP configured",
+      "emailOff": "SMTP not configured: emails are not sent",
+      "levels": {
+        "ok": "Working",
+        "warn": "Warning",
+        "down": "Problem",
+        "off": "Off"
+      },
+      "names": {
+        "db": "Database",
+        "kv": "Key store",
+        "worker": "Worker (jobs)",
+        "realtime": "Real time",
+        "cron": "Host cron",
+        "email": "Email",
+        "storage": "File storage",
+        "translate": "Translations"
+      },
+      "engines": {
+        "postgresql": "PostgreSQL",
+        "mysql": "MySQL"
+      },
+      "kvDrivers": {
+        "redis": "Redis",
+        "sql": "Database table"
+      },
+      "storageDrivers": {
+        "s3": "S3 / MinIO",
+        "local": "Local folder"
+      },
+      "providers": {
+        "google": "Google Translate",
+        "deepl": "DeepL",
+        "libretranslate": "LibreTranslate",
+        "off": "Off"
+      },
+      "editions": {
+        "vps": "VPS edition",
+        "lite": "Lite edition"
+      },
+      "facts": {
+        "version": "Version",
+        "node": "Node.js",
+        "platform": "Platform",
+        "uptime": "Started",
+        "memory": "Memory",
+        "timezone": "Time zone",
+        "disk": "Disk"
+      },
+      "memoryValue": "{rss} used ({heap} heap)",
+      "diskValue": "{free} free of {total} ({pct}% free)",
+      "diskUnknown": "The system does not report disk space",
+      "jobsTitle": "Scheduled jobs",
+      "jobsCount": "{count, plural, one {# job} other {# jobs}}",
+      "col": {
+        "job": "Job",
+        "interval": "Runs",
+        "last": "Last run",
+        "duration": "Duration",
+        "state": "State",
+        "actions": "Actions"
+      },
+      "cron": "cron {pattern}",
+      "onDemand": "on demand",
+      "everyMinutes": "{n, plural, one {every minute} other {every # minutes}}",
+      "everyHours": "{n, plural, one {every hour} other {every # hours}}",
+      "everyDays": "{n, plural, one {daily} other {every # days}}",
+      "ms": "{ms} ms",
+      "failures": "({count} of {runs} failed)",
+      "runNow": "Run now",
+      "save": "Save",
+      "jobs": {
+        "system_heartbeat": "Worker heartbeat",
+        "system_status_check": "Status check (alerts)",
+        "system_lite_sweep": "Lite edition cleanup",
+        "license_check": "Licence check",
+        "warnings_expiry": "Warning expiry",
+        "groups_secondary_expiry": "Expired secondary groups",
+        "members_ip_retention": "Old IP removal",
+        "system_retention": "Data retention",
+        "seo_indexnow": "IndexNow",
+        "uploads_orphans": "Orphan files",
+        "translate_cleanup": "Translation cleanup",
+        "chat_pro_finalize": "Chat Pro ranking winner"
+      },
+      "alerts": {
+        "title": "Alerts",
+        "secGeneral": "General",
+        "secChecks": "What is checked",
+        "enabled": "Send alerts to administrators",
+        "enabledHint": "Bell and email, for everyone with access to System status. The check runs every 10 minutes.",
+        "repeatHours": "Repeat the alert after (hours)",
+        "repeatHint": "The same problem is announced again after this many hours, while it lasts.",
+        "disk": "Disk almost full",
+        "diskHint": "Alert when free space drops below the threshold.",
+        "diskMinFreePct": "Free space threshold (%)",
+        "jobs": "Failed jobs",
+        "jobsHint": "Alert when the last run of a scheduled job failed.",
+        "summaryOn": "Alerts on: disk below {pct}%, failed jobs, repeated every {hours} h",
+        "summaryOff": "Alerts are off"
+      }
+    },
+    "cache": {
+      "title": "Cache",
+      "description": "Data kept in memory so pages load fast. Clearing loses nothing: pages read the database again.",
+      "clearAll": "Clear all",
+      "clearAllConfirm": "Clear the whole cache? The first pages after clearing will load a little slower.",
+      "keys": "cached keys",
+      "areasCount": "areas",
+      "driver": "storage",
+      "drivers": {
+        "redis": "Redis",
+        "sql": "Database"
+      },
+      "areasTitle": "Areas",
+      "areaKeys": "{count, plural, one {# key} other {# keys}}",
+      "clear": "Clear",
+      "empty": "The cache is empty right now.",
+      "tagsTitle": "Tags",
+      "tagsHint": "A tag links data that changes together. Invalidating it has the same effect as an edit.",
+      "noTags": "No active tags.",
+      "invalidate": "Invalidate",
+      "logTitle": "Recent clears",
+      "logEmpty": "No clears yet.",
+      "logAll": "The whole cache",
+      "logTag": "Tag {tag}",
+      "logArea": "Area {area}",
+      "areas": {
+        "settings": "Settings",
+        "perm": "Permissions",
+        "themes": "Themes",
+        "nav": "Menu",
+        "apps": "Applications",
+        "groups": "Groups",
+        "forums": "Forums",
+        "stats": "Statistics",
+        "servers": "Servers",
+        "chat_pro": "Chat Pro",
+        "reactions": "Reactions",
+        "notif": "Notifications",
+        "profile": "Profiles",
+        "user": "Members",
+        "widgets": "Widgets",
+        "templates": "Templates",
+        "layout": "Layout"
+      }
+    },
+    "files": {
+      "title": "Files",
+      "description": "Every file uploaded to the site: post images, avatars, emotes, banners, themes. See where each one is used and delete what is no longer needed.",
+      "settings": "Upload settings",
+      "tiles": {
+        "files": "files · {size}",
+        "kind": "{kind} · {size}",
+        "unattached": "unattached · {size}"
+      },
+      "orphansOn": "Files not linked to anything are deleted automatically after {days} days.",
+      "orphansOff": "Automatic deletion of unattached files is off.",
+      "orphansChange": "Change",
+      "search": "Search",
+      "searchPlaceholder": "File name or id",
+      "allKinds": "All types",
+      "allAreas": "All areas",
+      "areaNone": "Unattached",
+      "sort": "Order",
+      "sorts": {
+        "new": "Newest",
+        "old": "Oldest",
+        "big": "Largest"
+      },
+      "filter": "Filter",
+      "reset": "Reset",
+      "total": "{count, plural, one {# file} other {# files}}",
+      "empty": "No file matches the filters.",
+      "col": {
+        "file": "File",
+        "owner": "Uploaded by",
+        "area": "Area",
+        "size": "Size",
+        "date": "Uploaded",
+        "type": "Type",
+        "actions": "Actions"
+      },
+      "kinds": {
+        "image": "Image",
+        "video": "Video",
+        "audio": "Audio",
+        "archive": "Archive",
+        "document": "Document",
+        "other": "Other"
+      },
+      "dimensions": "Dimensions",
+      "noOwner": "—",
+      "ownerFiles": "Only their files",
+      "usedIn": "Used in",
+      "unused": "Not used anywhere",
+      "download": "Download",
+      "open": "Details",
+      "delete": "Delete",
+      "confirmDelete": "Delete the file permanently?",
+      "confirmDeleteUsed": "The file is in use. After deleting it, the places that show it will be left without it. Delete permanently?",
+      "pages": "Pages",
+      "page": "Page {page} of {pages}",
+      "prev": "Previous",
+      "next": "Next",
+      "areas": {
+        "forums_post": "Post",
+        "forums_topic": "Topic",
+        "user_avatar": "Avatar",
+        "user_cover": "Profile cover",
+        "theme_logo": "Theme logo",
+        "theme_favicon": "Theme favicon",
+        "theme_header": "Header image",
+        "theme_header_video": "Header video",
+        "chat_message": "Chat message",
+        "chat_file": "Chat file",
+        "chat_emote": "Emote",
+        "pm_message": "Private message",
+        "decor": "Decor",
+        "rank": "Rank",
+        "badge": "Badge",
+        "frame": "Avatar frame",
+        "emote": "Emote",
+        "server": "Server",
+        "clan": "Clan",
+        "map": "Map",
+        "setting": "Setting"
+      },
+      "bulk": {
+        "title": "Bulk delete",
+        "selected": "{count, plural, =0 {No file selected} one {# file selected} other {# files selected}}",
+        "selectAll": "Select all",
+        "select": "Select {name}",
+        "delete": "Delete selected",
+        "none": "Select at least one file.",
+        "confirm": "{count, plural, one {Delete the selected file permanently?} other {Delete the # selected files permanently?}}",
+        "done": "{count, plural, one {# file deleted} other {# files deleted}}"
+      }
     }
   },
   "settings": {
@@ -7367,7 +7619,8 @@
         "group_expired": "Temporary groups that expired",
         "weekly_digest": "Weekly digest “What you missed”",
         "warning_appeal": "Warning appeal decisions",
-        "multi_account": "New accounts sharing another account's IP (staff)"
+        "multi_account": "New accounts sharing another account's IP (staff)",
+        "system_alert": "System status alerts (disk, failed jobs)"
       },
       "chat": {
         "mention": "Chat mentions",

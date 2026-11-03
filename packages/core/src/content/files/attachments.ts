@@ -476,6 +476,17 @@ export class GcsAttachmentService {
     await this.deleteRows(await this.deps.db.attachment.findMany({ where: { id: { in: ids }, contentType: null }, select: { id: true, storageKey: true } }));
   }
 
+  /**
+   * Șterge fișierele, legate sau nu (ACP › Sistem › Fișiere; dreptul îl verifică apelantul). Conținutul care le folosea
+   * rămâne, cu imaginea lipsă. Întoarce câte fișiere a șters.
+   */
+  async removeAny(ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    const rows = await this.deps.db.attachment.findMany({ where: { id: { in: ids } }, select: { id: true, storageKey: true } });
+    await this.deleteRows(rows);
+    return rows.length;
+  }
+
   private async deleteRows(rows: { id: string; storageKey: string }[]): Promise<void> {
     if (rows.length === 0) return;
     for (const row of rows) {
@@ -512,7 +523,23 @@ export class GcsAttachmentService {
       ? actor.userId !== null && row.ownerId === actor.userId
       : ((await this.access.get(row.contentType)?.(actor, row.contentId)) ?? false);
     if (!allowed) throw new GcsNotFound();
+    return this.openRow(row, opts);
+  }
 
+  /**
+   * Deschide orice atașament, fără verificarea accesului conținutului: doar pentru ACP › Sistem › Fișiere, după poarta
+   * ACP și dreptul pe secțiune (verificate de apelant). Miniatura, dacă e cerută și există.
+   */
+  async openTrusted(id: string, opts: { thumb?: boolean } = {}): Promise<GcsOpenedAttachment> {
+    const row = await this.deps.db.attachment.findUnique({ where: { id } });
+    if (!row) throw new GcsNotFound();
+    return this.openRow(row, opts);
+  }
+
+  private async openRow(
+    row: { storageKey: string; filename: string; mime: string; contentType: string | null; size: number },
+    opts: { thumb?: boolean; range?: (size: number) => GcsByteRange | null },
+  ): Promise<GcsOpenedAttachment> {
     const image = row.mime in IMAGE_FORMATS;
     if (opts.thumb && image) {
       const thumb = await this.deps.store.get(thumbnailKey(row.storageKey)).catch(() => null);

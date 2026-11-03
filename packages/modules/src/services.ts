@@ -175,6 +175,9 @@ import { loadContentPolicy } from "./seo/meta";
 import { GcsIndexNowService } from "./seo/indexnow";
 import { GcsSitemapService } from "./seo/sitemap";
 import { GcsOrphanFilesService } from "./uploads/orphans";
+import { GcsFileAdminService } from "./uploads/admin";
+import { GcsCacheAdminService } from "./system/cache";
+import { GcsSystemStatusService, STATUS_ALERT_TYPE } from "./system/status";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -257,6 +260,12 @@ export type GcsServices = {
   indexNow: GcsIndexNowService;
   /** Curățarea fișierelor încărcate și nelegate de nimic (jobul zilnic `uploads.orphans`). */
   orphanFiles: GcsOrphanFilesService;
+  /** ACP › Sistem › Fișiere: toate fișierele încărcate, cu filtre, unde sunt folosite și ștergerea. */
+  fileAdmin: GcsFileAdminService;
+  /** ACP › Sistem › Stare sistem: serviciile, joburile programate și alertele trimise administratorilor. */
+  systemStatus: GcsSystemStatusService;
+  /** ACP › Sistem › Cache: zonele cache-ului și golirea lor. */
+  cacheAdmin: GcsCacheAdminService;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -658,6 +667,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     const staff = (await acp.usersWith(IP_TOOLS_ACP_SECTION, "view")).filter((id) => id !== userId);
     if (staff.length > 0) await notifications.notify({ userIds: staff, type: "core.multi_account", targetType: "core.multi_account", targetId: userId, actorId: null, data: { others, banned } });
   });
+  // Stare sistem: alertele (disc, joburi picate) trimise administratorilor; linkul duce la pagina de stare.
+  const systemStatus = new GcsSystemStatusService({ db, kv, jobs, settings, acp, notifications, edition: infra.edition });
+  notifications.registerTarget(STATUS_ALERT_TYPE, {
+    canView: async (userId) => (await acp.usersWith("system.status", "view", 500)).includes(userId),
+    describe: async (id) => ({ title: id.startsWith("job:") ? id.slice(4) : id, href: "/admin/system/status" }),
+  });
   const notificationProducers = new GcsNotificationProducers({
     db,
     kv,
@@ -980,6 +995,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
       changedTopics: (since, limit) => sitemap.changedTopics(since, limit),
     }),
     orphanFiles: new GcsOrphanFilesService({ db, settings, attachments }),
+    fileAdmin: new GcsFileAdminService({ db, acp, attachments, settings }),
+    systemStatus,
+    cacheAdmin: new GcsCacheAdminService({ db, kv, cache, acp }),
     files,
     attachments,
     forums,

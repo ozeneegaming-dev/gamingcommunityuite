@@ -56,6 +56,7 @@
     "./acp-member.css": "./src/acp-member.css",
     "./acp-announce.css": "./src/acp-announce.css",
     "./acp-misc.css": "./src/acp-misc.css",
+    "./acp-system.css": "./src/acp-system.css",
     "./nova.css": "./src/nova.css",
     "./sweep.css": "./src/sweep.css",
     "./icons": "./src/icons/index.tsx",

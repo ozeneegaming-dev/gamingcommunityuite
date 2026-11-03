@@ -1,5 +1,6 @@
-import { GcsSqlKv, PLUGIN_JOB, writeWorkerHeartbeat } from "@gcs/core";
+import { GcsSqlKv, PLUGIN_JOB, recordJobRun, writeWorkerHeartbeat } from "@gcs/core";
 import type { GcsServices } from "./services";
+import { STATUS_CHECK_EVERY_MS, STATUS_CHECK_JOB } from "./system/status";
 import { BOT_SCHEDULED_JOB, BOT_WELCOME_JOB } from "./bot/settings";
 import { RETENTION_JOB } from "./security/retention";
 import { INDEXNOW_EVERY_MS, INDEXNOW_JOB } from "./seo/indexnow";
@@ -23,7 +24,11 @@ export const IP_RETENTION_JOB = "members.ip_retention";
  * dar rulează doar în `gcs-worker` (`services.jobs.start()`).
  */
 export function registerAppJobs(s: GcsServices): void {
+  // Fiecare rulare (reușită sau nu) se notează pentru ACP › Sistem › Stare sistem.
+  s.jobs.setRecorder((name, run) => recordJobRun(s.kv, name, run));
   s.jobs.register({ name: HEARTBEAT_JOB, everyMs: 60_000, handler: () => writeWorkerHeartbeat(s.kv) });
+  // Stare sistem: discul aproape plin și joburile picate, anunțate administratorilor (după setările de alertă).
+  s.jobs.register({ name: STATUS_CHECK_JOB, everyMs: STATUS_CHECK_EVERY_MS, handler: async () => void (await s.systemStatus.check()) });
   if (s.edition === "lite") {
     s.jobs.register({
       name: LITE_SWEEP_JOB,

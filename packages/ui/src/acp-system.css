@@ -1,0 +1,382 @@
+/* ACP › Sistem: Stare sistem, Cache și Fișiere (paginile care erau „în curând”). */
+
+/* ── Starea unui rând (ok / atenție / căzut / oprit) ── */
+.gcs-sysChip {
+  --gcs-chip: var(--gcs-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--gcs-chip) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gcs-chip) 12%, transparent);
+  color: color-mix(in srgb, var(--gcs-chip) 75%, var(--gcs-text));
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gcs-sysChip .gcs-icon {
+  color: var(--gcs-chip);
+}
+.gcs-sysChip--ok {
+  --gcs-chip: var(--gcs-acp-good);
+}
+.gcs-sysChip--warn {
+  --gcs-chip: var(--gcs-warn);
+}
+.gcs-sysChip--down {
+  --gcs-chip: var(--gcs-acp-bad);
+}
+
+/* ── Rezumatul de sus ── */
+.gcs-sysSummary {
+  --gcs-sum: var(--gcs-acp-good);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--gcs-sum) 35%, var(--gcs-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gcs-sum) 9%, var(--gcs-surface));
+}
+.gcs-sysSummary--down {
+  --gcs-sum: var(--gcs-acp-bad);
+}
+.gcs-sysSummary > .gcs-icon {
+  color: var(--gcs-sum);
+  font-size: 22px;
+}
+.gcs-sysSummary > span:not(.gcs-sysSummary__alerts) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcs-sysSummary small {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-sysSummary__alerts {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+
+/* ── Grilă de carduri ── */
+.gcs-sysGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+.gcs-sysStack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* ── Liste cu iconiță, text și starea / acțiunea la dreapta ── */
+.gcs-sysList {
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+}
+.gcs-sysList__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+}
+.gcs-sysList__row + .gcs-sysList__row {
+  border-top: 1px solid color-mix(in srgb, var(--gcs-border) 60%, transparent);
+}
+.gcs-sysList__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+}
+.gcs-sysList__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-sysList__body strong {
+  font-size: 14px;
+}
+.gcs-sysList__body small {
+  overflow: hidden;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+}
+.gcs-sysList__body code,
+.gcs-sysJob code,
+.gcs-sysTags code {
+  font-size: 12px;
+  color: var(--gcs-muted);
+}
+.gcs-sysList .gcs-actionForm,
+.gcs-sysJobs__actions .gcs-actionForm {
+  flex: none;
+}
+
+/* ── Fapte (termen → valoare) ── */
+.gcs-sysFacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 14px 18px;
+  margin: 0;
+  padding: 16px 18px;
+}
+.gcs-sysFacts > div {
+  min-width: 0;
+}
+.gcs-sysFacts__wide {
+  grid-column: 1 / -1;
+}
+.gcs-sysFacts dt {
+  margin-bottom: 3px;
+  color: var(--gcs-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gcs-sysFacts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.gcs-sysDisk {
+  --gcs-disk: var(--gcs-acp-good);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcs-sysDisk[data-level="warn"] {
+  --gcs-disk: var(--gcs-warn);
+}
+.gcs-sysDisk[data-level="down"] {
+  --gcs-disk: var(--gcs-acp-bad);
+}
+.gcs-sysDisk__bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+}
+.gcs-sysDisk__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gcs-disk);
+}
+
+/* ── Texte ajutătoare ── */
+.gcs-sysMuted {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-sysHint {
+  margin: 0;
+  padding: 12px 18px 0;
+  color: var(--gcs-muted);
+  font-size: 13px;
+}
+.gcs-sysHint--page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 16px;
+  padding: 0;
+}
+.gcs-sysEmpty {
+  padding: 18px;
+}
+
+/* ── Joburile programate ── */
+.gcs-sysJobs {
+  min-width: 760px;
+}
+.gcs-sysJobs__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.gcs-sysJob {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-sysJob__error {
+  max-width: 420px;
+  overflow: hidden;
+  color: var(--gcs-acp-bad);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Plăci și tag-uri ── */
+.gcs-sysTiles {
+  margin-bottom: 18px;
+  padding: 0;
+}
+.gcs-sysTiles__text {
+  font-size: 18px;
+}
+.gcs-sysTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 18px 16px;
+  list-style: none;
+}
+.gcs-sysTags li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--gcs-border);
+  border-radius: 999px;
+  background: var(--gcs-surface2);
+}
+
+/* ── Fișiere ── */
+.gcs-fileSearch {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.gcs-fileSearch .gcs-field:not(.gcs-memberSearch__q) {
+  min-width: 150px;
+}
+.gcs-fileHead {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcs-fileTable {
+  min-width: 820px;
+}
+.gcs-fileTable .gcs-table__row:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 4%, transparent);
+}
+.gcs-fileCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 360px;
+}
+.gcs-fileCell__thumb {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 9px;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+  font-size: 18px;
+}
+.gcs-fileCell__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-fileCell__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-fileCell__body strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-fileCell__body small {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+.gcs-fileOwner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gcs-fileDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gcs-fileDetail__preview {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  max-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  border-radius: 12px;
+  background: repeating-conic-gradient(var(--gcs-surface2) 0% 25%, var(--gcs-surface) 0% 50%) 50% / 20px 20px;
+}
+.gcs-fileDetail__preview img,
+.gcs-fileDetail__preview video {
+  max-width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+.gcs-fileDetail__icon {
+  color: var(--gcs-muted);
+  font-size: 48px;
+}
+.gcs-fileDetail .gcs-sysFacts {
+  padding: 0;
+}
+.gcs-fileUses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gcs-bulkBar__status {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcs-bulkBar__status--ok {
+  color: var(--gcs-ok);
+}
+.gcs-bulkBar__status--bad {
+  color: var(--gcs-danger);
+}
+
+@media (max-width: 640px) {
+  .gcs-sysSummary__alerts {
+    margin-left: 0;
+  }
+  .gcs-sysList__row {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+}
