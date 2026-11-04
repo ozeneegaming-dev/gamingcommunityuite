@@ -201,8 +201,8 @@ export const forumsModule: GcsModule = {
   ],
   widgets: forumWidgets,
   stats: forumStatTiles,
-  // Pagina principală implicită a instalărilor noi (macheta HomeComplete, 2026-11-04): anunțul și „Acum în comunitate”
-  // sus; chat-ul în coloana din stânga, sub categorii; în coloana din dreapta serverele (compact), „Obiectivul lunii”,
+  // Pagina principală implicită a instalărilor noi (macheta HomeComplete, 2026-11-04): anunțul sus („Acum în comunitate”
+  // vine cu aplicația premium Comunitate Live și îl pune adminul); chat-ul în coloana din stânga, sub categorii; în coloana din dreapta serverele (compact), „Obiectivul lunii”,
   // cine e online, topul săptămânii (postatori / jucători / clanuri), ultimele postări și meciurile live; panoul de
   // statistici jos. Toată ordinea stă aici (și pentru widget-urile
   // altor aplicații), ca modulele înregistrate după forum să nu o schimbe. Tipurile aplicațiilor lipsă (ex. fără Chat
@@ -210,7 +210,6 @@ export const forumsModule: GcsModule = {
   widgetLayout: {
     index: [
       { zone: "top", type: "core.announcement" },
-      { zone: "top", type: "core.nowCommunity", config: { live: "show", servers: "show" } },
       { zone: "main", type: "chat.shoutbox" },
       { zone: "sidebar", type: "servers.list", config: { limit: 5, game: "", layout: "compact" } },
       { zone: "sidebar", type: "vip.donationGoal", config: { goal: "", lastDonor: "show", donorCount: "show" } },

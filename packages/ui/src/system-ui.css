@@ -341,7 +341,6 @@
   animation: gcs-motion-drop var(--gcs-motion-base) var(--gcs-motion-ease) both;
 }
 
-
 /* ─── Mișcarea redusă: fără transformări și tranziții ───────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -549,6 +548,25 @@
 }
 :root .gcs-nowCommunity .gcs-ck__bandTitle {
   margin: 0;
+}
+:root .gcs-nowCommunity__play {
+  flex: none;
+}
+/* Pe telefon, antetul se rupe pe două rânduri: titlul, apoi jucătorii și „Joacă acum”. */
+@media (max-width: 767px) {
+  :root .gcs-nowCommunity .gcs-ck__band {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 56px;
+    padding: 10px 14px;
+    row-gap: 8px;
+  }
+  :root .gcs-nowCommunity .gcs-ck__bandTitle {
+    flex: 1 1 calc(100% - 44px);
+  }
+  :root .gcs-nowCommunity .gcs-ck__chip {
+    margin-right: auto;
+  }
 }
 :root .gcs-ck__ico {
   flex: none;
@@ -852,73 +870,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* Benzile serverelor: umplerea = ocuparea, lumina în culoarea ei; click = conectare. */
-:root .gcs-ck__strips {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px 10px;
-  background: color-mix(in srgb, var(--gcs-bg) 50%, var(--gcs-surface));
-  border-radius: 0 0 5px 5px;
-}
-:root .gcs-ck__strip {
-  --c: var(--gcs-ui-ok);
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 0 10px;
-  border-radius: 4px;
-  border: 1px solid var(--gcs-border);
-  background-color: var(--gcs-surface);
-  overflow: hidden;
-  font: 700 11.5px var(--gcs-font-text);
-  text-decoration: none;
-}
-:root .gcs-ck__strip--warm {
-  --c: #ffb347;
-}
-:root .gcs-ck__strip--full {
-  --c: #ff6a6a;
-}
-:root .gcs-ck__strip--off {
-  --c: var(--gcs-ui-off);
-}
-:root .gcs-ck__stripFill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--pct, 0%);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--gcs-accent) 5%, transparent), color-mix(in srgb, var(--c) 22%, transparent));
-  border-right: 2px solid var(--c);
-  transition: width var(--gcs-dur-slow) var(--gcs-ease-out);
-}
-:root .gcs-ck__strip > b {
-  position: relative;
-  color: var(--gcs-heading, var(--gcs-text));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-:root .gcs-ck__stripCount {
-  position: relative;
-  flex: none;
-  color: var(--c);
-}
-:root .gcs-ck__strip:is(:hover, :focus-visible) {
-  border-color: var(--c);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--c) 25%, transparent);
-  transform: translateY(-1px);
-}
-:root .gcs-ck__play {
-  flex: none;
-  box-shadow: 0 0 18px color-mix(in srgb, var(--gcs-accent) 40%, transparent);
-}
 :root .gcs-ck__dots {
   display: none;
 }
@@ -929,12 +880,6 @@
   }
   :root .gcs-ck__panels[data-count="3"] > :last-child {
     grid-column: 1 / -1;
-  }
-  :root .gcs-ck__strips {
-    flex-wrap: wrap;
-  }
-  :root .gcs-ck__strip {
-    flex: 1 1 140px;
   }
 }
 @media (max-width: 767px) {
@@ -994,18 +939,6 @@
   :root .gcs-ck__dot--on {
     width: 18px;
     background: var(--gcs-accent);
-  }
-  :root .gcs-ck__strips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  :root .gcs-ck__strip {
-    flex: 0 0 118px;
-    height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 9px 10px;
   }
   :root .gcs-ck__points {
     font-size: 36px;
@@ -1100,51 +1033,7 @@
   gap: 8px;
   margin-left: auto;
 }
-:root .gcs-ck__strips--compact {
-  flex-wrap: nowrap;
-  /* Loc pentru lumina pastilelor la hover (derularea orizontală taie și pe verticală). */
-  padding: 2px 0 4px;
-  border-radius: 0;
-  background: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
-:root .gcs-ck__strips--compact::-webkit-scrollbar {
-  display: none;
-}
-:root .gcs-ck__strips--compact .gcs-ck__strip {
-  --edge: var(--gcs-ui-ok);
-  flex: 1 0 150px;
-  max-width: 320px;
-  height: 36px;
-  flex-direction: row;
-  align-items: center;
-  padding: 0 10px;
-  border-radius: 6px;
-  border-left: 3px solid var(--edge);
-  background-color: var(--gcs-surface);
-  font-size: 12px;
-}
-:root .gcs-ck__strips--compact .gcs-ck__stripFill {
-  display: none;
-}
-:root .gcs-ck__strips--compact .gcs-ck__stripCount {
-  margin-left: auto;
-  color: var(--gcs-ui-ok);
-  font-variant-numeric: tabular-nums;
-}
-:root .gcs-ck__strips--compact .gcs-ck__strip--full .gcs-ck__stripCount {
-  color: var(--gcs-danger);
-}
-:root .gcs-ck__strips--compact .gcs-ck__strip--off {
-  --edge: var(--gcs-ui-edge-strong);
-}
-:root .gcs-ck__strips--compact .gcs-ck__strip--off > b,
-:root .gcs-ck__strips--compact .gcs-ck__strip--off .gcs-ck__stripCount {
-  color: var(--gcs-muted);
-  font-weight: 600;
-}
+
 @media (max-width: 767px) {
   :root .gcs-ck--compact {
     padding-top: 14px;
@@ -1160,16 +1049,6 @@
   }
   :root .gcs-ck__go {
     margin-left: 0;
-  }
-  /* Pastilele serverelor se derulează până la marginea ecranului (fără derularea paginii). */
-  :root .gcs-ck__strips--compact {
-    margin: 0 -12px;
-    padding: 2px 12px 4px;
-  }
-  :root .gcs-ck__strips--compact .gcs-ck__strip {
-    flex: 0 0 180px;
-    height: 36px;
-    padding: 0 10px;
   }
 }
 

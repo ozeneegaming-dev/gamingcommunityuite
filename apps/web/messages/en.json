@@ -9758,7 +9758,8 @@
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
       "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
       "groups_pro": "Group legend by category (with counts and linked groups) and the “Community groups” page.",
-      "pages": "Custom pages built from blocks, databases with fields (guides, rules, configs, recruitment), a media library and member submissions with approval."
+      "pages": "Custom pages built from blocks, databases with fields (guides, rules, configs, recruitment), a media library and member submissions with approval.",
+      "community_live": "The “Now in the community” widget: live activity in tabs (forum, servers, mix), the mix match in progress and “Play now”. Place it anywhere from “Edit page”."
     },
     "sections": {
       "messages": "Private messages",
@@ -9770,7 +9771,8 @@
     },
     "chat_pro": "Chat Pro",
     "groups_pro": "Groups Pro",
-    "pages": "Pages"
+    "pages": "Pages",
+    "community_live": "Community Live"
   },
   "translate": {
     "translate": "Translate",
@@ -10429,8 +10431,7 @@
       "ranking": "Ranking",
       "guestCta": "Guest block",
       "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}",
-      "ad": "Ad",
-      "nowCommunity": "Now in the community"
+      "ad": "Ad"
     },
     "forums": {
       "stats": "Statistics",
@@ -10464,8 +10465,11 @@
       "database": "Database",
       "sort": "Order",
       "block": "Block",
-      "liveMatch": "Live match",
-      "serverChips": "Servers"
+      "feedRows": "Feed rows",
+      "liveNow": "“Live now” card",
+      "tabForum": "“Forum” tab",
+      "tabServers": "“Servers” tab",
+      "tabMix": "“Mix” tab"
     },
     "periods": {
       "week": "this week",
@@ -10486,8 +10490,7 @@
         "newMembers": "The newest registered members.",
         "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time.",
         "guestCta": "Sign up, sign in and one-click login. Only guests see it.",
-        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one).",
-        "nowCommunity": "Live activity (forum, servers, mix) with tabs, the mix match in progress and the servers with “Play now”."
+        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one)."
       },
       "forums": {
         "stats": "The number of topics, posts and members.",
@@ -10518,6 +10521,9 @@
       "pages": {
         "records": "The latest records of a database: guides, configs, recruitment…",
         "block": "A reusable block from the Pages app."
+      },
+      "community_live": {
+        "now": "Live activity in tabs, the “Live now” card and “Play now”, with the players on the servers."
       }
     },
     "servers": {
@@ -10591,6 +10597,9 @@
       "views": "Most viewed",
       "comments": "Most commented",
       "updated": "Recently updated"
+    },
+    "community_live": {
+      "now": "Now in the community"
     }
   },
   "pageEditor": {

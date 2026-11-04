@@ -267,10 +267,11 @@ export async function cockpitData(actor: GcsActor, settings: GcsThemeSettings["c
 }
 
 /**
- * Datele widget-ului „Acum în comunitate”: feed-ul (Tot), meciul live cu recomandatele (dacă e afișat), serverele
- * vizibile cu statusul lor și jucătorii de pe servere. Fără aplicația Servere, doar feed-ul (și recomandatele).
+ * Datele widget-ului „Acum în comunitate” (aplicația Comunitate Live): feed-ul (Tot), meciul live cu recomandatele
+ * (dacă e afișat) și serverele vizibile cu statusul lor (doar pentru „Joacă acum” și jucătorii din antet). Fără
+ * aplicația Servere, doar feed-ul (și recomandatele).
  */
-export async function nowCommunityData(actor: GcsActor, show: { live: boolean; servers: boolean }): Promise<GcsNowCommunityData> {
+export async function nowCommunityData(actor: GcsActor, show: { live: boolean }): Promise<GcsNowCommunityData> {
   const servers = await visibleServers(actor);
   const [feed, live, feat, summary, poll] = await Promise.all([
     cockpitFeed(actor, "all"),
@@ -281,12 +282,11 @@ export async function nowCommunityData(actor: GcsActor, show: { live: boolean; s
       .settings.get<number>(POLL_INTERVAL_SETTING)
       .catch(() => 30),
   ]);
-  const shown = show.servers ? servers : [];
   return {
     feed,
     live: live ? { ...live, featured: feat } : null,
-    servers: shown.map((s) => ({ id: s.id, name: s.name, href: serverHref(s), connectHref: s.connectHref, address: s.address, game: s.game.key })),
-    statuses: Object.fromEntries(shown.map((s) => [s.id, s.status])),
+    servers: servers.map((s) => ({ id: s.id, name: s.name, href: serverHref(s), connectHref: s.connectHref, address: s.address, game: s.game.key })),
+    statuses: Object.fromEntries(servers.map((s) => [s.id, s.status])),
     pollSeconds: poll,
     players: summary.servers.players,
   };

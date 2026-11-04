@@ -668,13 +668,13 @@ body:has(.gcs-pageSidebar) {
 .gcs-widgetSkeleton--sidebar {
   min-height: 220px;
 }
-/* „Acum în comunitate”: cât cutia consolei (banda, feed-ul cu meciul live, pastilele serverelor). */
-.gcs-widgetSkeleton[data-skeleton="core.nowCommunity"] {
-  min-height: 540px;
+/* „Acum în comunitate” (Comunitate Live): cât cutia consolei (banda, feed-ul cu „Live acum”). */
+.gcs-widgetSkeleton[data-skeleton="community_live.now"] {
+  min-height: 490px;
 }
 @media (max-width: 767px) {
-  .gcs-widgetSkeleton[data-skeleton="core.nowCommunity"] {
-    min-height: 460px;
+  .gcs-widgetSkeleton[data-skeleton="community_live.now"] {
+    min-height: 420px;
   }
 }
 @keyframes gcs-skeleton {

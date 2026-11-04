@@ -13,7 +13,7 @@ describe("prima pagină implicită (instalările noi)", () => {
 
   test("zonele și ordinea, cu configurările coloanei înguste", () => {
     const layout = defaultWidgetLayout(registry, "index");
-    expect(layout.filter((p) => p.zone === "top").map((p) => p.type)).toEqual(["core.announcement", "core.nowCommunity"]);
+    expect(layout.filter((p) => p.zone === "top").map((p) => p.type)).toEqual(["core.announcement"]);
     expect(layout.filter((p) => p.zone === "main").map((p) => p.type)).toEqual(["chat.shoutbox"]);
     expect(layout.filter((p) => p.zone === "sidebar").map((p) => p.type)).toEqual(["servers.list", "vip.donationGoal", "core.online", "core.ranking", "forums.recentPosts", "servers.liveMatches"]);
     expect(layout.filter((p) => p.zone === "bottom").map((p) => p.type)).toEqual(["core.statsPanel"]);
@@ -53,12 +53,19 @@ describe("prima pagină implicită (instalările noi)", () => {
     expect(def("core.ranking").config({ tabs: "clans" })).toBeNull();
   });
 
-  test("„Acum în comunitate”: widget lat (sus, coloana din stânga, jos), cu meciul live și serverele afișate sau ascunse", () => {
-    const w = registry.widgetDef("core.nowCommunity")!;
+  test("Comunitate Live (premium): widget-ul „Acum în comunitate”, lat, cu tab-urile, rândurile și „Live acum” din setări; nu e pus implicit", () => {
+    const app = registry.module("community_live")?.app;
+    expect(app?.premium).toBe(true);
+    expect(app?.optional).toBe(true);
+    const w = registry.widgetDef("community_live.now")!;
+    expect(w.module).toBe("community_live");
     expect(w.def.zones).toEqual(["top", "main", "bottom"]);
-    expect(w.def.config({})).toEqual({ live: "show", servers: "show" });
-    expect(w.def.config({ live: "hide", servers: "show" })).toEqual({ live: "hide", servers: "show" });
-    expect(w.def.config({ servers: "maybe" })).toBeNull();
-    expect(w.def.fields?.map((f) => f.key)).toEqual(["live", "servers"]);
+    expect(w.def.config({})).toEqual({ limit: 8, live: "show", tabForum: "show", tabServers: "show", tabMix: "show" });
+    expect(w.def.config({ limit: 3, tabMix: "hide", live: "hide" })).toMatchObject({ limit: 3, tabMix: "hide", live: "hide" });
+    expect(w.def.config({ limit: 20 })).toBeNull();
+    expect(w.def.config({ tabForum: "maybe" })).toBeNull();
+    expect(w.def.fields?.map((f) => f.key)).toEqual(["limit", "live", "tabForum", "tabServers", "tabMix"]);
+    expect(registry.widgetDef("core.nowCommunity")).toBeUndefined();
+    expect(defaultWidgetLayout(registry, "index").some((p) => p.type === "community_live.now")).toBe(false);
   });
 });
