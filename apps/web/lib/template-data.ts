@@ -5,7 +5,7 @@
  */
 import { isSafeBanner } from "@gcs/core";
 import { GCS_BRAND } from "@gcs/core/themes";
-import type { GcsCardView, GcsClanTag, GcsForumRow, GcsMemberCard, GcsPostAuthor, GcsPostbitData, GcsTopicRow, GcsUserRef } from "@gcs/modules";
+import type { GcsCardView, GcsClanTag, GcsForumRow, GcsMemberCard, GcsPagesRecordCard, GcsPostAuthor, GcsPostbitData, GcsTopicRow, GcsUserRef } from "@gcs/modules";
 import { forumHref, memberHref, tagHref, topicHref, unreadHref } from "./forum-urls";
 
 /** Numele vechi ale iconițelor de forum (din etapele 1–4), pentru date nemigrate. */
@@ -214,4 +214,30 @@ export function hoverCardVars(card: GcsCardView, clan: GcsClanTag | null = null)
 /** `widgets.card` */
 export function widgetCardVars(w: { id: string; type: string; title: string; icon: string | null; hasExtra: boolean; testId?: string | undefined }) {
   return { widget: { id: w.id, type: w.type, title: w.title, icon: w.icon, headingId: `gcs-widget-${w.id}`, hasExtra: w.hasExtra, testId: w.testId ?? null } };
+}
+
+/** `pages.record_card`: o înregistrare din aplicația Pagini (cardul din liste, grile, carusel și blocuri). */
+export function recordCardVars(r: GcsPagesRecordCard, db: { name: string; key: string; icon: string | null }, showImage: boolean, labels: { yes: string; no: string }) {
+  return {
+    showImage,
+    database: { name: db.name, key: db.key },
+    record: {
+      id: r.id,
+      title: r.title,
+      url: r.href,
+      excerpt: r.excerpt,
+      image: r.image,
+      icon: r.category?.icon ?? db.icon ?? "fa-solid fa-file-lines",
+      category: r.category ? { name: r.category.name, url: r.category.href, color: r.category.color } : null,
+      fields: r.fields.map((f) => ({ label: f.label, value: f.type === "checkbox" ? (f.value === true ? labels.yes : labels.no) : f.display, badge: f.badge })),
+      pinned: r.pinned,
+      featured: r.featured,
+      isNew: r.isNew,
+      publishedAt: r.publishedAt,
+      views: r.views,
+      comments: r.comments,
+      rating: r.rating,
+      author: userVar(r.author),
+    },
+  };
 }

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { CSSProperties } from "react";
 import { GcsMemberLink } from "@/lib/member-names";
+import { recordCardVars } from "@/lib/template-data";
+import { siteTemplate } from "@/lib/templates";
 import { GcsStarsStatic } from "../topic/GcsTopicRating";
 
 export type GcsRecordView = "list" | "grid" | "table" | "compact" | "featured" | "carousel";
@@ -62,6 +64,11 @@ async function Flags({ r }: { r: GcsPagesRecordCard }) {
 
 async function Card({ r, db, image, big = false }: { r: GcsPagesRecordCard; db: GcsPagesDb; image: boolean; big?: boolean }) {
   const t = await getTranslations("pages");
+  // Șablonul temei (ACP › Aspect › Șabloane › Pagini), dacă tema l-a modificat; altfel componenta de mai jos.
+  if (!big) {
+    const custom = await siteTemplate("pages.record_card", recordCardVars(r, db, image, { yes: t("yes"), no: t("no") }), {});
+    if (custom) return custom;
+  }
   return (
     <article className={`gcs-pgCard${big ? " gcs-pgCard--big" : ""}`} data-testid="gcs-pages-record" data-record={r.id}>
       {image && (

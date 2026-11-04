@@ -26,6 +26,7 @@
 @import "@gcs/ui/clans.css";
 /* Aplicația Pagini (orice temă): paginile construite, bazele de date, înregistrările și constructorul din ACP. */
 @import "@gcs/ui/pages.css";
+@import "@gcs/ui/pages-acp.css";
 @import "@gcs/ui/gameplay.css";
 @import "@gcs/ui/viewer.css";
 @import "@gcs/ui/chatpro.css";

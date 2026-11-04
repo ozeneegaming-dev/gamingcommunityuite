@@ -318,3 +318,8 @@ export async function savePagesSettings(fd: FormData): Promise<GcsResult<null>> 
     return null;
   });
 }
+
+/** „Șterge” din panoul unui fișier al bibliotecii. */
+export async function deletePagesMediaOne(id: number): Promise<GcsResult<{ count: number }>> {
+  return deletePagesMedia([id]);
+}

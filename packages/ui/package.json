@@ -34,6 +34,7 @@
     "./servers.css": "./src/servers.css",
     "./clans.css": "./src/clans.css",
     "./pages.css": "./src/pages.css",
+    "./pages-acp.css": "./src/pages-acp.css",
     "./gameplay.css": "./src/gameplay.css",
     "./titles.css": "./src/titles.css",
     "./viewer.css": "./src/viewer.css",

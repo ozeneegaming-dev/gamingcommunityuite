@@ -942,6 +942,55 @@ export class GcsPagesAdmin {
     return { databaseId, nodeId: node.id, path: node.path, records: imported };
   }
 
+  /**
+   * Coada din ACP › Pagini › Înregistrări: înregistrările pe stări (cu numerele), filtrate pe bază și căutare, și
+   * comentariile în așteptare. Linkurile duc la pagina înregistrării (unde staff-ul are bara de moderare).
+   */
+  async records(actor: GcsActor, query: { status: "pending" | "published" | "hidden" | "rejected"; databaseId?: number | null; q?: string; page?: number }) {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.records, "view");
+    const STATUS = { pending: "PENDING", published: "PUBLISHED", hidden: "HIDDEN", rejected: "REJECTED" } as const;
+    const q = searchNormalize(query.q ?? "").slice(0, 60);
+    const base: Prisma.PagesRecordWhereInput = { ...(query.databaseId ? { databaseId: query.databaseId } : {}), ...(q ? { searchText: { contains: q } } : {}) };
+    const where: Prisma.PagesRecordWhereInput = { ...base, status: STATUS[query.status] };
+    const counts = Object.fromEntries(await Promise.all(Object.entries(STATUS).map(async ([k, s]) => [k, await db.pagesRecord.count({ where: { ...base, status: s } })] as const))) as Record<keyof typeof STATUS, number>;
+    const perPage = 30;
+    const total = counts[query.status];
+    const pages = Math.max(1, Math.ceil(total / perPage));
+    const page = Math.min(Math.max(1, query.page ?? 1), pages);
+    const rows = await db.pagesRecord.findMany({
+      where,
+      orderBy: query.status === "pending" ? [{ createdAt: "asc" }] : [{ updatedAt: "desc" }],
+      skip: (page - 1) * perPage,
+      take: perPage,
+      select: { id: true, title: true, slug: true, status: true, authorId: true, createdAt: true, rejectReason: true, database: { select: { id: true, name: true, node: { select: { path: true } } } } },
+    });
+    const users = new Map((await db.user.findMany({ where: { id: { in: rows.flatMap((r) => (r.authorId ? [r.authorId] : [])) } }, select: { id: true, name: true } })).map((u) => [u.id, u]));
+    const pendingComments = await db.pagesComment.findMany({ where: { pending: true }, orderBy: { createdAt: "asc" }, take: 50, select: { id: true, contentHtml: true, authorId: true, createdAt: true, record: { select: { id: true, title: true, slug: true, database: { select: { node: { select: { path: true } } } } } } } });
+    const commentUsers = new Map((await db.user.findMany({ where: { id: { in: pendingComments.flatMap((c) => (c.authorId ? [c.authorId] : [])) } }, select: { id: true, name: true } })).map((u) => [u.id, u]));
+    return {
+      counts,
+      pagination: { page, pages, perPage, total },
+      rows: rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        status: r.status,
+        createdAt: r.createdAt.toISOString(),
+        rejectReason: r.rejectReason,
+        author: r.authorId ? (users.get(r.authorId) ?? null) : null,
+        database: { id: r.database.id, name: r.database.name },
+        href: r.database.node ? `/pages/${r.database.node.path}/${r.id}-${r.slug}` : null,
+      })),
+      comments: pendingComments.map((c) => ({
+        id: c.id,
+        text: c.contentHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200),
+        author: c.authorId ? (commentUsers.get(c.authorId) ?? null) : null,
+        createdAt: c.createdAt.toISOString(),
+        record: { title: c.record.title, href: c.record.database.node ? `/pages/${c.record.database.node.path}/${c.record.id}-${c.record.slug}#comment-${c.id}` : null },
+      })),
+    };
+  }
+
   // ─── Categoriile ───────────────────────────────────────────────────────────────────────────────────────────
 
   async saveCategory(actor: GcsActor, databaseId: number, id: number | null, input: GcsPagesCategoryInput): Promise<{ id: number }> {
