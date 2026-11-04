@@ -26,6 +26,14 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: path.join(SHOTS, name), fullPage: true, animations: "disabled" });
 }
 
+/** Captura unui singur widget (capturile pentru Marketplace), după fonturi. */
+async function widgetShot(el: Locator, name: string): Promise<void> {
+  if (!SHOTS) return;
+  mkdirSync(SHOTS, { recursive: true });
+  await el.evaluate(() => document.fonts.ready.then(() => undefined));
+  await el.screenshot({ path: path.join(SHOTS, name), animations: "disabled" });
+}
+
 /** Un widget din coloana din dreapta (doar copia vizibilă: widget-urile vin în flux). */
 const sideWidget = (page: Page, type: string): Locator => page.locator(`[data-zone="sidebar"] [data-widget="${type}"]`).filter({ visible: true }).first();
 
@@ -215,6 +223,8 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     await expect(now.getByRole("heading", { name: "Acum în comunitate" })).toBeVisible();
     await expect(now.getByTestId("gcs-now-community-players")).toContainText(/jucători|jucător/);
     await expect(now.getByTestId("gcs-now-community-feed-item").first()).toBeVisible();
+    await expect(now.getByTestId("gcs-now-community-match")).toBeVisible();
+    await widgetShot(now, "cl-1-desktop.png");
     await now.getByTestId("gcs-now-community-feed-tab-forum").click();
     await expect(now.getByTestId("gcs-now-community-feed-tab-forum")).toHaveAttribute("aria-selected", "true");
     await expect(now.getByTestId("gcs-now-community-feed-item").first()).toHaveAttribute("data-kind", /topic|reply|status|member/);
@@ -224,6 +234,7 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     await expect(now.getByTestId("gcs-now-community-strip")).toHaveCount(0);
     // „Joacă acum” stă în antet, lângă jucătorii de pe servere.
     await expect(now.locator(".gcs-ck__band").getByTestId("gcs-now-community-play")).toBeVisible();
+    await widgetShot(now, "cl-2-forum-tab.png");
   });
 
   await test.step("chat-ul stă în coloana din stânga, lângă coloana din dreapta (fără golul de sub categorii)", async () => {
@@ -263,10 +274,13 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     await expect(now.getByTestId("gcs-now-community-feed-tab-servers")).toBeVisible();
     await expect.poll(async () => now.getByTestId("gcs-now-community-feed-item").count()).toBeLessThanOrEqual(3);
     await expect(now.getByTestId("gcs-now-community-live")).toHaveCount(0);
+    await widgetShot(now, "cl-3-settings-compact.png");
     await setApp("community_live", false);
     await page.reload();
     await expect(page.locator('[data-testid="gcs-now-community"]').filter({ visible: true })).toHaveCount(0);
     await setApp("community_live", true);
+    await sql(`UPDATE widget_placements SET config = $1::jsonb WHERE id = $2`, [JSON.stringify({ limit: 8, live: "show", tabForum: "show", tabServers: "show", tabMix: "show" }), placed!.id]);
+    await clearLayoutCache();
   });
 
   await test.step("Chat Pro (premium, după licență): în coloana din stânga, cu bara de vot și clasamentul alături", async () => {
@@ -299,6 +313,7 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     expect(box.x + box.width).toBeLessThanOrEqual(376);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     await shot(page, "home-complete-375.png");
+    await widgetShot(now, "cl-4-mobile.png");
   });
   await sql(`DELETE FROM widget_placements WHERE id = $1`, [placed!.id]);
   await clearLayoutCache();
