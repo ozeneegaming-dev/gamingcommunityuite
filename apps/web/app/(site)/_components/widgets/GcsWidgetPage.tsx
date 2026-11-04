@@ -141,6 +141,8 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
   // „Obiectivul lunii”: obiectivele de donații (gol = primul activ vizibil).
   const goals = enabled("vip") ? await services().donations.goals() : [];
+  // Widget-ul „Reclamă”: unitățile din ACP › Promovare › Reclame (gol = una la întâmplare).
+  const adUnits = await services().ads.names();
 
   const initial = Object.fromEntries(GCS_WIDGET_ZONES.map((z) => [z, [] as GcsPageEditorItem[]])) as Record<GcsWidgetZone, GcsPageEditorItem[]>;
   placements.forEach((p, i) => {
@@ -182,6 +184,8 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
                       ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
                       : f.optionsFrom === "donations.goals"
                         ? [{ value: "", label: t("defaultGoal") }, ...goals.map((g) => ({ value: String(g.id), label: g.title }))]
+                      : f.optionsFrom === "ads.units"
+                        ? [{ value: "", label: t("randomAd") }, ...adUnits.map((a) => ({ value: String(a.id), label: a.name }))]
                       : f.optionsFrom === "groups"
                         ? [{ value: "", label: t("allGroups") }, ...groups.map((g) => ({ value: String(g.id), label: g.name }))]
                         : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) })),

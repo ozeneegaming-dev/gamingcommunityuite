@@ -37,7 +37,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     items: [
       { key: CLANS_ACP_SECTION, labelKey: "acp.menu.gaming.clans", href: "/admin/gaming/clans", section: CLANS_ACP_SECTION, icon: "fa-solid fa-people-group" },
       { key: "gaming.clans_settings", labelKey: "acp.menu.gaming.clans_settings", href: "/admin/gaming/clans/settings", section: CLANS_SETTINGS_ACP_SECTION, icon: "fa-solid fa-sliders" },
-      // Raportul clanurilor din zona Statistici („în curând”).
+      // Raportul clanurilor din zona Statistici (ACP › Statistici › Clanuri).
       { key: "stats.clans", labelKey: "acp.menu.stats.clans", href: "/admin/stats/clans", section: "stats.clans", icon: "fa-solid fa-people-group", area: "stats", group: "acp.menu.stats.apps" },
     ],
   },

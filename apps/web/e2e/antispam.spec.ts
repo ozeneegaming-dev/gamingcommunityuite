@@ -55,12 +55,23 @@ test("un IP din intervalul banat nu se poate înregistra (banul creat din ACP �
   const id = uid();
   await enterAcpAsRoot(page, `RootB${id}`, `root-b${id}@example.com`);
   await page.goto("/admin/members/settings/bans");
+  await page.getByTestId("gcs-bans-new-open").click();
   const form = page.getByTestId("gcs-bans-new");
   await form.getByTestId("gcs-bans-type").selectOption("IP");
   await form.getByTestId("gcs-bans-value").fill("100.71.0.0/16");
   await form.getByTestId("gcs-bans-reason").fill(`roboți ${id}`);
   await form.getByRole("button", { name: "Banează" }).click();
-  await expect(page.getByTestId("gcs-bans-row").filter({ hasText: `roboți ${id}` })).toBeVisible();
+  await expect(form).toHaveCount(0);
+  const row = page.getByTestId("gcs-bans-row").filter({ hasText: `roboți ${id}` });
+  await expect(row).toBeVisible();
+  // Panoul banului: motivul și durata se pot schimba.
+  await row.getByTestId("gcs-bans-edit-open").click();
+  const edit = page.getByTestId("gcs-bans-edit");
+  await edit.getByLabel("Motivul").fill(`roboți ${id} (interval)`);
+  await edit.getByLabel("Durata").selectOption("d30");
+  await edit.getByRole("button", { name: "Salvează" }).click();
+  await expect(edit).toHaveCount(0);
+  await expect(page.getByTestId("gcs-bans-row").filter({ hasText: `roboți ${id} (interval)` })).toContainText("până la");
 
   const context = await browser.newContext();
   // Ca în spatele proxy-ului din producție: X-Real-IP e adresa clientului.

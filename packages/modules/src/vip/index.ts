@@ -95,7 +95,7 @@ const acpMenu: GcsAcpMenuSection[] = [
       ].map(([key, href, icon]) => ({ key: `vip.${key}`, labelKey: `acp.menu.vip.${key}`, href: href!, section: `vip.${key}`, icon: icon! })),
       // Setările secțiunii `vip` (pagina publică `/vip`, avertizarea expirării), în pagina generică de setări.
       { key: "vip.page", labelKey: "acp.menu.vip.page", href: "/admin/settings/vip", section: "system.settings_vip", icon: "fa-solid fa-store" },
-      // Raportul VIP din zona Statistici („în curând”).
+      // Raportul VIP din zona Statistici (ACP › Statistici › VIP).
       { key: "stats.vip", labelKey: "acp.menu.stats.vip", href: "/admin/stats/vip", section: "stats.vip", icon: "fa-solid fa-crown", area: "stats", group: "acp.menu.stats.apps" },
     ],
   },

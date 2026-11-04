@@ -542,3 +542,192 @@ test("RSS, Distribuire și Web App: setările schimbă fluxurile, meniul topicul
     for (const key of ["rss.config", "share.config", "pwa.config"]) await resetSetting(key);
   }
 });
+
+test("Reclame: o reclamă din ACP apare prin widget pe prima pagină, se ascunde VIP-urilor, iar click-ul se numără", async ({ page, browser }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Ads${id}`, `ads-${id}@example.com`);
+  const name = `Sponsor ${id}`;
+  let placement: number | null = null;
+  const clearLayout = async () => {
+    const kv = await e2eKv();
+    try {
+      const keys = await kv.keys("gcs:k:layout*");
+      if (keys.length > 0) await kv.del(...keys);
+    } finally {
+      kv.disconnect();
+    }
+  };
+  try {
+    await page.goto("/admin/system/ads");
+    await expect(page.getByRole("heading", { name: "Reclame", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-ad-new-open").click();
+    const add = page.getByTestId("gcs-ad-new");
+    await add.getByLabel("Numele (doar în ACP)").fill(name);
+    await add.getByTestId("gcs-ad-image-url").fill("https://placehold.co/300x250.png");
+    await add.getByLabel("Linkul").fill("https://sponsor.example.com/oferta");
+    await add.getByRole("button", { name: "Adaugă reclama" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-ad-row"][data-name="${name}"]`);
+    await expect(row.locator("[data-state]")).toHaveAttribute("data-state", "live");
+    const [ad] = await sql<{ id: number }>(`SELECT id FROM ad_units WHERE name = $1`, [name]);
+
+    // Widget-ul pe prima pagină (vizitator): imaginea, cu linkul de click numărat.
+    const [placed] = await sql<{ id: number }>(`INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'sidebar', 0, 'core.ad', $1, '[]') RETURNING id`, [JSON.stringify({ unit: String(ad!.id) })]);
+    placement = placed?.id ?? null;
+    await clearLayout();
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto("/");
+    const shown = guest.locator(`[data-testid="gcs-ad"][data-ad="${ad!.id}"]`);
+    await expect(shown).toBeVisible();
+    await expect(shown.locator("a")).toHaveAttribute("href", `/go/ad/${ad!.id}`);
+    const go = await guest.request.get(`/go/ad/${ad!.id}`, { maxRedirects: 0 });
+    expect(go.status()).toBe(302);
+    expect(go.headers().location).toBe("https://sponsor.example.com/oferta");
+    await ctx.close();
+
+    await page.reload();
+    await expect(row).toContainText("1 click");
+    await shot(page, "ads-acp");
+  } finally {
+    if (placement !== null) await sql(`DELETE FROM widget_placements WHERE id = $1`, [placement]);
+    await sql(`DELETE FROM ad_units WHERE name = $1`, [name]);
+    await clearLayout();
+  }
+});
+
+test("Fluxuri: un flux propriu devine tab pe pagina Activitate", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Flx${id}`, `flx-${id}@example.com`);
+  await forumTree(request);
+  const name = `Noutăți ${id}`;
+  try {
+    await page.goto("/admin/system/streams");
+    await expect(page.getByRole("heading", { name: "Fluxuri", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-stream-new-open").click();
+    const add = page.getByTestId("gcs-stream-new");
+    await add.getByLabel("Numele (tab-ul)").fill(name);
+    await add.getByRole("button", { name: "Adaugă fluxul" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.getByTestId("gcs-stream-row").filter({ hasText: name });
+    await expect(row).toBeVisible();
+    const key = await row.getAttribute("data-stream");
+    await shot(page, "streams-acp");
+    await page.goto("/activity");
+    const tab = page.getByTestId(`gcs-activity-stream-${key}`);
+    await expect(tab).toHaveText(name);
+    await tab.click();
+    await expect(page).toHaveURL(new RegExp(`stream=${key}`));
+    await expect(tab).toHaveAttribute("aria-current", "page");
+  } finally {
+    await resetSetting("streams.config");
+  }
+});
+
+test("Webhooks: o adresă internă e refuzată; un webhook Discord se adaugă, se editează și se șterge", async ({ page }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Hook${id}`, `hook-${id}@example.com`);
+  const name = `Discord ${id}`;
+  try {
+    await page.goto("/admin/system/webhooks");
+    await expect(page.getByRole("heading", { name: "Webhooks", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await page.getByTestId("gcs-webhook-new-open").click();
+    const add = page.getByTestId("gcs-webhook-new");
+    await add.getByLabel("Numele").fill(name);
+    await add.getByLabel("Adresa (URL)").fill("https://127.0.0.1/hook");
+    await add.getByRole("button", { name: "Adaugă webhook-ul" }).click();
+    await expect(add.getByRole("alert")).toContainText("nu e publică");
+
+    await add.getByLabel("Adresa (URL)").fill("https://discord.com/api/webhooks/123/abc");
+    await add.getByLabel("Formatul").selectOption("discord");
+    await add.getByLabel("Membru nou").check();
+    await add.getByRole("button", { name: "Adaugă webhook-ul" }).click();
+    await expect(add).toHaveCount(0);
+    const row = page.locator(`[data-testid="gcs-webhook-row"][data-name="${name}"]`);
+    await expect(row).toContainText("2 evenimente");
+    await shot(page, "webhooks-acp");
+
+    await row.getByTestId("gcs-webhook-edit-open").click();
+    await page.getByTestId("gcs-webhook-edit").getByRole("button", { name: "Șterge" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(row).toHaveCount(0);
+  } finally {
+    await sql(`DELETE FROM webhook_endpoints WHERE name = $1`, [name]);
+  }
+});
+
+test("API: cheia creată se vede o dată, citește statisticile, e refuzată pe alt drept și după revocare", async ({ page, request }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Api${id}`, `api-${id}@example.com`);
+  const name = `Bot ${id}`;
+  try {
+    await page.goto("/admin/system/api");
+    await expect(page.getByRole("heading", { name: "API", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.getByTestId("gcs-api-endpoints")).toContainText("/api/v1/stats");
+    await page.getByTestId("gcs-api-new-open").click();
+    const add = page.getByTestId("gcs-api-new");
+    await add.getByLabel("Numele").fill(name);
+    await add.getByRole("button", { name: "Creează cheia" }).click();
+    const key = (await add.getByTestId("gcs-api-key-value").textContent())?.trim() ?? "";
+    expect(key).toMatch(/^gcs_[a-f0-9]{12}_/);
+    await shot(page, "api-key-created");
+
+    const auth = { Authorization: `Bearer ${key}` };
+    const stats = await request.get("/api/v1/stats", { headers: auth });
+    expect(stats.status()).toBe(200);
+    expect((await stats.json()).data).toHaveProperty("members");
+    expect((await request.get("/api/v1/topics", { headers: auth })).status()).toBe(403);
+    expect((await request.get("/api/v1/stats")).status()).toBe(403);
+
+    await page.goto("/admin/system/api");
+    const row = page.locator(`[data-testid="gcs-api-row"][data-name="${name}"]`);
+    await expect(row.locator("[data-level]")).toHaveAttribute("data-level", "ok");
+    await row.getByTestId("gcs-api-edit-open").click();
+    const edit = page.getByTestId("gcs-api-edit");
+    await expect(edit.getByTestId("gcs-api-log")).toContainText("/api/v1/stats");
+    await edit.getByRole("button", { name: "Revocă cheia" }).click();
+    await page.getByTestId("gcs-confirm-ok").click();
+    await expect(row.locator("[data-level]")).toHaveAttribute("data-level", "down");
+    expect((await request.get("/api/v1/stats", { headers: auth })).status()).toBe(403);
+    await shot(page, "api-acp");
+  } finally {
+    await sql(`DELETE FROM api_keys WHERE name = $1`, [name]);
+  }
+});
+
+test("Integrări: starea serviciilor cu linkurile lor; Plausible pornit apare în pagina site-ului", async ({ page, browser }) => {
+  const id = uid();
+  await enterAcpAsRoot(page, `Integr${id}`, `integr-${id}@example.com`);
+  try {
+    await page.goto("/admin/system/integrations");
+    await expect(page.getByRole("heading", { name: "Integrări", level: 1 })).toBeVisible();
+    await expect(page.getByText(COMING_SOON)).toHaveCount(0);
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="smtp"] [data-testid="gcs-integration-link"]')).toHaveAttribute("href", "/admin/settings/email");
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="api"]')).toBeVisible();
+
+    await page.locator('[data-testid="gcs-integration-row"][data-key="analytics"]').getByTestId("gcs-analytics-edit-open").click();
+    const edit = page.getByTestId("gcs-analytics-edit");
+    await edit.getByLabel("Serviciul").selectOption("plausible");
+    await edit.getByLabel("Domeniul").fill("forum.exemplu.ro");
+    await edit.getByLabel("Pornește doar după").uncheck();
+    await edit.getByRole("button", { name: "Salvează" }).click();
+    await expect(edit).toHaveCount(0);
+    await expect(page.locator('[data-testid="gcs-integration-row"][data-key="analytics"] [data-level]')).toHaveAttribute("data-level", "ok");
+    await shot(page, "integrations-acp");
+
+    // Un vizitator primește scriptul; staff-ul (adminul) nu.
+    const ctx = await browser.newContext();
+    const guest = await ctx.newPage();
+    await guest.goto("/");
+    await expect(guest.locator('script[data-domain="forum.exemplu.ro"]')).toHaveCount(1);
+    await ctx.close();
+    await page.goto("/");
+    await expect(page.locator('script[data-domain="forum.exemplu.ro"]')).toHaveCount(0);
+  } finally {
+    await resetSetting("integrations.analytics");
+  }
+});

@@ -1,4 +1,4 @@
-import { GCS_ACTIVITY_FILTERS, type GcsActivityFilter, type GcsStreamItem, type GcsUserRef } from "@gcs/modules";
+import { GCS_ACTIVITY_FILTERS, loadStreamsConfig, type GcsActivityFilter, type GcsStreamItem, type GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsButton, GcsCard, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("activity"))("title"), alternates: { canonical: await landingCanonical("core", "/activity") } };
 }
 
-type Search = { type?: string; unread?: string; before?: string };
+type Search = { type?: string; unread?: string; before?: string; stream?: string };
 
 const FILTER_ICONS: Record<GcsActivityFilter, string> = {
   all: "fa-solid fa-bolt",
@@ -39,12 +39,16 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const [t, format, actor] = await Promise.all([getTranslations("activity"), getFormatter(), currentActor()]);
   const filter: GcsActivityFilter = GCS_ACTIVITY_FILTERS.includes(sp.type as GcsActivityFilter) ? (sp.type as GcsActivityFilter) : "all";
   const unread = actor.userId !== null && sp.unread === "1";
-  const page = await services().activity.page(actor, { filter, unread, before: sp.before ?? null });
+  // Fluxurile proprii din ACP › Fluxuri: tab-uri în plus; unul ales înlocuiește filtrele de tip.
+  const streams = (await loadStreamsConfig(services().settings)).custom;
+  const stream = streams.find((x) => x.key === sp.stream) ?? null;
+  const page = await services().activity.page(actor, { filter: stream ? "all" : filter, unread, before: sp.before ?? null, stream: stream?.key ?? null });
 
-  const href = (patch: { type?: GcsActivityFilter; unread?: boolean; before?: string | null }) => {
-    const next = { type: patch.type ?? filter, unread: patch.unread ?? unread, before: patch.before ?? null };
+  const href = (patch: { type?: GcsActivityFilter; unread?: boolean; before?: string | null; stream?: string | null }) => {
+    const next = { type: patch.type ?? filter, unread: patch.unread ?? unread, before: patch.before ?? null, stream: patch.stream === undefined ? (patch.type ? null : (stream?.key ?? null)) : patch.stream };
     const params = new URLSearchParams();
-    if (next.type !== "all") params.set("type", next.type);
+    if (next.stream) params.set("stream", next.stream);
+    else if (next.type !== "all") params.set("type", next.type);
     if (next.unread) params.set("unread", "1");
     if (next.before) params.set("before", next.before);
     const qs = params.toString();
@@ -102,12 +106,24 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
             <Link
               key={f}
               href={href({ type: f })}
-              className={`gcs-segLink${f === filter ? " gcs-segLink--active" : ""}`}
-              aria-current={f === filter ? "page" : undefined}
+              className={`gcs-segLink${!stream && f === filter ? " gcs-segLink--active" : ""}`}
+              aria-current={!stream && f === filter ? "page" : undefined}
               data-testid={`gcs-activity-filter-${f}`}
             >
               <GcsIcon name={FILTER_ICONS[f]} />
               {t(`filter.${f}`)}
+            </Link>
+          ))}
+          {streams.map((x) => (
+            <Link
+              key={x.key}
+              href={href({ stream: x.key })}
+              className={`gcs-segLink${stream?.key === x.key ? " gcs-segLink--active" : ""}`}
+              aria-current={stream?.key === x.key ? "page" : undefined}
+              data-testid={`gcs-activity-stream-${x.key}`}
+            >
+              <GcsIcon name={x.icon || "fa-solid fa-list-ul"} />
+              {x.name}
             </Link>
           ))}
         </nav>

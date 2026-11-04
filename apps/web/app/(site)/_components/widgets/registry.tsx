@@ -166,6 +166,27 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
   // Doar vizitatorii îl văd (membrii sunt deja înăuntru).
   "core.guestCta": async ({ id, actor }) => (actor.userId ? null : <GcsGuestCta variant="widget" headingId={`gcs-widget-${id}`} />),
   "core.groupLegend": async ({ id, config }) => <GcsGroupLegend id={id} config={config} />,
+  // Reclama (ACP › Promovare › Reclame): ascunsă grupurilor alese acolo; click-ul trece prin `/go/ad/<id>` (numărat).
+  "core.ad": async ({ id, actor, config }) => {
+    const unit = typeof config.unit === "string" && /^\d+$/.test(config.unit) ? Number(config.unit) : null;
+    const ad = await services().ads.pick(actor.groupIds, unit);
+    if (!ad) return null;
+    const t = await getTranslations("widgets");
+    return (
+      <aside className="gcs-adUnit" aria-label={t("adLabel")} data-testid="gcs-ad" data-ad={ad.id} id={`gcs-widget-${id}`}>
+        <span className="gcs-adUnit__tag">{t("adLabel")}</span>
+        {ad.kind === "html" ? (
+          <div className="gcs-adUnit__html" dangerouslySetInnerHTML={{ __html: sanitizeContentHtml(ad.html) }} />
+        ) : ad.linkUrl ? (
+          <a href={`/go/ad/${ad.id}`} target="_blank" rel="sponsored noopener" className="gcs-adUnit__link">
+            <img src={ad.imageUrl} alt={ad.alt} loading="lazy" />
+          </a>
+        ) : (
+          <img src={ad.imageUrl} alt={ad.alt} loading="lazy" />
+        )}
+      </aside>
+    );
+  },
 
   // Realizări v2: ultimele badge-uri primite, cu actualizare live (camera `feed:badges`).
   "profile.recentBadges": async ({ id, config }) => {

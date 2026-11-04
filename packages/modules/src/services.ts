@@ -185,6 +185,10 @@ import { GcsBulkMailService } from "./notifications/bulkMail";
 import { GcsReferralService, REFERRAL_NOTIFICATION } from "./profile/referrals";
 import { GcsStatsReportService } from "./stats/reports";
 import { GcsTagsAdmin } from "./forums/tagsAdmin";
+import { GcsAdService } from "./community/ads";
+import { GcsWebhookService } from "./system/webhooks";
+import { GcsApiKeyService } from "./system/apiKeys";
+import { GcsPublicApi } from "./system/publicApi";
 import { loadUploadPolicy } from "./uploads/settings";
 
 export type GcsServices = {
@@ -283,6 +287,14 @@ export type GcsServices = {
   statsReports: GcsStatsReportService;
   /** ACP › Descoperire › Etichete: lista, redenumirea, unirea, ștergerea și setările etichetelor. */
   tagsAdmin: GcsTagsAdmin;
+  /** Reclamele (ACP › Promovare › Reclame) și widget-ul lor. */
+  ads: GcsAdService;
+  /** Webhook-urile (ACP › Funcții site › Webhooks): endpointurile, livrările prin coadă și jurnalul. */
+  webhooks: GcsWebhookService;
+  /** Cheile API (ACP › Funcții site › API) și verificarea cererilor `/api/v1`. */
+  apiKeys: GcsApiKeyService;
+  /** Datele rutelor `/api/v1` (doar ce vede un vizitator). */
+  publicApi: GcsPublicApi;
   files: GcsFileStore;
   attachments: GcsAttachmentService;
   forums: GcsForumService;
@@ -695,6 +707,9 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     canView: async (userId) => (await acp.usersWith("system.status", "view", 500)).includes(userId),
     describe: async (id) => ({ title: id.startsWith("job:") ? id.slice(4) : id, href: "/admin/system/status" }),
   });
+  // Webhook-urile: evenimentele publice alese pleacă prin coadă spre endpointuri (JSON semnat sau Discord).
+  const webhooks = new GcsWebhookService({ db, kv, jobs, acp, settings, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) });
+  webhooks.listen(bus);
   // Contact: mesajele primite; notificarea duce la cutia din ACP, cu mesajul deschis.
   const contact = new GcsContactService({ db, settings, acp, notifications, mailer, rateLimiter, antispam, siteName: () => settings.get<string>("site.name") });
   // Recomandări: notificarea duce la pagina membrului cu invitațiile lui.
@@ -1014,7 +1029,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     postbit: new GcsPostbitService({ db, cache, permissions, settings, groups: groupDirectory }),
     memberList,
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
-    activity: new GcsActivityStream({ db, cache, permissions, social }),
+    activity: new GcsActivityStream({ db, cache, permissions, social, settings }),
     leaderboard: new GcsLeaderboard({ db, cache, permissions, settings, onlineTime }),
     onlineTime,
     // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
@@ -1050,6 +1065,10 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     referrals,
     statsReports: new GcsStatsReportService({ db, acp, settings }),
     tagsAdmin: new GcsTagsAdmin({ db, acp, settings, bus }),
+    ads: new GcsAdService({ db, kv, acp }),
+    webhooks,
+    apiKeys: new GcsApiKeyService({ db, kv, acp, rateLimiter }),
+    publicApi: new GcsPublicApi({ db, forumQueries, profileQueries, serverQueries, baseUrl: async () => baseUrl(await settings.get<string>("site.url")) }),
     bulkMail: new GcsBulkMailService({
       db,
       acp,

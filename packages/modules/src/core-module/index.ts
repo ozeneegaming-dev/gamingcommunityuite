@@ -10,6 +10,8 @@ import { searchSetting } from "../forums/searchConfig";
 import { rssSetting } from "../forums/rssConfig";
 import { shareSetting } from "../forums/shareConfig";
 import { pwaSetting } from "../community/pwa";
+import { analyticsSetting } from "../system/integrations";
+import { streamsSetting } from "../community/streams";
 import { coreWidgets } from "../widgets";
 import { BOT_FEATURES_SETTING, BOT_WELCOME_SETTING, BOT_WELCOME_TITLE_SETTING } from "../bot/settings";
 import { NOTIFICATION_SETTING_DEFS } from "../notifications/settings";
@@ -141,6 +143,10 @@ const settings: GcsSettingDef[] = [
   shareSetting,
   // Web App (ACP › Setări › Web App): numele, culorile, deschiderea, pagina de pornire și iconița din manifest.
   pwaSetting,
+  // Analiza traficului (ACP › Funcții site › Integrări): Google Analytics 4, Plausible sau Umami.
+  analyticsSetting,
+  // Fluxurile de activitate (ACP › Descoperire › Fluxuri): tipurile, forumurile excluse, pagina, fluxurile proprii.
+  streamsSetting,
   // Perioada de răzgândire a cererii „Șterge contul meu” (zile; 0 = la următoarea trecere a jobului), ACP → Cereri GDPR.
   // Anti-spam: membrul confirmă un avertisment nou înainte să poată posta din nou (ACP › Moderare › Avertismente).
   setting(WARNINGS_ACK_SETTING, "boolean", true, "warnings"),
@@ -301,6 +307,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     ["settings_terms", "/admin/settings/terms", "fa-solid fa-file-contract"],
     ["settings_rules", "/admin/settings/rules", "fa-solid fa-scale-balanced"],
     ["settings_posting", "/admin/settings/posting", "fa-solid fa-pen-to-square"],
+    ["settings_messages", "/admin/settings/messages", "fa-solid fa-envelope-open-text"],
     ["settings_uploads", "/admin/settings/uploads", "fa-solid fa-images"],
     ["settings_email", "/admin/settings/email", "fa-solid fa-envelope"],
     ["settings_languages", "/admin/settings/languages", "fa-solid fa-language"],
@@ -389,7 +396,7 @@ const acpMenu: GcsAcpMenuSection[] = [
     title: "acp.menu.appearance.layout",
   }),
 
-  // ─── Statistici: prezentarea (pagina reală) și rapoartele care vin („în curând”); aplicațiile își aduc rapoartele ───
+  // ─── Statistici: prezentarea și rapoartele (perioadă, grupare, grafic, CSV); aplicațiile își aduc rapoartele ───
   menuSection("stats", "overview_group", "fa-solid fa-chart-pie", [["overview", "/admin/stats", "fa-solid fa-chart-pie"]]),
   menuSection("stats", "activity", "fa-solid fa-chart-line", [
     ["registrations", "/admin/stats/registrations", "fa-solid fa-user-plus"],

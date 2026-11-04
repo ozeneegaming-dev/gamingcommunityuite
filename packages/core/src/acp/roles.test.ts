@@ -70,4 +70,16 @@ describe("GcsAcpRoleService", () => {
   test("un actor banat nu are niciun drept, nici root", async () => {
     await expect(acp.rights(actor([groups.root_admin!], { isBanned: true }))).resolves.toEqual({});
   });
+
+  test("redenumirea unui rol: nume unic, rolul Root rămâne neatins", async () => {
+    const root = actor([groups.root_admin!]);
+    const role = await acp.createRole("Manager VIP", root);
+    await acp.createRole("Moderator chat", root);
+    await expect(acp.renameRole(role.id, "  Echipa VIP  ", root)).resolves.toMatchObject({ name: "Echipa VIP" });
+    await expect(acp.renameRole(role.id, "Moderator chat", root)).rejects.toMatchObject({ params: { reason: "role_exists" } });
+    await expect(acp.renameRole(role.id, " ", root)).rejects.toMatchObject({ fields: { name: "invalid_length" } });
+    const rootRole = await db.acpRole.findFirstOrThrow({ where: { name: "Root" } });
+    await expect(acp.renameRole(rootRole.id, "Altul", root)).rejects.toMatchObject({ params: { reason: "root_role_protected" } });
+    await expect(acp.renameRole(role.id, "Fără drept", actor([groups.member!]))).rejects.toBeInstanceOf(GcsForbidden);
+  });
 });
