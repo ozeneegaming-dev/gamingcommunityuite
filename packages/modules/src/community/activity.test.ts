@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createProfileWorld, type GcsProfileWorld } from "../../test/profileWorld";
 import { doc } from "../../test/world";
 import { GcsActivityStream, parseActivityCursor, type GcsStreamItem, type GcsActivityQuery } from "./activity";
+import { DEFAULT_STREAMS, STREAMS_SETTING } from "./streams";
 
 let w: GcsProfileWorld;
 let stream: GcsActivityStream;
@@ -212,5 +213,28 @@ describe("fluxul de activitate", () => {
     expect((await stream.page(w.guest)).items.map(describeItem)).toContain("topic:Cache:Textul: Cache");
     await reply(w.root, t.topicId, "invalidează");
     expect((await stream.page(w.guest)).items.map(describeItem)).toContain("reply:Redenumit direct în bază:invalidează");
+  });
+  test("ACP › Fluxuri: forumurile excluse, tipurile din „Tot” și un flux propriu pe un forum", async () => {
+    const withSettings = new GcsActivityStream({ db: w.db, cache: w.cache, permissions: w.permissions, social: w.social, settings: w.settings });
+    const news = await w.forums.create({ parentId: tree.category.id, type: "FORUM", name: "Știri" }, w.root);
+    const offtopic = await w.forums.create({ parentId: tree.category.id, type: "FORUM", name: "Off-topic" }, w.root);
+    const n = await topic(w.member, "Turneu anunțat", news.id);
+    await reply(w.member, n.topicId, "abia aștept");
+    await topic(w.member, "Ce mâncați azi", offtopic.id);
+    await topic(w.member, "Config nou");
+    await w.settings.set(
+      STREAMS_SETTING,
+      { ...DEFAULT_STREAMS, kinds: ["topic"], excludeForumIds: [offtopic.id], custom: [{ key: "stiri", name: "Știri", icon: "", kinds: ["topic", "reply"], forumIds: [news.id] }] },
+      w.root,
+    );
+    const all = (await withSettings.page(w.member)).items.map(describeItem).join("\n");
+    expect(all).toContain("Turneu anunțat");
+    expect(all).toContain("Config nou");
+    expect(all).not.toContain("Ce mâncați azi");
+    expect(all).not.toContain("abia aștept");
+    const stiri = (await withSettings.page(w.member, { stream: "stiri" })).items.map(describeItem).join("\n");
+    expect(stiri).toContain("Turneu anunțat");
+    expect(stiri).toContain("abia aștept");
+    expect(stiri).not.toContain("Config nou");
   });
 });

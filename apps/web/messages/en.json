@@ -412,7 +412,7 @@
       "unknown": "Unknown.",
       "migration_failed": "A database migration failed.",
       "invalid_host": "Invalid host (a public IP or domain name, without a port)",
-      "blocked_address": "The address is private or local and can't be queried",
+      "blocked_address": "The address is not public (internal networks or localhost are not allowed)",
       "duplicate_server": "The server already exists (same game, host and port)",
       "invalid_chars": "Contains characters that are not allowed",
       "clan_tag_taken": "A clan with this tag already exists",
@@ -509,7 +509,10 @@
       "empty": "No recipients for the chosen audience",
       "tag_not_allowed": "The tag is not on the list allowed by the admins",
       "unknown_job": "This job cannot be run manually",
-      "invalid_area": "Invalid cache area"
+      "invalid_area": "Invalid cache area",
+      "invalid_ga4": "The Google Analytics ID looks like G-XXXXXXXXXX",
+      "invalid_uuid": "The ID looks like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "unresolvable": "The address can't be found (the domain doesn't respond). Check it and try again."
     }
   },
   "acp": {
@@ -603,7 +606,8 @@
         "cron": "Cron",
         "bot": "Community bot",
         "settings_uploads": "Uploads & images",
-        "license": "Licence"
+        "license": "Licence",
+        "settings_messages": "Private messages"
       },
       "members": {
         "members": "Members",
@@ -1443,7 +1447,11 @@
         "remove": "Remove from {target}"
       },
       "delete": "Delete role",
-      "userNotFound": "No user with this name"
+      "userNotFound": "No user with this name",
+      "rename": {
+        "name": "Rename the role",
+        "submit": "Save the name"
+      }
     },
     "logs": {
       "title": "ACP log",
@@ -1491,7 +1499,8 @@
         "2fa": "Security",
         "terms": "Terms and privacy",
         "uploads": "Uploads & images",
-        "seo": "SEO"
+        "seo": "SEO",
+        "messages": "Private messages"
       },
       "save": "Save settings",
       "secretSet": "•••• saved (leave empty to keep the value)",
@@ -2162,8 +2171,12 @@
       "settings": {
         "profile": "Profile",
         "faceit": "FACEIT",
-        "elsewhere": "Elsewhere"
-      }
+        "elsewhere": "Elsewhere",
+        "signature": "Signature"
+      },
+      "signatureMaxChars": "Maximum length (characters)",
+      "signatureMaxCharsHint": "0 turns signatures off site-wide. Groups can have their own limit too, in Permissions.",
+      "signatureMaxImages": "Images in the signature (0–5)"
     },
     "memberProfile": {
       "profileTitle": "Profile",
@@ -5049,7 +5062,9 @@
         "valuePlaceholder": "name, IP / range or email / @domain",
         "duration": "Duration",
         "reason": "Reason",
-        "submit": "Ban"
+        "submit": "Ban",
+        "what": "What to ban",
+        "details": "Duration and reason"
       },
       "types": {
         "ACCOUNT": "Account",
@@ -5085,7 +5100,12 @@
       "liftConfirm": "The ban is lifted at once; the person gets access back.",
       "prev": "‹ Previous",
       "next": "Next ›",
-      "page": "Page {page} of {pages}"
+      "page": "Page {page} of {pages}",
+      "save": "Save",
+      "keepUntil": "Unchanged (until {date})",
+      "keepPermanent": "Unchanged (permanent)",
+      "fromNow": "{duration} from now",
+      "liftedAt": "lifted {date}"
     },
     "warnings": {
       "title": "Warnings",
@@ -6149,6 +6169,267 @@
         "startUrl": "Start page",
         "startHint": "An address on the site, e.g. / or /forum."
       }
+    },
+    "ads": {
+      "title": "Ads",
+      "description": "Banners with an image and a link or HTML blocks, hidden from chosen groups (e.g. VIP), with scheduling, impressions and clicks.",
+      "add": "New ad",
+      "create": "Add the ad",
+      "save": "Save",
+      "placeHint": "Place ads from “Edit page” (home page, forums, topics) with the “Ad” widget.",
+      "empty": "No ads yet.",
+      "secBasics": "Ad",
+      "secImage": "Image with a link",
+      "secHtml": "Or an HTML block",
+      "secAudience": "Who sees it and when",
+      "name": "Name (ACP only)",
+      "kind": "Type",
+      "kinds": {
+        "image": "Image with a link",
+        "html": "HTML"
+      },
+      "enabled": "On",
+      "image": "Image",
+      "link": "Link",
+      "alt": "Alternative text",
+      "html": "HTML",
+      "htmlHint": "Cleaned like posts: no scripts or iframes.",
+      "hideHint": "Checked groups do NOT see the ad (VIP by default).",
+      "startsAt": "From",
+      "endsAt": "Until",
+      "impressions": "{count, plural, one {# impression} other {# impressions}}",
+      "clicks": "{count, plural, one {# click} other {# clicks}}",
+      "states": {
+        "live": "Live",
+        "scheduled": "Scheduled",
+        "ended": "Ended",
+        "off": "Off"
+      },
+      "resetStats": "Reset statistics",
+      "resetConfirm": "Start impressions and clicks from zero?",
+      "delete": "Delete",
+      "confirmDelete": "Delete the ad? Widgets that showed it stay empty."
+    },
+    "streams": {
+      "title": "Streams",
+      "description": "The Activity page: what appears in the “All” stream, forums left out of activity and custom streams as tabs (e.g. “News”, “Servers”).",
+      "settings": "The “All” stream",
+      "save": "Save",
+      "add": "New stream",
+      "create": "Add the stream",
+      "allStream": "All (main stream)",
+      "builtIn": "Built-in",
+      "kindsTitle": "What appears",
+      "kinds": {
+        "topic": "New topics",
+        "reply": "Replies",
+        "status": "Status updates",
+        "member": "New members"
+      },
+      "secPage": "Page",
+      "perPage": "Items per page",
+      "perPageChip": "{n} per page",
+      "exclude": "Forums left out of activity",
+      "excludeHint": "Their topics and replies appear in no stream.",
+      "excluded": "Without: {forums}",
+      "noExcluded": "All forums",
+      "secStream": "Stream",
+      "name": "Name (the tab)",
+      "icon": "Icon",
+      "forums": "From the forums",
+      "forumsHint": "No forum selected = all of them (except those left out of activity).",
+      "allForums": "From every forum",
+      "inForums": "From: {forums}",
+      "up": "Move up",
+      "down": "Move down",
+      "delete": "Delete the stream",
+      "confirmDelete": "Delete the stream? Its tab disappears from the Activity page.",
+      "emptyCustom": "No custom streams yet. Add one for an important section (e.g. news or servers)."
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Send the site's events to other services automatically: a Discord channel (new topics, new members…) or your own server, as signed JSON.",
+      "add": "New webhook",
+      "create": "Add the webhook",
+      "save": "Save",
+      "empty": "No webhooks yet. Add one to announce new topics on Discord.",
+      "secEndpoint": "Destination",
+      "name": "Name",
+      "url": "Address (URL)",
+      "urlHint": "Public https addresses only. For Discord: Channel settings › Integrations › Webhooks › Copy URL.",
+      "format": "Format",
+      "formats": {
+        "json": "Signed JSON (your server)",
+        "discord": "Discord message"
+      },
+      "enabled": "On",
+      "events": "Events",
+      "eventNames": {
+        "topic_created": "New topic",
+        "post_created": "New reply",
+        "post_approved": "Post approved",
+        "user_registered": "New member",
+        "user_banned": "Member banned",
+        "user_warned": "Warning given",
+        "report_created": "New report",
+        "badge_awarded": "Badge awarded",
+        "vip_granted": "New VIP",
+        "vip_expired": "VIP expired"
+      },
+      "eventsCount": "{count, plural, one {# event} other {# events}}",
+      "lastDelivery": "last delivery {when}",
+      "disabled": "Off",
+      "never": "No deliveries",
+      "failed": "Failed",
+      "ok": "Working",
+      "test": "Send a test",
+      "testHint": "Sends the “ping” event now and logs it below.",
+      "secret": "Signing secret",
+      "secretHint": "The X-GCS-Signature header = sha256=HMAC(secret, request body). Verify it on your server.",
+      "rotate": "Generate a new secret",
+      "rotateConfirm": "Generate a new secret? Your server has to use the new one.",
+      "deliveries": "Recent deliveries",
+      "noDeliveries": "No deliveries yet.",
+      "delete": "Delete",
+      "confirmDelete": "Delete the webhook? Pending deliveries will not be sent."
+    },
+    "api": {
+      "title": "API",
+      "description": "Keys for other apps (a Discord bot, a landing site, a server panel) that read the community's public data. Each key only has the rights you pick and at most {rate} requests per minute.",
+      "add": "New key",
+      "create": "Create the key",
+      "save": "Save",
+      "empty": "No keys yet. Create one for your Discord bot or your landing site.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Discord bot",
+      "nameHint": "So you know where it's used.",
+      "scopes": "What it can read",
+      "scopeNames": {
+        "stats_read": "Statistics",
+        "forums_read": "Recent topics",
+        "members_read": "Public profiles",
+        "servers_read": "Servers"
+      },
+      "createdHint": "Copy the key now: for security it won't be shown again. If you lose it, create another one and revoke the old one.",
+      "copy": "Copy the key",
+      "copied": "Copied",
+      "another": "Another key",
+      "lastUsed": "used {when}",
+      "neverUsed": "not used yet",
+      "active": "Active",
+      "unused": "Unused",
+      "revoked": "Revoked",
+      "created": "Created {when}",
+      "revokedAt": "revoked {when}",
+      "revoke": "Revoke the key",
+      "revokeHint": "Requests with this key are refused right away. The key stays in the list, with its log.",
+      "confirmRevoke": "Revoke the key? Apps using it will stop getting data.",
+      "calls": "Recent requests",
+      "noCalls": "No requests yet.",
+      "delete": "Delete",
+      "confirmDelete": "Delete the key and its log?",
+      "docsTitle": "How to use it",
+      "docsIntro": "Send the key in the Authorization header. The response is JSON, with the data in the data field (or the code in the error field). The data is what a guest can see.",
+      "endpoints": {
+        "stats_read": "The number of topics, posts and members, plus the newest member.",
+        "forums_read": "The latest active topics in public forums (limit up to 50).",
+        "members_read": "A member's public profile, by name: group, posts, reputation, whether they're online.",
+        "servers_read": "Public servers with players, map and uptime (Servers app)."
+      },
+      "docsErrors": "Codes: 403 = wrong or revoked key, or missing right; 404 = not found; 429 = over {rate} requests per minute (see the Retry-After header)."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "The community's external services in one place: what's connected, what's missing and where each one is configured.",
+      "summary": "{on} of {all} integrations on",
+      "summaryHint": "Press “Configure” to connect a service.",
+      "summaryWarn": "Something is missing for: {names}",
+      "configure": "Configure",
+      "save": "Save",
+      "levels": {
+        "ok": "Connected",
+        "warn": "Incomplete",
+        "off": "Not connected"
+      },
+      "groups": {
+        "login": "Login with other accounts",
+        "security": "Anti-spam protection",
+        "email": "Email",
+        "search": "Search engines",
+        "translate": "Automatic translation",
+        "developers": "Developers"
+      },
+      "items": {
+        "discord": {
+          "name": "Login with Discord",
+          "hint": "The Discord application's client ID and secret."
+        },
+        "google": {
+          "name": "Login with Google",
+          "hint": "The client ID and secret from Google Cloud."
+        },
+        "steam": {
+          "name": "Login with Steam",
+          "hint": "The Steam Web API key."
+        },
+        "turnstile": {
+          "name": "Cloudflare Turnstile",
+          "hint": "Invisible captcha on sign-up and forms."
+        },
+        "sfs": {
+          "name": "StopForumSpam",
+          "hint": "Checks new accounts' email and IP against the spammer database."
+        },
+        "smtp": {
+          "name": "SMTP server",
+          "hint": "Sending emails (confirmations, notifications, newsletter)."
+        },
+        "verification": {
+          "name": "Site verification",
+          "hint": "Google Search Console, Bing, Yandex.",
+          "detail": "{detail}"
+        },
+        "indexnow": {
+          "name": "IndexNow",
+          "hint": "Tells search engines about new pages right away."
+        },
+        "translate": {
+          "name": "Post translation",
+          "hint": "The provider used by “Translate”.",
+          "detail": "provider: {detail}"
+        },
+        "webhooks": {
+          "name": "Webhooks",
+          "hint": "Site events sent to Discord or other servers.",
+          "detail": "{detail} on"
+        },
+        "api": {
+          "name": "API keys",
+          "hint": "Apps that read the public data.",
+          "detail": "{detail} active"
+        }
+      },
+      "analytics": {
+        "title": "Traffic analytics",
+        "hint": "Visitors, pages and where they come from, in your statistics service.",
+        "provider": "Service",
+        "providers": {
+          "none": "Off",
+          "ga4": "Google Analytics 4",
+          "plausible": "Plausible",
+          "umami": "Umami"
+        },
+        "ga4Id": "Stream ID (Measurement ID)",
+        "ga4Hint": "Google Analytics › Admin › Data streams › the ID starting with G-.",
+        "domain": "Domain",
+        "script": "Script address",
+        "scriptHint": "Keep the default for the cloud version; change it if you self-host.",
+        "websiteId": "Website ID",
+        "who": "Who it loads for",
+        "skipStaff": "Don't count staff (anyone with ACP access)",
+        "afterCookieNotice": "Start only after “Got it” on the cookie notice",
+        "cookieHint": "Google Analytics sets cookies; Plausible and Umami don't. The cookie notice is turned on in Settings › Terms and privacy."
+      }
     }
   },
   "settings": {
@@ -6287,7 +6568,8 @@
       "sponsor_min_amount": "“Sponsor” badge threshold (confirmed donations, in the main currency; 0 = off)"
     },
     "pm": {
-      "messages_per_page": "Messages per page in a conversation"
+      "messages_per_page": "Messages per page in a conversation",
+      "messages_per_page_hint": "How many messages load at once in a private conversation (5–100)."
     },
     "vip": {
       "warn_days": "Days before expiry the member is warned",
@@ -6960,6 +7242,12 @@
     },
     "pwa": {
       "config": "Web app"
+    },
+    "streams": {
+      "config": "Activity streams"
+    },
+    "integrations": {
+      "analytics": "Traffic analytics"
     }
   },
   "permissions": {
@@ -9237,7 +9525,8 @@
       "groupLegend": "Group legend",
       "ranking": "Ranking",
       "guestCta": "Guest block",
-      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}"
+      "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}",
+      "ad": "Ad"
     },
     "forums": {
       "stats": "Statistics",
@@ -9266,7 +9555,8 @@
       "rare": "Which badges",
       "group": "Only members of the group",
       "tabs": "Leaderboard tabs",
-      "layout": "Layout"
+      "layout": "Layout",
+      "adUnit": "Ad"
     },
     "periods": {
       "week": "this week",
@@ -9286,7 +9576,8 @@
         "groupLegend": "The community groups, with their name styles.",
         "newMembers": "The newest registered members.",
         "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time.",
-        "guestCta": "Sign up, sign in and one-click login. Only guests see it."
+        "guestCta": "Sign up, sign in and one-click login. Only guests see it.",
+        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one)."
       },
       "forums": {
         "stats": "The number of topics, posts and members.",
@@ -9373,7 +9664,8 @@
       "allCount": "All ({count})",
       "players": "{count, plural, one {# player} other {# players}}",
       "more": "and {count} more"
-    }
+    },
+    "adLabel": "Ad"
   },
   "pageEditor": {
     "title": "Edit page",
@@ -9436,7 +9728,8 @@
     "dropHere": "Drag widgets here",
     "done": "Finish editing",
     "defaultGoal": "First active goal",
-    "allGroups": "All groups"
+    "allGroups": "All groups",
+    "randomAd": "Random (among active ones)"
   },
   "stats": {
     "title": "Community statistics",
