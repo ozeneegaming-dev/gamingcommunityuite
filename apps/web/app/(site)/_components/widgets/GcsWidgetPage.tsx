@@ -141,6 +141,9 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
   // „Obiectivul lunii”: obiectivele de donații (gol = primul activ vizibil).
   const goals = enabled("vip") ? await services().donations.goals() : [];
+  // Aplicația Pagini: bazele de date și blocurile reutilizabile (widget-urile „Înregistrări” și „Bloc”).
+  const pagesDbs = enabled("pages") ? await services().pagesAccess.databases() : [];
+  const pagesBlocks = enabled("pages") ? await services().db.pagesBlock.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }) : [];
 
   const initial = Object.fromEntries(GCS_WIDGET_ZONES.map((z) => [z, [] as GcsPageEditorItem[]])) as Record<GcsWidgetZone, GcsPageEditorItem[]>;
   placements.forEach((p, i) => {
@@ -180,6 +183,10 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
                   options:
                     f.optionsFrom === "chat.channels"
                       ? [{ value: "", label: t("defaultChannel") }, ...channels.map((c) => ({ value: c.key, label: c.name }))]
+                      : f.optionsFrom === "pages.databases"
+                        ? [{ value: "", label: "—" }, ...pagesDbs.map((d) => ({ value: String(d.id), label: d.name }))]
+                      : f.optionsFrom === "pages.blocks"
+                        ? [{ value: "", label: "—" }, ...pagesBlocks.map((b) => ({ value: String(b.id), label: b.name }))]
                       : f.optionsFrom === "donations.goals"
                         ? [{ value: "", label: t("defaultGoal") }, ...goals.map((g) => ({ value: String(g.id), label: g.title }))]
                       : f.optionsFrom === "groups"

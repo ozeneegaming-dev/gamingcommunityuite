@@ -6,6 +6,7 @@ import {
   GcsValidationError,
   writeAudit,
   contentRefs,
+  normalizeUsername,
   type GcsActor,
   type GcsAttachmentService,
   type GcsEventBus,
@@ -100,8 +101,19 @@ export class GcsPagesRecords {
       }
     }
     const needsServers = d.fields.some((f) => f.type === "server");
-    const fieldsIn = input.fields ?? (current ? (fieldValuesOf(d.fields, current.fields) as Record<string, unknown>) : {});
-    const parsed = parseFieldValues(d.fields, fieldsIn, { servers: needsServers && servers ? await servers() : null });
+    const fieldsIn = { ...(input.fields ?? (current ? (fieldValuesOf(d.fields, current.fields) as Record<string, unknown>) : {})) };
+    // Câmpurile „membru”: formularul trimite numele; se păstrează id-ul (rezistă la redenumiri).
+    const memberIds = new Set<string>();
+    for (const f of d.fields.filter((x) => x.type === "member")) {
+      const v = fieldsIn[f.key];
+      if (typeof v !== "string" || !v.trim()) continue;
+      const user = (await db.user.findUnique({ where: { id: v.trim() }, select: { id: true } })) ?? (await db.user.findUnique({ where: { nameNormalized: normalizeUsername(v) }, select: { id: true } }));
+      if (user) {
+        fieldsIn[f.key] = user.id;
+        memberIds.add(user.id);
+      }
+    }
+    const parsed = parseFieldValues(d.fields, fieldsIn, { servers: needsServers && servers ? await servers() : null, members: memberIds });
     Object.assign(errors, parsed.errors);
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
     const text = rendered ? rendered.text : "";

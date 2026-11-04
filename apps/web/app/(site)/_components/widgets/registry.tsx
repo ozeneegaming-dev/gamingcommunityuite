@@ -26,13 +26,14 @@ import { recentBadges, recentBadgesQuery } from "@/lib/recent-badges";
 import { GcsWidgetTitle, widgetIcon } from "./GcsWidgetTitle";
 import { GcsSlot, GcsSlotStyles, slotRootProps } from "@/lib/forum-slots";
 import { widgetDecor } from "@/lib/widget-decor";
-import { GcsMemberLink } from "@/lib/member-names";
+import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { GcsRankingPanel } from "../cockpit/GcsRankingPanel";
 import { GcsDonationGoal } from "../donations/GcsDonationGoal";
 import { donationCta } from "@/lib/donations.server";
 import { COMMUNITY_METRICS, WIDGET_METRICS } from "@/lib/ranking";
 import { isRankingMetric, isRankingPeriod, rankingMetrics, rankingRows } from "@/lib/ranking.server";
 import { liveMatchList } from "@/lib/cockpit.server";
+import { GcsRecordList } from "../pages/GcsRecordList";
 
 /** Ce primește randarea unui widget: amplasarea (id, config), viewer-ul și locul ei (pagina, zona). */
 export type GcsWidgetRenderProps = { id: string; config: Record<string, unknown>; actor: GcsActor; page: GcsWidgetPage; zone: GcsWidgetZone };
@@ -627,6 +628,34 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
         <Link href="/clans" className="gcs-clanList__all">
           {tc("viewAll")}
         </Link>
+      </GcsWidgetCard>
+    );
+  },
+  // Aplicația Pagini: înregistrările unei baze de date (cele mai noi, recomandate, bine notate…) și un bloc reutilizabil.
+  "pages.records": async ({ id, config, actor, zone }) => {
+    const databaseId = Number(config.database);
+    if (!Number.isSafeInteger(databaseId) || databaseId <= 0) return null;
+    const sort = typeof config.sort === "string" ? config.sort : "newest";
+    const data = await services().pagesQueries.latest(actor, databaseId, { limit: limitOf(config, 5), sort });
+    if (!data) return null;
+    const t = await getTranslations("pages");
+    return (
+      <GcsWidgetCard id={id} type="pages.records" config={config} title={data.db.name} testId="gcs-widget-pages-records">
+        <GcsRecordList db={data.db} records={data.records} view={zone === "sidebar" ? "compact" : "list"} hideImages={zone === "sidebar"} />
+        <Link href={`/pages/${data.db.path}`} className="gcs-clanList__all">
+          {t("viewAll", { name: data.db.name })}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
+  "pages.block": async ({ id, config }) => {
+    const blockId = Number(config.block);
+    if (!Number.isSafeInteger(blockId) || blockId <= 0) return null;
+    const b = (await services().pagesQueries.blocks([blockId])).get(blockId);
+    if (!b?.html) return null;
+    return (
+      <GcsWidgetCard id={id} type="pages.block" config={config} title={b.name} testId="gcs-widget-pages-block">
+        <GcsNamedHtml className={b.kind === "content" ? "gcs-postBody gcs-pgBlock__body" : "gcs-pgBlock__html"} html={b.html} userContent={b.kind === "content"} />
       </GcsWidgetCard>
     );
   },

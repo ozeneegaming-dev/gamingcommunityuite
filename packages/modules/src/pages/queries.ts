@@ -2,7 +2,7 @@ import type { GcsActor, GcsContentRatingService, GcsRatingView, GcsSettingsServi
 import { Prisma, type PagesRecordStatus, type PrismaClient } from "@gcs/db";
 import type { GcsContentHit, GcsContentSearchInput, GcsContentStreamEntry } from "../community/contentSources";
 import { toRef, userRefSelect, type GcsPagination, type GcsUserRef } from "../forums/queries";
-import { parseRef } from "../forums/slug";
+import { parseRef, slugify } from "../forums/slug";
 import type { GcsPagesAccess, GcsPagesDb, GcsPagesTreeNode } from "./access";
 import { fieldValuesOf, type GcsPagesFieldDef, type GcsPagesFieldType, type GcsPagesFieldValue } from "./fields";
 import { layoutOf, type GcsPagesLayout } from "./layout";
@@ -15,7 +15,7 @@ const FILTER_SCAN = 5000;
 export type GcsPagesCrumb = { title: string; href: string };
 
 /** Valoarea unui câmp pregătită de afișat: valoarea brută, textul (opțiunile, serverul, fișierul) și linkul, dacă are. */
-export type GcsPagesFieldView = { key: string; label: string; type: GcsPagesFieldType; value: GcsPagesFieldValue; display: string; url: string | null; size: number | null };
+export type GcsPagesFieldView = { key: string; label: string; type: GcsPagesFieldType; value: GcsPagesFieldValue; display: string; url: string | null; size: number | null; badge: string | null; position: "top" | "bottom" };
 
 export type GcsPagesCategoryView = {
   id: number;
@@ -257,23 +257,27 @@ export class GcsPagesQueries {
     const values = rows.map((r) => fieldValuesOf(shown, r.fields));
     const fileIds = new Set<string>();
     const serverIds = new Set<number>();
+    const memberIds = new Set<string>();
     for (const v of values)
       for (const d of shown) {
         const x = v[d.key];
         if ((d.type === "file" || d.type === "image") && typeof x === "string") fileIds.add(x);
         if (d.type === "server" && typeof x === "number") serverIds.add(x);
+        if (d.type === "member" && typeof x === "string") memberIds.add(x);
       }
-    const [files, servers] = await Promise.all([
+    const [files, servers, members] = await Promise.all([
       fileIds.size ? db.attachment.findMany({ where: { id: { in: [...fileIds] } }, select: { id: true, filename: true, size: true } }) : [],
       serverIds.size ? db.gameServer.findMany({ where: { id: { in: [...serverIds] } }, select: { id: true, name: true, slug: true } }) : [],
+      memberIds.size ? db.user.findMany({ where: { id: { in: [...memberIds] } }, select: { id: true, name: true } }) : [],
     ]);
+    const memberMap = new Map(members.map((u) => [u.id, u]));
     const fileMap = new Map(files.map((f) => [f.id, f]));
     const serverMap = new Map(servers.map((s) => [s.id, s]));
     return values.map((v) =>
       shown.flatMap((d): GcsPagesFieldView[] => {
         const x = v[d.key];
-        if (x === undefined || (d.type === "checkbox" && x !== true && !onlyListed)) return d.type === "checkbox" && x === false ? [{ key: d.key, label: d.label, type: d.type, value: false, display: "", url: null, size: null }] : [];
-        const base = { key: d.key, label: d.label, type: d.type, value: x, url: null as string | null, size: null as number | null };
+        if (x === undefined || (d.type === "checkbox" && x !== true && !onlyListed)) return d.type === "checkbox" && x === false ? [{ key: d.key, label: d.label, type: d.type, value: false, display: "", url: null, size: null, badge: d.badge, position: d.position }] : [];
+        const base = { key: d.key, label: d.label, type: d.type, value: x, url: null as string | null, size: null as number | null, badge: d.badge, position: d.position };
         switch (d.type) {
           case "file":
           case "image": {
@@ -284,6 +288,12 @@ export class GcsPagesQueries {
             const s = typeof x === "number" ? serverMap.get(x) : undefined;
             return s ? [{ ...base, display: s.name, url: `/servers/${s.id}-${s.slug}` }] : [];
           }
+          case "member": {
+            const u = typeof x === "string" ? memberMap.get(x) : undefined;
+            return u ? [{ ...base, display: u.name, url: `/members/${u.id}-${slugify(u.name)}` }] : [];
+          }
+          case "youtube":
+            return [{ ...base, display: String(x), url: `https://www.youtube-nocookie.com/embed/${String(x)}` }];
           case "url":
             return [{ ...base, display: String(x).replace(/^https?:\/\//, ""), url: String(x) }];
           case "multiselect":

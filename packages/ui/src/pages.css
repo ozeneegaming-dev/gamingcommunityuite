@@ -1,0 +1,746 @@
+/*
+ * Aplicația Pagini (specul 2026-11-03-pagini): paginile construite (secțiuni, coloane, blocuri), cuprinsul, bazele de
+ * date (cardurile, grila, tabelul, filtrele), pagina unei înregistrări (câmpurile, codul, comentariile) și constructorul
+ * din ACP. Totul pe tokenurile temei; singurul element îndrăzneț e blocul de cod al config-urilor (bara „terminal”).
+ */
+
+/* ─── Pagina și layout-ul ───────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgLayout {
+  display: grid;
+  gap: 20px;
+}
+.gcs-pgLayout--normal {
+  max-width: 1100px;
+}
+.gcs-pgLayout--wide {
+  max-width: 1320px;
+}
+.gcs-pgSection {
+  display: grid;
+  gap: 14px;
+}
+.gcs-pgSection--card {
+  padding: 18px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  background: var(--gcs-surface);
+}
+.gcs-pgSection--accent {
+  padding: 18px;
+  border-radius: var(--gcs-radius);
+  background: color-mix(in srgb, var(--gcs-accent) 10%, var(--gcs-surface));
+  border-left: 3px solid var(--gcs-accent);
+}
+.gcs-pgSection__title {
+  margin: 0;
+  font-family: var(--gcs-font-display);
+  font-size: 1.35rem;
+  color: var(--gcs-heading);
+}
+.gcs-pgSection__grid {
+  display: grid;
+  grid-template-columns: var(--gcs-pg-cols, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.gcs-pgSection__col {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+@media (max-width: 860px) {
+  .gcs-pgSection__grid {
+    grid-template-columns: 1fr;
+  }
+}
+.gcs-pgBlock {
+  min-width: 0;
+}
+.gcs-pgBlock--card {
+  padding: 16px 18px;
+}
+.gcs-pgBlock__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: var(--gcs-font-display);
+  font-size: 1.05rem;
+  color: var(--gcs-heading);
+}
+.gcs-pgBlock__title .gcs-icon {
+  color: var(--gcs-accent);
+}
+.gcs-pgBlock__body > :first-child,
+.gcs-pgBlock__html > :first-child {
+  margin-top: 0;
+}
+.gcs-pgBlock__more {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+.gcs-pgImage {
+  margin: 0;
+}
+.gcs-pgImage__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--gcs-radius);
+}
+.gcs-pgImage--normal .gcs-pgImage__img {
+  max-width: 720px;
+}
+.gcs-pgImage figcaption {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgMenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.gcs-pgMenu__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcs-pgMenu__link:hover {
+  background: var(--gcs-surface2);
+  text-decoration: none;
+}
+.gcs-pgMenu__link[aria-current="page"] {
+  background: var(--gcs-surface2);
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+  font-weight: 700;
+}
+.gcs-pgNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--gcs-radius);
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+}
+.gcs-pgNotice--pending {
+  border-color: color-mix(in srgb, var(--gcs-warn) 50%, var(--gcs-border));
+}
+.gcs-pgNotice--rejected {
+  border-color: color-mix(in srgb, var(--gcs-danger) 50%, var(--gcs-border));
+}
+.gcs-pgNotice__reason {
+  color: var(--gcs-muted);
+}
+.gcs-pgEditLinks {
+  margin-top: 16px;
+}
+
+/* ─── Cuprinsul ─────────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgDir {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.gcs-pgDir__item {
+  padding: 14px 16px;
+}
+.gcs-pgDir__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gcs-heading);
+  font-weight: 700;
+  text-decoration: none;
+}
+.gcs-pgDir__icon {
+  color: var(--gcs-accent);
+  font-size: 1.1rem;
+}
+.gcs-pgDir__count {
+  margin-left: auto;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgDir__children {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0 0 0 28px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+/* ─── Bazele de date: antet, filtre, categorii ──────────────────────────────────────────────────────────── */
+
+.gcs-pgDb {
+  display: grid;
+  gap: 16px;
+}
+.gcs-pgDb__head .gcs-pageHeader__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.gcs-pgFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 12px 14px;
+}
+.gcs-pgFilters__q {
+  flex: 1 1 240px;
+  margin: 0;
+}
+.gcs-pgFilters__f {
+  flex: 0 1 180px;
+  margin: 0;
+}
+.gcs-pgCats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.gcs-pgCats__link {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  text-decoration: none;
+  box-shadow: inset 3px 0 0 var(--gcs-pg-cat, var(--gcs-accent));
+}
+.gcs-pgCats__link:hover {
+  background: var(--gcs-surface2);
+  text-decoration: none;
+}
+.gcs-pgCats__icon {
+  font-size: 1.4rem;
+  color: var(--gcs-pg-cat, var(--gcs-accent));
+}
+.gcs-pgCats__cover {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: calc(var(--gcs-radius) - 2px);
+}
+.gcs-pgCats__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-pgCats__desc,
+.gcs-pgCats__count {
+  font-size: 0.82rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgCats__lock {
+  margin-left: 6px;
+  font-size: 0.75em;
+  color: var(--gcs-muted);
+}
+
+/* ─── Cardurile înregistrărilor ──────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgList {
+  display: grid;
+  gap: 10px;
+}
+.gcs-pgGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+.gcs-pgCarousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 300px);
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+}
+.gcs-pgCarousel > * {
+  scroll-snap-align: start;
+}
+.gcs-pgFeatured {
+  display: grid;
+  gap: 14px;
+}
+.gcs-pgCard {
+  display: flex;
+  min-width: 0;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  background: var(--gcs-surface);
+  overflow: hidden;
+}
+.gcs-pgList .gcs-pgCard {
+  flex-direction: row;
+}
+.gcs-pgGrid .gcs-pgCard,
+.gcs-pgCarousel .gcs-pgCard,
+.gcs-pgCard--big {
+  flex-direction: column;
+}
+.gcs-pgCard__media {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--gcs-surface2);
+  color: var(--gcs-muted);
+}
+.gcs-pgList .gcs-pgCard__media {
+  width: 132px;
+}
+.gcs-pgGrid .gcs-pgCard__media,
+.gcs-pgCarousel .gcs-pgCard__media {
+  aspect-ratio: 16 / 9;
+}
+.gcs-pgCard--big .gcs-pgCard__media {
+  aspect-ratio: 21 / 9;
+}
+.gcs-pgCard__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-pgCard__placeholder {
+  font-size: 1.8rem;
+  opacity: 0.6;
+}
+.gcs-pgCard__body {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.gcs-pgCard__title {
+  margin: 0;
+  font-family: var(--gcs-font-display);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+.gcs-pgCard--big .gcs-pgCard__title {
+  font-size: 1.5rem;
+}
+.gcs-pgCard__title a {
+  color: var(--gcs-heading);
+}
+.gcs-pgCard__excerpt {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gcs-pgCard__cat {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gcs-pg-cat, var(--gcs-accent));
+  text-decoration: none;
+}
+.gcs-pgCard__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gcs-pgCard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--gcs-muted);
+}
+
+/* Valoarea unui câmp: o plăcuță cu crestătura în culoarea câmpului. */
+.gcs-pgChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px 3px 10px;
+  border-radius: var(--gcs-brand-radius-badge, 6px);
+  background: var(--gcs-surface2);
+  font-size: 0.78rem;
+  box-shadow: inset 3px 0 0 var(--gcs-pg-chip, var(--gcs-border));
+}
+.gcs-pgChip__label {
+  color: var(--gcs-muted);
+}
+.gcs-pgFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gcs-pgFlag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--gcs-surface2);
+  color: var(--gcs-text);
+}
+.gcs-pgFlag--featured {
+  color: var(--gcs-warn);
+}
+.gcs-pgFlag--new {
+  color: var(--gcs-ok);
+}
+.gcs-pgFlag--pending {
+  color: var(--gcs-warn);
+}
+.gcs-pgFlag--hidden,
+.gcs-pgFlag--rejected {
+  color: var(--gcs-danger);
+}
+.gcs-pgCompact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.gcs-pgCompact li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.gcs-pgCompact li > .gcs-icon {
+  margin-top: 3px;
+  color: var(--gcs-accent);
+}
+.gcs-pgCompact li > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.gcs-pgCompact__title {
+  font-weight: 700;
+}
+.gcs-pgTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+}
+.gcs-pgTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--gcs-surface);
+  font-size: 0.9rem;
+}
+.gcs-pgTable th,
+.gcs-pgTable td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--gcs-border);
+}
+.gcs-pgTable thead th {
+  color: var(--gcs-muted);
+  font-weight: 600;
+  background: var(--gcs-surface2);
+}
+.gcs-pgTable tbody th {
+  font-weight: 700;
+}
+.gcs-pgTable tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* ─── Pagina înregistrării ───────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgRecord {
+  display: grid;
+  gap: 16px;
+  max-width: 960px;
+}
+.gcs-pgRecord__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+.gcs-pgRecord__cover {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: var(--gcs-radius);
+}
+.gcs-pgRecord__headText {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.gcs-pgRecord__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  line-height: 1.15;
+  color: var(--gcs-heading);
+}
+.gcs-pgRecord__pin {
+  margin-right: 8px;
+  font-size: 0.6em;
+  vertical-align: middle;
+  color: var(--gcs-accent);
+}
+.gcs-pgRecord__by {
+  margin: 0;
+  color: var(--gcs-muted);
+  font-size: 0.9rem;
+}
+.gcs-pgRecord__edited {
+  display: block;
+  font-size: 0.82rem;
+}
+.gcs-pgRecord__body {
+  max-width: 72ch;
+}
+.gcs-pgFields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.gcs-pgFields__row {
+  padding: 8px 12px;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  box-shadow: inset 3px 0 0 var(--gcs-pg-chip, var(--gcs-border));
+}
+.gcs-pgFields__row dt {
+  font-size: 0.75rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgFields__row dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.gcs-pgPre {
+  white-space: pre-line;
+  font-weight: 400;
+}
+.gcs-pgFieldImage {
+  max-width: 100%;
+  border-radius: calc(var(--gcs-radius) - 2px);
+}
+.gcs-pgFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gcs-pgFile small {
+  color: var(--gcs-muted);
+}
+
+/* Codul unui config: bara de terminal cu numele câmpului și „Copiază”, apoi codul pe fundalul întunecat al temei. */
+.gcs-pgCode {
+  border-radius: var(--gcs-radius);
+  overflow: hidden;
+  border: 1px solid var(--gcs-border);
+  background: color-mix(in srgb, var(--gcs-bg) 70%, #000);
+}
+.gcs-pgCode__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  background: var(--gcs-surface2);
+  border-bottom: 1px solid var(--gcs-border);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.gcs-pgCode__bar > .gcs-icon {
+  color: var(--gcs-ok);
+}
+.gcs-pgCode__bar .gcs-pgCopy {
+  margin-left: auto;
+}
+.gcs-pgCode pre {
+  margin: 0;
+  padding: 14px 16px;
+  max-height: 420px;
+  overflow: auto;
+  font-family: var(--gcs-brand-font-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--gcs-text) 92%, var(--gcs-ok));
+}
+.gcs-pgVideo {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-width: 860px;
+  border-radius: var(--gcs-radius);
+  overflow: hidden;
+  background: #000;
+}
+.gcs-pgVideo iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.gcs-pgModBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.gcs-pgModBar__icon {
+  color: var(--gcs-accent);
+}
+.gcs-pgModBar__reject,
+.gcs-pgModBar__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 100%;
+}
+.gcs-pgModBar__reject .gcs-input {
+  flex: 1 1 240px;
+}
+.gcs-pgRevisions {
+  padding: 10px 14px;
+}
+.gcs-pgRevisions summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.gcs-pgRevisions ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.gcs-pgRevisions li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+.gcs-pgComments {
+  display: grid;
+  gap: 12px;
+}
+.gcs-pgComments__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-family: var(--gcs-font-display);
+  font-size: 1.2rem;
+}
+.gcs-pgComments__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.gcs-pgComment {
+  padding: 12px 14px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  background: var(--gcs-surface);
+}
+.gcs-pgComment--hidden,
+.gcs-pgComment--pending {
+  border-style: dashed;
+  opacity: 0.8;
+}
+.gcs-pgComment__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgComment__tools {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 10px;
+}
+.gcs-pgComment__tools .gcs-linkBtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gcs-muted);
+  cursor: pointer;
+  font: inherit;
+}
+.gcs-pgComment__tools .gcs-linkBtn:hover {
+  color: var(--gcs-text);
+}
+.gcs-pgComposer__actions,
+.gcs-pgForm__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.gcs-pgForm {
+  display: grid;
+  gap: 14px;
+  max-width: 960px;
+}
+.gcs-pgForm__note {
+  margin: 0;
+  text-align: right;
+  font-size: 0.85rem;
+}
+.gcs-pgCodeInput {
+  font-family: var(--gcs-brand-font-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+}
+.gcs-pgChecks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}

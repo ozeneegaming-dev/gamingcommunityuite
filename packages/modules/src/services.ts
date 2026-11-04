@@ -998,6 +998,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     },
     clansVisible: (actor) => clanQueries.canView(actor),
     serverIds: (actor) => serverQueries.visibleIds(actor),
+    appPages: (actor) => pagesQueries.sitemap(actor),
   });
 
   const services: GcsServices = {
