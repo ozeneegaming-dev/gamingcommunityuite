@@ -14,7 +14,7 @@ type DocNode = {
   marks?: { type: string; attrs?: Record<string, unknown> }[];
 };
 
-export type GcsRichFieldKey = "signature" | "chatRules" | "announcement" | "profileText" | "clanDescription";
+export type GcsRichFieldKey = "signature" | "chatRules" | "announcement" | "profileText" | "clanDescription" | "downloadText";
 
 /** Ce acceptă un câmp: nodurile și mărcile permise și limitele implicite. */
 export type GcsRichFieldProfile = {
@@ -70,6 +70,14 @@ export const GCS_RICH_FIELDS = {
     marks: TEXT_MARKS,
     maxChars: 5000,
     maxImages: 2,
+  },
+  // Descărcări: descrierea fișierului, lista schimbărilor, comentariile și recenziile (limitele le dă aplicația).
+  downloadText: {
+    key: "downloadText",
+    nodes: ["paragraph", "heading", ...LISTS, "blockquote", "codeBlock", "horizontalRule", "hardBreak", "image", "spoiler", "mention"],
+    marks: TEXT_MARKS,
+    maxChars: 20000,
+    maxImages: 6,
   },
 } as const satisfies Record<GcsRichFieldKey, GcsRichFieldProfile>;
 

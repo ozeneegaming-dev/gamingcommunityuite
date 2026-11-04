@@ -454,3 +454,12 @@ export class GcsClanQueries {
 function tagOf(c: CardRow, role: ClanRole): GcsClanTag {
   return { id: c.id, tag: c.tag, name: c.name, href: clanHref(c), color: c.color, color2: c.color2, ink: tagInk(c.color), logoUrl: c.logoId ? `/files/${c.logoId}` : null, role };
 }
+
+/**
+ * Clanurile active ale unui membru, cu rolul lui: interfața publică pentru alte aplicații (ex. categoria de descărcări
+ * a unui clan, ale cărei drepturi vin din apartenență).
+ */
+export async function activeClanRoles(db: PrismaClient, userId: string): Promise<{ clanId: number; role: ClanRole }[]> {
+  const rows = await db.clanMember.findMany({ where: { userId, clan: { status: "ACTIVE" } }, select: { clanId: true, role: true } });
+  return rows.map((r) => ({ clanId: r.clanId, role: r.role }));
+}
