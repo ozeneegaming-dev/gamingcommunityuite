@@ -35,7 +35,13 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await fake?.close();
   await sql(`DELETE FROM game_servers WHERE name LIKE $1`, [`%${id}`]);
-  await sql(`DELETE FROM forums WHERE name LIKE $1 AND "parentId" IS NULL`, [`%${id}`]);
+  // Arborele categoriei, de jos în sus (subforumurile, forumurile serverelor, categoria): legătura părinte e RESTRICT.
+  for (const [cat] of [await sql<{ id: number }>(`SELECT id FROM forums WHERE name = $1`, [CAT])]) {
+    if (!cat) continue;
+    await sql(`DELETE FROM forums WHERE "parentId" IN (SELECT id FROM forums WHERE "parentId" = $1)`, [cat.id]);
+    await sql(`DELETE FROM forums WHERE "parentId" = $1`, [cat.id]);
+    await sql(`DELETE FROM forums WHERE id = $1`, [cat.id]);
+  }
 });
 
 test("asistentul: tipul, jocul, serverul verificat live, subforumurile, rezumatul și crearea", async ({ page, context }) => {
