@@ -417,7 +417,7 @@ export class GcsDownloadUploads {
         },
       });
       await this.dropChunks(row);
-      if (infected) await this.deps.bus.emit({ name: "downloads.infected", payload: { assetId: row.id, uploaderId: row.uploaderId, signature: verdict.signature, name: row.name } });
+      if (infected) await this.deps.bus.emit({ name: "downloads.infected", payload: { assetId: row.id, uploaderId: row.uploaderId, signature: verdict.signature, name: row.name }, tags: [] });
       await this.afterReady(row.id);
     } catch (error) {
       const code = error instanceof Error && /^[a-z_]{3,40}$/.test(error.message) ? error.message : "process_failed";
@@ -504,7 +504,7 @@ export class GcsDownloadUploads {
       }
     }
     await db.downloadAsset.update({ where: { id: row.id }, data: { storageKey: key, scanStatus: "INFECTED", scanResult: signature.slice(0, 200), scannedAt: now, ...(engine ? { scanEngine: engine } : {}) } });
-    await this.deps.bus.emit({ name: "downloads.infected", payload: { assetId: row.id, uploaderId: row.uploaderId, signature, name: row.name, rescan: true } });
+    await this.deps.bus.emit({ name: "downloads.infected", payload: { assetId: row.id, uploaderId: row.uploaderId, signature, name: row.name, rescan: true }, tags: [] });
   }
 
   /**

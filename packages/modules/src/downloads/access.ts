@@ -108,12 +108,12 @@ export class GcsDownloadAccess {
   async rights(actor: GcsActor, categoryId: number): Promise<GcsCategoryRights> {
     const { permissions } = this.deps;
     const ref = container(categoryId);
-    const [see, view, upload, download, comment, review, vip, moderate, skipApproval] = await Promise.all([
+    const [see, view, upload, download, comment, review, vip, moderate, skipApproval] = (await Promise.all([
       ...DOWNLOAD_CATEGORY_ACTIONS.map((a) => permissions.can(actor, a, ref)),
       permissions.can(actor, "downloads.vip_files"),
       this.isModerator(actor),
       permissions.can(actor, "downloads.skip_approval"),
-    ]);
+    ])) as [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean];
     const cat = await this.category(categoryId);
     const open = Boolean(cat && (cat.enabled || moderate));
     const member = actor.userId !== null;

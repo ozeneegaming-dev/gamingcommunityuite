@@ -189,7 +189,7 @@ export class GcsDownloadService {
 
   private mentionsEvent(rendered: GcsRendered | null, authorId: string, kind: "file" | "comment" | "review", fileId: number, refId: number) {
     const userIds = (rendered?.mentions ?? []).filter((id) => id !== authorId);
-    return userIds.length > 0 ? this.deps.bus.emit({ name: "downloads.mentioned", payload: { userIds, authorId, kind, fileId, refId } }) : Promise.resolve();
+    return userIds.length > 0 ? this.deps.bus.emit({ name: "downloads.mentioned", payload: { userIds, authorId, kind, fileId, refId }, tags: [] }) : Promise.resolve();
   }
 
   /**
@@ -245,7 +245,7 @@ export class GcsDownloadService {
       await writeAudit(tx, { actorId: actor.userId, action: "downloads.submit", targetType: "download", targetId: String(created.id), after: { title, categoryId: category.id, version }, ip: actor.ip });
       return { ...created, versionId: v.id };
     });
-    await this.deps.bus.emit({ name: "downloads.submitted", payload: { fileId: file.id, authorId: actor.userId, categoryId: category.id } });
+    await this.deps.bus.emit({ name: "downloads.submitted", payload: { fileId: file.id, authorId: actor.userId, categoryId: category.id }, tags: [] });
     await this.settle(file.versionId);
     const fresh = await db.downloadFile.findUnique({ where: { id: file.id }, select: { status: true } });
     return { fileId: file.id, status: (fresh?.status ?? "SCANNING").toLowerCase(), href: downloadFileHref(file) };
@@ -425,7 +425,7 @@ export class GcsDownloadService {
       return;
     }
     const kind = status === "PENDING" ? "queued" : status === "QUARANTINED" ? "blocked" : "rejected";
-    await this.deps.bus.emit({ name: "downloads.reviewed", payload: { fileId: v.fileId, versionId: v.id, authorId: v.createdById, kind, reason, first, title: v.file.title } });
+    await this.deps.bus.emit({ name: "downloads.reviewed", payload: { fileId: v.fileId, versionId: v.id, authorId: v.createdById, kind, reason, first, title: v.file.title }, tags: [] });
     await this.changed([v.fileId]);
   }
 
@@ -466,7 +466,7 @@ export class GcsDownloadService {
       const desc = v.file.descriptionJson ? { mentions: contentRefs(v.file.descriptionJson).mentions } : null;
       if (v.file.authorId && desc) await this.mentionsEvent(desc as GcsRendered, v.file.authorId, "file", v.fileId, v.fileId);
     }
-    await this.deps.bus.emit({ name: "downloads.published", payload: { fileId: v.fileId, versionId: v.id, authorId: v.file.authorId, first, approverId, categoryId: v.file.categoryId, title: v.file.title, label: v.label } });
+    await this.deps.bus.emit({ name: "downloads.published", payload: { fileId: v.fileId, versionId: v.id, authorId: v.file.authorId, first, approverId, categoryId: v.file.categoryId, title: v.file.title, label: v.label }, tags: [] });
     await this.changed([v.fileId]);
   }
 
@@ -528,7 +528,7 @@ export class GcsDownloadService {
       await writeAudit(tx, { actorId: actor.userId, action: "downloads.reject", targetType: "download", targetId: String(v.fileId), after: { versionId, reason: why }, ip: actor.ip });
     });
     for (const a of v.assets.filter((x) => x.scanStatus !== "INFECTED")) await this.deps.uploads().removeAsset(a);
-    await this.deps.bus.emit({ name: "downloads.reviewed", payload: { fileId: v.fileId, versionId: v.id, authorId: v.createdById, kind: "rejected", reason: why, first, title: v.file.title } });
+    await this.deps.bus.emit({ name: "downloads.reviewed", payload: { fileId: v.fileId, versionId: v.id, authorId: v.createdById, kind: "rejected", reason: why, first, title: v.file.title }, tags: [] });
     await this.changed([v.fileId]);
   }
 
@@ -738,7 +738,7 @@ export class GcsDownloadService {
       return saved;
     });
     if (!pending) {
-      await this.deps.bus.emit({ name: "downloads.reviewed_by", payload: { fileId, reviewId: row.id, authorId: file.authorId, userId: actor.userId, rating: input.rating } });
+      await this.deps.bus.emit({ name: "downloads.reviewed_by", payload: { fileId, reviewId: row.id, authorId: file.authorId, userId: actor.userId, rating: input.rating }, tags: [] });
       await this.mentionsEvent(body, actor.userId, "review", fileId, row.id);
     }
     await this.changed([fileId]);
@@ -763,7 +763,7 @@ export class GcsDownloadService {
       return created;
     });
     if (!pending) {
-      await this.deps.bus.emit({ name: "downloads.commented", payload: { fileId, commentId: row.id, authorId: file.authorId, userId: actor.userId } });
+      await this.deps.bus.emit({ name: "downloads.commented", payload: { fileId, commentId: row.id, authorId: file.authorId, userId: actor.userId }, tags: [] });
       await this.mentionsEvent(body, actor.userId, "comment", fileId, row.id);
     }
     await this.changed([fileId]);
