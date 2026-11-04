@@ -84,7 +84,9 @@ const strOrNull = (v: unknown, max = 200): string | null => (typeof v === "strin
 const httpsUrl = (v: unknown): string | null => {
   if (typeof v !== "string" || v.length > 500) return null;
   try {
-    return new URL(v).protocol === "https:" ? v : null;
+    const url = new URL(v);
+    // Forma normalizată (ghilimelele și spațiile codate): sigură și în `url("…")` din CSS.
+    return url.protocol === "https:" ? url.href : null;
   } catch {
     return null;
   }

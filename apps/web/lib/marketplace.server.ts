@@ -26,7 +26,10 @@ async function licence(): Promise<{ token: string; domain: string } | null> {
  * `true` dacă licența s-a schimbat (aplicațiile se pot porni acum).
  */
 async function adopt(token: string | undefined): Promise<boolean> {
-  return token ? services().licenseOnline.adopt(token).catch(() => false) : false;
+  if (!token) return false;
+  const changed = await services().licenseOnline.adopt(token).catch(() => false);
+  if (changed) services().resetLicensedApps();
+  return changed;
 }
 
 const missing = { ok: false as const, error: "licence_missing" as GcsMarketError };
@@ -63,7 +66,7 @@ export async function marketPackage(itemId: number): Promise<GcsMarketResult<{ d
   const catalog = await fetchMarketCatalog(opts);
   if (!catalog.ok) return catalog;
   const item = catalog.items.find((i) => i.id === itemId);
-  if (!item || item.kind !== "package" || !item.package) return { ok: false, error: "no_package" };
+  if (!item || !item.package) return { ok: false, error: "no_package" };
   if (!item.owned && item.price.cents > 0) return { ok: false, error: "not_owned" };
   const res = await downloadMarketPackage(itemId, item.package.sha256, opts);
   return res.ok ? { ok: true, data: res.data, slug: item.slug } : res;

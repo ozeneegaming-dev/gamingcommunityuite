@@ -1,4 +1,5 @@
 import { isMysql, jsonStrings, type Prisma, type PrismaClient } from "@gcs/db";
+import { isPremiumAppPackage } from "../install/apps";
 import type { KeyObject } from "node:crypto";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { AUDIT_REDACTED, writeAudit } from "../audit";
@@ -101,6 +102,11 @@ export type GcsPluginServiceDeps = {
   platformVersion?: string;
   /** Datele pluginului din afara schemei lui (fișierele media, aspectul membrilor), șterse la dezinstalarea completă. */
   removeData?: (key: string) => Promise<void>;
+  /**
+   * Aplicațiile premium din licență (vezi `GcsAppService`): pachetul unei aplicații premium (`gcs.<cheia>`, ex. Studio
+   * VIP) se instalează și se pornește doar dacă licența o include. `null` = nicio licență salvată: fără restricție.
+   */
+  licensedApps?: () => Promise<readonly string[] | null>;
 };
 
 export type GcsPluginInstallConfirm = {
@@ -231,6 +237,7 @@ export class GcsPluginService {
   async install(actor: GcsActor, uploadId: string, confirm: GcsPluginInstallConfirm = {}): Promise<{ key: string; mode: "install" | "update" | "reinstall" }> {
     await this.deps.acp.assert(actor, PLUGINS_ACP_SECTION, "edit");
     const { manifest } = await this.confirmedUpload(actor, uploadId, confirm);
+    await this.assertLicensed(manifest.key);
     // Două confirmări simultane (dublu-click, doi admini) pentru aceeași cheie rulează pe rând; a doua revalidează
     // încărcarea (poate fi deja consumată) față de starea lăsată de prima.
     return this.deps.database.withInstallLock(manifest.key, () => this.installLocked(actor, uploadId, confirm));
@@ -315,12 +322,20 @@ export class GcsPluginService {
 
   // ─── Activare, setări, hook-uri ───
 
+  /** Pachetul unei aplicații premium cere aplicația în licență (se cumpără din Marketplace). */
+  private async assertLicensed(key: string): Promise<void> {
+    if (!isPremiumAppPackage(key) || !this.deps.licensedApps) return;
+    const licensed = await this.deps.licensedApps();
+    if (licensed && !licensed.includes(key.slice(4))) throw new GcsConflict({ reason: "app_not_licensed" });
+  }
+
   async setEnabled(actor: GcsActor, key: string, enabled: boolean): Promise<void> {
     const { db, acp } = this.deps;
     await acp.assert(actor, PLUGINS_ACP_SECTION, "edit");
     const row = await this.get(key);
     if (!row || row.status !== "installed") throw new GcsNotFound({ entity: "plugin" });
     if (enabled) {
+      await this.assertLicensed(key);
       const installed = await this.installedInfo();
       for (const dep of Object.keys(row.manifest.dependencies)) {
         if (!installed.some((p) => p.key === dep && p.status === "installed" && p.enabled)) throw new GcsConflict({ reason: "dependency_disabled", plugin: dep });

@@ -102,8 +102,8 @@ export class GcsAppService {
       premiumBlocked?: () => Promise<boolean>;
       /**
        * Aplicațiile premium din licența instalării: o aplicație premium care nu e în licență nu se poate porni (se
-       * cumpără din Marketplace); cele deja pornite rămân așa. `null` = nicio licență salvată (dezvoltare, teste):
-       * fără restricție. O licență salvată, dar invalidă, nu permite nicio aplicație premium (`[]`).
+       * cumpără din Marketplace) și, dacă iese din licență, se oprește. `null` = nicio licență salvată (dezvoltare,
+       * teste): fără restricție. O licență salvată, dar invalidă, nu permite nicio aplicație premium (`[]`).
        */
       licensedApps?: () => Promise<readonly string[] | null>;
     },
@@ -128,13 +128,19 @@ export class GcsAppService {
 
   /** Funcția de filtrare pentru mai multe chei (o singură citire). */
   async enabledFilter(): Promise<(key: string) => boolean> {
-    const [off, premiumBlocked] = await Promise.all([this.disabled(), this.deps.premiumBlocked?.() ?? Promise.resolve(false)]);
+    const [off, premiumBlocked, licensed] = await Promise.all([
+      this.disabled(),
+      this.deps.premiumBlocked?.() ?? Promise.resolve(false),
+      this.deps.licensedApps?.() ?? Promise.resolve(null),
+    ]);
     const registry = this.deps.registry;
     const active = (key: string, seen: Set<string>): boolean => {
       const m = registry.module(key);
       if (!m || seen.has(key)) return false;
       if (m.app?.optional && off.has(key)) return false;
       if (premiumBlocked && m.app?.premium) return false;
+      // O aplicație premium ieșită din licență (rambursare, retragere) se oprește, chiar dacă era pornită.
+      if (m.app?.premium && licensed && !licensed.includes(key)) return false;
       seen.add(key);
       return (m.app?.requires ?? []).every((dep) => active(dep, seen));
     };

@@ -52,11 +52,12 @@ export default async function AcpMarketplacePage({ searchParams }: { searchParam
       let installedVersion: string | null = null;
       if (item.order && !item.owned) state = "pending";
       else if (!item.owned) state = item.price.cents === 0 ? "get" : "buy";
-      else if (item.kind === "app") {
-        const app = appList.find((a) => a.key === item.key);
-        state = !app ? "unavailable" : app.enabled ? "enabled" : "activate";
+      else if (item.kind === "app" && appList.some((a) => a.key === item.key)) {
+        state = appList.find((a) => a.key === item.key)!.enabled ? "enabled" : "activate";
       } else {
-        const plugin = item.key ? plugins.find((p) => p.key === item.key) : undefined;
+        // Un pachet sau o aplicație premium livrată ca pachet semnat (`gcs.<cheia>`, ex. Studio VIP).
+        const pluginKey = item.kind === "app" && item.key ? `gcs.${item.key}` : item.key;
+        const plugin = pluginKey ? plugins.find((p) => p.key === pluginKey) : undefined;
         installedVersion = plugin?.version ?? null;
         state = !plugin ? (item.package ? "install" : "unavailable") : older(plugin.version, item.version) && item.package ? "update" : "installed";
       }
