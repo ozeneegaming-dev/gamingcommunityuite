@@ -9758,7 +9758,8 @@
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
       "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
       "groups_pro": "Légende des groupes par catégories (avec compteurs et groupes liés) et la page « Groupes de la communauté ».",
-      "pages": "Pagini proprii construite din blocuri, baze de date cu câmpuri (ghiduri, regulamente, config-uri, recrutări), bibliotecă media și trimiteri de la membri cu aprobare."
+      "pages": "Pagini proprii construite din blocuri, baze de date cu câmpuri (ghiduri, regulamente, config-uri, recrutări), bibliotecă media și trimiteri de la membri cu aprobare.",
+      "community_live": "Widget-ul „Acum în comunitate”: activitatea live pe tab-uri (forum, servere, mix), meciul mix în desfășurare și „Joacă acum”. Îl pui unde vrei din „Editează pagina”."
     },
     "sections": {
       "messages": "Private messages",
@@ -9770,7 +9771,8 @@
     },
     "chat_pro": "Chat Pro",
     "groups_pro": "Groupes Pro",
-    "pages": "Pagini"
+    "pages": "Pagini",
+    "community_live": "Comunitate Live"
   },
   "translate": {
     "translate": "Traduire",
@@ -10429,8 +10431,7 @@
       "ranking": "Classement",
       "guestCta": "Bloc pour les visiteurs",
       "rankingTop": "{period, select, day {Top du jour} week {Top de la semaine} month {Top du mois} year {Top de l'année} other {Top de tous les temps}}",
-      "ad": "Reclamă",
-      "nowCommunity": "Acum în comunitate"
+      "ad": "Reclamă"
     },
     "forums": {
       "stats": "Statistiques",
@@ -10464,8 +10465,11 @@
       "database": "Baza de date",
       "sort": "Ordinea",
       "block": "Blocul",
-      "liveMatch": "Meciul live",
-      "serverChips": "Serverele"
+      "feedRows": "Rânduri în feed",
+      "liveNow": "Cardul „Live acum”",
+      "tabForum": "Tabul „Forum”",
+      "tabServers": "Tabul „Servere”",
+      "tabMix": "Tabul „Mix”"
     },
     "periods": {
       "week": "cette semaine",
@@ -10486,8 +10490,7 @@
         "newMembers": "Les nouveaux membres inscrits.",
         "ranking": "Les meilleurs membres par messages, sujets, réputation ou temps en ligne, pour aujourd'hui, la semaine, le mois, l'année ou depuis toujours.",
         "guestCta": "Inscription, connexion et connexion en un clic. Seuls les visiteurs le voient.",
-        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare).",
-        "nowCommunity": "Activitatea live (forum, servere, mix) cu tab-uri, meciul mix în desfășurare și serverele cu „Joacă acum”."
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
       },
       "forums": {
         "stats": "Nombre de sujets, de postes et de membres.",
@@ -10518,6 +10521,9 @@
       "pages": {
         "records": "Ultimele înregistrări ale unei baze de date: ghiduri, config-uri, recrutări…",
         "block": "Un bloc reutilizabil din aplicația Pagini."
+      },
+      "community_live": {
+        "now": "Activitatea live pe tab-uri, cardul „Live acum” și „Joacă acum”, cu jucătorii de pe servere."
       }
     },
     "servers": {
@@ -10591,6 +10597,9 @@
       "views": "Cele mai văzute",
       "comments": "Cele mai comentate",
       "updated": "Actualizate recent"
+    },
+    "community_live": {
+      "now": "Acum în comunitate"
     }
   },
   "pageEditor": {

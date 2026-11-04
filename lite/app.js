@@ -50,7 +50,7 @@ const configDir = env.GCS_CONFIG_DIR;
 fs.mkdirSync(configDir, { recursive: true, mode: 0o700 });
 
 // Pachetele aplicațiilor premium (ca `GCS_PREMIUM_APPS` din aplicație): stau în `applications/`, nu în `plugins/`.
-const PREMIUM_APP_PACKAGES = ["gcs.servers", "gcs.shop", "gcs.vip_studio", "gcs.chat_pro", "gcs.groups_pro", "gcs.recruitment"];
+const PREMIUM_APP_PACKAGES = ["gcs.servers", "gcs.shop", "gcs.vip_studio", "gcs.chat_pro", "gcs.groups_pro", "gcs.community_live", "gcs.recruitment"];
 
 /**
  * Mută `from` la `to`. Dacă `to` există, mută doar ce lipsește acolo: un fișier care există deja în destinație nu se
