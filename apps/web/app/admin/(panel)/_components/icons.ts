@@ -2,6 +2,7 @@ import {
   faChartLine,
   faComments,
   faCrown,
+  faFileLines,
   faGamepad,
   faGaugeHigh,
   faGears,
@@ -20,6 +21,7 @@ export const ACP_AREA_ICONS: Record<string, GcsAcpIconDef> = {
   appearance: faPalette,
   gaming: faGamepad,
   vip: faCrown,
+  pages: faFileLines,
   stats: faChartLine,
   apps: faPuzzlePiece,
 };

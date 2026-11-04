@@ -2,7 +2,6 @@ import {
   GcsConflict,
   GcsNotFound,
   GcsValidationError,
-  sanitizeContentHtml,
   writeAudit,
   type GcsAcpRoleService,
   type GcsActor,
@@ -16,11 +15,14 @@ import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { Prisma, ci, jsonInts, type PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import { fieldDefsOf, parseFieldDefs, type GcsPagesFieldDef } from "./fields";
+import { MAX_PAGE_HTML, blockFieldsOf, fillBlockTemplate, sanitizePageHtml } from "./html";
 import { EMPTY_LAYOUT, isSafeLink, layoutBlocks, layoutOf, parseLayout, type GcsPagesLayout } from "./layout";
 import { PAGES_PRESET_DEFS, presetData, type GcsPagesPreset } from "./presets";
-import { PAGES_ACP, PAGES_CACHE_TAG, PAGES_MEDIA_TYPE, PAGES_RECORD_TYPE, RESERVED_SEGMENTS, SLUG_RE, pageHref } from "./shared";
+import { PAGES_ACP, PAGES_CACHE_TAG, PAGES_MEDIA_TYPE, PAGES_RECORD_TYPE, RESERVED_SEGMENTS, SLUG_RE, pageHref, searchNormalize } from "./shared";
 
 const MAX_DEPTH = 6;
+/** Versiunile păstrate pentru o pagină (cele mai vechi se șterg). */
+const MAX_REVISIONS = 30;
 const MAX_NODES = 2000;
 const MEDIA_PER_PAGE = 48;
 export const PAGES_LIST_LAYOUTS = ["list", "grid", "table"] as const;
@@ -35,11 +37,12 @@ export type GcsPagesNodeRow = {
   path: string;
   position: number;
   icon: string | null;
-  contentType: "layout" | "database";
+  contentType: "layout" | "html" | "database";
   databaseId: number | null;
   published: boolean;
   inMenu: boolean;
   viewGroupIds: number[];
+  homeGroupIds: number[];
   updatedAt: string;
 };
 
@@ -49,11 +52,13 @@ export type GcsPagesNodeInput = {
   title: string;
   slug?: string;
   icon?: string | null;
-  contentType?: "layout" | "database";
+  contentType?: "layout" | "html" | "database";
   databaseId?: number | null;
   published?: boolean;
   showTitle?: boolean;
   viewGroupIds?: number[];
+  /** Grupurile (principale) pentru care pagina e pagina de pornire a aplicației. */
+  homeGroupIds?: number[];
   seoTitle?: string;
   seoDescription?: string;
   /** Imaginea de distribuire: un element din biblioteca media (id-ul lui). */
@@ -79,13 +84,44 @@ export type GcsPagesDatabaseInput = {
   authorEdit?: boolean;
   searchable?: boolean;
   inStream?: boolean;
+  useCategories?: boolean;
+  indexMode?: string;
+  recordPlural?: string;
+  commentApproval?: boolean;
+  recordImage?: boolean;
+  rss?: boolean;
+  wiki?: boolean;
+  revisions?: boolean;
+  forumId?: number | null;
   viewGroupIds?: number[];
   submitGroupIds?: number[];
   commentGroupIds?: number[];
   rateGroupIds?: number[];
 };
 
-export type GcsPagesCategoryInput = { name: string; slug?: string; description?: string; icon?: string | null; color?: string | null };
+export type GcsPagesCategoryInput = {
+  name: string;
+  slug?: string;
+  description?: string;
+  icon?: string | null;
+  color?: string | null;
+  parentId?: number | null;
+  /** Coperta: un element din biblioteca media (`null` = fără). */
+  mediaId?: number | null;
+  viewGroupIds?: number[];
+  private?: boolean;
+};
+
+export const PAGES_INDEX_MODES = ["all", "categories", "featured"] as const;
+
+/** Pachetul descărcat al unei baze de date (`gcs-pages-database`, versiunea 1). */
+export type GcsPagesDatabasePackage = {
+  format: "gcs-pages-database";
+  v: 1;
+  database: Omit<GcsPagesDatabaseInput, "viewGroupIds" | "submitGroupIds" | "commentGroupIds" | "rateGroupIds" | "forumId"> & { template: string };
+  categories: { name: string; slug: string; description: string; icon: string | null; color: string | null; private: boolean; parent: string | null }[];
+  records: { title: string; content: unknown; fields: Record<string, unknown>; category: string | null; featured: boolean; pinned: boolean }[];
+};
 
 export type GcsPagesMediaItem = {
   id: number;
@@ -144,11 +180,12 @@ export class GcsPagesAdmin {
       path: n.path,
       position: n.position,
       icon: n.icon,
-      contentType: n.contentType === "database" ? "database" : "layout",
+      contentType: n.contentType === "database" || n.contentType === "html" ? n.contentType : "layout",
       databaseId: n.databaseId,
       published: n.published,
       inMenu: n.inMenu,
       viewGroupIds: jsonInts(n.viewGroupIds),
+      homeGroupIds: jsonInts(n.homeGroupIds),
       updatedAt: n.updatedAt.toISOString(),
     }));
   }
@@ -159,7 +196,7 @@ export class GcsPagesAdmin {
     const n = Number.isSafeInteger(id) ? await this.deps.db.pagesNode.findUnique({ where: { id } }) : null;
     if (!n) return null;
     const seoMedia = n.seoImageId ? await this.deps.db.pagesMedia.findUnique({ where: { attachmentId: n.seoImageId }, select: { id: true } }) : null;
-    return { ...n, viewGroupIds: jsonInts(n.viewGroupIds), layout: layoutOf(n.layout), seoMediaId: seoMedia?.id ?? null };
+    return { ...n, viewGroupIds: jsonInts(n.viewGroupIds), homeGroupIds: jsonInts(n.homeGroupIds), layout: layoutOf(n.layout), seoMediaId: seoMedia?.id ?? null };
   }
 
   /** Calea unui nod: calea părintelui + slug-ul. */
@@ -215,7 +252,9 @@ export class GcsPagesAdmin {
     if (icon && !isGcsIcon(icon)) errors.icon = "invalid_choice";
     const viewGroupIds = [...new Set(input.viewGroupIds ?? [])];
     if (viewGroupIds.length > 0 && (await db.group.count({ where: { id: { in: viewGroupIds } } })) !== viewGroupIds.length) errors.viewGroupIds = "invalid_choice";
-    const contentType = kind === "folder" ? "layout" : input.contentType === "database" ? "database" : "layout";
+    const homeGroupIds = kind === "page" ? [...new Set(input.homeGroupIds ?? [])] : [];
+    if (homeGroupIds.length > 0 && (await db.group.count({ where: { id: { in: homeGroupIds } } })) !== homeGroupIds.length) errors.homeGroupIds = "invalid_choice";
+    const contentType = kind === "folder" ? "layout" : input.contentType === "database" || input.contentType === "html" ? input.contentType : "layout";
     const databaseId = contentType === "database" ? (input.databaseId ?? null) : null;
     if (contentType === "database") {
       const owner = databaseId ? await db.pagesDatabase.findUnique({ where: { id: databaseId }, select: { id: true, node: { select: { id: true } } } }) : null;
@@ -245,6 +284,7 @@ export class GcsPagesAdmin {
       published: input.published ?? true,
       showTitle: input.showTitle ?? true,
       viewGroupIds,
+      homeGroupIds,
       seoTitle: text(input.seoTitle, 120) || null,
       seoDescription: text(input.seoDescription, 300) || null,
       seoImageId: seoMedia?.attachmentId ?? null,
@@ -385,12 +425,18 @@ export class GcsPagesAdmin {
     const blocks = layoutBlocks(layout);
     const dbIds = [...new Set(blocks.flatMap((b) => (b.type === "records" ? [b.databaseId] : [])))];
     const mediaIds = [...new Set(blocks.flatMap((b) => (b.type === "image" && b.mediaId ? [b.mediaId] : [])))];
-    const [dbs, media] = await Promise.all([
+    const blockIds = [...new Set(blocks.flatMap((b) => (b.type === "block" ? [b.blockId] : [])))];
+    const folderIds = [...new Set(blocks.flatMap((b) => (b.type === "pages" && b.folderId ? [b.folderId] : [])))];
+    const [dbs, media, reusable, folders] = await Promise.all([
       dbIds.length ? db.pagesDatabase.findMany({ where: { id: { in: dbIds } }, select: { id: true, categories: { select: { id: true } } } }) : [],
       mediaIds.length ? db.pagesMedia.findMany({ where: { id: { in: mediaIds } }, select: { id: true } }) : [],
+      blockIds.length ? db.pagesBlock.findMany({ where: { id: { in: blockIds } }, select: { id: true } }) : [],
+      folderIds.length ? db.pagesNode.findMany({ where: { id: { in: folderIds }, kind: "folder" }, select: { id: true } }) : [],
     ]);
     const dbMap = new Map(dbs.map((d) => [d.id, new Set(d.categories.map((c) => c.id))]));
     const mediaSet = new Set(media.map((m) => m.id));
+    const blockSet = new Set(reusable.map((b) => b.id));
+    const folderSet = new Set(folders.map((f) => f.id));
     for (const b of blocks) {
       const key = `block.${b.id}`;
       if (b.icon && !isGcsIcon(b.icon)) b.icon = null;
@@ -406,7 +452,7 @@ export class GcsPagesAdmin {
           }
           break;
         case "html":
-          b.html = sanitizeContentHtml(b.html);
+          b.html = sanitizePageHtml(b.html);
           break;
         case "widget": {
           const def = registry.widgetDef(b.widget);
@@ -425,15 +471,152 @@ export class GcsPagesAdmin {
           if (b.mediaId !== null && !mediaSet.has(b.mediaId)) errors[key] = "invalid_media";
           if (b.link && !isSafeLink(b.link)) errors[key] = "invalid_url";
           break;
+        case "block":
+          if (!blockSet.has(b.blockId)) errors[key] = "invalid_block";
+          break;
+        case "pages":
+          if (b.folderId !== null && !folderSet.has(b.folderId)) b.folderId = null;
+          break;
       }
     }
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
     await db.$transaction(async (tx) => {
+      await this.keepRevision(tx, id, "layout", node.layout, "", actor);
       await tx.pagesNode.update({ where: { id }, data: { layout: layout as unknown as Prisma.InputJsonValue, updatedById: actor.userId } });
       await writeAudit(tx, { actorId: actor.userId, action: "pages.layout.save", targetType: "pages_node", targetId: String(id), before: null, after: { sections: layout.sections.length, blocks: blocks.length }, ip: actor.ip });
     });
     await this.changed({ nodeId: id });
     return layout;
+  }
+
+  /** Versiunea de dinainte a conținutului (doar dacă avea ceva); se păstrează ultimele `MAX_REVISIONS`. */
+  private async keepRevision(tx: Prisma.TransactionClient, nodeId: number, kind: "layout" | "html", layout: unknown, html: string, actor: GcsActor): Promise<void> {
+    const hasContent = kind === "html" ? html.trim() !== "" : layoutBlocks(layoutOf(layout)).length > 0;
+    if (!hasContent) return;
+    await tx.pagesRevision.create({ data: { nodeId, kind, layout: kind === "layout" ? (layout as Prisma.InputJsonValue) : Prisma.DbNull, html, actorId: actor.userId } });
+    const old = await tx.pagesRevision.findMany({ where: { nodeId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: MAX_REVISIONS, select: { id: true } });
+    if (old.length > 0) await tx.pagesRevision.deleteMany({ where: { id: { in: old.map((r) => r.id) } } });
+  }
+
+  /** Pagina „HTML manual”: HTML-ul curățat (cu etichetele `{block="…"}` / `{database="…"}` păstrate). */
+  async saveHtml(actor: GcsActor, id: number, html: string): Promise<void> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.pages, "edit");
+    const node = await db.pagesNode.findUnique({ where: { id }, select: { id: true, kind: true, html: true } });
+    if (!node || node.kind !== "page") throw new GcsNotFound();
+    if (html.length > MAX_PAGE_HTML) throw new GcsValidationError({ html: "too_long" });
+    const clean = sanitizePageHtml(html);
+    await db.$transaction(async (tx) => {
+      await this.keepRevision(tx, id, "html", null, node.html, actor);
+      await tx.pagesNode.update({ where: { id }, data: { html: clean, updatedById: actor.userId } });
+      await writeAudit(tx, { actorId: actor.userId, action: "pages.html.save", targetType: "pages_node", targetId: String(id), before: null, after: { length: clean.length }, ip: actor.ip });
+    });
+    await this.changed({ nodeId: id });
+  }
+
+  /** Versiunile salvate ale unei pagini (cele mai noi primele), cu autorul. */
+  async revisions(actor: GcsActor, nodeId: number) {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.pages, "view");
+    const rows = await db.pagesRevision.findMany({ where: { nodeId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: MAX_REVISIONS });
+    const ids = [...new Set(rows.map((r) => r.actorId).filter((x): x is string => x !== null))];
+    const users = new Map((ids.length ? await db.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : []).map((u) => [u.id, u.name]));
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind === "html" ? ("html" as const) : ("layout" as const),
+      at: r.createdAt.toISOString(),
+      actor: r.actorId ? (users.get(r.actorId) ?? null) : null,
+      blocks: r.kind === "layout" ? layoutBlocks(layoutOf(r.layout)).length : 0,
+      length: r.html.length,
+    }));
+  }
+
+  /** Restaurează o versiune (versiunea de acum devine și ea o versiune, deci restaurarea se poate anula). */
+  async restoreRevision(actor: GcsActor, revisionId: number): Promise<{ nodeId: number }> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.pages, "edit");
+    const rev = await db.pagesRevision.findUnique({ where: { id: revisionId } });
+    if (!rev) throw new GcsNotFound();
+    const node = await db.pagesNode.findUnique({ where: { id: rev.nodeId }, select: { id: true, layout: true, html: true } });
+    if (!node) throw new GcsNotFound();
+    await db.$transaction(async (tx) => {
+      if (rev.kind === "html") {
+        await this.keepRevision(tx, node.id, "html", null, node.html, actor);
+        await tx.pagesNode.update({ where: { id: node.id }, data: { html: rev.html, updatedById: actor.userId } });
+      } else {
+        await this.keepRevision(tx, node.id, "layout", node.layout, "", actor);
+        await tx.pagesNode.update({ where: { id: node.id }, data: { layout: (rev.layout ?? EMPTY_LAYOUT) as Prisma.InputJsonValue, updatedById: actor.userId } });
+      }
+      await writeAudit(tx, { actorId: actor.userId, action: "pages.revision.restore", targetType: "pages_node", targetId: String(node.id), before: null, after: { revisionId }, ip: actor.ip });
+    });
+    await this.changed({ nodeId: node.id });
+    return { nodeId: node.id };
+  }
+
+  // ─── Blocurile reutilizabile ───────────────────────────────────────────────────────────────────────────────
+
+  async blocks(actor: GcsActor) {
+    await this.deps.acp.assert(actor, PAGES_ACP.pages, "view");
+    const rows = await this.deps.db.pagesBlock.findMany({ orderBy: [{ category: "asc" }, { name: "asc" }] });
+    return rows.map((b) => ({ ...b, fields: blockFieldsOf(b.fields), values: (b.values && typeof b.values === "object" && !Array.isArray(b.values) ? b.values : {}) as Record<string, string> }));
+  }
+
+  /**
+   * Un bloc reutilizabil: conținut bogat (randat ca o postare), HTML curățat sau șablon cu câmpuri (`{{cheie}}` înlocuit
+   * cu valoarea câmpului, escapată, apoi totul curățat). Cheia e unică (eticheta `{block="cheie"}`).
+   */
+  async saveBlock(actor: GcsActor, id: number | null, input: { key?: string; name: string; description?: string; category?: string; kind: string; content?: unknown; html?: string; fields?: unknown; values?: Record<string, unknown> }): Promise<{ id: number }> {
+    const { db, acp, render } = this.deps;
+    await acp.assert(actor, PAGES_ACP.pages, "edit");
+    const existing = id === null ? null : await db.pagesBlock.findUnique({ where: { id } });
+    if (id !== null && !existing) throw new GcsNotFound();
+    const errors: Record<string, string> = {};
+    const name = text(input.name, 80);
+    if (name.length < 2) errors.name = "too_short";
+    const key = (input.key ?? "").trim().toLowerCase() || existing?.key || slugify(name).slice(0, 60);
+    if (!SLUG_RE.test(key)) errors.key = "invalid_slug";
+    else {
+      const clash = await db.pagesBlock.findUnique({ where: { key }, select: { id: true } });
+      if (clash && clash.id !== id) errors.key = "taken";
+    }
+    const kind = input.kind === "html" || input.kind === "template" ? input.kind : "content";
+    let contentJson: Prisma.InputJsonValue | typeof Prisma.DbNull = Prisma.DbNull;
+    let html = "";
+    const fields = kind === "template" ? blockFieldsOf(input.fields) : [];
+    const values: Record<string, string> = {};
+    if (kind === "content") {
+      try {
+        const rendered = input.content ? await render(input.content, actor) : null;
+        contentJson = rendered ? (rendered.json as Prisma.InputJsonValue) : Prisma.DbNull;
+        html = rendered?.html ?? "";
+      } catch (error) {
+        if (error instanceof GcsValidationError) Object.assign(errors, error.fields);
+        else throw error;
+      }
+    } else if (kind === "html") {
+      html = sanitizePageHtml(input.html ?? "");
+    } else {
+      const source = (input.html ?? "").slice(0, MAX_PAGE_HTML);
+      for (const f of fields) values[f.key] = String(input.values?.[f.key] ?? "").slice(0, 5000);
+      html = sanitizePageHtml(fillBlockTemplate(source, fields, values));
+      contentJson = source as unknown as Prisma.InputJsonValue;
+    }
+    if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
+    const data = { key, name, description: text(input.description, 300), category: text(input.category, 60), kind, contentJson, html, fields: fields as unknown as Prisma.InputJsonValue, values };
+    const row = existing ? await db.pagesBlock.update({ where: { id: existing.id }, data }) : await db.pagesBlock.create({ data });
+    await writeAudit(db, { actorId: actor.userId, action: existing ? "pages.block.update" : "pages.block.create", targetType: "pages_block", targetId: String(row.id), before: existing ? { name: existing.name, key: existing.key } : null, after: { name, key, kind }, ip: actor.ip });
+    await this.changed();
+    return { id: row.id };
+  }
+
+  async deleteBlock(actor: GcsActor, id: number): Promise<void> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.pages, "delete");
+    const b = await db.pagesBlock.findUnique({ where: { id }, select: { id: true, name: true } });
+    if (!b) throw new GcsNotFound();
+    await db.pagesBlock.delete({ where: { id } });
+    await writeAudit(db, { actorId: actor.userId, action: "pages.block.delete", targetType: "pages_block", targetId: String(id), before: { name: b.name }, after: null, ip: actor.ip });
+    await this.changed();
   }
 
   // ─── Bazele de date ────────────────────────────────────────────────────────────────────────────────────────
@@ -467,8 +650,12 @@ export class GcsPagesAdmin {
     await acp.assert(actor, PAGES_ACP.databases, "view");
     const d = Number.isSafeInteger(id) ? await db.pagesDatabase.findUnique({ where: { id }, include: { node: { select: { id: true, path: true, title: true } }, categories: { orderBy: [{ position: "asc" }, { id: "asc" }] } } }) : null;
     if (!d) return null;
+    const covers = new Map(
+      (await db.pagesMedia.findMany({ where: { attachmentId: { in: d.categories.flatMap((c) => (c.imageId ? [c.imageId] : [])) } }, select: { id: true, attachmentId: true } })).map((m) => [m.attachmentId, m.id]),
+    );
     return {
       ...d,
+      categories: d.categories.map((c) => ({ ...c, viewGroupIds: jsonInts(c.viewGroupIds), coverMediaId: c.imageId ? (covers.get(c.imageId) ?? null) : null })),
       fields: fieldDefsOf(d.fields),
       viewGroupIds: jsonInts(d.viewGroupIds),
       submitGroupIds: jsonInts(d.submitGroupIds),
@@ -521,14 +708,21 @@ export class GcsPagesAdmin {
     const perPage = input.perPage ?? existing?.perPage ?? 20;
     if (!Number.isInteger(perPage) || perPage < 5 || perPage > 100) errors.perPage = "invalid_range";
     for (const k of ["viewGroupIds", "submitGroupIds", "commentGroupIds", "rateGroupIds"] as const) if (!(await this.groupsValid(input[k]))) errors[k] = "invalid_choice";
+    const indexMode = input.indexMode ?? existing?.indexMode ?? "all";
+    if (!(PAGES_INDEX_MODES as readonly string[]).includes(indexMode)) errors.indexMode = "invalid_choice";
+    const forumId = input.forumId === undefined ? (existing?.forumId ?? null) : input.forumId;
+    if (forumId !== null) {
+      const forum = await db.forum.findUnique({ where: { id: forumId }, select: { type: true } });
+      if (!forum || (forum.type !== "FORUM" && forum.type !== "QA")) errors.forumId = "invalid_choice";
+    }
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
 
     const data = {
       name,
       key: rawKey || existing?.key || (await this.freeKey(name, id)),
-      description: text(input.description, 500),
-      icon,
-      recordLabel: text(input.recordLabel, 40),
+      description: input.description === undefined ? (existing?.description ?? "") : text(input.description, 500),
+      icon: input.icon === undefined ? (existing?.icon ?? null) : icon,
+      recordLabel: input.recordLabel === undefined ? (existing?.recordLabel ?? "") : text(input.recordLabel, 40),
       fields: fields as unknown as Prisma.InputJsonValue,
       listLayout,
       sort,
@@ -540,6 +734,15 @@ export class GcsPagesAdmin {
       authorEdit: input.authorEdit ?? existing?.authorEdit ?? true,
       searchable: input.searchable ?? existing?.searchable ?? true,
       inStream: input.inStream ?? existing?.inStream ?? true,
+      useCategories: input.useCategories ?? existing?.useCategories ?? true,
+      indexMode,
+      recordPlural: input.recordPlural === undefined ? (existing?.recordPlural ?? "") : text(input.recordPlural, 40),
+      commentApproval: input.commentApproval ?? existing?.commentApproval ?? false,
+      recordImage: input.recordImage ?? existing?.recordImage ?? true,
+      rss: input.rss ?? existing?.rss ?? true,
+      wiki: input.wiki ?? existing?.wiki ?? false,
+      revisions: input.revisions ?? existing?.revisions ?? true,
+      forumId,
       viewGroupIds: [...new Set(input.viewGroupIds ?? jsonInts(existing?.viewGroupIds))],
       submitGroupIds: [...new Set(input.submitGroupIds ?? jsonInts(existing?.submitGroupIds))],
       commentGroupIds: [...new Set(input.commentGroupIds ?? jsonInts(existing?.commentGroupIds))],
@@ -620,6 +823,125 @@ export class GcsPagesAdmin {
     await this.changed({ databaseId: id });
   }
 
+  /**
+   * Pachetul unei baze de date (descărcare): setările, câmpurile, categoriile și, opțional, înregistrările publicate
+   * (titlul, conținutul, valorile câmpurilor fără fișiere). Grupurile și forumul nu pleacă (sunt ale acestui site).
+   */
+  async exportDatabase(actor: GcsActor, id: number, withRecords: boolean): Promise<GcsPagesDatabasePackage> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, PAGES_ACP.databases, "view");
+    const d = await db.pagesDatabase.findUnique({ where: { id }, include: { categories: { orderBy: [{ position: "asc" }, { id: "asc" }] } } });
+    if (!d) throw new GcsNotFound();
+    const fields = fieldDefsOf(d.fields);
+    const slugOf = new Map(d.categories.map((c) => [c.id, c.slug]));
+    const records = withRecords
+      ? await db.pagesRecord.findMany({ where: { databaseId: id, status: "PUBLISHED" }, orderBy: { id: "asc" }, take: 2000, select: { title: true, contentJson: true, fields: true, categoryId: true, featured: true, pinned: true } })
+      : [];
+    const fileKeys = new Set(fields.filter((f) => f.type === "image" || f.type === "file" || f.type === "member" || f.type === "server").map((f) => f.key));
+    return {
+      format: "gcs-pages-database",
+      v: 1,
+      database: {
+        name: d.name,
+        key: d.key,
+        description: d.description,
+        icon: d.icon,
+        template: d.template,
+        recordLabel: d.recordLabel,
+        recordPlural: d.recordPlural,
+        fields,
+        listLayout: d.listLayout,
+        sort: d.sort,
+        perPage: d.perPage,
+        comments: d.comments,
+        ratings: d.ratings,
+        submissions: d.submissions,
+        approval: d.approval,
+        authorEdit: d.authorEdit,
+        searchable: d.searchable,
+        inStream: d.inStream,
+        useCategories: d.useCategories,
+        indexMode: d.indexMode,
+        commentApproval: d.commentApproval,
+        recordImage: d.recordImage,
+        rss: d.rss,
+        wiki: d.wiki,
+        revisions: d.revisions,
+      },
+      categories: d.categories.map((c) => ({ name: c.name, slug: c.slug, description: c.description, icon: c.icon, color: c.color, private: c.private, parent: c.parentId ? (slugOf.get(c.parentId) ?? null) : null })),
+      records: records.map((r) => ({
+        title: r.title,
+        content: r.contentJson,
+        fields: Object.fromEntries(Object.entries((r.fields ?? {}) as Record<string, unknown>).filter(([k]) => !fileKeys.has(k))),
+        category: r.categoryId ? (slugOf.get(r.categoryId) ?? null) : null,
+        featured: r.featured,
+        pinned: r.pinned,
+      })),
+    };
+  }
+
+  /** Importă un pachet descărcat (din acest site sau din altul): o bază nouă, cu categoriile, înregistrările și pagina ei. */
+  async importDatabase(actor: GcsActor, pkg: unknown, opts: { parentId?: number | null } = {}): Promise<{ databaseId: number; nodeId: number; path: string; records: number }> {
+    const { db, acp, render } = this.deps;
+    await acp.assert(actor, PAGES_ACP.databases, "edit");
+    await acp.assert(actor, PAGES_ACP.pages, "edit");
+    const p = (pkg && typeof pkg === "object" ? pkg : {}) as Partial<GcsPagesDatabasePackage>;
+    if (p.format !== "gcs-pages-database" || p.v !== 1 || !p.database || typeof p.database !== "object") throw new GcsValidationError({ file: "invalid_package" });
+    const src = p.database as GcsPagesDatabasePackage["database"];
+    const key = await this.freeKey(typeof src.key === "string" ? src.key : slugify(String(src.name ?? "baza")));
+    const { id: databaseId } = await this.saveDatabase(actor, null, { ...src, key, icon: src.icon && isGcsIcon(src.icon) ? src.icon : null, name: String(src.name ?? key) });
+    await db.pagesDatabase.update({ where: { id: databaseId }, data: { template: typeof src.template === "string" ? src.template.slice(0, 20) : "blank" } });
+    const cats = Array.isArray(p.categories) ? p.categories.slice(0, 200) : [];
+    const idBySlug = new Map<string, number>();
+    for (const [position, c] of cats.entries()) {
+      const slug = typeof c.slug === "string" && SLUG_RE.test(c.slug) ? c.slug : slugify(String(c.name ?? "categorie")).slice(0, 60);
+      if (idBySlug.has(slug)) continue;
+      const row = await db.pagesCategory.create({
+        data: { databaseId, name: text(c.name, 80) || slug, slug, description: text(c.description, 300), icon: c.icon && isGcsIcon(c.icon) ? c.icon : null, color: c.color && COLOR_RE.test(c.color) ? c.color : null, private: c.private === true, position },
+      });
+      idBySlug.set(slug, row.id);
+    }
+    for (const c of cats) if (c.parent && idBySlug.has(c.parent) && idBySlug.has(c.slug)) await db.pagesCategory.update({ where: { id: idBySlug.get(c.slug)! }, data: { parentId: idBySlug.get(c.parent)! } });
+    const fields = fieldDefsOf(src.fields);
+    let imported = 0;
+    for (const r of Array.isArray(p.records) ? p.records.slice(0, 2000) : []) {
+      const title = text(r.title, 150);
+      if (title.length < 3) continue;
+      let rendered: GcsRendered | null = null;
+      try {
+        rendered = r.content ? await render(r.content, actor) : null;
+      } catch {
+        continue;
+      }
+      const values = Object.fromEntries(fields.filter((f) => !["image", "file", "member", "server"].includes(f.type)).flatMap((f) => (r.fields && f.key in r.fields ? [[f.key, r.fields[f.key]]] : [])));
+      await db.pagesRecord.create({
+        data: {
+          databaseId,
+          categoryId: r.category ? (idBySlug.get(r.category) ?? null) : null,
+          authorId: actor.userId,
+          title,
+          slug: slugify(title),
+          contentJson: rendered ? (rendered.json as Prisma.InputJsonValue) : Prisma.DbNull,
+          contentHtml: rendered?.html ?? "",
+          fields: values as Prisma.InputJsonValue,
+          searchText: searchNormalize(`${title} ${rendered?.text ?? ""}`).slice(0, 20_000),
+          featured: r.featured === true,
+          pinned: r.pinned === true,
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+        },
+      });
+      imported++;
+    }
+    await db.pagesDatabase.update({ where: { id: databaseId }, data: { recordsCount: imported } });
+    for (const cid of idBySlug.values()) await db.pagesCategory.update({ where: { id: cid }, data: { recordsCount: await db.pagesRecord.count({ where: { categoryId: cid } }) } });
+    const parentId = opts.parentId ?? null;
+    let slug = key;
+    for (let i = 2; await db.pagesNode.findUnique({ where: { path: await this.pathFor(parentId, slug) }, select: { id: true } }); i++) slug = `${key}-${i}`;
+    const node = await this.saveNode(actor, null, { kind: "page", parentId, title: String(src.name ?? key).slice(0, 120), slug, icon: src.icon && isGcsIcon(src.icon) ? src.icon : null, contentType: "database", databaseId, published: true });
+    return { databaseId, nodeId: node.id, path: node.path, records: imported };
+  }
+
   // ─── Categoriile ───────────────────────────────────────────────────────────────────────────────────────────
 
   async saveCategory(actor: GcsActor, databaseId: number, id: number | null, input: GcsPagesCategoryInput): Promise<{ id: number }> {
@@ -641,8 +963,29 @@ export class GcsPagesAdmin {
     if (icon && !isGcsIcon(icon)) errors.icon = "invalid_choice";
     const color = input.color?.trim() || null;
     if (color && !COLOR_RE.test(color)) errors.color = "invalid_color";
+    // Părintele: o categorie a aceleiași baze, fără cicluri.
+    const parentId = input.parentId ?? null;
+    if (parentId !== null) {
+      const all = await db.pagesCategory.findMany({ where: { databaseId }, select: { id: true, parentId: true } });
+      const byId = new Map(all.map((c) => [c.id, c.parentId]));
+      if (!byId.has(parentId)) errors.parentId = "invalid_parent";
+      else for (let cur: number | null = parentId, n = 0; cur !== null && n < 50; cur = byId.get(cur) ?? null, n++) if (cur === id) errors.parentId = "cycle";
+    }
+    const cover = input.mediaId ? await db.pagesMedia.findUnique({ where: { id: input.mediaId }, select: { attachmentId: true } }) : null;
+    if (input.mediaId && !cover) errors.mediaId = "invalid_choice";
+    if (!(await this.groupsValid(input.viewGroupIds))) errors.viewGroupIds = "invalid_choice";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    const data = { name, slug, description: text(input.description, 300), icon, color };
+    const data = {
+      name,
+      slug,
+      description: text(input.description, 300),
+      icon,
+      color,
+      parentId,
+      imageId: input.mediaId === undefined ? (existing?.imageId ?? null) : (cover?.attachmentId ?? null),
+      viewGroupIds: [...new Set(input.viewGroupIds ?? jsonInts(existing?.viewGroupIds))],
+      private: input.private ?? existing?.private ?? false,
+    };
     const row = existing
       ? await db.pagesCategory.update({ where: { id: existing.id }, data })
       : await db.pagesCategory.create({ data: { ...data, databaseId, position: await db.pagesCategory.count({ where: { databaseId } }) } });
@@ -657,7 +1000,7 @@ export class GcsPagesAdmin {
     await acp.assert(actor, PAGES_ACP.databases, "delete");
     const c = await db.pagesCategory.findFirst({ where: { id, databaseId } });
     if (!c) throw new GcsNotFound();
-    await db.pagesCategory.delete({ where: { id } });
+    await db.$transaction([db.pagesCategory.updateMany({ where: { parentId: id }, data: { parentId: c.parentId } }), db.pagesCategory.delete({ where: { id } })]);
     await writeAudit(db, { actorId: actor.userId, action: "pages.category.delete", targetType: "pages_database", targetId: String(databaseId), before: { name: c.name }, after: null, ip: actor.ip });
     await this.changed({ databaseId });
   }

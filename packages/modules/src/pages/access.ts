@@ -17,10 +17,12 @@ export type GcsPagesTreeNode = {
   path: string;
   position: number;
   icon: string | null;
-  contentType: "layout" | "database";
+  contentType: "layout" | "html" | "database";
   databaseId: number | null;
   published: boolean;
   viewGroupIds: number[];
+  /** Grupurile (principale) pentru care pagina e pagina de pornire a aplicației. */
+  homeGroupIds: number[];
   updatedAt: string;
 };
 
@@ -43,6 +45,15 @@ export type GcsPagesDb = {
   authorEdit: boolean;
   searchable: boolean;
   inStream: boolean;
+  useCategories: boolean;
+  indexMode: "all" | "categories" | "featured";
+  recordPlural: string;
+  commentApproval: boolean;
+  recordImage: boolean;
+  rss: boolean;
+  wiki: boolean;
+  revisions: boolean;
+  forumId: number | null;
   viewGroupIds: number[];
   submitGroupIds: number[];
   commentGroupIds: number[];
@@ -66,13 +77,14 @@ export class GcsPagesAccess {
     if (cached) return cached;
     const rows = await this.deps.db.pagesNode.findMany({
       orderBy: [{ position: "asc" }, { id: "asc" }],
-      select: { id: true, parentId: true, kind: true, title: true, slug: true, path: true, position: true, icon: true, contentType: true, databaseId: true, published: true, viewGroupIds: true, updatedAt: true },
+      select: { id: true, parentId: true, kind: true, title: true, slug: true, path: true, position: true, icon: true, contentType: true, databaseId: true, published: true, viewGroupIds: true, homeGroupIds: true, updatedAt: true },
     });
-    const tree = rows.map((n) => ({
+    const tree: GcsPagesTreeNode[] = rows.map((n) => ({
       ...n,
       kind: n.kind === "folder" ? ("folder" as const) : ("page" as const),
-      contentType: n.contentType === "database" ? ("database" as const) : ("layout" as const),
+      contentType: n.contentType === "database" || n.contentType === "html" ? n.contentType : ("layout" as const),
       viewGroupIds: jsonInts(n.viewGroupIds),
+      homeGroupIds: jsonInts(n.homeGroupIds),
       updatedAt: n.updatedAt.toISOString(),
     }));
     await this.deps.cache.set(TREE_KEY, tree, { ttlSec: TTL, tags: [PAGES_CACHE_TAG] });
@@ -101,6 +113,15 @@ export class GcsPagesAccess {
       authorEdit: d.authorEdit,
       searchable: d.searchable,
       inStream: d.inStream,
+      useCategories: d.useCategories,
+      indexMode: d.indexMode === "categories" || d.indexMode === "featured" ? d.indexMode : "all",
+      recordPlural: d.recordPlural,
+      commentApproval: d.commentApproval,
+      recordImage: d.recordImage,
+      rss: d.rss,
+      wiki: d.wiki,
+      revisions: d.revisions,
+      forumId: d.forumId,
       viewGroupIds: jsonInts(d.viewGroupIds),
       submitGroupIds: jsonInts(d.submitGroupIds),
       commentGroupIds: jsonInts(d.commentGroupIds),

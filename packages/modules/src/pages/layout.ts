@@ -10,9 +10,9 @@ export const PAGES_SECTION_STYLES = ["plain", "card", "accent"] as const;
 export type GcsPagesSectionStyle = (typeof PAGES_SECTION_STYLES)[number];
 export const PAGES_WIDTHS = ["normal", "wide", "full"] as const;
 export type GcsPagesWidth = (typeof PAGES_WIDTHS)[number];
-export const PAGES_BLOCK_TYPES = ["content", "html", "widget", "records", "image"] as const;
+export const PAGES_BLOCK_TYPES = ["content", "html", "widget", "records", "image", "block", "pages"] as const;
 export type GcsPagesBlockType = (typeof PAGES_BLOCK_TYPES)[number];
-export const PAGES_RECORD_VIEWS = ["list", "grid", "compact"] as const;
+export const PAGES_RECORD_VIEWS = ["list", "grid", "compact", "featured", "carousel"] as const;
 export const PAGES_RECORD_SORTS = ["newest", "updated", "rating", "views", "comments", "featured"] as const;
 export const PAGES_IMAGE_SIZES = ["normal", "wide", "full"] as const;
 
@@ -24,7 +24,8 @@ const ID_RE = /^[A-Za-z0-9_-]{1,24}$/;
 /** Numărul de coloane al unui aspect (`2-1` → 2). */
 export const columnCount = (c: GcsPagesColumns) => c.split("-").length;
 
-type BlockBase = { id: string; title: string; icon: string | null; card: boolean };
+/** Ce au toate blocurile: titlul (cu iconița), cardul în jur și grupurile care văd blocul (gol = toți). */
+type BlockBase = { id: string; title: string; icon: string | null; card: boolean; groups: number[] };
 export type GcsPagesBlock =
   | (BlockBase & { type: "content"; doc: unknown; html: string })
   | (BlockBase & { type: "html"; html: string })
@@ -36,8 +37,13 @@ export type GcsPagesBlock =
       view: (typeof PAGES_RECORD_VIEWS)[number];
       sort: (typeof PAGES_RECORD_SORTS)[number];
       categoryId: number | null;
+      hideImages: boolean;
     })
-  | (BlockBase & { type: "image"; mediaId: number | null; caption: string; link: string; size: (typeof PAGES_IMAGE_SIZES)[number] });
+  | (BlockBase & { type: "image"; mediaId: number | null; caption: string; link: string; size: (typeof PAGES_IMAGE_SIZES)[number] })
+  /** Un bloc reutilizabil (ACP › Pagini › Blocuri). */
+  | (BlockBase & { type: "block"; blockId: number })
+  /** Meniul de secțiune: paginile unui folder (`null` = folderul paginii), cu pagina curentă evidențiată. */
+  | (BlockBase & { type: "pages"; folderId: number | null });
 
 export type GcsPagesSection = { id: string; title: string; columns: GcsPagesColumns; style: GcsPagesSectionStyle; blocks: GcsPagesBlock[][] };
 export type GcsPagesLayout = { v: 1; width: GcsPagesWidth; sections: GcsPagesSection[] };
@@ -59,7 +65,8 @@ export function parseBlock(raw: unknown): { block: GcsPagesBlock | null; error: 
   const o = obj(raw);
   const id = typeof o.id === "string" && ID_RE.test(o.id) ? o.id : null;
   if (!id) return { block: null, error: "invalid_block" };
-  const base: BlockBase = { id, title: text(o.title, 120), icon: typeof o.icon === "string" && o.icon.length <= 60 ? o.icon : null, card: o.card !== false };
+  const groups = Array.isArray(o.groups) ? [...new Set(o.groups.map(posInt).filter((g): g is number => g !== null))].slice(0, 50) : [];
+  const base: BlockBase = { id, title: text(o.title, 120), icon: typeof o.icon === "string" && o.icon.length <= 60 ? o.icon : null, card: o.card !== false, groups };
   switch (o.type) {
     case "content":
       return { block: { ...base, type: "content", doc: o.doc ?? null, html: "" }, error: null };
@@ -83,10 +90,18 @@ export function parseBlock(raw: unknown): { block: GcsPagesBlock | null; error: 
           view: oneOf(PAGES_RECORD_VIEWS, o.view, "list"),
           sort: oneOf(PAGES_RECORD_SORTS, o.sort, "newest"),
           categoryId: posInt(o.categoryId),
+          hideImages: o.hideImages === true,
         },
         error: null,
       };
     }
+    case "block": {
+      const blockId = posInt(o.blockId);
+      if (!blockId) return { block: null, error: "invalid_block" };
+      return { block: { ...base, type: "block", blockId }, error: null };
+    }
+    case "pages":
+      return { block: { ...base, type: "pages", folderId: posInt(o.folderId) }, error: null };
     case "image": {
       const link = typeof o.link === "string" ? o.link.trim().slice(0, 500) : "";
       if (link && !isSafeLink(link)) return { block: null, error: "invalid_url" };

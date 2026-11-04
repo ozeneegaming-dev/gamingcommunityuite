@@ -1,4 +1,4 @@
--- Aplicația Pagini: arborele de pagini și foldere, bazele de date (categorii, înregistrări, comentarii) și biblioteca media (ca pe PostgreSQL).
+-- Aplicația Pagini: arborele de pagini și foldere (cu versiunile lor), blocurile reutilizabile, bazele de date (categorii, înregistrări, revizii, comentarii) și biblioteca media (ca pe PostgreSQL).
 
 -- CreateTable
 CREATE TABLE `pages_nodes` (
@@ -12,6 +12,8 @@ CREATE TABLE `pages_nodes` (
     `icon` LONGTEXT NULL,
     `contentType` LONGTEXT NOT NULL DEFAULT ('layout'),
     `layout` JSON NOT NULL DEFAULT ('{}'),
+    `html` LONGTEXT NOT NULL DEFAULT (''),
+    `homeGroupIds` JSON NOT NULL DEFAULT ('[]'),
     `databaseId` INTEGER NULL,
     `published` BOOLEAN NOT NULL DEFAULT true,
     `showTitle` BOOLEAN NOT NULL DEFAULT true,
@@ -28,6 +30,39 @@ CREATE TABLE `pages_nodes` (
     UNIQUE INDEX `pages_nodes_path_key`(`path`),
     UNIQUE INDEX `pages_nodes_databaseId_key`(`databaseId`),
     INDEX `pages_nodes_parentId_position_idx`(`parentId`, `position`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `pages_revisions` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `nodeId` INTEGER NOT NULL,
+    `kind` LONGTEXT NOT NULL,
+    `layout` JSON NULL,
+    `html` LONGTEXT NOT NULL DEFAULT (''),
+    `actorId` LONGTEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+
+    INDEX `pages_revisions_nodeId_createdAt_idx`(`nodeId`, `createdAt`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `pages_blocks` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `key` VARCHAR(191) NOT NULL,
+    `name` LONGTEXT NOT NULL,
+    `description` LONGTEXT NOT NULL DEFAULT (''),
+    `category` LONGTEXT NOT NULL DEFAULT (''),
+    `kind` LONGTEXT NOT NULL DEFAULT ('content'),
+    `contentJson` JSON NULL,
+    `html` LONGTEXT NOT NULL DEFAULT (''),
+    `fields` JSON NOT NULL DEFAULT ('[]'),
+    `values` JSON NOT NULL DEFAULT ('{}'),
+    `createdAt` DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `pages_blocks_key_key`(`key`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -51,6 +86,15 @@ CREATE TABLE `pages_databases` (
     `authorEdit` BOOLEAN NOT NULL DEFAULT true,
     `searchable` BOOLEAN NOT NULL DEFAULT true,
     `inStream` BOOLEAN NOT NULL DEFAULT true,
+    `useCategories` BOOLEAN NOT NULL DEFAULT true,
+    `indexMode` LONGTEXT NOT NULL DEFAULT ('all'),
+    `recordPlural` LONGTEXT NOT NULL DEFAULT (''),
+    `commentApproval` BOOLEAN NOT NULL DEFAULT false,
+    `recordImage` BOOLEAN NOT NULL DEFAULT true,
+    `rss` BOOLEAN NOT NULL DEFAULT true,
+    `wiki` BOOLEAN NOT NULL DEFAULT false,
+    `revisions` BOOLEAN NOT NULL DEFAULT true,
+    `forumId` INTEGER NULL,
     `viewGroupIds` JSON NOT NULL DEFAULT ('[]'),
     `submitGroupIds` JSON NOT NULL DEFAULT ('[]'),
     `commentGroupIds` JSON NOT NULL DEFAULT ('[]'),
@@ -67,6 +111,10 @@ CREATE TABLE `pages_databases` (
 CREATE TABLE `pages_categories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `databaseId` INTEGER NOT NULL,
+    `parentId` INTEGER NULL,
+    `imageId` LONGTEXT NULL,
+    `viewGroupIds` JSON NOT NULL DEFAULT ('[]'),
+    `private` BOOLEAN NOT NULL DEFAULT false,
     `name` LONGTEXT NOT NULL,
     `slug` VARCHAR(191) NOT NULL,
     `description` LONGTEXT NOT NULL DEFAULT (''),
@@ -104,6 +152,9 @@ CREATE TABLE `pages_records` (
     `publishedAt` DATETIME(3) NULL,
     `reviewedById` LONGTEXT NULL,
     `lastCommentAt` DATETIME(3) NULL,
+    `topicId` INTEGER NULL,
+    `editedById` LONGTEXT NULL,
+    `editedAt` DATETIME(3) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -121,11 +172,27 @@ CREATE TABLE `pages_comments` (
     `contentJson` JSON NOT NULL,
     `contentHtml` LONGTEXT NOT NULL,
     `hidden` BOOLEAN NOT NULL DEFAULT false,
+    `pending` BOOLEAN NOT NULL DEFAULT false,
     `editedAt` DATETIME(3) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
 
     INDEX `pages_comments_recordId_createdAt_idx`(`recordId`, `createdAt`),
     INDEX `pages_comments_authorId_idx`(`authorId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `pages_record_revisions` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `recordId` INTEGER NOT NULL,
+    `title` LONGTEXT NOT NULL,
+    `contentJson` JSON NULL,
+    `contentHtml` LONGTEXT NOT NULL DEFAULT (''),
+    `fields` JSON NOT NULL DEFAULT ('{}'),
+    `actorId` LONGTEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+
+    INDEX `pages_record_revisions_recordId_createdAt_idx`(`recordId`, `createdAt`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -162,6 +229,9 @@ ALTER TABLE `pages_nodes` ADD CONSTRAINT `pages_nodes_parentId_fkey` FOREIGN KEY
 ALTER TABLE `pages_nodes` ADD CONSTRAINT `pages_nodes_databaseId_fkey` FOREIGN KEY (`databaseId`) REFERENCES `pages_databases`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `pages_revisions` ADD CONSTRAINT `pages_revisions_nodeId_fkey` FOREIGN KEY (`nodeId`) REFERENCES `pages_nodes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `pages_categories` ADD CONSTRAINT `pages_categories_databaseId_fkey` FOREIGN KEY (`databaseId`) REFERENCES `pages_databases`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -172,6 +242,9 @@ ALTER TABLE `pages_records` ADD CONSTRAINT `pages_records_categoryId_fkey` FOREI
 
 -- AddForeignKey
 ALTER TABLE `pages_comments` ADD CONSTRAINT `pages_comments_recordId_fkey` FOREIGN KEY (`recordId`) REFERENCES `pages_records`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `pages_record_revisions` ADD CONSTRAINT `pages_record_revisions_recordId_fkey` FOREIGN KEY (`recordId`) REFERENCES `pages_records`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `pages_media_folders` ADD CONSTRAINT `pages_media_folders_parentId_fkey` FOREIGN KEY (`parentId`) REFERENCES `pages_media_folders`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

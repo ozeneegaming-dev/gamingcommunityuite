@@ -1,4 +1,4 @@
--- Aplicația Pagini: arborele de pagini și foldere, bazele de date (categorii, înregistrări, comentarii) și biblioteca media.
+-- Aplicația Pagini: arborele de pagini și foldere (cu versiunile lor), blocurile reutilizabile, bazele de date (categorii, înregistrări, revizii, comentarii) și biblioteca media.
 
 -- CreateEnum
 CREATE TYPE "PagesRecordStatus" AS ENUM ('PUBLISHED', 'PENDING', 'REJECTED', 'HIDDEN');
@@ -15,6 +15,8 @@ CREATE TABLE "pages_nodes" (
     "icon" TEXT,
     "contentType" TEXT NOT NULL DEFAULT 'layout',
     "layout" JSONB NOT NULL DEFAULT '{}',
+    "html" TEXT NOT NULL DEFAULT '',
+    "homeGroupIds" JSONB NOT NULL DEFAULT '[]',
     "databaseId" INTEGER,
     "published" BOOLEAN NOT NULL DEFAULT true,
     "showTitle" BOOLEAN NOT NULL DEFAULT true,
@@ -29,6 +31,37 @@ CREATE TABLE "pages_nodes" (
     "updatedById" TEXT,
 
     CONSTRAINT "pages_nodes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pages_revisions" (
+    "id" SERIAL NOT NULL,
+    "nodeId" INTEGER NOT NULL,
+    "kind" TEXT NOT NULL,
+    "layout" JSONB,
+    "html" TEXT NOT NULL DEFAULT '',
+    "actorId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "pages_revisions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pages_blocks" (
+    "id" SERIAL NOT NULL,
+    "key" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "category" TEXT NOT NULL DEFAULT '',
+    "kind" TEXT NOT NULL DEFAULT 'content',
+    "contentJson" JSONB,
+    "html" TEXT NOT NULL DEFAULT '',
+    "fields" JSONB NOT NULL DEFAULT '[]',
+    "values" JSONB NOT NULL DEFAULT '{}',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "pages_blocks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -51,6 +84,15 @@ CREATE TABLE "pages_databases" (
     "authorEdit" BOOLEAN NOT NULL DEFAULT true,
     "searchable" BOOLEAN NOT NULL DEFAULT true,
     "inStream" BOOLEAN NOT NULL DEFAULT true,
+    "useCategories" BOOLEAN NOT NULL DEFAULT true,
+    "indexMode" TEXT NOT NULL DEFAULT 'all',
+    "recordPlural" TEXT NOT NULL DEFAULT '',
+    "commentApproval" BOOLEAN NOT NULL DEFAULT false,
+    "recordImage" BOOLEAN NOT NULL DEFAULT true,
+    "rss" BOOLEAN NOT NULL DEFAULT true,
+    "wiki" BOOLEAN NOT NULL DEFAULT false,
+    "revisions" BOOLEAN NOT NULL DEFAULT true,
+    "forumId" INTEGER,
     "viewGroupIds" JSONB NOT NULL DEFAULT '[]',
     "submitGroupIds" JSONB NOT NULL DEFAULT '[]',
     "commentGroupIds" JSONB NOT NULL DEFAULT '[]',
@@ -66,6 +108,10 @@ CREATE TABLE "pages_databases" (
 CREATE TABLE "pages_categories" (
     "id" SERIAL NOT NULL,
     "databaseId" INTEGER NOT NULL,
+    "parentId" INTEGER,
+    "imageId" TEXT,
+    "viewGroupIds" JSONB NOT NULL DEFAULT '[]',
+    "private" BOOLEAN NOT NULL DEFAULT false,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "description" TEXT NOT NULL DEFAULT '',
@@ -101,6 +147,9 @@ CREATE TABLE "pages_records" (
     "publishedAt" TIMESTAMP(3),
     "reviewedById" TEXT,
     "lastCommentAt" TIMESTAMP(3),
+    "topicId" INTEGER,
+    "editedById" TEXT,
+    "editedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -115,10 +164,25 @@ CREATE TABLE "pages_comments" (
     "contentJson" JSONB NOT NULL,
     "contentHtml" TEXT NOT NULL,
     "hidden" BOOLEAN NOT NULL DEFAULT false,
+    "pending" BOOLEAN NOT NULL DEFAULT false,
     "editedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "pages_comments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pages_record_revisions" (
+    "id" SERIAL NOT NULL,
+    "recordId" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "contentJson" JSONB,
+    "contentHtml" TEXT NOT NULL DEFAULT '',
+    "fields" JSONB NOT NULL DEFAULT '{}',
+    "actorId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "pages_record_revisions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -154,6 +218,12 @@ CREATE UNIQUE INDEX "pages_nodes_databaseId_key" ON "pages_nodes"("databaseId");
 CREATE INDEX "pages_nodes_parentId_position_idx" ON "pages_nodes"("parentId", "position");
 
 -- CreateIndex
+CREATE INDEX "pages_revisions_nodeId_createdAt_idx" ON "pages_revisions"("nodeId", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "pages_blocks_key_key" ON "pages_blocks"("key");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "pages_databases_key_key" ON "pages_databases"("key");
 
 -- CreateIndex
@@ -178,6 +248,9 @@ CREATE INDEX "pages_comments_recordId_createdAt_idx" ON "pages_comments"("record
 CREATE INDEX "pages_comments_authorId_idx" ON "pages_comments"("authorId");
 
 -- CreateIndex
+CREATE INDEX "pages_record_revisions_recordId_createdAt_idx" ON "pages_record_revisions"("recordId", "createdAt");
+
+-- CreateIndex
 CREATE INDEX "pages_media_folders_parentId_idx" ON "pages_media_folders"("parentId");
 
 -- CreateIndex
@@ -193,6 +266,9 @@ ALTER TABLE "pages_nodes" ADD CONSTRAINT "pages_nodes_parentId_fkey" FOREIGN KEY
 ALTER TABLE "pages_nodes" ADD CONSTRAINT "pages_nodes_databaseId_fkey" FOREIGN KEY ("databaseId") REFERENCES "pages_databases"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "pages_revisions" ADD CONSTRAINT "pages_revisions_nodeId_fkey" FOREIGN KEY ("nodeId") REFERENCES "pages_nodes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "pages_categories" ADD CONSTRAINT "pages_categories_databaseId_fkey" FOREIGN KEY ("databaseId") REFERENCES "pages_databases"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -203,6 +279,9 @@ ALTER TABLE "pages_records" ADD CONSTRAINT "pages_records_categoryId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "pages_comments" ADD CONSTRAINT "pages_comments_recordId_fkey" FOREIGN KEY ("recordId") REFERENCES "pages_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pages_record_revisions" ADD CONSTRAINT "pages_record_revisions_recordId_fkey" FOREIGN KEY ("recordId") REFERENCES "pages_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "pages_media_folders" ADD CONSTRAINT "pages_media_folders_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "pages_media_folders"("id") ON DELETE CASCADE ON UPDATE CASCADE;

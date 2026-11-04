@@ -7,7 +7,7 @@ import type { GcsPagesAccess, GcsPagesDb, GcsPagesTreeNode } from "./access";
 import { fieldValuesOf, type GcsPagesFieldDef, type GcsPagesFieldType, type GcsPagesFieldValue } from "./fields";
 import { layoutOf, type GcsPagesLayout } from "./layout";
 import { readPagesOptions } from "./options";
-import { PAGES_RECORD_TYPE, RESERVED_SEGMENTS, categoryHref, pageHref, plainText, recordHref, searchNormalize } from "./shared";
+import { PAGES_RECORD_TYPE, RESERVED_SEGMENTS, categoryHref, groupsAllow, pageHref, plainText, recordHref, searchNormalize } from "./shared";
 
 const EXCERPT = 220;
 const FILTER_SCAN = 5000;
@@ -17,7 +17,19 @@ export type GcsPagesCrumb = { title: string; href: string };
 /** Valoarea unui câmp pregătită de afișat: valoarea brută, textul (opțiunile, serverul, fișierul) și linkul, dacă are. */
 export type GcsPagesFieldView = { key: string; label: string; type: GcsPagesFieldType; value: GcsPagesFieldValue; display: string; url: string | null; size: number | null };
 
-export type GcsPagesCategoryView = { id: number; name: string; slug: string; href: string; description: string; icon: string | null; color: string | null; recordsCount: number };
+export type GcsPagesCategoryView = {
+  id: number;
+  parentId: number | null;
+  name: string;
+  slug: string;
+  href: string;
+  description: string;
+  icon: string | null;
+  color: string | null;
+  image: string | null;
+  private: boolean;
+  recordsCount: number;
+};
 
 export type GcsPagesRecordCard = {
   id: number;
@@ -50,12 +62,16 @@ export type GcsPagesListQuery = {
   q?: string;
   /** Staff-ul: înregistrările în așteptare / ascunse în loc de cele publicate. */
   status?: "pending" | "hidden" | "mine";
+  /** Doar înregistrările recomandate (pagina bazei în modul „recomandate”). */
+  featured?: boolean;
   limit?: number;
 };
 
 export type GcsPagesNodeView = {
   node: GcsPagesTreeNode & { showTitle: boolean; seoTitle: string | null; seoDescription: string | null; seoImage: string | null; noindex: boolean };
   layout: GcsPagesLayout;
+  /** Pagina „HTML manual”: HTML-ul curățat la salvare. */
+  html: string;
   crumbs: GcsPagesCrumb[];
   editor: boolean;
 };
@@ -122,9 +138,10 @@ export class GcsPagesQueries {
     const tree = await access.tree();
     const clean = segments.map((s) => decodeURIComponent(s).toLowerCase()).filter(Boolean);
     if (clean.length === 0) {
+      // Pagina de pornire a grupului principal, apoi cea aleasă pentru toți, apoi cuprinsul.
       const homeId = await settings.get<number>("pages.home_page");
-      const home = homeId ? tree.find((n) => n.id === homeId && n.kind === "page") : undefined;
-      if (home && (await access.canViewNode(actor, home, { tree, app: true }))) return { node: home, rest: [] };
+      const candidates = [...tree.filter((n) => n.kind === "page" && n.homeGroupIds.includes(actor.primaryGroupId)), ...tree.filter((n) => n.id === homeId && n.kind === "page")];
+      for (const home of candidates) if (await access.canViewNode(actor, home, { tree, app: true })) return { node: home, rest: [] };
       return "directory";
     }
     const byPath = new Map(tree.map((n) => [n.path, n]));
@@ -148,11 +165,12 @@ export class GcsPagesQueries {
   /** Pagina cu layout-ul, SEO și firimiturile (nodul e deja verificat de `resolve`). */
   async pageView(actor: GcsActor, node: GcsPagesTreeNode): Promise<GcsPagesNodeView | null> {
     const { db, access } = this.deps;
-    const row = await db.pagesNode.findUnique({ where: { id: node.id }, select: { layout: true, showTitle: true, seoTitle: true, seoDescription: true, seoImageId: true, noindex: true } });
+    const row = await db.pagesNode.findUnique({ where: { id: node.id }, select: { layout: true, html: true, showTitle: true, seoTitle: true, seoDescription: true, seoImageId: true, noindex: true } });
     if (!row) return null;
     return {
       node: { ...node, showTitle: row.showTitle, seoTitle: row.seoTitle, seoDescription: row.seoDescription, seoImage: row.seoImageId ? `/files/${row.seoImageId}` : null, noindex: row.noindex },
       layout: layoutOf(row.layout),
+      html: node.contentType === "html" ? row.html : "",
       crumbs: await this.crumbs(node),
       editor: await access.isEditor(actor),
     };
@@ -192,9 +210,43 @@ export class GcsPagesQueries {
     return d && (await this.deps.access.canViewDatabase(actor, d)) ? d : null;
   }
 
-  async categories(d: GcsPagesDb): Promise<GcsPagesCategoryView[]> {
+  /** Categoriile vizibile actorului (grupurile proprii ale categoriei; staff-ul le vede pe toate). */
+  async categories(actor: GcsActor, d: GcsPagesDb): Promise<GcsPagesCategoryView[]> {
+    if (!d.useCategories) return [];
+    const staff = await this.deps.access.isStaff(actor);
     const rows = await this.deps.db.pagesCategory.findMany({ where: { databaseId: d.id }, orderBy: [{ position: "asc" }, { id: "asc" }] });
-    return rows.map((c) => ({ id: c.id, name: c.name, slug: c.slug, href: d.path ? categoryHref(d.path, c.slug) : "#", description: c.description, icon: c.icon, color: c.color, recordsCount: c.recordsCount }));
+    return rows
+      .filter((c) => staff || groupsAllow(actor, c.viewGroupIds))
+      .map((c) => ({
+        id: c.id,
+        parentId: c.parentId,
+        name: c.name,
+        slug: c.slug,
+        href: d.path ? categoryHref(d.path, c.slug) : "#",
+        description: c.description,
+        icon: c.icon,
+        color: c.color,
+        image: c.imageId ? `/files/${c.imageId}` : null,
+        private: c.private,
+        recordsCount: c.recordsCount,
+      }));
+  }
+
+  /**
+   * Regula categoriilor pentru actor: înregistrările din categoriile pe care nu le vede lipsesc, iar într-o categorie
+   * privată membrul își vede doar propriile înregistrări (staff-ul vede tot). `strict`: categoriile private lipsesc
+   * de tot (căutarea, fluxul, blocurile).
+   */
+  private async categoryWhere(actor: GcsActor, databaseIds: number[], strict = false): Promise<Prisma.PagesRecordWhereInput> {
+    if (databaseIds.length === 0 || (await this.deps.access.isStaff(actor))) return {};
+    const cats = await this.deps.db.pagesCategory.findMany({ where: { databaseId: { in: databaseIds } }, select: { id: true, viewGroupIds: true, private: true } });
+    const blocked = cats.filter((c) => !groupsAllow(actor, c.viewGroupIds)).map((c) => c.id);
+    const priv = cats.filter((c) => c.private && !blocked.includes(c.id)).map((c) => c.id);
+    const closed = [...blocked, ...priv];
+    if (closed.length === 0) return {};
+    const or: Prisma.PagesRecordWhereInput[] = [{ categoryId: null }, { categoryId: { notIn: closed } }];
+    if (!strict && actor.userId && priv.length > 0) or.push({ categoryId: { in: priv }, authorId: actor.userId });
+    return { OR: or };
   }
 
   /** Valorile câmpurilor pregătite de afișat (fișierele cu numele și mărimea, serverele cu numele și linkul). */
@@ -267,7 +319,9 @@ export class GcsPagesQueries {
         excerpt: plainText(r.contentHtml, EXCERPT),
         image: r.imageId ? `/files/${r.imageId}` : null,
         author: r.authorId ? (authorMap.get(r.authorId) ?? null) : null,
-        category: c ? { id: c.id, name: c.name, slug: c.slug, href: categoryHref(path, c.slug), description: c.description, icon: c.icon, color: c.color, recordsCount: c.recordsCount } : null,
+        category: c
+          ? { id: c.id, parentId: c.parentId, name: c.name, slug: c.slug, href: categoryHref(path, c.slug), description: c.description, icon: c.icon, color: c.color, image: c.imageId ? `/files/${c.imageId}` : null, private: c.private, recordsCount: c.recordsCount }
+          : null,
         status: r.status,
         featured: r.featured,
         pinned: r.pinned,
@@ -307,11 +361,19 @@ export class GcsPagesQueries {
           : query.status === "mine" && actor.userId
             ? { authorId: actor.userId }
             : { status: "PUBLISHED" };
+    // Categoria aleasă cuprinde și subcategoriile ei.
+    let categoryIds: number[] | null = null;
+    if (query.categoryId) {
+      const all = await db.pagesCategory.findMany({ where: { databaseId: d.id }, select: { id: true, parentId: true } });
+      categoryIds = [query.categoryId];
+      for (let i = 0; i < categoryIds.length && i < 200; i++) for (const c of all) if (c.parentId === categoryIds[i] && !categoryIds.includes(c.id)) categoryIds.push(c.id);
+    }
     const where: Prisma.PagesRecordWhereInput = {
       databaseId: d.id,
       ...statusWhere,
-      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      ...(query.q ? { AND: GcsPagesQueries.words(query.q) } : {}),
+      ...(categoryIds ? { categoryId: { in: categoryIds } } : {}),
+      AND: [await this.categoryWhere(actor, [d.id]), ...(query.q ? GcsPagesQueries.words(query.q) : [])],
+      ...(query.featured ? { featured: true } : {}),
     };
     const sort = query.sort && SORTS[query.sort] ? query.sort : SORTS[d.sort] ? d.sort : "newest";
     const orderBy: Prisma.PagesRecordOrderByWithRelationInput[] = [{ pinned: "desc" }, ...SORTS[sort]!];
@@ -362,25 +424,40 @@ export class GcsPagesQueries {
     const { db, access, ratings } = this.deps;
     const parsed = parseRef(ref);
     if (!parsed) return null;
-    const row = await db.pagesRecord.findFirst({ where: { id: parsed.id, databaseId: d.id }, select: { ...recordSelect, contentJson: true, rejectReason: true } });
+    const row = await db.pagesRecord.findFirst({ where: { id: parsed.id, databaseId: d.id }, select: { ...recordSelect, contentJson: true, rejectReason: true, topicId: true, editedById: true, editedAt: true } });
     if (!row) return null;
     const staff = await access.isStaff(actor);
     const own = actor.userId !== null && row.authorId === actor.userId;
     if (row.status !== "PUBLISHED" && !staff && !(own && row.status !== "HIDDEN")) return null;
-    const [[card], [fields], rating, canComment, canRate] = await Promise.all([
+    if (!(await this.categoryAllowsRow(actor, row))) return null;
+    const [[card], [fields], rating, canComment, canRate, wiki, editor, revisions] = await Promise.all([
       this.cards(d, [row]),
       this.fieldViews(d.fields, [row], false),
       d.ratings ? ratings.view(actor, PAGES_RECORD_TYPE, String(row.id)) : Promise.resolve(null as GcsRatingView | null),
       access.canComment(actor, d),
       access.canRate(actor, d),
+      d.wiki && row.status === "PUBLISHED" ? access.canSubmit(actor, d) : Promise.resolve(false),
+      row.editedById ? db.user.findUnique({ where: { id: row.editedById }, select: userRefSelect }) : Promise.resolve(null),
+      staff && d.revisions ? db.pagesRecordRevision.count({ where: { recordId: row.id } }) : Promise.resolve(0),
     ]);
     return {
-      record: { ...card!, contentHtml: row.contentHtml, contentJson: row.contentJson, rejectReason: row.rejectReason, createdAt: row.createdAt.toISOString(), authorId: row.authorId },
+      record: {
+        ...card!,
+        contentHtml: row.contentHtml,
+        contentJson: row.contentJson,
+        rejectReason: row.rejectReason,
+        createdAt: row.createdAt.toISOString(),
+        authorId: row.authorId,
+        topicId: row.topicId,
+        editedAt: row.editedAt?.toISOString() ?? null,
+        editedBy: editor ? toRef(editor) : null,
+      },
       fields: fields ?? [],
       rating,
+      revisions,
       canonicalSlug: row.slug,
       can: {
-        edit: staff || (own && d.authorEdit && row.status !== "HIDDEN"),
+        edit: staff || wiki || (own && d.authorEdit && row.status !== "HIDDEN"),
         moderate: staff,
         delete: staff || (own && (row.status === "PENDING" || row.status === "REJECTED")),
         comment: canComment && row.status === "PUBLISHED",
@@ -394,7 +471,8 @@ export class GcsPagesQueries {
     const { db, access } = this.deps;
     const opts = await readPagesOptions(this.deps.settings);
     const staff = await access.isStaff(actor);
-    const where: Prisma.PagesCommentWhereInput = { recordId, ...(staff ? {} : { hidden: false }) };
+    // Staff-ul vede tot; ceilalți, comentariile vizibile și propriile comentarii în așteptare.
+    const where: Prisma.PagesCommentWhereInput = { recordId, ...(staff ? {} : { hidden: false, OR: [{ pending: false }, ...(actor.userId ? [{ authorId: actor.userId }] : [])] }) };
     const total = await db.pagesComment.count({ where });
     const pages = Math.max(1, Math.ceil(total / opts.commentsPerPage));
     const p = Math.min(Math.max(1, page), pages);
@@ -408,6 +486,7 @@ export class GcsPagesQueries {
         html: c.contentHtml,
         json: c.contentJson,
         hidden: c.hidden,
+        pending: c.pending,
         createdAt: c.createdAt.toISOString(),
         editedAt: c.editedAt?.toISOString() ?? null,
         canEdit: staff || (actor.userId !== null && c.authorId === actor.userId),
@@ -417,13 +496,21 @@ export class GcsPagesQueries {
     };
   }
 
+  /** Categoria înregistrării o lasă pe actor să o vadă (grupurile categoriei; categoria privată = doar autorul). */
+  private async categoryAllowsRow(actor: GcsActor, row: { categoryId: number | null; authorId: string | null }): Promise<boolean> {
+    if (row.categoryId === null || (await this.deps.access.isStaff(actor))) return true;
+    const c = await this.deps.db.pagesCategory.findUnique({ where: { id: row.categoryId }, select: { viewGroupIds: true, private: true } });
+    if (!c) return true;
+    return groupsAllow(actor, c.viewGroupIds) && (!c.private || (actor.userId !== null && row.authorId === actor.userId));
+  }
+
   /** Actorul vede înregistrarea (atașamentele, notificările, notele): publicată într-o bază vizibilă, sau a lui / staff. */
   async canViewRecord(actor: GcsActor, recordId: number): Promise<boolean> {
     const { db, access } = this.deps;
-    const r = Number.isSafeInteger(recordId) ? await db.pagesRecord.findUnique({ where: { id: recordId }, select: { databaseId: true, status: true, authorId: true } }) : null;
+    const r = Number.isSafeInteger(recordId) ? await db.pagesRecord.findUnique({ where: { id: recordId }, select: { databaseId: true, status: true, authorId: true, categoryId: true } }) : null;
     if (!r) return false;
     const d = await access.database(r.databaseId);
-    if (!d || !(await access.canViewDatabase(actor, d))) return false;
+    if (!d || !(await access.canViewDatabase(actor, d)) || !(await this.categoryAllowsRow(actor, r))) return false;
     if (r.status === "PUBLISHED") return true;
     return (actor.userId !== null && r.authorId === actor.userId) || (await access.isStaff(actor));
   }
@@ -453,7 +540,7 @@ export class GcsPagesQueries {
     const dbs = (await access.visibleDatabases(actor)).filter((d) => d.searchable);
     const words = GcsPagesQueries.words(input.q);
     if (dbs.length === 0 || words.length === 0) return { hits: [], total: 0 };
-    const where: Prisma.PagesRecordWhereInput = { databaseId: { in: dbs.map((d) => d.id) }, status: "PUBLISHED", AND: words };
+    const where: Prisma.PagesRecordWhereInput = { databaseId: { in: dbs.map((d) => d.id) }, status: "PUBLISHED", AND: [...words, await this.categoryWhere(actor, dbs.map((d) => d.id), true)] };
     const [total, rows] = await Promise.all([
       db.pagesRecord.count({ where }),
       db.pagesRecord.findMany({ where, orderBy: [{ publishedAt: "desc" }, { id: "desc" }], skip: (input.page - 1) * input.perPage, take: input.perPage, select: recordSelect }),
@@ -484,7 +571,7 @@ export class GcsPagesQueries {
     const dbs = (await access.visibleDatabases(viewer)).filter((d) => d.inStream);
     if (dbs.length === 0) return [];
     const rows = await db.pagesRecord.findMany({
-      where: { databaseId: { in: dbs.map((d) => d.id) }, status: "PUBLISHED", publishedAt: query.until ? { lte: query.until } : { not: null } },
+      where: { databaseId: { in: dbs.map((d) => d.id) }, status: "PUBLISHED", publishedAt: query.until ? { lte: query.until } : { not: null }, ...(await this.categoryWhere(viewer, dbs.map((d) => d.id), true)) },
       orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
       take: query.limit,
       select: recordSelect,
@@ -509,6 +596,42 @@ export class GcsPagesQueries {
     const list = [...new Set(ids.filter((id): id is string => id !== null))];
     if (list.length === 0) return new Map();
     return new Map((await this.deps.db.user.findMany({ where: { id: { in: list } }, select: userRefSelect })).map((u) => [u.id, toRef(u)]));
+  }
+
+  /** Blocurile reutilizabile, după id (randarea paginilor și a widget-ului „Bloc”). */
+  async blocks(ids: number[]): Promise<Map<number, { id: number; key: string; name: string; kind: string; html: string }>> {
+    const list = [...new Set(ids)].filter((i) => Number.isSafeInteger(i));
+    if (list.length === 0) return new Map();
+    const rows = await this.deps.db.pagesBlock.findMany({ where: { id: { in: list } }, select: { id: true, key: true, name: true, kind: true, html: true } });
+    return new Map(rows.map((b) => [b.id, b]));
+  }
+
+  async blockByKey(key: string) {
+    return this.deps.db.pagesBlock.findUnique({ where: { key }, select: { id: true, key: true, name: true, kind: true, html: true } });
+  }
+
+  /** Reviziile unei înregistrări (staff-ul), cele mai noi primele. */
+  async revisions(actor: GcsActor, recordId: number) {
+    const { db, access } = this.deps;
+    if (!(await access.isStaff(actor))) return [];
+    const rows = await db.pagesRecordRevision.findMany({ where: { recordId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 50 });
+    const authors = await this.authors(rows.map((r) => r.actorId));
+    return rows.map((r) => ({ id: r.id, title: r.title, html: r.contentHtml, at: r.createdAt.toISOString(), actor: r.actorId ? (authors.get(r.actorId) ?? null) : null }));
+  }
+
+  /** Fluxul RSS al unei baze de date: doar dacă e pornit și baza e vizibilă vizitatorilor; ultimele 30 de înregistrări. */
+  async rss(guest: GcsActor, databaseKey: string): Promise<{ db: GcsPagesDb; items: { title: string; href: string; description: string; at: Date; author: string | null }[] } | null> {
+    const { db, access } = this.deps;
+    const d = (await access.visibleDatabases(guest)).find((x) => x.key === databaseKey);
+    if (!d || !d.rss) return null;
+    const rows = await db.pagesRecord.findMany({
+      where: { databaseId: d.id, status: "PUBLISHED", ...(await this.categoryWhere(guest, [d.id], true)) },
+      orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+      take: 30,
+      select: recordSelect,
+    });
+    const authors = await this.authors(rows.map((r) => r.authorId));
+    return { db: d, items: rows.map((r) => ({ title: r.title, href: recordHref(d.path!, r), description: plainText(r.contentHtml, 500), at: r.publishedAt ?? r.createdAt, author: r.authorId ? (authors.get(r.authorId)?.name ?? null) : null })) };
   }
 
   /** Harta site-ului: paginile publice (fără `noindex`) și înregistrările bazelor publice. */

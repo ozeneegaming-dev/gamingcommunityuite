@@ -2757,10 +2757,14 @@ model PagesNode {
   path           String   @unique
   position       Int      @default(0)
   icon           String?
-  /// Conținutul unei pagini: `layout` (constructorul) sau `database` (înregistrările unei baze de date).
+  /// Conținutul unei pagini: `layout` (constructorul), `html` (HTML scris de mână, curățat) sau `database`.
   contentType    String   @default("layout")
   /// Layout-ul constructorului (`{ v, width, sections }`), validat și randat de modul.
   layout         Json     @default("{}")
+  /// Pagina „HTML manual”: HTML-ul curățat (cu etichetele GCS pentru blocuri și baze de date).
+  html           String   @default("")
+  /// Grupurile pentru care pagina e pagina de pornire a aplicației (după grupul principal).
+  homeGroupIds   Json     @default("[]")
   databaseId     Int?     @unique
   published      Boolean  @default(true)
   showTitle      Boolean  @default(true)
@@ -2777,12 +2781,51 @@ model PagesNode {
   updatedAt      DateTime @updatedAt
   updatedById    String?
 
-  parent   PagesNode?     @relation("PagesTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children PagesNode[]    @relation("PagesTree")
-  database PagesDatabase? @relation(fields: [databaseId], references: [id], onDelete: SetNull)
+  parent    PagesNode?     @relation("PagesTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  PagesNode[]    @relation("PagesTree")
+  database  PagesDatabase? @relation(fields: [databaseId], references: [id], onDelete: SetNull)
+  revisions PagesRevision[]
 
   @@index([parentId, position])
   @@map("pages_nodes")
+}
+
+/// O versiune salvată a conținutului unei pagini (layout sau HTML), restaurabilă din ACP.
+model PagesRevision {
+  id        Int      @id @default(autoincrement())
+  nodeId    Int
+  /// `layout` sau `html`.
+  kind      String
+  layout    Json?
+  html      String   @default("")
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  node PagesNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId, createdAt])
+  @@map("pages_revisions")
+}
+
+/// Un bloc reutilizabil: conținut bogat, HTML curățat sau șablon cu câmpuri, pus în orice pagină (și ca widget).
+model PagesBlock {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  description String   @default("")
+  /// Categoria din lista blocurilor (text liber, ex. „Servere”).
+  category    String   @default("")
+  /// `content`, `html` sau `template` (HTML cu `{{câmp}}`, completat din câmpurile blocului).
+  kind        String   @default("content")
+  contentJson Json?
+  html        String   @default("")
+  /// Blocul-șablon: câmpurile (`[{ key, label, type }]`) și valorile lor.
+  fields      Json     @default("[]")
+  values      Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("pages_blocks")
 }
 
 /// O bază de date a aplicației Pagini: câmpurile, categoriile, funcțiile și grupurile pe acțiuni.
@@ -2810,6 +2853,24 @@ model PagesDatabase {
   authorEdit      Boolean  @default(true)
   searchable      Boolean  @default(true)
   inStream        Boolean  @default(true)
+  /// Categoriile pornite (oprite: pagina bazei e direct lista înregistrărilor).
+  useCategories   Boolean  @default(true)
+  /// Ce arată pagina bazei: `all` (toate înregistrările), `categories` (cuprinsul categoriilor), `featured` (recomandatele).
+  indexMode       String   @default("all")
+  /// Pluralul substantivului (ex. „Ghiduri”); singularul e `recordLabel`.
+  recordPlural    String   @default("")
+  /// Comentariile membrilor fără `pages.skip_approval` așteaptă aprobarea.
+  commentApproval Boolean  @default(false)
+  /// Imaginea înregistrării (încărcată în formular).
+  recordImage     Boolean  @default(true)
+  /// Fluxul RSS al bazei (doar conținutul vizibil vizitatorilor).
+  rss             Boolean  @default(true)
+  /// Editare „wiki”: orice membru care poate trimite poate edita și înregistrările altora.
+  wiki            Boolean  @default(false)
+  /// Fiecare editare păstrează versiunea anterioară (restaurabilă).
+  revisions       Boolean  @default(true)
+  /// Publicarea automată ca topic în forumul ales (o înregistrare nouă publicată → un topic cu linkul ei).
+  forumId         Int?
   /// Grupurile pe acțiuni (gol = permisiunea globală a grupului).
   viewGroupIds    Json     @default("[]")
   submitGroupIds  Json     @default("[]")
@@ -2829,6 +2890,13 @@ model PagesDatabase {
 model PagesCategory {
   id           Int     @id @default(autoincrement())
   databaseId   Int
+  parentId     Int?
+  /// Coperta categoriei (un element din biblioteca media).
+  imageId      String?
+  /// Grupurile care văd categoria (gol = ca baza de date).
+  viewGroupIds Json    @default("[]")
+  /// Categorie privată: membrii își văd doar propriile înregistrări (comunicarea cu staff-ul).
+  private      Boolean @default(false)
   name         String
   slug         String
   description  String  @default("")
@@ -2873,12 +2941,18 @@ model PagesRecord {
   publishedAt   DateTime?
   reviewedById  String?
   lastCommentAt DateTime?
+  /// Topicul publicat automat în forumul bazei (legătura cu forumul).
+  topicId       Int?
+  /// Ultimul editor (afișat „Editat de…”).
+  editedById    String?
+  editedAt      DateTime?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  database PagesDatabase  @relation(fields: [databaseId], references: [id], onDelete: Cascade)
-  category PagesCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  comments PagesComment[]
+  database  PagesDatabase         @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  category  PagesCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments  PagesComment[]
+  revisions PagesRecordRevision[]
 
   @@index([databaseId, status, publishedAt])
   @@index([status, createdAt])
@@ -2893,6 +2967,8 @@ model PagesComment {
   contentJson Json
   contentHtml String
   hidden      Boolean   @default(false)
+  /// Comentariul așteaptă aprobarea (baza cu „comentariile se aprobă”).
+  pending     Boolean   @default(false)
   editedAt    DateTime?
   createdAt   DateTime  @default(now())
 
@@ -2901,6 +2977,23 @@ model PagesComment {
   @@index([recordId, createdAt])
   @@index([authorId])
   @@map("pages_comments")
+}
+
+/// Versiunea anterioară a unei înregistrări, păstrată la fiecare editare (baza cu „revizii”).
+model PagesRecordRevision {
+  id          Int      @id @default(autoincrement())
+  recordId    Int
+  title       String
+  contentJson Json?
+  contentHtml String   @default("")
+  fields      Json     @default("{}")
+  actorId     String?
+  createdAt   DateTime @default(now())
+
+  record PagesRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId, createdAt])
+  @@map("pages_record_revisions")
 }
 
 /// Un folder din biblioteca media (ștergerea lui mută fișierele la rădăcină).

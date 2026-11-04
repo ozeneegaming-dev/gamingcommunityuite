@@ -6,13 +6,14 @@ import { coreModule } from "./core-module";
 import { forumsModule } from "./forums";
 import { groupsProModule } from "./groups-pro";
 import { messagesModule } from "./messages";
+import { pagesModule } from "./pages";
 import { profileModule } from "./profile";
 import { serversModule } from "./servers";
 import { vipModule } from "./vip";
 
 /** Modulele aplicației, în ordinea înregistrării. */
 export function appModules(): GcsModule[] {
-  return [coreModule, forumsModule, profileModule, messagesModule, vipModule, chatModule, chatProModule, groupsProModule, serversModule, clansModule];
+  return [coreModule, forumsModule, profileModule, messagesModule, vipModule, chatModule, chatProModule, groupsProModule, serversModule, clansModule, pagesModule];
 }
 
 /** Registry-ul cu modulele aplicației (folosit de servicii, worker, seed, teste și E2E). */

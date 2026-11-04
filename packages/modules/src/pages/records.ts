@@ -5,6 +5,7 @@ import {
   GcsRateLimited,
   GcsValidationError,
   writeAudit,
+  contentRefs,
   type GcsActor,
   type GcsAttachmentService,
   type GcsEventBus,
@@ -34,6 +35,8 @@ export type GcsPagesRecordInput = {
 export type GcsPagesRecordFlags = { featured?: boolean; pinned?: boolean };
 
 const CHANGE_TAGS = [PAGES_CACHE_TAG, "activity"];
+/** Reviziile păstrate pentru o înregistrare. */
+const MAX_REVISIONS = 30;
 const VIEW_WINDOW = 3600;
 
 /**
@@ -166,6 +169,8 @@ export class GcsPagesRecords {
   async canEdit(actor: GcsActor, record: { authorId: string | null; status: PagesRecordStatus }, d: GcsPagesDb): Promise<boolean> {
     if (!actor.userId) return false;
     if (await this.deps.access.isStaff(actor)) return true;
+    // Editarea „wiki”: oricine poate trimite în bază editează și înregistrările publicate ale altora.
+    if (d.wiki && record.status === "PUBLISHED" && (await this.deps.access.canSubmit(actor, d))) return true;
     return record.authorId === actor.userId && d.authorEdit && record.status !== "HIDDEN";
   }
 
@@ -185,9 +190,19 @@ export class GcsPagesRecords {
     const fresh = wanted.filter((id) => !owned.has(id));
     const before = { imageId: record.imageId, files: attachmentIdsOf(d.fields, fieldValuesOf(d.fields, record.fields)) };
     await db.$transaction(async (tx) => {
+      // Revizia: versiunea de dinainte (titlul, conținutul, câmpurile), restaurabilă de staff.
+      if (d.revisions) {
+        await tx.pagesRecordRevision.create({
+          data: { recordId, title: record.title, contentJson: (record.contentJson ?? Prisma.DbNull) as Prisma.InputJsonValue, contentHtml: record.contentHtml, fields: record.fields as Prisma.InputJsonValue, actorId: record.editedById ?? record.authorId },
+        });
+        const old = await tx.pagesRecordRevision.findMany({ where: { recordId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: MAX_REVISIONS, select: { id: true } });
+        if (old.length > 0) await tx.pagesRecordRevision.deleteMany({ where: { id: { in: old.map((r) => r.id) } } });
+      }
       await tx.pagesRecord.update({
         where: { id: recordId },
         data: {
+          editedById: actor.userId,
+          editedAt: new Date(),
           title: data.title,
           slug: data.slug,
           categoryId: data.categoryId,
@@ -275,6 +290,21 @@ export class GcsPagesRecords {
     return { databaseId: record.databaseId };
   }
 
+  /** Ștergerea unei înregistrări fără actor (ștergerea unui cont cu conținutul lui): comentariile, notele, fișierele. */
+  async deleteAsSystem(recordId: number): Promise<void> {
+    const { db, bus, attachments } = this.deps;
+    const record = await db.pagesRecord.findUnique({ where: { id: recordId }, select: { id: true, databaseId: true, categoryId: true } });
+    if (!record) return;
+    await db.$transaction(async (tx) => {
+      await tx.pagesRecord.delete({ where: { id: recordId } });
+      await tx.contentRating.deleteMany({ where: { contentType: PAGES_RECORD_TYPE, contentId: String(recordId) } });
+      await tx.contentRatingSummary.deleteMany({ where: { contentType: PAGES_RECORD_TYPE, contentId: String(recordId) } });
+      await this.recount(tx, record.databaseId, [record.categoryId]);
+    });
+    await attachments.deleteFor(PAGES_RECORD_TYPE, [String(recordId)]);
+    await bus.emit({ name: "pages.record.deleted", payload: { recordId, databaseId: record.databaseId }, tags: CHANGE_TAGS });
+  }
+
   /** Mai multe înregistrări odată (coada din ACP): aprobă / respinge / ascunde / arată / șterge. Întoarce câte au reușit. */
   async bulk(actor: GcsActor, ids: number[], action: "approve" | "reject" | "hide" | "unhide" | "delete", reason = ""): Promise<number> {
     let done = 0;
@@ -309,17 +339,70 @@ export class GcsPagesRecords {
     await checkWrite(actor);
     const rendered = await renderComment(content, actor);
     if (!rendered.text.trim() && rendered.attachments.length === 0) throw new GcsValidationError({ content: "required" });
+    // Baza cu „comentariile se aprobă”: fără dreptul de a sări aprobarea, comentariul așteaptă (îl vede doar autorul și staff-ul).
+    const pending = d.commentApproval && !(await access.skipsApproval(actor));
     const row = await db.$transaction(async (tx) => {
-      const c = await tx.pagesComment.create({ data: { recordId, authorId: actor.userId, contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html } });
-      await tx.pagesRecord.update({ where: { id: recordId }, data: { commentsCount: { increment: 1 }, lastCommentAt: c.createdAt } });
+      const c = await tx.pagesComment.create({ data: { recordId, authorId: actor.userId, contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, pending } });
+      if (!pending) await tx.pagesRecord.update({ where: { id: recordId }, data: { commentsCount: { increment: 1 }, lastCommentAt: c.createdAt } });
       return c;
     });
     await bus.emit({
-      name: "pages.comment.created",
+      name: pending ? "pages.comment.pending" : "pages.comment.created",
       payload: { commentId: row.id, recordId, authorId: actor.userId, recordAuthorId: record.authorId, mentions: rendered.mentions, groupMentions: rendered.groupMentions },
       tags: CHANGE_TAGS,
     });
-    return { id: row.id };
+    return { id: row.id, pending };
+  }
+
+  /** Aprobă un comentariu în așteptare (staff-ul); abia acum pleacă notificările lui. */
+  async approveComment(actor: GcsActor, commentId: number): Promise<void> {
+    const { db, bus, access } = this.deps;
+    if (!(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
+    const c = await db.pagesComment.findUnique({ where: { id: commentId }, select: { id: true, pending: true, recordId: true, authorId: true, contentJson: true, createdAt: true, record: { select: { authorId: true } } } });
+    if (!c) throw new GcsNotFound();
+    if (!c.pending) return;
+    await db.$transaction(async (tx) => {
+      await tx.pagesComment.update({ where: { id: commentId }, data: { pending: false } });
+      await tx.pagesRecord.update({ where: { id: c.recordId }, data: { commentsCount: { increment: 1 }, lastCommentAt: c.createdAt } });
+      await writeAudit(tx, { actorId: actor.userId, action: "pages.comment.approve", targetType: "pages_comment", targetId: String(commentId), before: null, after: null, ip: actor.ip });
+    });
+    const refs = contentRefs(c.contentJson);
+    await bus.emit({
+      name: "pages.comment.created",
+      payload: { commentId, recordId: c.recordId, authorId: c.authorId, recordAuthorId: c.record.authorId, mentions: refs.mentions, groupMentions: refs.groups },
+      tags: CHANGE_TAGS,
+    });
+  }
+
+  /** Restaurează o revizie a înregistrării (staff-ul); versiunea de acum devine și ea o revizie. */
+  async restoreRevision(actor: GcsActor, revisionId: number): Promise<{ recordId: number }> {
+    const { db, access } = this.deps;
+    if (!(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
+    const rev = await db.pagesRecordRevision.findUnique({ where: { id: revisionId } });
+    if (!rev) throw new GcsNotFound();
+    const record = await db.pagesRecord.findUnique({ where: { id: rev.recordId } });
+    if (!record) throw new GcsNotFound();
+    const d = await this.loadDb(record.databaseId);
+    const values = fieldValuesOf(d.fields, rev.fields);
+    await db.$transaction(async (tx) => {
+      await tx.pagesRecordRevision.create({ data: { recordId: record.id, title: record.title, contentJson: (record.contentJson ?? Prisma.DbNull) as Prisma.InputJsonValue, contentHtml: record.contentHtml, fields: record.fields as Prisma.InputJsonValue, actorId: record.editedById ?? record.authorId } });
+      await tx.pagesRecord.update({
+        where: { id: record.id },
+        data: {
+          title: rev.title,
+          slug: slugify(rev.title),
+          contentJson: (rev.contentJson ?? Prisma.DbNull) as Prisma.InputJsonValue,
+          contentHtml: rev.contentHtml,
+          fields: values as Prisma.InputJsonValue,
+          searchText: searchNormalize(`${rev.title} ${plainText(rev.contentHtml, 20_000)} ${fieldSearchText(d.fields, values)}`).slice(0, 20_000),
+          editedById: actor.userId,
+          editedAt: new Date(),
+        },
+      });
+      await writeAudit(tx, { actorId: actor.userId, action: "pages.record.restore", targetType: "pages_record", targetId: String(record.id), before: { title: record.title }, after: { revisionId }, ip: actor.ip });
+    });
+    await this.deps.bus.emit({ name: "pages.record.updated", payload: { recordId: record.id, databaseId: record.databaseId }, tags: CHANGE_TAGS });
+    return { recordId: record.id };
   }
 
   async editComment(actor: GcsActor, commentId: number, content: unknown): Promise<void> {

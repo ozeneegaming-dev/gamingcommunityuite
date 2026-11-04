@@ -3,18 +3,18 @@
  * și valorile unei înregistrări (`PagesRecord.fields`), validate aici, fără bază de date.
  */
 
-export const PAGES_FIELD_TYPES = ["text", "textarea", "number", "select", "multiselect", "checkbox", "url", "date", "code", "image", "file", "server"] as const;
+export const PAGES_FIELD_TYPES = ["text", "textarea", "number", "select", "multiselect", "checkbox", "url", "date", "code", "image", "file", "server", "youtube", "member"] as const;
 export type GcsPagesFieldType = (typeof PAGES_FIELD_TYPES)[number];
 
 /** Tipurile cu opțiuni fixe (lista din definiție). */
 const WITH_OPTIONS: readonly GcsPagesFieldType[] = ["select", "multiselect"];
 /** Tipurile care pot fi filtre în lista înregistrărilor. */
-export const FILTERABLE_FIELD_TYPES: readonly GcsPagesFieldType[] = ["select", "multiselect", "checkbox", "server"];
+export const FILTERABLE_FIELD_TYPES: readonly GcsPagesFieldType[] = ["select", "multiselect", "checkbox", "server", "member"];
 
 export const MAX_FIELDS = 30;
 const MAX_OPTIONS = 50;
 const KEY_RE = /^[a-z][a-z0-9_]{0,29}$/;
-const LIMITS: Partial<Record<GcsPagesFieldType, number>> = { text: 200, textarea: 5000, url: 500, code: 20_000 };
+const LIMITS: Partial<Record<GcsPagesFieldType, number>> = { text: 200, textarea: 5000, url: 500, code: 20_000, youtube: 500 };
 
 export type GcsPagesFieldDef = {
   key: string;
@@ -29,6 +29,10 @@ export type GcsPagesFieldDef = {
   listed: boolean;
   /** Filtru în lista înregistrărilor (doar tipurile din `FILTERABLE_FIELD_TYPES`). */
   filter: boolean;
+  /** Pe pagina înregistrării: deasupra sau sub conținut. */
+  position: "top" | "bottom";
+  /** Culoarea insignei de pe card (`#rrggbb`; `null` = culoarea temei). */
+  badge: string | null;
 };
 
 /** Valoarea unui câmp: text, număr, boolean, listă de opțiuni, id de atașament (imagine / fișier) sau id de server. */
@@ -70,6 +74,8 @@ export function parseFieldDefs(raw: unknown): { defs: GcsPagesFieldDef[]; errors
       options: options.slice(0, MAX_OPTIONS),
       listed: o.listed === true,
       filter: o.filter === true && type !== null && FILTERABLE_FIELD_TYPES.includes(type),
+      position: o.position === "top" ? "top" : "bottom",
+      badge: typeof o.badge === "string" && /^#[0-9a-f]{6}$/i.test(o.badge) ? o.badge : null,
     });
   });
   return { defs, errors };
@@ -87,7 +93,16 @@ const ATTACHMENT_RE = /^[a-z0-9]{8,40}$/i;
 export type GcsFieldCheckContext = {
   /** Serverele de joc care pot fi alese (id-urile), dacă aplicația Servere e pornită. */
   servers?: ReadonlySet<number> | null;
+  /** Membrii existenți dintre cei aleși în câmpurile „membru” (id-urile). */
+  members?: ReadonlySet<string> | null;
 };
+
+/** Id-ul unui video YouTube dintr-o adresă (`watch?v=`, `youtu.be/`, `shorts/`, `embed/`) sau chiar id-ul. */
+export function youtubeId(input: string): string | null {
+  if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
+  const m = /^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#].*)?$/.exec(input);
+  return m ? m[1]! : null;
+}
 
 /**
  * Valorile trimise pentru câmpurile unei baze de date → valorile curate (doar câmpurile definite) sau erorile
@@ -159,6 +174,18 @@ export function parseFieldValues(defs: readonly GcsPagesFieldDef[], raw: Record<
         else values[def.key] = text;
         break;
       }
+      case "youtube": {
+        const id = youtubeId(typeof v === "string" ? v.trim() : "");
+        if (!id) errors[name] = "invalid_url";
+        else values[def.key] = id;
+        break;
+      }
+      case "member": {
+        const text = typeof v === "string" ? v.trim() : "";
+        if (!ATTACHMENT_RE.test(text) || (ctx.members && !ctx.members.has(text))) errors[name] = "invalid_member";
+        else values[def.key] = text;
+        break;
+      }
       case "server": {
         const n = typeof v === "number" ? v : Number(v);
         if (!Number.isSafeInteger(n) || n <= 0 || (ctx.servers && !ctx.servers.has(n))) errors[name] = "invalid_choice";
@@ -192,7 +219,7 @@ export function fieldSearchText(defs: readonly GcsPagesFieldDef[], values: Recor
   return defs
     .flatMap((d) => {
       const v = values[d.key];
-      if (d.type === "image" || d.type === "file" || d.type === "server" || d.type === "checkbox") return [];
+      if (d.type === "image" || d.type === "file" || d.type === "server" || d.type === "checkbox" || d.type === "youtube" || d.type === "member") return [];
       return Array.isArray(v) ? v : v === undefined ? [] : [String(v)];
     })
     .join(" ")

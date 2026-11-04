@@ -51,7 +51,7 @@ export type GcsAcpApp = "system" | "community" | "members" | "vip" | "gaming" | 
  * O zonă din bara de iconițe a ACP-ului (specul 2026-10-09-acp-navigatie-aplicatii §1.2). Dashboard-ul nu e o zonă: are
  * linkul lui, deasupra zonelor.
  */
-export type GcsAcpArea = "system" | "community" | "members" | "appearance" | "gaming" | "vip" | "stats" | "apps";
+export type GcsAcpArea = "system" | "community" | "members" | "appearance" | "gaming" | "vip" | "pages" | "stats" | "apps";
 
 /**
  * O intrare din meniul ACP. `section` e cheia folosită de rolurile ACP; `icon` e o iconiță Font Awesome Free
