@@ -209,3 +209,13 @@ describe("ștergerea de către vizitatori", () => {
     expect(await w.db.downloadFile.count({ where: { id: s.fileId } })).toBe(1);
   });
 });
+
+describe("recenzia doar cu stele", () => {
+  test("textul e opțional: o notă fără text se salvează", async () => {
+    const cat = await w.category({ approval: false });
+    const s = await submit(w.member, cat);
+    const a = await w.user("Stele");
+    await w.dl.service.review(a, s.fileId, { rating: 5, body: "" });
+    expect((await w.db.downloadFile.findUniqueOrThrow({ where: { id: s.fileId } })).reviewsCount).toBe(1);
+  });
+});

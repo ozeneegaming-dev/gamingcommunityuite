@@ -23,7 +23,7 @@ import {
   type GcsSettingsService,
   type GcsUploadedFile,
 } from "@gcs/core";
-import { jsonInts, jsonStrings, type DownloadAsset, type Prisma, type PrismaClient } from "@gcs/db";
+import { jsonInts, jsonStrings, Prisma, type DownloadAsset, type PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import type { GcsCategoryRights, GcsCategoryRow, GcsDownloadAccess } from "./access";
 import { fieldTopicLine, validateFieldValues, type GcsDownloadFieldDef } from "./fields";
@@ -735,7 +735,8 @@ export class GcsDownloadService {
     if (file.authorId === actor.userId) throw new GcsForbidden({ reason: "own_content" });
     if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) throw new GcsValidationError({ rating: "invalid_range" });
     if (category.options.reviewNeedsDownload && (await db.downloadLog.count({ where: { fileId, userId: actor.userId } })) === 0) throw new GcsForbidden({ reason: "download_first" });
-    const body = this.render(input.body, "body", COMMENT_LIMITS);
+    // Textul e opțional: o notă doar cu stele e o recenzie validă.
+    const body = this.optionalRender(input.body, "body", COMMENT_LIMITS);
     const limit = await rateLimiter.consume(`downloads:comment:${actor.userId}`, COMMENT_LIMIT);
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
     const pending = category.options.reviewsApproval && !rights.moderate;
@@ -743,8 +744,8 @@ export class GcsDownloadService {
     const row = await db.$transaction(async (tx) => {
       const saved = await tx.downloadReview.upsert({
         where: { fileId_userId: { fileId, userId: actor.userId! } },
-        create: { fileId, userId: actor.userId!, rating: input.rating, bodyJson: body.json as Prisma.InputJsonValue, bodyHtml: body.html, version: file.version, status },
-        update: { rating: input.rating, bodyJson: body.json as Prisma.InputJsonValue, bodyHtml: body.html, version: file.version, status },
+        create: { fileId, userId: actor.userId!, rating: input.rating, bodyJson: (body?.json ?? undefined) as Prisma.InputJsonValue | undefined, bodyHtml: body?.html ?? "", version: file.version, status },
+        update: { rating: input.rating, bodyJson: body ? (body.json as Prisma.InputJsonValue) : Prisma.DbNull, bodyHtml: body?.html ?? "", version: file.version, status },
       });
       await this.recountReviews(tx, fileId);
       return saved;
