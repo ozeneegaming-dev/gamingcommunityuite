@@ -276,9 +276,10 @@ test("instalarea completă: licența, aplicațiile, reluare după refresh, login
     const db = await e2eDb(process.env.GCS_E2E_INSTALL_DATABASE_URL);
     try {
       await db.query(`DELETE FROM settings WHERE key = $1`, ["apps.landing"]);
-      // Starea de după seed: aplicațiile premium (Chat Pro, Grupuri Pro) își pun singure un rând „oprită”; restul, fără rând = pornite.
-      await db.query(`DELETE FROM apps WHERE key NOT IN ($1, $2)`, ["chat_pro", "groups_pro"]);
-      await db.query(`UPDATE apps SET enabled = false WHERE key IN ($1, $2)`, ["chat_pro", "groups_pro"]);
+      // Starea de după seed: aplicațiile premium (Chat Pro, Grupuri Pro, Comunitate Live) își pun singure un rând „oprită”;
+      // restul, fără rând = pornite.
+      await db.query(`DELETE FROM apps WHERE key NOT IN ($1, $2, $3)`, ["chat_pro", "groups_pro", "community_live"]);
+      await db.query(`UPDATE apps SET enabled = false WHERE key IN ($1, $2, $3)`, ["chat_pro", "groups_pro", "community_live"]);
     } finally {
       await db.end();
     }

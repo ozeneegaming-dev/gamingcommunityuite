@@ -29,12 +29,24 @@ async function shot(page: Page, name: string): Promise<void> {
 /** Un widget din coloana din dreapta (doar copia vizibilă: widget-urile vin în flux). */
 const sideWidget = (page: Page, type: string): Locator => page.locator(`[data-zone="sidebar"] [data-widget="${type}"]`).filter({ visible: true }).first();
 
-/** Pornește / oprește Chat Pro direct în baza E2E și golește cache-ul aplicațiilor (ca în `chat-pro.spec.ts`). */
-async function setChatPro(enabled: boolean): Promise<void> {
-  await sql(`INSERT INTO apps (key, enabled, "updatedAt") VALUES ('chat_pro', $1, now()) ON CONFLICT (key) DO UPDATE SET enabled = EXCLUDED.enabled, "updatedAt" = now()`, [enabled]);
+/** Pornește / oprește o aplicație direct în baza E2E și golește cache-ul aplicațiilor (ca în `chat-pro.spec.ts`). */
+async function setApp(key: string, enabled: boolean): Promise<void> {
+  await sql(`INSERT INTO apps (key, enabled, "updatedAt") VALUES ($1, $2, now()) ON CONFLICT (key) DO UPDATE SET enabled = EXCLUDED.enabled, "updatedAt" = now()`, [key, enabled]);
   const redis = await e2eKv();
   try {
     await redis.del("gcs:k:apps:enabled");
+  } finally {
+    redis.disconnect();
+  }
+}
+const setChatPro = (enabled: boolean) => setApp("chat_pro", enabled);
+
+/** Cache-ul layout-urilor de widget-uri. */
+async function clearLayoutCache(): Promise<void> {
+  const redis = await e2eKv();
+  try {
+    const keys = await redis.keys("gcs:k:layout*");
+    if (keys.length > 0) await redis.del(...keys);
   } finally {
     redis.disconnect();
   }
@@ -84,14 +96,8 @@ test("membru, 1440 px: salutul cu pastilele, serverele, fără cele 3 panouri; c
   // „Meciuri live (N)” lângă „Joacă acum” (macheta HomeComplete): meciul mix de pe MIX1.
   await expect(page.getByTestId("gcs-cockpit-live-matches")).toHaveAttribute("href", "/servers/matches?status=live");
   await expect(page.getByTestId("gcs-cockpit-live-matches")).toHaveText(/Meciuri live \([1-9]\d*\)/);
-  // Pastilele serverelor: plinul în roșu (32/32), restul cu jucătorii.
-  const strip = page.getByTestId("gcs-cockpit-servers");
-  await expect(strip).toBeVisible();
-  await expect.poll(async () => strip.getByTestId("gcs-cockpit-strip").count()).toBeGreaterThanOrEqual(4);
-  const full = strip.getByTestId("gcs-cockpit-strip").filter({ hasText: `Plin ${id}` });
-  await expect(full).toHaveClass(/gcs-ck__strip--full/);
-  await expect(full).toContainText("32/32");
-  await expect(strip.getByTestId("gcs-cockpit-strip").filter({ hasText: `MIX1 ${id}` })).toContainText("9/14");
+  // Fără benzile serverelor (decizia proprietarului, 2026-11-04): serverele se văd prin widget-ul „Servere”.
+  await expect(page.getByTestId("gcs-cockpit-servers")).toHaveCount(0);
   // Consola compactă nu are cutia cu panouri (Feed live / Live acum / Top); „Acum în comunitate” e un widget separat.
   for (const panel of ["gcs-cockpit-feed", "gcs-cockpit-live", "gcs-cockpit-top"]) await expect(page.getByTestId(panel)).toHaveCount(0);
   await expect(cockpit.locator(".gcs-ck__console")).toHaveCount(0);
@@ -133,7 +139,7 @@ test("vizitator: bun venit, intrarea și înregistrarea în locul pastilelor", a
   await expect(page.getByTestId("gcs-cockpit-guest")).toBeVisible();
   await expect(page.getByTestId("gcs-cockpit-welcome")).toHaveCount(0);
   await expect(page.getByTestId("gcs-cockpit-login")).toHaveAttribute("href", "/login");
-  await expect(page.getByTestId("gcs-cockpit-servers")).toBeVisible();
+  await expect(page.getByTestId("gcs-cockpit-servers")).toHaveCount(0);
 });
 
 test("telefon, 375 px: fără derulare orizontală, pastilele serverelor se derulează, widget-urile coloanei sunt rânduri strânse", async ({ page, context }) => {
@@ -149,19 +155,7 @@ test("telefon, 375 px: fără derulare orizontală, pastilele serverelor se deru
   await expect(page.getByTestId("gcs-cockpit-play")).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 
-  // Pastilele serverelor: mai late decât ecranul, se derulează în bandă (nu pagina).
-  const strip = page.getByTestId("gcs-cockpit-servers");
-  await expect(strip).toBeVisible();
-  const scroll = await strip.evaluate((el) => {
-    const before = el.scrollLeft;
-    el.scrollLeft = 240;
-    return { overflow: getComputedStyle(el).overflowX, wider: el.scrollWidth > el.clientWidth, moved: el.scrollLeft > before, right: el.getBoundingClientRect().right };
-  });
-  expect(scroll.overflow).toBe("auto");
-  expect(scroll.wider).toBe(true);
-  expect(scroll.moved).toBe(true);
-  expect(scroll.right).toBeLessThanOrEqual(375);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await expect(page.getByTestId("gcs-cockpit-servers")).toHaveCount(0);
 
   // Widget-urile coloanei, sub forumuri: serverele deschise, restul strânse (banda cu titlul și săgeata).
   const srv = sideWidget(page, "servers.list");
@@ -204,12 +198,18 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
   const two = await forumTree(request);
   await fixture(request, { action: "forum", parentId: two.category.id, type: "FORUM", name: `Al doilea ${id}` });
   await topicWithReplies(request, one.forum.id, email, `Despre mix ${id}`, 1);
+  // Comunitate Live (premium; fără licență salvată în E2E nu e restricție): pornită și widget-ul pus sus, primul.
+  await setApp("community_live", true);
+  const [placed] = await sql<{ id: number }>(
+    `INSERT INTO widget_placements (page, zone, position, type, config, groups) VALUES ('index', 'top', -1, 'community_live.now', '{"limit":8,"live":"show","tabForum":"show","tabServers":"show","tabMix":"show"}', '[]') RETURNING id`,
+  );
+  await clearLayoutCache();
   const url = new URL(page.url());
   await context.addCookies([{ name: "gcs-forum-view", value: "grid", domain: url.hostname, path: "/" }]);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
 
-  await test.step("„Acum în comunitate”: banda cu jucătorii, feed-ul cu tab-uri, meciul live, serverele cu „Joacă acum”", async () => {
+  await test.step("„Acum în comunitate”: antetul cu jucătorii și „Joacă acum”, feed-ul cu tab-uri, meciul live, fără lista serverelor", async () => {
     const now = page.locator('[data-zone="top"] [data-testid="gcs-now-community"]').filter({ visible: true }).first();
     await expect(now).toBeVisible();
     await expect(now.getByRole("heading", { name: "Acum în comunitate" })).toBeVisible();
@@ -221,8 +221,9 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     const match = now.getByTestId("gcs-now-community-match");
     await expect(match).toContainText("8");
     await expect(match).toContainText("5");
-    await expect.poll(async () => now.getByTestId("gcs-now-community-strip").count()).toBeGreaterThanOrEqual(4);
-    await expect(now.getByTestId("gcs-now-community-play")).toBeVisible();
+    await expect(now.getByTestId("gcs-now-community-strip")).toHaveCount(0);
+    // „Joacă acum” stă în antet, lângă jucătorii de pe servere.
+    await expect(now.locator(".gcs-ck__band").getByTestId("gcs-now-community-play")).toBeVisible();
   });
 
   await test.step("chat-ul stă în coloana din stânga, lângă coloana din dreapta (fără golul de sub categorii)", async () => {
@@ -252,6 +253,21 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     expect(Math.abs(a.y - b.y)).toBeLessThan(2);
   });
   await shot(page, "home-complete-1440.png");
+
+  await test.step("setările widget-ului: fără tabul Mix, 3 rânduri, fără „Live acum”; aplicația oprită îl ascunde", async () => {
+    await sql(`UPDATE widget_placements SET config = $1::jsonb WHERE id = $2`, [JSON.stringify({ limit: 3, live: "hide", tabForum: "show", tabServers: "show", tabMix: "hide" }), placed!.id]);
+    await clearLayoutCache();
+    await page.reload();
+    const now = page.locator('[data-zone="top"] [data-testid="gcs-now-community"]').filter({ visible: true }).first();
+    await expect(now.getByTestId("gcs-now-community-feed-tab-mix")).toHaveCount(0);
+    await expect(now.getByTestId("gcs-now-community-feed-tab-servers")).toBeVisible();
+    await expect.poll(async () => now.getByTestId("gcs-now-community-feed-item").count()).toBeLessThanOrEqual(3);
+    await expect(now.getByTestId("gcs-now-community-live")).toHaveCount(0);
+    await setApp("community_live", false);
+    await page.reload();
+    await expect(page.locator('[data-testid="gcs-now-community"]').filter({ visible: true })).toHaveCount(0);
+    await setApp("community_live", true);
+  });
 
   await test.step("Chat Pro (premium, după licență): în coloana din stânga, cu bara de vot și clasamentul alături", async () => {
     await setChatPro(true);
@@ -284,4 +300,7 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     await shot(page, "home-complete-375.png");
   });
+  await sql(`DELETE FROM widget_placements WHERE id = $1`, [placed!.id]);
+  await clearLayoutCache();
+  await setApp("community_live", false);
 });

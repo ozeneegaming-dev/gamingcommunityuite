@@ -115,6 +115,7 @@ export * from "./chat/moderation-types";
 export * from "./chat/moderation";
 export * from "./chat/modlog";
 export { chatProModule, CHAT_PRO_ACP_BAR, CHAT_PRO_ACP_EMOTES, CHAT_PRO_ACP_SETTINGS, CHAT_PRO_APP, CHAT_PRO_SETTINGS, CHAT_PRO_WINNER_BADGE, safeChatProUrl } from "./chat-pro";
+export { communityLiveModule, COMMUNITY_LIVE_APP, COMMUNITY_LIVE_MAX_ROWS, COMMUNITY_LIVE_WIDGET } from "./community-live";
 export * from "./chat-pro/types";
 export * from "./chat-pro/prefs";
 export { GcsChatProService, CHAT_NOTIFICATION_TYPES } from "./chat-pro/service";

@@ -4,7 +4,7 @@ import { isGcsIcon } from "@gcs/ui/icon-registry";
 const ALL_ZONES = ["top", "bottom", "sidebar", "main"] as const;
 const limitField = (max = 20): GcsWidgetField => ({ key: "limit", labelKey: "widgets.fields.limit", type: "number", min: 1, max });
 /** Un câmp „Afișat / Ascuns” (valoarea implicită o dă `defaultConfig`). */
-const showField = (key: string, labelKey: string): GcsWidgetField => ({
+export const showField = (key: string, labelKey: string): GcsWidgetField => ({
   key,
   labelKey,
   type: "select",
@@ -62,18 +62,6 @@ export const coreWidgets: GcsWidgetDef[] = [
     iconOverride: false,
     defaultConfig: { unit: "" },
     fields: [{ key: "unit", labelKey: "widgets.fields.adUnit", type: "select", optionsFrom: "ads.units" }],
-  }),
-  // „Acum în comunitate” (macheta HomeComplete): feed-ul cu tab-urile Tot / Forum / Servere / Mix, cardul meciului mix
-  // live și pastilele serverelor cu „Joacă acum”, ca widget lat (fără titlul comun: își randează singur banda).
-  widget({
-    key: "core.nowCommunity",
-    labelKey: "widgets.core.nowCommunity",
-    descriptionKey: "widgets.desc.core.nowCommunity",
-    icon: "fa-solid fa-satellite-dish",
-    zones: ["top", "main", "bottom"],
-    iconOverride: false,
-    defaultConfig: { live: "show", servers: "show" },
-    fields: [showField("live", "widgets.fields.liveMatch"), showField("servers", "widgets.fields.serverChips")],
   }),
   widget({ key: "core.online", labelKey: "widgets.core.online", descriptionKey: "widgets.desc.core.online", icon: "fa-solid fa-signal", defaultConfig: {} }),
   widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", descriptionKey: "widgets.desc.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom", "main"], defaultConfig: {} }),

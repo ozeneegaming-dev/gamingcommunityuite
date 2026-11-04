@@ -5,7 +5,8 @@ import type { GcsLicense } from "./license";
 /**
  * Aplicațiile alese la instalare (pasul „Aplicații”, decizia proprietarului 2026-10-09):
  * - **standard** (în pachetul de bază): Forum (mereu pornit), Galerie, Descărcări, Pagini, Clanuri, Calendar, Chat, VIP clasic;
- * - **premium** (vândute separat): Servere, Magazin, Studio VIP, Chat Pro, Grupuri Pro, Recrutare, doar dacă licența le include.
+ * - **premium** (vândute separat): Servere, Magazin, Studio VIP, Chat Pro, Grupuri Pro, Recrutare, Comunitate Live, doar dacă
+ *   licența le include.
  * În wizard apar doar aplicațiile care există în această versiune (modulele înregistrate).
  * Aplicațiile nebifate se instalează OPRITE (tabelele există, aplicația e oprită) și se pot porni din ACP › Aplicații.
  */
@@ -26,6 +27,8 @@ export const GCS_INSTALL_APP_CATALOG: readonly GcsInstallCatalogEntry[] = [
   { key: "vip_studio", tier: "premium" },
   { key: "chat_pro", tier: "premium" },
   { key: "groups_pro", tier: "premium" },
+  // Comunitate Live (`gcs.community_live`): widget-ul „Acum în comunitate”.
+  { key: "community_live", tier: "premium" },
   // Pluginul premium `gcs.recruitment` (Marketplace): pornește doar dacă licența îl include.
   { key: "recruitment", tier: "premium" },
 ];
