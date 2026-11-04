@@ -111,7 +111,8 @@ test("indexul: bara live, eticheta ON și sumarul categoriei; pagina forumului: 
 test("ACP › Forumuri › Editează › Server: stilul Compact și cardul mare oprit", async ({ page, context }) => {
   test.setTimeout(120_000);
   await useFreshIp(context, "100.77.1");
-  await enterAcpAsRoot(page, `SfAdm${id}`, `sfadm-${id}@example.com`);
+  // Un cont nou (contul din primul test există deja: înregistrarea cu același nume ar fi refuzată).
+  await enterAcpAsRoot(page, `SfTab${id}`, `sftab-${id}@example.com`);
   await page.setViewportSize({ width: 1440, height: 900 });
   const [srv] = await sql<{ forumId: number }>(`SELECT "forumId" FROM game_servers WHERE name = $1`, [SRV]);
   await page.goto(`/admin/community/forums/${srv!.forumId}?tab=${encodeURIComponent("x:servers:server")}`);
