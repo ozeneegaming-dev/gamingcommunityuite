@@ -1,0 +1,398 @@
+/* Aplicația Pagini în ACP: arborele, constructorul, câmpurile bazelor, șabloanele gata, media și editorul HTML. */
+
+.gcs-pgTree__row {
+  flex-wrap: wrap;
+}
+.gcs-pgTree__icon {
+  color: var(--gcs-accent);
+}
+.gcs-pgTree__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.gcs-pgOrder {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* ─── Constructorul ─────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgBuilder {
+  display: grid;
+  gap: 14px;
+}
+.gcs-pgBuilder__bar {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.gcs-pgBuilder__width {
+  margin: 0;
+  width: 200px;
+}
+.gcs-pgBuilder__status {
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgBuilder__section {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.gcs-pgBuilder__section--accent {
+  border-left: 3px solid var(--gcs-accent);
+}
+.gcs-pgBuilder__sectionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.gcs-pgBuilder__sectionTitle {
+  flex: 1 1 220px;
+}
+.gcs-pgBuilder__style {
+  width: auto;
+}
+/* Iconița aspectului: coloanele desenate la scară (⅔ + ⅓ = o bară dublă lângă una simplă). */
+.gcs-pgBuilder__colIcon {
+  display: inline-flex;
+  gap: 2px;
+  width: 30px;
+  height: 14px;
+}
+.gcs-pgBuilder__colIcon i {
+  display: block;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.55;
+}
+.gcs-segLink--active .gcs-pgBuilder__colIcon i {
+  opacity: 1;
+}
+.gcs-pgBuilder__grid {
+  display: grid;
+  gap: 10px;
+}
+@media (max-width: 860px) {
+  .gcs-pgBuilder__grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+.gcs-pgBuilder__col {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 90px;
+  padding: 8px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  background: color-mix(in srgb, var(--gcs-surface2) 50%, transparent);
+}
+.gcs-pgBuilder__tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+  cursor: grab;
+}
+.gcs-pgBuilder__tile--error {
+  border-color: var(--gcs-danger);
+}
+.gcs-pgBuilder__tileIcon {
+  color: var(--gcs-accent);
+}
+.gcs-pgBuilder__tileText {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.gcs-pgBuilder__tileText small {
+  color: var(--gcs-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-pgBuilder__tileTools {
+  display: inline-flex;
+  gap: 2px;
+}
+.gcs-pgBuilder__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px dashed var(--gcs-border);
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: transparent;
+  color: var(--gcs-muted);
+  cursor: pointer;
+  font: inherit;
+}
+.gcs-pgBuilder__add:hover {
+  color: var(--gcs-text);
+  border-color: var(--gcs-accent);
+}
+.gcs-pgBuilder__palette {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--gcs-radius);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcs-pgBuilder__paletteItem {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: transparent;
+  color: var(--gcs-text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.gcs-pgBuilder__paletteItem:hover,
+.gcs-pgBuilder__paletteItem:focus-visible {
+  background: var(--gcs-surface2);
+}
+.gcs-pgBuilder__paletteItem > .gcs-icon {
+  color: var(--gcs-accent);
+}
+.gcs-pgBuilder__paletteItem span {
+  display: grid;
+}
+.gcs-pgBuilder__paletteItem small {
+  color: var(--gcs-muted);
+}
+.gcs-pgBuilder__addSection {
+  justify-self: start;
+}
+.gcs-pgBlockForm {
+  display: grid;
+  gap: 12px;
+}
+.gcs-pgPicker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+}
+.gcs-pgPicker__item {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: var(--gcs-surface2);
+  cursor: pointer;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.gcs-pgPicker__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-pgPicker__item--on {
+  border-color: var(--gcs-accent);
+}
+
+/* ─── Câmpurile, șabloanele gata, coada ─────────────────────────────────────────────────────────────────── */
+
+.gcs-pgFieldsEd__row {
+  flex-wrap: wrap;
+}
+.gcs-pgFieldsEd__panel {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: var(--gcs-surface2);
+}
+.gcs-pgPresets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.gcs-pgPreset {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--gcs-border);
+  border-radius: var(--gcs-radius);
+  cursor: pointer;
+}
+.gcs-pgPreset:has(input:checked) {
+  border-color: var(--gcs-accent);
+  box-shadow: inset 3px 0 0 var(--gcs-accent);
+}
+.gcs-pgPreset span {
+  display: grid;
+  gap: 2px;
+}
+.gcs-pgPreset small {
+  color: var(--gcs-muted);
+}
+.gcs-pgPreset__icon {
+  color: var(--gcs-accent);
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+.gcs-pgBulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--gcs-border);
+}
+.gcs-pgBlockField {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gcs-border);
+}
+
+/* ─── Media ─────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgMediaBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcs-pgMediaBar__search .gcs-input {
+  width: 240px;
+}
+.gcs-pgMedia {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+.gcs-pgMedia__item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  min-width: 0;
+}
+.gcs-pgMedia__thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: var(--gcs-surface2);
+  overflow: hidden;
+  font-size: 2rem;
+  color: var(--gcs-muted);
+}
+.gcs-pgMedia__item--folder .gcs-pgMedia__thumb {
+  color: var(--gcs-accent);
+}
+.gcs-pgMedia__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcs-pgMedia__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcs-pgMedia__tools {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcs-pgMedia__preview {
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: var(--gcs-radius);
+  margin-bottom: 8px;
+}
+
+/* ─── Editorul HTML ─────────────────────────────────────────────────────────────────────────────────────── */
+
+.gcs-pgHtmlEd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .gcs-pgHtmlEd {
+    grid-template-columns: 1fr;
+  }
+}
+.gcs-pgHtmlEd__main {
+  padding: 12px;
+}
+.gcs-pgHtmlEd__code {
+  width: 100%;
+  min-height: 480px;
+  tab-size: 2;
+}
+.gcs-pgHtmlEd__tags {
+  padding: 12px;
+}
+.gcs-pgHtmlEd__tags ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.gcs-pgHtmlEd__tag {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: calc(var(--gcs-radius) - 2px);
+  background: transparent;
+  color: var(--gcs-text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.gcs-pgHtmlEd__tag:hover {
+  background: var(--gcs-surface2);
+}
+.gcs-pgHtmlEd__tag span {
+  display: grid;
+  min-width: 0;
+}
+.gcs-pgHtmlEd__tag code {
+  font-size: 0.75rem;
+  color: var(--gcs-muted);
+  overflow-wrap: anywhere;
+}
+.gcs-pgTagHelp {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+}
+.gcs-pgTagHelp dd {
+  margin: 0;
+  color: var(--gcs-muted);
+}

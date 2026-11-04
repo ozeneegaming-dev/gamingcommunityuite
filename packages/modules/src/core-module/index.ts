@@ -407,7 +407,16 @@ const acpMenu: GcsAcpMenuSection[] = [
 
   // ─── Aplicații: lista aplicațiilor și a pluginurilor (locul ei, o singură dată în meniu) și uneltele pentru pluginuri;
   // pluginurile își adaugă grupurile. Cheia și dreptul rămân `system.applications`. ───
-  menuSection("system", "apps_manage", "fa-solid fa-cubes", [["applications", "/admin/system/applications", "fa-solid fa-cubes"]], { area: "apps" }),
+  menuSection(
+    "system",
+    "apps_manage",
+    "fa-solid fa-cubes",
+    [
+      ["applications", "/admin/system/applications", "fa-solid fa-cubes"],
+      ["marketplace", "/admin/system/marketplace", "fa-solid fa-store"],
+    ],
+    { area: "apps" },
+  ),
   menuSection(
     "system",
     "apps_dev",

@@ -28,6 +28,7 @@ const KIND_ICONS: Record<GcsStreamItem["kind"], string> = {
   reply: "fa-solid fa-reply",
   status: "fa-solid fa-quote-left",
   member: "fa-solid fa-user-plus",
+  app: "fa-solid fa-cube",
 };
 
 /**
@@ -82,6 +83,14 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         </Link>
       );
       return t.rich(`line.${item.kind}`, { user, topic });
+    }
+    if (item.kind === "app") {
+      const title = () => (
+        <Link className="gcs-stream__title" href={item.href}>
+          {item.title}
+        </Link>
+      );
+      return t.rich("line.app", { user, title, place: item.context?.label ?? "" });
     }
     if (item.kind === "status") return item.owner ? t.rich("line.wall", { user, owner: () => who(item.owner) }) : t.rich("line.status", { user });
     return t.rich("line.member", { user });
@@ -157,7 +166,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
                       {...(item.user?.frameKey ? { frame: item.user.frameKey } : {})}
                     />
                     <span className={`gcs-stream__kind gcs-stream__kind--${item.kind}`} title={t(`kind.${item.kind}`)}>
-                      <GcsIcon name={KIND_ICONS[item.kind]} />
+                      <GcsIcon name={item.kind === "app" ? item.icon : KIND_ICONS[item.kind]} />
                       <span className="gcs-srOnly">{t(`kind.${item.kind}`)}</span>
                     </span>
                   </span>
@@ -169,6 +178,12 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
                         <Link className="gcs-stream__forum" href={forumHref(item.forum)}>
                           <GcsIcon name="fa-regular fa-folder" />
                           {item.forum.name}
+                        </Link>
+                      )}
+                      {item.kind === "app" && item.context && (
+                        <Link className="gcs-stream__forum" href={item.context.href}>
+                          <GcsIcon name={item.icon} />
+                          {item.context.label}
                         </Link>
                       )}
                       {item.kind === "status" && (item.owner ?? item.user) && (

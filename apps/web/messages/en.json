@@ -23,6 +23,7 @@
       "serverAdmins": "Admins",
       "serverTickets": "Appeals",
       "donations": "Donations",
+      "pages": "Pages",
       "downloads": "Downloads"
     },
     "acp": "ACP",
@@ -350,6 +351,22 @@
       "license_revoked": "The licence has been revoked.",
       "tag_exists": "A tag with this name already exists.",
       "login_required": "You need to sign in.",
+      "not_empty": "The folder has pages; move or delete them first.",
+      "not_pending": "The record is no longer pending.",
+      "invalid_state": "The record's status changed in the meantime.",
+      "app_not_licensed": "This premium app is not in your licence. You can buy it in System › Marketplace.",
+      "market_licence_missing": "The site has no licence yet.",
+      "market_licence_unmanaged": "Offline licences cannot buy from the Marketplace.",
+      "market_licence_invalid": "The Data Center does not recognise the licence.",
+      "market_licence_inactive": "The licence is not active.",
+      "market_domain": "The site’s domain is not in the licence.",
+      "market_not_found": "The item is no longer in the Marketplace.",
+      "market_not_owned": "The item is not purchased yet.",
+      "market_no_package": "The item has no package to install yet.",
+      "market_rate_limited": "Too many orders in an hour. Try again a little later.",
+      "market_bad_package": "The downloaded package does not match the catalogue. Try again.",
+      "market_unreachable": "The Data Center is not answering. Try again in a few minutes.",
+      "market_disabled": "The Data Center link is off.",
       "vip": "This file is for VIP members only.",
       "token": "The download link expired: open the file page again.",
       "download_first": "Download the file before reviewing it.",
@@ -523,6 +540,19 @@
       "invalid_ga4": "The Google Analytics ID looks like G-XXXXXXXXXX",
       "invalid_uuid": "The ID looks like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
       "unresolvable": "The address can't be found (the domain doesn't respond). Check it and try again.",
+      "invalid_slug": "Only lowercase letters, digits and hyphens.",
+      "reserved": "The address is reserved by the system.",
+      "too_deep": "Too many folder levels.",
+      "in_use": "The database already has a page.",
+      "invalid_package": "The file is not a GCS database package.",
+      "invalid_member": "The member does not exist.",
+      "invalid_widget": "Invalid widget.",
+      "invalid_database": "The database does not exist.",
+      "invalid_media": "The file is no longer in the library.",
+      "invalid_block": "Invalid block.",
+      "invalid_section": "Invalid section.",
+      "too_many_sections": "Too many sections.",
+      "too_many_blocks": "Too many blocks.",
       "no_extension": "The file has no extension.",
       "over_quota": "You've reached your group's storage limit.",
       "site_full": "The site's download storage is full.",
@@ -630,7 +660,8 @@
         "bot": "Community bot",
         "settings_uploads": "Uploads & images",
         "license": "Licence",
-        "settings_messages": "Private messages"
+        "settings_messages": "Private messages",
+        "marketplace": "Marketplace"
       },
       "members": {
         "members": "Members",
@@ -737,6 +768,17 @@
         "servers": "Servers",
         "clans": "Clans",
         "downloads": "Downloads"
+      },
+      "pages": {
+        "content": "Content",
+        "setup": "Look and settings",
+        "pages": "Pages",
+        "blocks": "Blocks",
+        "databases": "Databases",
+        "records": "Records",
+        "media": "Media",
+        "templates": "Templates",
+        "settings": "Settings"
       }
     },
     "comingSoon": {
@@ -2682,7 +2724,8 @@
         "postbit": "Posts",
         "members": "Members",
         "widgets": "Widgets",
-        "email": "Emails"
+        "email": "Emails",
+        "pages": "Pages"
       },
       "status": {
         "default": "original",
@@ -2745,7 +2788,10 @@
         "emailHello": "Hi, {name}!",
         "emailItem": "Ana replied in “Welcome!”",
         "emailFooter": "Choose which emails you get in the notification settings.",
-        "emailSubject": "A new notification — {site}"
+        "emailSubject": "A new notification — {site}",
+        "recordTitle": "A clean crosshair for CS2",
+        "recordExcerpt": "Step-by-step settings for a crosshair you can see on any map.",
+        "recordDatabase": "Guides"
       }
     },
     "plugins": {
@@ -3920,6 +3966,10 @@
         "online_time": {
           "days": "Days with time online in the ranking"
         },
+        "pages": {
+          "records": "Records in Pages",
+          "comments": "Comments in Pages"
+        },
         "downloads": {
           "files": "files in Downloads",
           "reviews": "file reviews",
@@ -3943,6 +3993,7 @@
         "files": "Files",
         "chat_pro": "Chat Pro",
         "online_time": "Time online",
+        "pages": "Pages (records and comments)",
         "downloads": "Downloads"
       },
       "notes": {
@@ -4052,7 +4103,8 @@
       "gaming": "Gaming",
       "vip": "VIP & Store",
       "stats": "Statistics",
-      "apps": "Apps"
+      "apps": "Apps",
+      "pages": "Pages"
     },
     "stats": {
       "title": "Overview",
@@ -4065,7 +4117,7 @@
     "appsPage": {
       "description": "Turn the site's apps on and off, put them in order, pick the landing page and choose who can use each app.",
       "checkUpdates": "Check for updates",
-      "checkUpdatesHint": "Available with licences",
+      "marketplace": "Marketplace",
       "appsTitle": "Apps",
       "pluginsTitle": "Plugins",
       "pluginsEmpty": "No plugins installed. Upload a .zip package below.",
@@ -6470,6 +6522,650 @@
         "cookieHint": "Google Analytics sets cookies; Plausible and Umami don't. The cookie notice is turned on in Settings › Terms and privacy."
       }
     },
+    "pages": {
+      "title": "Pages",
+      "lead": "The site's folders and pages: content, who sees them, SEO and the menu. Pages are built from blocks or written in HTML.",
+      "newPage": "New page",
+      "newFolder": "New folder",
+      "create": "Create",
+      "save": "Save",
+      "delete": "Delete",
+      "deleteConfirm": "Delete “{title}”? Its menu item goes too.",
+      "deleteFolderFirst": "The folder “{title}” has pages. Move or delete them first.",
+      "empty": "No pages yet. Create the first page or a database from a template.",
+      "secDetails": "Details",
+      "secAccess": "Who sees it",
+      "secMenu": "Menu and start page",
+      "secSeo": "SEO and sharing",
+      "titleField": "Title",
+      "slug": "Address (slug)",
+      "slugAuto": "from the title",
+      "slugHint": "Lowercase letters, digits and hyphens. The full address is /pages/folder/slug.",
+      "parent": "Folder",
+      "noParent": "No folder (root)",
+      "icon": "Icon",
+      "contentType": "Content",
+      "contentTypeHint": "The block builder, hand-written HTML or the records of a database.",
+      "types": {
+        "layout": "Block builder",
+        "html": "Manual HTML",
+        "database": "Database"
+      },
+      "database": {
+        "title": "Database",
+        "lead": "The database's details, fields, categories, features and permissions.",
+        "back": "Back to databases",
+        "view": "View page",
+        "export": "Download",
+        "noPage": "This database has no page, so it does not show on the site.",
+        "noPageLink": "Create a page of type “Database”.",
+        "tabs": "Database sections",
+        "tab": {
+          "details": "Details",
+          "fields": "Fields",
+          "categories": "Categories",
+          "features": "Features",
+          "permissions": "Permissions",
+          "forum": "Forum"
+        },
+        "save": "Save",
+        "create": "Create",
+        "delete": "Delete",
+        "secIdentity": "Identity",
+        "secLanguage": "What records are called",
+        "secDisplay": "Display",
+        "name": "Name",
+        "key": "Key",
+        "keyHint": "The tag in HTML pages: '{'database=\"{key}\"'}'; also the RSS feed address.",
+        "description": "Description",
+        "icon": "Icon",
+        "languageHint": "Used in buttons and messages (“Add a guide”, “No guides yet”).",
+        "recordLabel": "One record",
+        "recordLabelPh": "e.g. Guide",
+        "recordPlural": "Several",
+        "recordPluralPh": "e.g. Guides",
+        "indexMode": "The database page shows",
+        "indexModes": {
+          "all": "All records",
+          "categories": "The category index",
+          "featured": "Featured only"
+        },
+        "listLayout": "List layout",
+        "layouts": {
+          "list": "List",
+          "grid": "Card grid",
+          "table": "Table"
+        },
+        "sort": "Default order",
+        "sorts": {
+          "newest": "Newest",
+          "updated": "Recently updated",
+          "title": "By title",
+          "rating": "Top rated",
+          "views": "Most viewed",
+          "comments": "Most commented"
+        },
+        "perPage": "Per page",
+        "fieldsHint": "Title and content always exist; add the database's own fields here.",
+        "categoriesHint": "Categories show as filters and have their own page; a private one shows each member only their own records.",
+        "categoriesOff": "Categories are off in Features; you can prepare them anyway.",
+        "addCategory": "New category",
+        "noCategories": "No categories.",
+        "recordsCount": "{count, plural, one {one record} other {# records}}",
+        "private": "Private",
+        "restricted": "Restricted",
+        "deleteCategoryConfirm": "Delete the category “{name}”? Its records and subcategories move to the parent category (or stay without one).",
+        "secCategory": "Category",
+        "secCategoryAccess": "Access",
+        "slug": "Address (slug)",
+        "slugAuto": "from the name",
+        "parentCategory": "Parent category",
+        "noParentCategory": "No parent",
+        "color": "Colour",
+        "cover": "Cover",
+        "noCover": "No cover",
+        "privateHint": "Members see only their own records (e.g. requests to staff); the records stay out of blocks, search and the stream.",
+        "categoryGroupsHint": "Nothing ticked = same as the database.",
+        "secContent": "Content",
+        "secSubmissions": "Submissions",
+        "secCommunity": "Comments and ratings",
+        "secDiscovery": "Search, stream, RSS",
+        "f": {
+          "useCategories": "Categories",
+          "useCategoriesHint": "Off, the database page is the record list itself.",
+          "recordImage": "Record image",
+          "revisions": "Revisions",
+          "revisionsHint": "Every edit keeps the previous version, restorable by staff.",
+          "submissions": "Member submissions",
+          "submissionsHint": "Those with the right (Permissions) add records from the site.",
+          "approval": "Submissions need approval",
+          "approvalHint": "Without the right to skip approval, the record waits for staff.",
+          "authorEdit": "Authors can edit their record",
+          "wiki": "Wiki editing",
+          "wikiHint": "Anyone who can submit to the database also edits other people's records (with revisions).",
+          "comments": "Comments",
+          "commentApproval": "Comments need approval",
+          "ratings": "Star ratings",
+          "searchable": "In site search",
+          "inStream": "In the activity stream",
+          "rss": "RSS feed",
+          "rssHint": "/pages/rss/{key}, only what guests can see."
+        },
+        "permissionsHint": "Nothing ticked = the group permission (ACP › Groups). Ticks limit the action to the chosen groups.",
+        "perm": {
+          "view": "Who sees the database",
+          "submit": "Who submits",
+          "comment": "Who comments",
+          "rate": "Who rates"
+        },
+        "forumHint": "Every published record becomes a topic in the chosen forum (the title, an excerpt and the link), posted by its author.",
+        "forum": "Forum",
+        "noForum": "No forum publishing",
+        "deleteHint": "Deleting removes the database with all its {count} records, their comments, ratings and files. Its page stays empty.",
+        "deleteDb": "Delete the database",
+        "deleteDbConfirm": "Permanently delete the database “{name}” with all its content?"
+      },
+      "published": "Published",
+      "publishedHint": "Unpublished, only page editors see it (with the “Draft” band).",
+      "showTitle": "Show the page title",
+      "accessHint": "Nothing ticked = everyone who can see the Pages app. A folder's groups also apply to its pages.",
+      "inMenu": "In the site menu",
+      "inMenuHint": "Adds the page at the end of the main menu; move it later in the Menu manager.",
+      "homeGroupsHint": "The app start page for the ticked groups (by primary group). For everyone, use the star in the list.",
+      "seoTitle": "Title for search engines",
+      "seoDescription": "Description",
+      "seoImage": "Share image",
+      "seoImageNone": "No image",
+      "seoImageHint": "From the media library; shown when the page is shared.",
+      "noindex": "Hide the page from search engines",
+      "chips": {
+        "draft": "Draft",
+        "menu": "In menu",
+        "home": "Start page",
+        "homeGroups": "Start page for {count, plural, one {one group} other {# groups}}",
+        "restricted": "Restricted"
+      },
+      "build": "Build",
+      "editHtml": "HTML",
+      "revisions": {
+        "title": "Versions",
+        "titleFor": "Versions: {title}",
+        "lead": "Every save keeps the previous version (the last 30). Restoring keeps the current version too.",
+        "back": "Back to pages",
+        "empty": "No saved versions yet.",
+        "unknown": "unknown",
+        "htmlSize": "HTML, {n} characters",
+        "blocks": "{count, plural, one {one block} other {# blocks}}",
+        "restore": "Restore",
+        "restoreConfirm": "Restore this version? The current version stays in the list."
+      },
+      "view": "View page",
+      "setHome": "Make it the start page",
+      "unsetHome": "No longer the start page",
+      "duplicate": "Copy",
+      "order": "Order",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "builder": {
+        "title": "Builder",
+        "titleFor": "Build: {title}",
+        "lead": "Sections with columns and blocks. Drag blocks between columns or use the arrows; edit a block in the panel on the right.",
+        "back": "Back to pages",
+        "width": "Page width",
+        "widths": {
+          "normal": "Normal",
+          "wide": "Wide",
+          "full": "Full width"
+        },
+        "unsaved": "Unsaved changes",
+        "saved": "The page was saved.",
+        "preview": "View page",
+        "save": "Save page",
+        "empty": "The page is empty. Add a section, then blocks in it.",
+        "sectionN": "Section {n}",
+        "sectionTitle": "Section title (optional)",
+        "columns": "Columns",
+        "cols": {
+          "1": "One column",
+          "1-1": "Two equal columns",
+          "2-1": "Wide + narrow",
+          "1-2": "Narrow + wide",
+          "1-1-1": "Three columns"
+        },
+        "style": "Section style",
+        "styles": {
+          "plain": "Plain",
+          "card": "Card",
+          "accent": "Highlighted"
+        },
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "deleteSection": "Delete the section",
+        "addSection": "Add a section",
+        "addBlock": "Add a block",
+        "editBlock": "Edit the block",
+        "deleteBlock": "Remove the block",
+        "cancel": "Cancel",
+        "close": "Close",
+        "done": "Done",
+        "types": {
+          "content": "Content",
+          "html": "HTML",
+          "widget": "Widget",
+          "records": "Records",
+          "image": "Image",
+          "block": "Reusable block",
+          "pages": "Section menu"
+        },
+        "typeHints": {
+          "content": "Formatted text with images, sections, cards and buttons",
+          "html": "Hand-written HTML, cleaned on save",
+          "widget": "Servers, ranking, clans, mix, chat and the other GCS widgets",
+          "records": "The latest records of a database",
+          "image": "An image from the media library",
+          "block": "A saved block used on several pages",
+          "pages": "Links to the pages of a folder"
+        },
+        "noDatabase": "No database chosen",
+        "noImage": "No image chosen",
+        "noBlock": "No block chosen",
+        "currentFolder": "This page's folder",
+        "htmlChars": "{n} characters",
+        "emptyContent": "No content yet",
+        "secBlock": "Block",
+        "blockTitle": "Block title",
+        "blockIcon": "Title icon",
+        "card": "In a card",
+        "content": "Content",
+        "html": "HTML",
+        "htmlHint": "Scripts, event handlers and unsafe addresses are removed on save.",
+        "widget": "Widget",
+        "database": "Database",
+        "category": "Category",
+        "allCategories": "All categories",
+        "view": "Layout",
+        "views": {
+          "list": "List",
+          "grid": "Grid",
+          "compact": "Compact",
+          "featured": "First one big",
+          "carousel": "Carousel"
+        },
+        "sort": "Order",
+        "sorts": {
+          "newest": "Newest",
+          "updated": "Recently updated",
+          "rating": "Top rated",
+          "views": "Most viewed",
+          "comments": "Most commented",
+          "featured": "Featured first"
+        },
+        "limit": "How many",
+        "hideImages": "No images",
+        "noImages": "The media library has no images yet.",
+        "openMedia": "Open the library",
+        "pickImage": "Pick the image",
+        "caption": "Caption",
+        "link": "Link on click",
+        "size": "Size",
+        "sizes": {
+          "normal": "Normal",
+          "wide": "Wide",
+          "full": "Full width"
+        },
+        "manageBlocks": "Manage blocks",
+        "folder": "Folder",
+        "visibility": "Who sees the block",
+        "visibilityHint": "Nothing ticked = everyone who sees the page.",
+        "errors": {
+          "invalid_widget": "The widget no longer exists or its settings are not valid.",
+          "invalid_database": "The chosen database no longer exists.",
+          "invalid_media": "The chosen image is no longer in the library.",
+          "invalid_block": "The block is incomplete or no longer exists.",
+          "invalid_url": "The link must start with / or https://.",
+          "duplicate": "Duplicated block.",
+          "too_long": "The content is too long."
+        }
+      },
+      "html": {
+        "title": "HTML",
+        "titleFor": "HTML: {title}",
+        "lead": "The hand-written page. The GCS tags on the right place a block or the latest records of a database anywhere in the page.",
+        "back": "Back to pages",
+        "notHtml": "This page is not “Manual HTML”: change its content type in its panel for the HTML to show on the site.",
+        "code": "Page code",
+        "saved": "The HTML was saved (and cleaned).",
+        "save": "Save",
+        "view": "View page",
+        "tags": "GCS tags",
+        "tagsHint": "A click puts the tag at the cursor.",
+        "noTags": "No blocks or databases yet."
+      },
+      "blocks": {
+        "title": "Blocks",
+        "lead": "Blocks saved once and used on any page, in HTML pages (their tag) and as a widget on the forum.",
+        "add": "New block",
+        "create": "Create",
+        "save": "Save",
+        "delete": "Delete",
+        "deleteConfirm": "Delete the block “{name}”? Pages using it lose it.",
+        "empty": "No blocks yet.",
+        "uncategorized": "No category",
+        "secDetails": "Details",
+        "secContent": "Content",
+        "secFields": "Template fields",
+        "name": "Name",
+        "key": "Key",
+        "keyAuto": "from the name",
+        "category": "Category",
+        "description": "Description",
+        "kind": "Block type",
+        "kinds": {
+          "content": "Content",
+          "html": "HTML",
+          "template": "Template with fields"
+        },
+        "kindHints": {
+          "content": "The post editor, with sections, cards, buttons and mentions.",
+          "html": "Hand-written HTML, cleaned on save.",
+          "template": "HTML with '{{'key'}}': staff only fill in the fields, the look stays the same."
+        },
+        "html": "HTML",
+        "template": "Template (HTML)",
+        "templateHint": "Put '{{'key'}}' where a field's value goes. Values are escaped.",
+        "fieldKey": "Key",
+        "fieldLabel": "Label",
+        "fieldType": "Type",
+        "fieldTypes": {
+          "text": "Text",
+          "textarea": "Long text",
+          "url": "Link",
+          "image": "Image (address)"
+        },
+        "value": "Value: {label}",
+        "addField": "Add a field",
+        "removeField": "Remove the field"
+      },
+      "databases": {
+        "title": "Databases",
+        "lead": "Content areas with their own fields: guides, server rules, configs, recruitment. Each database has its page.",
+        "add": "New database",
+        "create": "Create the database and its page",
+        "import": "Import",
+        "importSubmit": "Import the database",
+        "importHint": "The .json package downloaded from a database (this site or another). A new database with its page is created.",
+        "pickPreset": "Start from",
+        "name": "Name",
+        "nameFromPreset": "the template name",
+        "parent": "Its page lives in the folder",
+        "noParent": "Root (/pages/…)",
+        "createHint": "The template's fields, categories and features can be changed any time.",
+        "empty": "No databases yet. Start from a template.",
+        "noPage": "No page",
+        "row": "{records} records · {categories} categories · {fields} fields",
+        "pending": "{count, plural, one {one pending} other {# pending}}",
+        "edit": "Edit",
+        "view": "View page"
+      },
+      "fields": {
+        "empty": "No custom fields.",
+        "untitled": "Untitled field",
+        "required": "Required",
+        "listed": "On the card",
+        "listedHint": "Shown as a badge on the list card.",
+        "filter": "Filter",
+        "filterHint": "Visitors filter the list by it.",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "edit": "Edit the field",
+        "remove": "Remove the field",
+        "add": "Add a field",
+        "label": "Label",
+        "key": "Key",
+        "keyHint": "Lowercase letters, digits, _. Values stay tied to the key.",
+        "type": "Type",
+        "help": "Help (under the field, in the form)",
+        "options": "Options",
+        "optionsHint": "One per line.",
+        "position": "On the record page",
+        "positions": {
+          "top": "Above the content",
+          "bottom": "Below the content"
+        },
+        "badge": "Badge colour",
+        "badgeDefault": "Theme colour",
+        "types": {
+          "text": "Text",
+          "textarea": "Long text",
+          "number": "Number",
+          "select": "List",
+          "multiselect": "List (several)",
+          "checkbox": "Yes / no",
+          "url": "Link",
+          "date": "Date",
+          "code": "Code (config)",
+          "image": "Image",
+          "file": "File",
+          "server": "Game server",
+          "youtube": "YouTube video",
+          "member": "Member"
+        }
+      },
+      "records": {
+        "title": "Records",
+        "lead": "The staff queue: submissions to approve, published, hidden or rejected records, and pending comments.",
+        "filters": "Status",
+        "status": {
+          "pending": "Pending ({count})",
+          "published": "Published ({count})",
+          "hidden": "Hidden ({count})",
+          "rejected": "Rejected ({count})"
+        },
+        "database": "Database",
+        "allDatabases": "All databases",
+        "search": "Search",
+        "apply": "Apply",
+        "empty": {
+          "pending": "Nothing to approve.",
+          "published": "No published records.",
+          "hidden": "No hidden records.",
+          "rejected": "No rejected records."
+        },
+        "select": "Select “{title}”",
+        "deletedMember": "Deleted member",
+        "reason": "Reason: {reason}",
+        "applyBulk": "Apply to the selected",
+        "action": "Action",
+        "actions": {
+          "approve": "Approve",
+          "reject": "Reject",
+          "hide": "Hide",
+          "unhide": "Show again",
+          "delete": "Delete"
+        },
+        "rejectReason": "Rejection reason (sent to the author)",
+        "prev": "Back",
+        "next": "Next",
+        "pendingComments": "Pending comments ({count})",
+        "noPendingComments": "No pending comments."
+      },
+      "media": {
+        "title": "Media",
+        "lead": "The pages' files, in folders: images, video, fonts, documents (up to {mb} MB each). Copy any file's address in one click.",
+        "upload": "Upload files",
+        "types": "Images, video, audio, PDF, fonts, archives",
+        "newFolder": "New folder",
+        "create": "Create",
+        "save": "Save",
+        "folderName": "Folder name",
+        "parentFolder": "Inside the folder",
+        "root": "Library",
+        "path": "Path",
+        "search": "Search the library",
+        "editFolder": "Edit the folder",
+        "deleteFolder": "Delete the folder",
+        "deleteFolderConfirm": "Delete the folder? Its files and subfolders move up one level.",
+        "empty": "The folder is empty. Upload files or create a subfolder.",
+        "noResults": "Nothing found for “{q}”.",
+        "folderCount": "{items} files · {folders} folders",
+        "copyUrl": "Copy address",
+        "delete": "Delete",
+        "deleteConfirm": "Delete the file? Pages using it lose it.",
+        "itemTitle": "Title",
+        "alt": "Alternative text",
+        "altHint": "Describes the image for screen readers.",
+        "folder": "Folder",
+        "prev": "Back",
+        "next": "Next"
+      },
+      "templates": {
+        "title": "Templates",
+        "lead": "The Pages app templates in each theme, edited in the code editor (with preview and versions). Themes restyle them; features stay in the system.",
+        "original": "original",
+        "modified": "modified",
+        "edit": "Edit",
+        "tagsTitle": "GCS tags",
+        "tagBlock": "A reusable block, in HTML pages.",
+        "tagDatabase": "The latest records of a database, in HTML pages.",
+        "tagField": "A field's value, in template blocks.",
+        "toBlocks": "Blocks",
+        "toEditor": "Template editor"
+      },
+      "settings": {
+        "title": "Settings",
+        "lead": "The start page, display, submissions and media library of the Pages app.",
+        "save": "Save",
+        "secHome": "Start page",
+        "homePage": "/pages opens",
+        "homeDirectory": "The page index",
+        "homePageHint": "For everyone; a page can also be the start page of some groups only (its panel).",
+        "directoryFolders": "The index also shows folders",
+        "directoryFoldersHint": "With their pages, one level deep.",
+        "secDisplay": "Display",
+        "breadcrumbs": "Breadcrumbs (the page path)",
+        "showUpdated": "Show “updated on”",
+        "recordsPerPage": "Records per page",
+        "recordsPerPageHint": "For databases without their own value.",
+        "commentsPerPage": "Comments per page",
+        "commentOrder": "Comment order",
+        "orders": {
+          "oldest": "Oldest first",
+          "newest": "Newest first"
+        },
+        "newDays": "“New” badge (days)",
+        "newDaysHint": "0 = no badge.",
+        "secSubmissions": "Submissions",
+        "submitCooldown": "Pause between submissions (seconds)",
+        "submitCooldownHint": "For members without staff rights; 0 = no pause.",
+        "notifyStaff": "Notify staff about pending submissions",
+        "notifyStaffHint": "Groups with “Moderate pages”.",
+        "notifyAuthor": "Notify authors about new comments",
+        "secMedia": "Media library",
+        "mediaMaxMb": "Maximum file size (MB)",
+        "permsTitle": "Permissions",
+        "permsHint": "Who sees, submits, comments, rates and moderates is chosen per group; each database can narrow its groups.",
+        "toGroups": "Groups",
+        "toDatabases": "Databases",
+        "toMenu": "Menu manager"
+      }
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "description": "Premium apps, plugins, themes and widgets for your community, bought and activated right here.",
+      "all": "All",
+      "categoriesLabel": "Categories",
+      "search": "Search the Marketplace",
+      "mine": "Only mine",
+      "manualPayments": "Card payments are not open yet: an order is confirmed by hand, then activates here by itself.",
+      "featured": "Featured",
+      "seeDetails": "See details",
+      "empty": "The Marketplace has nothing to offer yet. Check back soon.",
+      "noMatch": "No item matches the filters.",
+      "close": "Close",
+      "official": "Official GCS",
+      "free": "Free",
+      "included": "Included in the licence",
+      "owned": "Purchased",
+      "state": {
+        "buy": "For sale",
+        "get": "Free",
+        "pending": "Payment pending",
+        "activate": "Purchased, off",
+        "enabled": "On",
+        "install": "Ready to install",
+        "update": "New version",
+        "installed": "Installed",
+        "unavailable": "Not available in this version"
+      },
+      "buy": "Buy for {price}",
+      "getFree": "Get it free",
+      "pay": "Pay {price} on the secure page",
+      "checkPayment": "I paid: check",
+      "payNoteCard": "Payment happens on the Data Center page (card, Apple Pay, Google Pay). After paying, press “I paid: check”.",
+      "payNoteManual": "The payment page shows how to pay. Once the payment is confirmed, press “I paid: check”.",
+      "notPaidYet": "The payment has not arrived yet. If you just paid, try again in a few seconds.",
+      "notConfirmedYet": "The payment is not confirmed yet. Come back once it is.",
+      "orderClosed": "The order was cancelled or refunded. You can start a new order.",
+      "boughtApp": "Done: the app is in your licence. Turn it on with “Turn on the app”.",
+      "boughtPackage": "Done: the package is yours. Install it with “Install”.",
+      "activate": "Turn on the app",
+      "activated": "The app is on.",
+      "install": "Install",
+      "updateTo": "Update to {version}",
+      "manage": "Manage in Applications",
+      "enlarge": "Enlarge the image",
+      "screenshots": "Screenshots",
+      "showImage": "Show image {n}",
+      "changelog": "What’s new",
+      "facts": {
+        "type": "Type",
+        "app": "Premium app",
+        "package": "Package to install",
+        "version": "Version",
+        "installed": "installed: {version}",
+        "needs": "Needs",
+        "size": "Size"
+      },
+      "goLicense": "Open the Licence page",
+      "categories": {
+        "application": "Applications",
+        "plugin": "Plugins",
+        "theme": "Themes",
+        "widget": "Widgets",
+        "language": "Language packs",
+        "integration": "Integrations"
+      },
+      "errors": {
+        "licence_missing": {
+          "title": "The site has no licence yet",
+          "body": "The Marketplace needs the site’s licence. Add it in System › Licence."
+        },
+        "licence_unmanaged": {
+          "title": "The licence is not from the Data Center",
+          "body": "Offline licences cannot buy from the Marketplace. Activate a GCS-XXXX-XXXX-XXXX key in System › Licence."
+        },
+        "licence_invalid": {
+          "title": "The licence was not recognised",
+          "body": "The Data Center does not recognise this site’s licence. Check it in System › Licence."
+        },
+        "licence_inactive": {
+          "title": "The licence is not active",
+          "body": "The licence is suspended, revoked or expired. Check it in System › Licence or contact us."
+        },
+        "domain": {
+          "title": "The domain is not in the licence",
+          "body": "The site runs on a domain the licence does not cover. Check the domains in System › Licence."
+        },
+        "disabled": {
+          "title": "The Data Center link is off",
+          "body": "This install has the online check turned off (GCS_LICENSE_SERVER=off), so the Marketplace cannot load."
+        },
+        "unreachable": {
+          "title": "The Data Center is not answering",
+          "body": "The catalogue could not load right now. Reload the page in a few minutes."
+        }
+      }
+    },
     "downloads": {
       "status": {
         "scanning": "Checking",
@@ -7627,6 +8323,20 @@
     "integrations": {
       "analytics": "Traffic analytics"
     },
+    "pages": {
+      "home_page": "App start page",
+      "directory_folders": "The index also shows folders",
+      "breadcrumbs": "Breadcrumbs",
+      "show_updated": "Show “updated on”",
+      "records_per_page": "Records per page",
+      "comments_per_page": "Comments per page",
+      "comment_order": "Comment order",
+      "media_max_mb": "Maximum library file size (MB)",
+      "notify_staff": "Notify staff about submissions",
+      "notify_author": "Notify authors about comments",
+      "submit_cooldown": "Pause between submissions (seconds)",
+      "new_days": "“New” badge (days)"
+    },
     "downloads": {
       "max_file_mb": "Default maximum file size (MB)",
       "total_quota_gb": "Total downloads storage (GB)",
@@ -7764,6 +8474,14 @@
     "chat_pro": {
       "history": "Can view the chat history (/chat/history)",
       "history_export": "Export the chat history (CSV)"
+    },
+    "pages": {
+      "view": "Sees the Pages app",
+      "submit": "Submits records to databases",
+      "comment": "Comments on records",
+      "rate": "Rates records",
+      "skip_approval": "Their submissions skip approval",
+      "moderate": "Moderates pages (approve, edit, hide, delete)"
     },
     "downloads": {
       "see": "Sees the category",
@@ -8760,7 +9478,10 @@
     "tooShort": "Type at least {min} characters.",
     "rateLimited": "Too many searches. Try again in a minute.",
     "in": "in {forum}",
-    "loginRequired": "Search is for members only: sign in to search."
+    "loginRequired": "Search is for members only: sign in to search.",
+    "sources": {
+      "pages_records": "Databases (Pages)"
+    }
   },
   "tags": {
     "title": "Tag: #{tag}",
@@ -8908,6 +9629,12 @@
         "confirmed": "Your confirmed donations",
         "rejected": "Your unconfirmed donations",
         "submitted": "New donations to confirm (staff)"
+      },
+      "pages": {
+        "submission": "Pages submissions awaiting approval (staff)",
+        "review": "Approval of the records you submitted",
+        "comment": "Comments on your records",
+        "followed": "New records in the databases you follow"
       },
       "downloads": {
         "review": "My files: approved, rejected or blocked",
@@ -9289,6 +10016,7 @@
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
       "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
       "groups_pro": "Group legend by category (with counts and linked groups) and the “Community groups” page.",
+      "pages": "Custom pages built from blocks, databases with fields (guides, rules, configs, recruitment), a media library and member submissions with approval.",
       "downloads": "Community files: maps, mods, configs, with approval, versions, antivirus and VIP categories."
     },
     "sections": {
@@ -9302,6 +10030,7 @@
     },
     "chat_pro": "Chat Pro",
     "groups_pro": "Groups Pro",
+    "pages": "Pages",
     "downloads": "Downloads"
   },
   "translate": {
@@ -9992,6 +10721,9 @@
       "tabs": "Leaderboard tabs",
       "layout": "Layout",
       "adUnit": "Ad",
+      "database": "Database",
+      "sort": "Order",
+      "block": "Block",
       "downloadsKind": "Which files"
     },
     "periods": {
@@ -10040,6 +10772,10 @@
       },
       "profile": {
         "recentBadges": "Badges members earned recently, live."
+      },
+      "pages": {
+        "records": "The latest records of a database: guides, configs, recruitment…",
+        "block": "A reusable block from the Pages app."
       },
       "downloads": {
         "latest": "The newest, most downloaded, highest rated or featured files.",
@@ -10106,6 +10842,18 @@
       "more": "and {count} more"
     },
     "adLabel": "Ad",
+    "pages": {
+      "records": "Records (Pages)",
+      "block": "Block (Pages)"
+    },
+    "pagesSort": {
+      "newest": "Newest",
+      "featured": "Featured first",
+      "rating": "Top rated",
+      "views": "Most viewed",
+      "comments": "Most commented",
+      "updated": "Recently updated"
+    },
     "downloads": {
       "latest": "Downloads",
       "categories": "Download categories"
@@ -10195,6 +10943,7 @@
       "serversOnline": "Servers",
       "serverPlayers": "Players",
       "clans": "Clans",
+      "pages_records": "Records in Pages",
       "downloads": "Files"
     },
     "allOnline": "See all online members →",
@@ -10642,13 +11391,15 @@
       "reply": "<user></user> replied in <topic></topic>",
       "status": "<user></user> updated their status",
       "wall": "<user></user> wrote on <owner></owner>'s profile",
-      "member": "<user></user> joined the community"
+      "member": "<user></user> joined the community",
+      "app": "<user></user> published <title></title> in {place}"
     },
     "kind": {
       "topic": "New topic",
       "reply": "Reply",
       "status": "Status",
-      "member": "New member"
+      "member": "New member",
+      "app": "Content"
     },
     "seeWall": "View profile",
     "deletedUser": "Deleted member",
@@ -12761,6 +13512,316 @@
     "invalid": "Invalid link",
     "invalidBody": "The unsubscribe link is not valid or the account no longer exists.",
     "settings": "Email settings"
+  },
+  "pages": {
+    "title": "Pages",
+    "breadcrumb": "Path",
+    "emptyDirectory": "No published pages yet.",
+    "recordsCount": "{count, plural, one {one record} other {{n} records}}",
+    "draft": "Draft",
+    "draftBanner": "This page is not published: only page editors can see it.",
+    "editPage": "Edit page",
+    "viewAll": "See all in {name}",
+    "record": "Record",
+    "add": "Add {noun}",
+    "editing": "Editing: {title}",
+    "edit": "Edit",
+    "rss": "RSS feed",
+    "follow": "Follow",
+    "following": "Following",
+    "searchIn": "Search {name}",
+    "any": "Any",
+    "yes": "Yes",
+    "no": "No",
+    "sortBy": "Order",
+    "sort": {
+      "newest": "Newest",
+      "updated": "Recently updated",
+      "title": "By title",
+      "rating": "Top rated",
+      "views": "Most viewed",
+      "comments": "Most commented"
+    },
+    "apply": "Apply",
+    "queues": "What you see",
+    "queue": {
+      "published": "Published",
+      "mine": "My submissions",
+      "pending": "Pending",
+      "hidden": "Hidden"
+    },
+    "emptyRecords": "Nothing here yet: no records in {name}.",
+    "deletedMember": "Deleted member",
+    "commentsCount": "{count, plural, one {one comment} other {# comments}}",
+    "viewsCount": "{count, plural, one {one view} other {# views}}",
+    "ratingShort": "{avg} of 5 ({count})",
+    "updated": "Updated",
+    "flags": {
+      "pinned": "Pinned",
+      "featured": "Featured",
+      "new": "New",
+      "pending": "Pending",
+      "hidden": "Hidden",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "PENDING": "This submission awaits staff approval.",
+      "REJECTED": "This submission was rejected.",
+      "HIDDEN": "This record is hidden by staff."
+    },
+    "rejectReason": "Reason: {reason}",
+    "by": "by <name></name>",
+    "edited": "Edited",
+    "editedBy": "Edited by <name></name>, {when}",
+    "discussTopic": "Discuss in the forum",
+    "copy": "Copy",
+    "copied": "Copied",
+    "mod": {
+      "label": "Staff tools",
+      "approve": "Approve",
+      "reject": "Reject",
+      "hide": "Hide",
+      "unhide": "Show again",
+      "feature": "Feature",
+      "unfeature": "Unfeature",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "delete": "Delete",
+      "deleteConfirm": "Permanently delete the record?",
+      "cancel": "Cancel",
+      "reason": "Reason (sent to the author)"
+    },
+    "revisions": {
+      "title": "{count, plural, one {One revision} other {# revisions}}",
+      "restore": "Restore"
+    },
+    "comments": {
+      "title": "{count, plural, =0 {Comments} one {One comment} other {# comments}}",
+      "empty": "No comments yet. Write the first one.",
+      "write": "Write a comment",
+      "send": "Send comment",
+      "pendingNote": "Your comment awaits staff approval.",
+      "signIn": "Sign in to comment."
+    },
+    "form": {
+      "basics": "{noun}",
+      "title": "Title",
+      "category": "Category",
+      "noCategory": "No category",
+      "image": "Image",
+      "details": "Details",
+      "content": "Content",
+      "fields": "More details",
+      "staff": "Staff",
+      "featured": "Featured",
+      "pinned": "Pinned on top",
+      "choose": "Choose…",
+      "yes": "Yes",
+      "memberPlaceholder": "Member name",
+      "fileTypes": "Configs, archives, documents, images",
+      "cancel": "Cancel",
+      "save": "Save",
+      "publish": "Publish",
+      "submitForReview": "Submit for approval",
+      "approvalNote": "Everyone sees it once staff approve it; you get a notification."
+    },
+    "presets": {
+      "guides": {
+        "name": "Guides",
+        "description": "Guides for players: setup, settings, strategies, written by the community.",
+        "record": "Guide",
+        "fields": {
+          "game": {
+            "label": "Game",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Other game"
+            }
+          },
+          "difficulty": {
+            "label": "Level",
+            "options": {
+              "0": "Beginner",
+              "1": "Intermediate",
+              "2": "Advanced"
+            }
+          },
+          "minutes": {
+            "label": "Reading minutes",
+            "help": "Roughly."
+          },
+          "video": {
+            "label": "Video",
+            "help": "A YouTube or Twitch link (optional)."
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Beginners",
+            "description": "First steps on the servers."
+          },
+          "1": {
+            "name": "Advanced",
+            "description": "Tactics, fine settings, tricks."
+          },
+          "2": {
+            "name": "Servers",
+            "description": "How the community servers work."
+          }
+        }
+      },
+      "rules": {
+        "name": "Server rules",
+        "description": "The rules of every game server, in one place.",
+        "record": "Rule set",
+        "fields": {
+          "server": {
+            "label": "Server",
+            "help": "The server it applies to (from the Servers app)."
+          },
+          "game": {
+            "label": "Game",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Other game"
+            }
+          },
+          "applies": {
+            "label": "Applies to",
+            "options": {
+              "0": "All players",
+              "1": "VIP",
+              "2": "Admins"
+            }
+          },
+          "updated": {
+            "label": "Updated on"
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "General",
+            "description": "The basic server rules."
+          },
+          "1": {
+            "name": "VIP",
+            "description": "What VIPs get and what they may not do."
+          },
+          "2": {
+            "name": "Staff",
+            "description": "The admins' rules."
+          }
+        }
+      },
+      "configs": {
+        "name": "Configs",
+        "description": "Player and server configs, ready to copy.",
+        "record": "Config",
+        "fields": {
+          "game": {
+            "label": "Game",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Other game"
+            }
+          },
+          "kind": {
+            "label": "Type",
+            "options": {
+              "0": "Player config",
+              "1": "Server config",
+              "2": "HUD",
+              "3": "Crosshair"
+            }
+          },
+          "config": {
+            "label": "Config",
+            "help": "Paste the file contents; visitors copy it in one click."
+          },
+          "file": {
+            "label": "File",
+            "help": "The archive or .cfg file (optional)."
+          },
+          "resolution": {
+            "label": "Resolution"
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Players",
+            "description": "Personal configs."
+          },
+          "1": {
+            "name": "Servers",
+            "description": "Server configs."
+          },
+          "2": {
+            "name": "HUD and crosshair",
+            "description": "The look of the game interface."
+          }
+        }
+      },
+      "recruitment": {
+        "name": "Recruitment",
+        "description": "Open positions in the team: requirements, slots, how to apply.",
+        "record": "Position",
+        "fields": {
+          "status": {
+            "label": "Status",
+            "options": {
+              "0": "Open",
+              "1": "Closed"
+            }
+          },
+          "slots": {
+            "label": "Slots"
+          },
+          "group": {
+            "label": "Group",
+            "help": "The group accepted applicants join."
+          },
+          "requirements": {
+            "label": "Requirements",
+            "help": "One per line."
+          },
+          "apply": {
+            "label": "Apply link",
+            "help": "The form or topic where people apply."
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Staff",
+            "description": "Moderators and administrators."
+          },
+          "1": {
+            "name": "Servers",
+            "description": "Game server admins."
+          },
+          "2": {
+            "name": "Clans",
+            "description": "Clans that recruit."
+          }
+        }
+      },
+      "blank": {
+        "name": "Empty database",
+        "description": "Just title and content; you add the fields and categories.",
+        "record": "Record"
+      }
+    }
   },
   "downloads": {
     "title": "Downloads",

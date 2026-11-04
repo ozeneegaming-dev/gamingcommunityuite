@@ -28,7 +28,11 @@ export default async function SearchPage({ searchParams }: Props) {
   // ACP › Căutare: ce caută implicit pagina (topicuri sau postări).
   const searchCfg = await loadSearchConfig(services().settings);
   const asked = one(sp.type);
+  // Sursele de conținut ale aplicațiilor pornite (ex. bazele de date din Pagini): câte un tip în plus.
+  const sources = await services().contentSources.searchSources();
+  const source = sources.find((s) => s.key === asked) ?? null;
   const type = asked === "posts" || asked === "topics" ? asked : searchCfg.defaultType;
+  const tSources = await getTranslations();
   const forumId = Number(one(sp.forum)) || undefined;
   const author = one(sp.author).trim();
   const since = one(sp.since);
@@ -37,7 +41,11 @@ export default async function SearchPage({ searchParams }: Props) {
 
   let result: Awaited<ReturnType<ReturnType<typeof services>["search"]["search"]>> | null = null;
   let message: string | null = null;
-  if (q) {
+  let appResult: Awaited<ReturnType<ReturnType<typeof services>["contentSources"]["search"]>> = null;
+  if (q && source) {
+    if (q.length < searchCfg.minLength) message = t("tooShort", { min: searchCfg.minLength });
+    else appResult = await services().contentSources.search(source.key, actor, { q, page, perPage: 20 });
+  } else if (q) {
     try {
       result = await services().search.search(actor, {
         q,
@@ -55,7 +63,7 @@ export default async function SearchPage({ searchParams }: Props) {
     }
   }
   const query = (p: number) => {
-    const params = new URLSearchParams({ q, type });
+    const params = new URLSearchParams({ q, type: source ? source.key : type });
     if (forumId) params.set("forum", String(forumId));
     if (author) params.set("author", author);
     if (since) params.set("since", since);
@@ -82,9 +90,14 @@ export default async function SearchPage({ searchParams }: Props) {
           <label className="gcs-field__label" htmlFor="gcs-search-type">
             {t("type")}
           </label>
-          <select id="gcs-search-type" className="gcs-input" name="type" defaultValue={type}>
+          <select id="gcs-search-type" className="gcs-input" name="type" defaultValue={source ? source.key : type}>
             <option value="topics">{t("types.topics")}</option>
             <option value="posts">{t("types.posts")}</option>
+            {sources.map((s) => (
+              <option key={s.key} value={s.key}>
+                {tSources(s.labelKey as never)}
+              </option>
+            ))}
           </select>
         </div>
         <div className="gcs-field">
@@ -123,6 +136,38 @@ export default async function SearchPage({ searchParams }: Props) {
         <p role="alert" className="gcs-notice gcs-notice--error">
           {message}
         </p>
+      )}
+      {appResult && source && (
+        <section aria-live="polite" className="gcs-searchResults" data-testid="gcs-search-app-results">
+          <p className="gcs-muted">
+            {appResult.total === 0 && <GcsIcon name="fa-regular fa-face-frown" className="gcs-emptyIcon" />}
+            {appResult.total === 0 ? t("none", { q }) : t("results", { count: appResult.total, q })}
+          </p>
+          {appResult.hits.map((h) => (
+            <GcsCard key={h.key} as="article" className="gcs-searchResult" data-testid="gcs-search-result">
+              <h2 className="gcs-searchResult__title">
+                <GcsIcon name={source.icon} className="gcs-hIcon" />
+                <Link href={h.href}>{h.title}</Link>
+              </h2>
+              {h.snippet && <p className="gcs-searchResult__snippet">{h.snippet}</p>}
+              <p className="gcs-searchResult__meta">
+                {h.author && (
+                  <>
+                    <GcsMemberName userId={h.author.id} name={h.author.name} nameKey={h.author.nameKey} href={memberHref(h.author)} />
+                    {" · "}
+                  </>
+                )}
+                {h.context && (
+                  <>
+                    <Link href={h.context.href}>{h.context.label}</Link> ·{" "}
+                  </>
+                )}
+                <GcsRelTime at={h.at} />
+              </p>
+            </GcsCard>
+          ))}
+          <GcsPagination pagination={{ page, pages: Math.max(1, Math.ceil(appResult.total / 20)), perPage: 20, total: appResult.total }} href={query} />
+        </section>
       )}
       {result && (
         <section aria-live="polite" className="gcs-searchResults">

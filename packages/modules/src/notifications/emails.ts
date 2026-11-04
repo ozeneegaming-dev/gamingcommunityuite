@@ -110,6 +110,17 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, t, _n, d) => (d.kind === "approved" ? `Clanul tău „${t}” a fost aprobat` : `Clanul tău „${t}” a fost respins${d.reason ? `: ${String(d.reason)}` : ""}`),
     en: (_a, t, _n, d) => (d.kind === "approved" ? `Your clan “${t}” was approved` : `Your clan “${t}” was rejected${d.reason ? `: ${String(d.reason)}` : ""}`),
   },
+  // Aplicația Pagini: trimiterile de aprobat (staff-ul), decizia (autorul), comentariile, bazele urmărite.
+  "pages.submission": {
+    ro: (a, t, n, d) => (d.kind === "comment" ? `${a} a comentat la „${t}” (în așteptare)` : n > 1 ? `${n} trimiteri noi așteaptă aprobarea` : `${a} a trimis „${t}” spre aprobare`),
+    en: (a, t, n, d) => (d.kind === "comment" ? `${a} commented on “${t}” (pending)` : n > 1 ? `${n} new submissions await approval` : `${a} submitted “${t}” for approval`),
+  },
+  "pages.review": {
+    ro: (_a, t, _n, d) => (d.kind === "approved" ? `„${t}” a fost aprobat și publicat` : `„${t}” a fost respins${d.reason ? `: ${String(d.reason)}` : ""}`),
+    en: (_a, t, _n, d) => (d.kind === "approved" ? `“${t}” was approved and published` : `“${t}” was rejected${d.reason ? `: ${String(d.reason)}` : ""}`),
+  },
+  "pages.comment": { ro: (a, t) => `${a} a comentat la „${t}”`, en: (a, t) => `${a} commented on “${t}”` },
+  "pages.followed": { ro: (a, t, n) => (n > 1 ? `${n} înregistrări noi în bazele urmărite` : `${a} a publicat „${t}”`), en: (a, t, n) => (n > 1 ? `${n} new records in the databases you follow` : `${a} published “${t}”`) },
 };
 
 /** O durată în minute, pe înțeles („15 minute”, „2 ore”, „3 zile”); `null` = permanent. */

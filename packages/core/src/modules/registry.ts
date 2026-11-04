@@ -51,7 +51,7 @@ export type GcsAcpApp = "system" | "community" | "members" | "vip" | "gaming" | 
  * O zonă din bara de iconițe a ACP-ului (specul 2026-10-09-acp-navigatie-aplicatii §1.2). Dashboard-ul nu e o zonă: are
  * linkul lui, deasupra zonelor.
  */
-export type GcsAcpArea = "system" | "community" | "members" | "appearance" | "gaming" | "vip" | "stats" | "apps";
+export type GcsAcpArea = "system" | "community" | "members" | "appearance" | "gaming" | "vip" | "pages" | "stats" | "apps";
 
 /**
  * O intrare din meniul ACP. `section` e cheia folosită de rolurile ACP; `icon` e o iconiță Font Awesome Free
@@ -294,7 +294,16 @@ export interface GcsModule {
   forumExtensions?: GcsForumExtension[];
   /** Aspect forumuri: extensiile widget-urilor (taburile din pagina de aspect a unui widget și stilul benzii lui). */
   widgetExtensions?: GcsWidgetExtension[];
+  /**
+   * Sursele de conținut ale aplicației (specul 2026-11-03-pagini §6): un tab în căutarea site-ului (`search`) și
+   * elemente în fluxul de activitate (`stream`), doar cât aplicația e pornită. Aici sunt metadatele; căutarea și
+   * fluxul le înregistrează serviciile aplicației (`GcsContentSources` din `@gcs/modules`).
+   */
+  contentSources?: GcsContentSourceDef[];
 }
+
+/** O sursă de conținut a unei aplicații (ex. înregistrările bazelor de date din Pagini). */
+export type GcsContentSourceDef = { key: string; labelKey: string; icon: string; search?: boolean; stream?: boolean };
 
 /** Contextul funcțiilor unui eveniment de realizări (citiri în baza de date). */
 export type GcsAchievementContext = { db: PrismaClient };
@@ -502,6 +511,14 @@ export class GcsModuleRegistry {
       .flatMap((m, i) => (m.widgetExtensions ?? []).map((def, j) => ({ module: m.key, def, order: i * 100 + j })))
       .sort((a, b) => (a.def.position ?? 100) - (b.def.position ?? 100) || a.order - b.order)
       .map(({ module, def }) => ({ module, def }));
+  }
+
+  /** Sursele de conținut ale modulelor (cu modulul fiecăreia), în ordinea înregistrării; o cheie repetată o păstrează pe prima. */
+  contentSources(): { module: string; def: GcsContentSourceDef }[] {
+    const seen = new Set<string>();
+    return this.modules
+      .flatMap((m) => (m.contentSources ?? []).map((def) => ({ module: m.key, def })))
+      .filter((s) => (seen.has(s.def.key) ? false : (seen.add(s.def.key), true)));
   }
 
   widgetDef(key: string): { module: string; def: GcsWidgetDef } | undefined {

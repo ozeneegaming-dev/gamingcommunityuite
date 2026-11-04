@@ -25,6 +25,9 @@
 @import "@gcs/ui/servers.css";
 @import "@gcs/ui/clans.css";
 @import "@gcs/ui/downloads.css";
+/* Aplicația Pagini (orice temă): paginile construite, bazele de date, înregistrările și constructorul din ACP. */
+@import "@gcs/ui/pages.css";
+@import "@gcs/ui/pages-acp.css";
 @import "@gcs/ui/gameplay.css";
 @import "@gcs/ui/viewer.css";
 @import "@gcs/ui/chatpro.css";
@@ -43,6 +46,8 @@
 @import "@gcs/ui/acp-announce.css";
 @import "@gcs/ui/acp-misc.css";
 @import "@gcs/ui/acp-system.css";
+/* Marketplace (ACP › Sistem): cardurile catalogului, vitrina și previzualizarea. */
+@import "@gcs/ui/marketplace.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";
 /* Componentele sistemului (în orice temă, pe tokenurile temei): antetul construit cu panourile lui, consola, bara de jos. */

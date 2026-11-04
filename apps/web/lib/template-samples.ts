@@ -4,7 +4,7 @@ import type { GcsForumRow, GcsMemberCard, GcsPostAuthor, GcsTopicRow } from "@gc
 import { templateIconSvg } from "@gcs/modules";
 import { getTranslations } from "next-intl/server";
 import { services } from "./services";
-import { forumRowVars, hoverCardVars, memberCardVars, postbitVars, topicRowVars, widgetCardVars } from "./template-data";
+import { forumRowVars, hoverCardVars, memberCardVars, postbitVars, recordCardVars, topicRowVars, widgetCardVars } from "./template-data";
 
 /**
  * Datele reale pe care se previzualizează un șablon în ACP (primul forum vizibil, un topic, o postare recentă,
@@ -167,6 +167,38 @@ export async function templateSample(key: string, actor: GcsActor): Promise<GcsT
         slots: { content: slotBox("content", t("slot", { name: "content" }), body), extra: slotBox("extra", t("slot", { name: "extra" })) },
         before: '<aside class="gcs-forumSidebar" style="max-width:340px">',
         after: "</aside>",
+      };
+    }
+    case "pages.record_card": {
+      // O înregistrare reală, dacă există; altfel una de exemplu.
+      const { pagesAccess, pagesQueries } = services();
+      const db = (await pagesAccess.visibleDatabases(actor)).find((d) => d.recordsCount > 0);
+      const real = db ? (await pagesQueries.latest(actor, db.id, { limit: 1, sort: "newest" }))?.records[0] : undefined;
+      const record = real ?? {
+        id: 1,
+        title: t("recordTitle"),
+        slug: "ghid",
+        href: "/pages",
+        excerpt: t("recordExcerpt"),
+        image: null,
+        author: sampleUser(name),
+        category: null,
+        status: "PUBLISHED" as const,
+        featured: true,
+        pinned: false,
+        isNew: true,
+        publishedAt: NOW(),
+        updatedAt: NOW(),
+        views: 120,
+        comments: 4,
+        rating: { avg: 4.5, count: 8 },
+        fields: [],
+      };
+      return {
+        data: recordCardVars(record, db ?? { name: t("recordDatabase"), key: "ghiduri", icon: "fa-solid fa-book-open" }, true, { yes: "✓", no: "✗" }),
+        slots: {},
+        before: '<div class="gcs-pgGrid" style="max-width:340px">',
+        after: "</div>",
       };
     }
     case "email.layout": {

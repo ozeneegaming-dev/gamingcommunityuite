@@ -263,3 +263,31 @@ describe("licența declarată invalidă de Data Center (după perioada de grați
     expect(await gated.enabled("srv")).toBe(true);
   });
 });
+
+describe("aplicațiile premium care nu sunt în licență (Marketplace)", () => {
+  test("nu se pot porni până nu sunt cumpărate; fără licență salvată, fără restricție", async () => {
+    const settings = new GcsSettingsService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry });
+    let licensed: string[] | null = [];
+    const gated = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings, licensedApps: async () => licensed });
+    await gated.setEnabled(root, "chatplus", false);
+    await expect(gated.setEnabled(root, "chatplus", true)).rejects.toMatchObject({ params: { reason: "app_not_licensed" } });
+    licensed = ["chatplus"];
+    await gated.setEnabled(root, "chatplus", true);
+    expect(await gated.enabled("chatplus")).toBe(true);
+    // Ieșită din licență (rambursare): oprită, deși starea ei e „pornită”; înapoi în licență, pornește iar.
+    licensed = [];
+    expect(await gated.enabled("chatplus")).toBe(false);
+    licensed = ["chatplus"];
+    expect(await gated.enabled("chatplus")).toBe(true);
+    // Fără licență salvată (dezvoltare, teste): fără restricție.
+    await gated.setEnabled(root, "chatplus", false);
+    licensed = null;
+    await gated.setEnabled(root, "chatplus", true);
+    expect(await gated.enabled("chatplus")).toBe(true);
+    // O aplicație standard nu ține de licență.
+    licensed = [];
+    await gated.setEnabled(root, "srv", false);
+    await gated.setEnabled(root, "srv", true);
+    expect(await gated.enabled("srv")).toBe(true);
+  });
+});

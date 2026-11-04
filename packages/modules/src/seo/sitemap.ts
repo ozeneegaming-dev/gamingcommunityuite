@@ -62,6 +62,8 @@ type Deps = {
   clansVisible?: (actor: GcsActor) => Promise<boolean>;
   /** Id-urile serverelor vizibile (aplicația pornită + `servers.view` + grupurile serverului). */
   serverIds?: (actor: GcsActor) => Promise<number[]>;
+  /** Paginile aplicației Pagini (și înregistrările bazelor publice), cu aplicația pornită. */
+  appPages?: (actor: GcsActor) => Promise<GcsSitemapEntry[]>;
   /** Mărimea unei bucăți (testele folosesc bucăți mici); implicit `SITEMAP_CHUNK`. */
   chunk?: number;
 };
@@ -145,6 +147,7 @@ export class GcsSitemapService {
     }
     if (await this.clansOn(guest)) out.push({ path: "/clans" });
     if ((await this.serverIdsFor(guest)).length > 0) out.push({ path: "/servers" });
+    if (this.deps.appPages && (await this.deps.apps.canAccess(guest, "pages"))) out.push(...(await this.deps.appPages(guest)));
     return out.map((e) => (e.lastModified && Number.isNaN(e.lastModified.getTime()) ? { path: e.path } : e));
   }
 
