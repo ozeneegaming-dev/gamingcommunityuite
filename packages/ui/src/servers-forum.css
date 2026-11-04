@@ -194,9 +194,27 @@
   letter-spacing: 0.04em;
 }
 
+/* Slotul rândului e un flex cu wrap: bara și cipurile ocupă tot rândul lor, fără să iasă din rând / card. */
+.gcsx-srv:not(.gcsx-srv--compact),
+.gcsx-srvChips {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 /* ── Cipurile subforumurilor-server pe index (B) ────────────────────────────────────────────────────── */
-.gcsx-servers--chips .gcs-forumRow__subs {
+.gcsx-servers--chips .gcs-forumRow__subs,
+.gcsx-servers--chips .gcs-forumCard__subs {
   display: none;
+}
+/* În vederea grilă (carduri): cipuri mai înguste, bara fără miniatură. */
+.gcs-forumCard .gcsx-srvChips {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+}
+.gcs-forumCard .gcsx-srv__thumb {
+  display: none;
+}
+.gcs-forumCard .gcsx-srv {
+  gap: 6px 12px;
 }
 .gcsx-srvChips {
   position: relative;
