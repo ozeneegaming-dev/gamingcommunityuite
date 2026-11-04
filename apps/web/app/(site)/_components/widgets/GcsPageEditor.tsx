@@ -42,7 +42,7 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { closePageEditor, resetPageLayout, savePageLayout, saveWidgetFavorites } from "../../edit-actions";
 import { GcsWidgetSidebar } from "./GcsWidgetSidebar";
 
-const ZONES: GcsWidgetZone[] = ["top", "sidebar", "bottom"];
+const ZONES: GcsWidgetZone[] = ["top", "main", "sidebar", "bottom"];
 /** Editorul textului formatat (Tiptap) se încarcă doar când se deschide configurarea unui widget care îl folosește. */
 const GcsRichTextInput = dynamic(() => import("../editor/GcsRichTextInput").then((m) => m.GcsRichTextInput), { ssr: false });
 /** Id-urile dnd-kit ale zonelor de drop pentru widget-urile noi („Trage widget-urile aici”). */
@@ -360,7 +360,10 @@ export function GcsPageEditor({ page, pageLabel, initial, catalog, groups, favor
         <GcsWidgetSidebar catalog={catalog} favorites={favorites} pageLabel={pageLabel} onToggleFavorite={toggleFavorite} onAdd={(zone, w) => add(zone, w)} footer={footer} />
         {zoneBox("top")}
         <div className="gcs-forumLayout">
-          <div className="gcs-forumLayout__main gcs-widgetPage__content">{children}</div>
+          <div className="gcs-forumLayout__main">
+            <div className="gcs-widgetPage__content">{children}</div>
+            {zoneBox("main")}
+          </div>
           <div className="gcs-forumSidebar">{zoneBox("sidebar")}</div>
         </div>
         {zoneBox("bottom")}

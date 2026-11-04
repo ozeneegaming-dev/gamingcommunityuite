@@ -1750,3 +1750,68 @@
 .gcs-aspectPreviewPage__widget {
   max-width: 360px;
 }
+
+/*
+ * Grila fără goluri (macheta HomeComplete): o categorie cu 1–2 forumuri sau un rând final incomplet nu mai lasă locuri
+ * goale. Pe lățimea a trei coloane, grila are 6 piste (un card = 2): un singur card rămas ocupă tot rândul, două rămase
+ * câte jumătate. Pe două coloane, cardul rămas singur ocupă rândul. Cardul care ocupă tot rândul se așază pe orizontală
+ * (imaginea în stânga, textul în dreapta), ca să nu devină o imagine uriașă.
+ */
+.gcs-forumIndex[data-view="grid"] .gcs-category {
+  container: gcs-category / inline-size;
+}
+@container gcs-category (min-width: 760px) {
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > * {
+    grid-column: span 2;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > :nth-last-child(2):nth-child(3n + 1),
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > :last-child:nth-child(3n + 2) {
+    grid-column: span 3;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > :last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(3n + 1) {
+    display: grid;
+    grid-template-columns: minmax(260px, 34%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(3n + 1) > .gcs-forumCard__media {
+    grid-row: 1 / span 2;
+    aspect-ratio: auto;
+    min-height: 150px;
+    border-bottom: 0;
+    border-right: 1px solid var(--gcs-border);
+    border-radius: 9px 0 0 9px;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(3n + 1) > :not(.gcs-forumCard__media) {
+    grid-column: 2;
+  }
+}
+@container gcs-category (min-width: 500px) and (max-width: 759.98px) {
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(odd) {
+    display: grid;
+    grid-template-columns: minmax(200px, 40%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(odd) > .gcs-forumCard__media {
+    grid-row: 1 / span 2;
+    aspect-ratio: auto;
+    min-height: 150px;
+    border-bottom: 0;
+    border-right: 1px solid var(--gcs-border);
+    border-radius: 9px 0 0 9px;
+  }
+  .gcs-forumIndex[data-view="grid"] .gcs-category .gcs-category__well > .gcs-forumCard:last-child:nth-child(odd) > :not(.gcs-forumCard__media) {
+    grid-column: 2;
+  }
+}

@@ -10255,7 +10255,8 @@
       "ranking": "Ranking",
       "guestCta": "Guest block",
       "rankingTop": "{period, select, day {Top of the day} week {Top of the week} month {Top of the month} year {Top of the year} other {All-time top}}",
-      "ad": "Ad"
+      "ad": "Ad",
+      "nowCommunity": "Now in the community"
     },
     "forums": {
       "stats": "Statistics",
@@ -10288,7 +10289,9 @@
       "adUnit": "Ad",
       "database": "Database",
       "sort": "Order",
-      "block": "Block"
+      "block": "Block",
+      "liveMatch": "Live match",
+      "serverChips": "Servers"
     },
     "periods": {
       "week": "this week",
@@ -10309,7 +10312,8 @@
         "newMembers": "The newest registered members.",
         "ranking": "Top members by posts, topics, reputation or time online, for today, the week, month, year or all time.",
         "guestCta": "Sign up, sign in and one-click login. Only guests see it.",
-        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one)."
+        "ad": "An ad from ACP › Promotion › Ads (a specific one or a random one).",
+        "nowCommunity": "Live activity (forum, servers, mix) with tabs, the mix match in progress and the servers with “Play now”."
       },
       "forums": {
         "stats": "The number of topics, posts and members.",
@@ -10426,7 +10430,8 @@
     "zones": {
       "top": "Top",
       "sidebar": "Right column",
-      "bottom": "Bottom"
+      "bottom": "Bottom",
+      "main": "Left column"
     },
     "add": "Add widget",
     "catalog": "Available widgets",

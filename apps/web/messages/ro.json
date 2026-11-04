@@ -10255,7 +10255,8 @@
       "ranking": "Clasament",
       "guestCta": "Bloc pentru vizitatori",
       "rankingTop": "{period, select, day {Topul zilei} week {Topul săptămânii} month {Topul lunii} year {Topul anului} other {Topul tuturor timpurilor}}",
-      "ad": "Reclamă"
+      "ad": "Reclamă",
+      "nowCommunity": "Acum în comunitate"
     },
     "forums": {
       "stats": "Statistici",
@@ -10288,7 +10289,9 @@
       "adUnit": "Reclama",
       "database": "Baza de date",
       "sort": "Ordinea",
-      "block": "Blocul"
+      "block": "Blocul",
+      "liveMatch": "Meciul live",
+      "serverChips": "Serverele"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -10309,7 +10312,8 @@
         "newMembers": "Cei mai noi membri înregistrați.",
         "ranking": "Top membri după postări, topicuri, reputație sau timp online, pe zi, săptămână, lună, an sau tot timpul.",
         "guestCta": "Înregistrarea, autentificarea și conectarea dintr-un click. Doar vizitatorii îl văd.",
-        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare).",
+        "nowCommunity": "Activitatea live (forum, servere, mix) cu tab-uri, meciul mix în desfășurare și serverele cu „Joacă acum”."
       },
       "forums": {
         "stats": "Numărul de topicuri, postări și membri.",
@@ -10426,7 +10430,8 @@
     "zones": {
       "top": "Sus",
       "sidebar": "Coloana din dreapta",
-      "bottom": "Jos"
+      "bottom": "Jos",
+      "main": "Coloana din stânga"
     },
     "add": "Adaugă widget",
     "catalog": "Widget-uri disponibile",

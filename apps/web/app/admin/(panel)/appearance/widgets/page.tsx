@@ -42,11 +42,11 @@ export default async function AcpWidgetsPage() {
         <GcsCard key={page} as="section" aria-label={tp(`pages.${page}`)} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           <h2 className="gcs-acpWidget__title"><GcsAcpTitleIcon name="fa-solid fa-file-lines" />{tp(`pages.${page}`)}</h2>
           <p className="gcs-muted" style={{ margin: 0 }}>
-            {(["top", "sidebar", "bottom"] as const).map((z) => `${tp(`zones.${z}`)}: ${layout[z].length}`).join(" · ")}
+            {(["top", "main", "sidebar", "bottom"] as const).map((z) => `${tp(`zones.${z}`)}: ${layout[z].length}`).join(" · ")}
           </p>
           {aspect && (
             <ul className="gcs-acpWidgetList" aria-label={ta("widget.listLabel")} data-page={page}>
-              {(["top", "sidebar", "bottom"] as const).flatMap((z) =>
+              {(["top", "main", "sidebar", "bottom"] as const).flatMap((z) =>
                 layout[z].map((p) => (
                   <li key={p.id}>
                     <span>

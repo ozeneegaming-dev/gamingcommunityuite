@@ -40,6 +40,7 @@
   gap: 20px;
 }
 .gcs-widgetZone--top .gcs-sideCard,
+.gcs-widgetZone--main .gcs-sideCard,
 .gcs-widgetZone--bottom .gcs-sideCard {
   width: 100%;
 }
