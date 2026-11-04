@@ -29,16 +29,19 @@ async function GcsWidgetSlot({ placement, actor, page }: { placement: GcsWidgetP
   return <>{await renderPlacement(placement, actor, page)}</>;
 }
 
-/** Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). */
-function GcsWidgetSkeleton({ zone }: { zone: GcsWidgetZone }) {
-  return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} aria-hidden="true" />;
+/**
+ * Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). `data-skeleton`
+ * = tipul widget-ului: widget-urile înalte (ex. „Acum în comunitate”) își rezervă din CSS înălțimea lor.
+ */
+function GcsWidgetSkeleton({ zone, type }: { zone: GcsWidgetZone; type: string }) {
+  return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} data-skeleton={type} aria-hidden="true" />;
 }
 
 type GcsLayout = Record<GcsWidgetZone, GcsWidgetPlacementView[]>;
 
 /**
  * Chat Pro: pe pagina principală, membrul alege unde stă chat-ul (preferința „Poziție”): primul în zona de sus sau
- * ultimul în zona de jos. Doar pentru un chat pus de admin sus sau jos (coloana laterală rămâne cum e).
+ * ultimul în zona de jos. Doar pentru un chat pus de admin sus, în coloana din stânga sau jos (coloana laterală rămâne cum e).
  */
 async function arrangeChat(layout: GcsLayout, actor: GcsActor): Promise<GcsLayout> {
   const { chatPro } = services();
@@ -46,11 +49,12 @@ async function arrangeChat(layout: GcsLayout, actor: GcsActor): Promise<GcsLayou
   const { position } = await chatPro.prefs(actor.userId);
   if (position === "auto") return layout;
   const isChat = (p: GcsWidgetPlacementView) => p.type === "chat.shoutbox";
-  const moving = [...layout.top.filter(isChat), ...layout.bottom.filter(isChat)];
+  const moving = [...layout.top.filter(isChat), ...layout.main.filter(isChat), ...layout.bottom.filter(isChat)];
   if (moving.length === 0) return layout;
   const top = layout.top.filter((p) => !isChat(p));
+  const main = layout.main.filter((p) => !isChat(p));
   const bottom = layout.bottom.filter((p) => !isChat(p));
-  return { ...layout, top: position === "top" ? [...moving, ...top] : top, bottom: position === "bottom" ? [...bottom, ...moving] : bottom };
+  return { ...layout, top: position === "top" ? [...moving, ...top] : top, main, bottom: position === "bottom" ? [...bottom, ...moving] : bottom };
 }
 
 /**
@@ -67,7 +71,7 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   const zone = (z: GcsWidgetZone) =>
     layout[z].map((p) => {
       const slot = (
-        <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
+        <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} type={p.type} />}>
           <GcsWidgetSlot placement={p} actor={actor} page={page} />
         </Suspense>
       );
@@ -89,7 +93,16 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
         </div>
       )}
       <div className="gcs-forumLayout">
-        <div className="gcs-forumLayout__main gcs-widgetPage__content">{children}</div>
+        {/* Zona „main” (coloana din stânga, sub conținutul paginii): blocurile late de lângă coloana din dreapta, ca
+            pagina să nu lase un gol sub conținut (macheta HomeComplete: zona serverelor, Comunitate, Chat). */}
+        <div className="gcs-forumLayout__main">
+          <div className="gcs-widgetPage__content">{children}</div>
+          {layout.main.length > 0 && (
+            <div className="gcs-widgetZone gcs-widgetZone--main" data-zone="main">
+              {zone("main")}
+            </div>
+          )}
+        </div>
         {layout.sidebar.length > 0 && (
           <aside className="gcs-forumSidebar gcs-widgetZone--sidebar" data-zone="sidebar">
             {zone("sidebar")}

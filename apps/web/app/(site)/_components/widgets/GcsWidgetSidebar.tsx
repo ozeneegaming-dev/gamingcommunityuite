@@ -10,7 +10,7 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import type { GcsPageEditorWidget } from "./GcsPageEditor";
 
 /** Ordinea zonelor în butoanele „Adaugă în zona:” (cum apar pe pagină). */
-const ZONE_ORDER: GcsWidgetZone[] = ["top", "sidebar", "bottom"];
+const ZONE_ORDER: GcsWidgetZone[] = ["top", "main", "sidebar", "bottom"];
 
 /** Id-ul dnd-kit al unui widget nou tras din listă (același widget poate apărea și la „Favorite”, și în categorie). */
 export const newWidgetId = (section: string, key: string) => `new:${section}:${key}`;

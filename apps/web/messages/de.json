@@ -10255,7 +10255,8 @@
       "ranking": "Rangliste",
       "guestCta": "Gästeblock",
       "rankingTop": "{period, select, day {Top des Tages} week {Top der Woche} month {Top des Monats} year {Top des Jahres} other {Top aller Zeiten}}",
-      "ad": "Reclamă"
+      "ad": "Reclamă",
+      "nowCommunity": "Acum în comunitate"
     },
     "forums": {
       "stats": "Statistiken",
@@ -10288,7 +10289,9 @@
       "adUnit": "Reclama",
       "database": "Baza de date",
       "sort": "Ordinea",
-      "block": "Blocul"
+      "block": "Blocul",
+      "liveMatch": "Meciul live",
+      "serverChips": "Serverele"
     },
     "periods": {
       "week": "diese woche",
@@ -10309,7 +10312,8 @@
         "newMembers": "Die neuesten registrierten Mitglieder.",
         "ranking": "Top-Mitglieder nach Beiträgen, Themen, Reputation oder Online-Zeit, für heute, die Woche, den Monat, das Jahr oder insgesamt.",
         "guestCta": "Registrierung, Anmeldung und Ein-Klick-Login. Nur Gäste sehen ihn.",
-        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare).",
+        "nowCommunity": "Activitatea live (forum, servere, mix) cu tab-uri, meciul mix în desfășurare și serverele cu „Joacă acum”."
       },
       "forums": {
         "stats": "Die Anzahl der Themen, Posts und Mitglieder.",
@@ -10426,7 +10430,8 @@
     "zones": {
       "top": "Oben",
       "sidebar": "Rechte Spalte",
-      "bottom": "Boden"
+      "bottom": "Boden",
+      "main": "Coloana din stânga"
     },
     "add": "Hinzufügen von Widget",
     "catalog": "Verfügbare Widgets",

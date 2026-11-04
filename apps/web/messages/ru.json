@@ -10255,7 +10255,8 @@
       "ranking": "Рейтинг",
       "guestCta": "Блок для гостей",
       "rankingTop": "{period, select, day {Топ дня} week {Топ недели} month {Топ месяца} year {Топ года} other {Топ за всё время}}",
-      "ad": "Reclamă"
+      "ad": "Reclamă",
+      "nowCommunity": "Acum în comunitate"
     },
     "forums": {
       "stats": "Статистика",
@@ -10288,7 +10289,9 @@
       "adUnit": "Reclama",
       "database": "Baza de date",
       "sort": "Ordinea",
-      "block": "Blocul"
+      "block": "Blocul",
+      "liveMatch": "Meciul live",
+      "serverChips": "Serverele"
     },
     "periods": {
       "week": "на этой неделе",
@@ -10309,7 +10312,8 @@
         "newMembers": "Новейшие зарегистрированные участники.",
         "ranking": "Лучшие участники по сообщениям, темам, репутации или времени онлайн за сегодня, неделю, месяц, год или за всё время.",
         "guestCta": "Регистрация, вход и вход в один клик. Видят только гости.",
-        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare).",
+        "nowCommunity": "Activitatea live (forum, servere, mix) cu tab-uri, meciul mix în desfășurare și serverele cu „Joacă acum”."
       },
       "forums": {
         "stats": "Количество тем, постов и членов.",
@@ -10426,7 +10430,8 @@
     "zones": {
       "top": "Топ",
       "sidebar": "Правая колонка",
-      "bottom": "Нижняя часть"
+      "bottom": "Нижняя часть",
+      "main": "Coloana din stânga"
     },
     "add": "Добавить виджет",
     "catalog": "Доступные виджеты",

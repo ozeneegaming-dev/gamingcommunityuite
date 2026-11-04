@@ -16,7 +16,7 @@ import { isGcsIcon } from "@gcs/ui/icon-registry";
 /** Spațiul de nume al textelor pluginurilor în mesajele next-intl: `pluginText.<vendor>.<nume>.<cheie>`. */
 export const PLUGIN_TEXT_NAMESPACE = "pluginText";
 const FALLBACK_ICON = "fa-solid fa-puzzle-piece";
-const ALL_ZONES = ["top", "bottom", "sidebar"] as const;
+const ALL_ZONES = ["top", "bottom", "sidebar", "main"] as const;
 
 export type GcsPluginLangs = Record<string, Record<string, unknown>>;
 

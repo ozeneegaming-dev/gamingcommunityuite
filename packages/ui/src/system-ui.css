@@ -543,6 +543,13 @@
   font: 700 15px var(--gcs-font-text);
   color: var(--gcs-heading, var(--gcs-text));
 }
+/* Widget-ul „Acum în comunitate”: aceeași cutie ca în consolă, oriunde pe pagină (titlul e un `h2`). */
+:root .gcs-nowCommunity {
+  min-width: 0;
+}
+:root .gcs-nowCommunity .gcs-ck__bandTitle {
+  margin: 0;
+}
 :root .gcs-ck__ico {
   flex: none;
   width: 30px;

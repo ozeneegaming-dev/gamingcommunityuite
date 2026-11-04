@@ -207,7 +207,7 @@ export const pluginManifestSchema = z.strictObject({
         label,
         description: z.string().trim().max(300).optional(),
         icon: icon.default("fa-solid fa-puzzle-piece"),
-        zones: z.array(z.enum(["top", "bottom", "sidebar"])).min(1).max(3).optional(),
+        zones: z.array(z.enum(["top", "bottom", "sidebar", "main"])).min(1).max(4).optional(),
         pages: z.array(z.enum(["index", "forum", "topic"])).min(1).max(3).optional(),
         fields: z.array(widgetField).max(20).default([]),
         defaultConfig: z.record(z.string(), json).default({}),

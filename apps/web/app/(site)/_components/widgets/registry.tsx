@@ -32,7 +32,8 @@ import { GcsDonationGoal } from "../donations/GcsDonationGoal";
 import { donationCta } from "@/lib/donations.server";
 import { COMMUNITY_METRICS, WIDGET_METRICS } from "@/lib/ranking";
 import { isRankingMetric, isRankingPeriod, rankingMetrics, rankingRows } from "@/lib/ranking.server";
-import { liveMatchList } from "@/lib/cockpit.server";
+import { liveMatchList, nowCommunityData } from "@/lib/cockpit.server";
+import { GcsNowCommunity } from "../cockpit/GcsNowCommunity";
 import { GcsRecordList } from "../pages/GcsRecordList";
 
 /** Ce primește randarea unui widget: amplasarea (id, config), viewer-ul și locul ei (pagina, zona). */
@@ -162,6 +163,10 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
+  // „Acum în comunitate”: feed-ul, meciul mix live și serverele (macheta HomeComplete), cu actualizare live în browser.
+  "core.nowCommunity": async ({ id, config, actor }) => (
+    <GcsNowCommunity id={id} data={await nowCommunityData(actor, { live: config.live !== "hide", servers: config.servers !== "hide" })} />
+  ),
   "core.statsPanel": async ({ id, config }) => <GcsStatsPanel id={id} config={config} />,
   "core.onlineDay": async ({ id, config }) => <GcsWhoWasOnline id={id} config={config} />,
   // Doar vizitatorii îl văd (membrii sunt deja înăuntru).
