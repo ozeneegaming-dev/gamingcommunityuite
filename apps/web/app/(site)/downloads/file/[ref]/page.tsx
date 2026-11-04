@@ -57,7 +57,7 @@ export default async function DownloadFilePage({ params }: Props) {
   const below = view.fields.filter((x) => x.location !== "sidebar");
   const fieldValue = async (x: (typeof view.fields)[number]) =>
     x.members.length > 0 ? (
-      <span className="gcs-dlField__members">{await Promise.all(x.members.map(async (m) => <GcsMemberLink key={m.id} user={m} size="sm" />))}</span>
+      <span className="gcs-dlField__members">{await Promise.all(x.members.map(async (m) => <GcsMemberLink key={m.id} user={m} />))}</span>
     ) : x.url ? (
       <a href={x.url} rel="nofollow ugc noopener" target="_blank">{x.url.replace(/^https?:\/\//, "")}</a>
     ) : x.type === "checkbox" ? (

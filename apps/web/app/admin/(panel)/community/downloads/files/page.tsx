@@ -6,8 +6,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { requireAcpAppSection } from "@/lib/acp";
 import { GcsMemberLink } from "@/lib/member-names";
 import { services } from "@/lib/services";
-import { GcsPagination } from "../../../../(site)/_components/forum/GcsPagination";
-import { GcsRelTime } from "../../../../(site)/_components/forum/GcsRelTime";
+import { GcsPagination } from "../../../../../(site)/_components/forum/GcsPagination";
+import { GcsRelTime } from "../../../../../(site)/_components/forum/GcsRelTime";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { deleteFile, setFileFlags } from "../actions";
@@ -73,7 +73,7 @@ export default async function AcpDownloadFiles({ searchParams }: Props) {
                 <span className="gcs-dlStatus" data-status={r.status}>{t(`status.${r.status}`)}</span>
                 <span className="gcs-muted">{r.category.name}</span>
               </span>
-              <span className="gcs-dlAcpRow__by">{r.author ? <GcsMemberLink user={r.author} size="sm" /> : "—"} <GcsRelTime at={r.createdAt} /></span>
+              <span className="gcs-dlAcpRow__by">{r.author ? <GcsMemberLink user={r.author} /> : "—"} <GcsRelTime at={r.createdAt} /></span>
               <span className="gcs-muted">{formatBytes(r.size, locale)} · {t("overview.downloadsN", { count: r.downloads })}</span>
               <span className="gcs-dlAcpRow__tools">
                 {canEdit && (r.status === "approved" || r.status === "hidden") && (

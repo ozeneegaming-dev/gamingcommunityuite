@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { requireAcpAppSection } from "@/lib/acp";
 import { GcsIconInput } from "@/lib/ui-inputs";
 import { services } from "@/lib/services";
-import { GcsRichTextInput } from "../../../../(site)/_components/editor/GcsRichTextInput";
+import { GcsRichTextInput } from "../../../../../(site)/_components/editor/GcsRichTextInput";
 import { GcsAcpEditPanel } from "../../../_components/GcsAcpEditPanel";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";

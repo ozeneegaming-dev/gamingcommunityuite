@@ -18,7 +18,7 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import { addDownloadLinkAction, addDownloadVersionAction, editDownloadAction, importDownloadPathAction, listImportableAction, submitDownloadAction, submitManyDownloadsAction } from "../../download-actions";
 import { GcsRichTextInput } from "../editor/GcsRichTextInput";
 
-const TOOLS: GcsEditorTool[] = ["bold", "italic", "underline", "strike", "color", "highlight", "clear", "heading", "bulletList", "orderedList", "quote", "code", "horizontalRule", "link", "image", "spoiler", "emoji"];
+const TOOLS: GcsEditorTool[] = ["bold", "italic", "underline", "strike", "color", "highlight", "clear", "size", "bulletList", "orderedList", "quote", "code", "horizontalRule", "link", "image", "spoiler", "emoji"];
 
 export type GcsDownloadFormContext = {
   categories: { id: number; name: string; depth: number; vip: boolean }[];

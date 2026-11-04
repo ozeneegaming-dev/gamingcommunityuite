@@ -6,7 +6,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { requireAcpAppSection } from "@/lib/acp";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { services } from "@/lib/services";
-import { GcsRelTime } from "../../../../(site)/_components/forum/GcsRelTime";
+import { GcsRelTime } from "../../../../../(site)/_components/forum/GcsRelTime";
 import { GcsAcpEditPanel } from "../../../_components/GcsAcpEditPanel";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
@@ -48,7 +48,7 @@ export default async function AcpDownloadQueue({ searchParams }: Props) {
                 <span className="gcs-dlFlag" data-flag={r.isNew ? "new" : "version"}>{r.isNew ? t("queue.newFile") : t("queue.newVersion", { label: r.label || "—" })}</span>
                 <span className="gcs-muted">{r.file.category.name}</span>
               </span>
-              <span className="gcs-dlAcpRow__by">{r.author ? <GcsMemberLink user={r.author} size="sm" /> : "—"} <GcsRelTime at={r.createdAt} /></span>
+              <span className="gcs-dlAcpRow__by">{r.author ? <GcsMemberLink user={r.author} /> : "—"} <GcsRelTime at={r.createdAt} /></span>
               <span className="gcs-dlAcpRow__scan">
                 {r.assets.map((a) => (
                   <span key={a.id} className="gcs-dlScanChip" data-scan={a.state === "failed" ? "failed" : a.scan} title={a.name}>

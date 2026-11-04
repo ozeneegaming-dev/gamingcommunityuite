@@ -63,13 +63,13 @@ export default async function AcpDownloadStats({ searchParams }: Props) {
         <GcsCard as="section" className="gcs-acpPanel">
           <div className="gcs-acpPanel__head"><h2 className="gcs-acpPanel__title"><GcsIcon name="fa-solid fa-user-pen" /> {t("topAuthors")}</h2></div>
           <ol className="gcs-dlAcpList">
-            {await Promise.all(data.topAuthors.map(async (a, i) => <li key={a.user?.id ?? i}>{a.user ? <GcsMemberLink user={a.user} size="sm" /> : "—"}<span className="gcs-muted">{t("authorRow", { files: a.files, downloads: a.downloads })}</span></li>))}
+            {await Promise.all(data.topAuthors.map(async (a, i) => <li key={a.user?.id ?? i}>{a.user ? <GcsMemberLink user={a.user} /> : "—"}<span className="gcs-muted">{t("authorRow", { files: a.files, downloads: a.downloads })}</span></li>))}
           </ol>
         </GcsCard>
         <GcsCard as="section" className="gcs-acpPanel">
           <div className="gcs-acpPanel__head"><h2 className="gcs-acpPanel__title"><GcsIcon name="fa-solid fa-users" /> {t("topDownloaders")}</h2></div>
           <ol className="gcs-dlAcpList">
-            {await Promise.all(data.topDownloaders.map(async (u, i) => <li key={u.user?.id ?? i}>{u.user ? <GcsMemberLink user={u.user} size="sm" /> : "—"}<span className="gcs-muted">{format.number(u.downloads)}</span></li>))}
+            {await Promise.all(data.topDownloaders.map(async (u, i) => <li key={u.user?.id ?? i}>{u.user ? <GcsMemberLink user={u.user} /> : "—"}<span className="gcs-muted">{format.number(u.downloads)}</span></li>))}
           </ol>
         </GcsCard>
       </div>

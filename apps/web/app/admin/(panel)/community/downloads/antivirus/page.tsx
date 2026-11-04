@@ -7,7 +7,7 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { requireAcpAppSection } from "@/lib/acp";
 import { GcsMemberLink } from "@/lib/member-names";
 import { services } from "@/lib/services";
-import { GcsRelTime } from "../../../../(site)/_components/forum/GcsRelTime";
+import { GcsRelTime } from "../../../../../(site)/_components/forum/GcsRelTime";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { deleteQuarantined, releaseQuarantined, saveDownloadSettings } from "../actions";
@@ -128,7 +128,7 @@ export default async function AcpDownloadAntivirus() {
                   <span className="gcs-muted">{formatBytes(q.size, locale)}</span>
                 </span>
                 <span className="gcs-dlAcpRow__by">
-                  {q.uploader ? <GcsMemberLink user={q.uploader} size="sm" /> : "—"} <GcsRelTime at={q.at} />
+                  {q.uploader ? <GcsMemberLink user={q.uploader} /> : "—"} <GcsRelTime at={q.at} />
                   {q.file && <Link href={q.file.href}>{q.file.title}</Link>}
                 </span>
                 <span className="gcs-dlAcpRow__tools">

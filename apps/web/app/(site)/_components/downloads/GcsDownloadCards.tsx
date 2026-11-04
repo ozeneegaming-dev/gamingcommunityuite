@@ -48,7 +48,7 @@ export async function GcsDownloadGrid({ files, testId = "gcs-download-grid", com
                 </h3>
                 {!compact && f.summary && <p className="gcs-dlCard__summary">{f.summary}</p>}
                 <p className="gcs-dlCard__by">
-                  {f.author ? <GcsMemberLink user={f.author} size="sm" /> : <span className="gcs-muted">{t("deletedMember")}</span>}
+                  {f.author ? <GcsMemberLink user={f.author} /> : <span className="gcs-muted">{t("deletedMember")}</span>}
                   <GcsRelTime at={f.publishedAt} />
                 </p>
                 <GcsDownloadStatus status={f.status} />

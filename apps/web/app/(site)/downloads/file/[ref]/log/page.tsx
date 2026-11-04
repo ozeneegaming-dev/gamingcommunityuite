@@ -55,7 +55,7 @@ export default async function DownloadLogPage({ params, searchParams }: Props) {
             <tbody>
               {await Promise.all(view.rows.map(async (r) => (
                 <tr key={r.id}>
-                  <td>{r.user ? <GcsMemberLink user={r.user} size="sm" /> : <span className="gcs-muted">{t("deletedMember")}</span>}</td>
+                  <td>{r.user ? <GcsMemberLink user={r.user} /> : <span className="gcs-muted">{t("deletedMember")}</span>}</td>
                   <td>{r.version || "—"}</td>
                   <td>{formatBytes(r.size, locale)}</td>
                   <td><GcsRelTime at={r.at} /></td>

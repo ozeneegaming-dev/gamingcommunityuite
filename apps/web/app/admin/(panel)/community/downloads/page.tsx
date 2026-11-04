@@ -78,7 +78,7 @@ export default async function AcpDownloadsOverview() {
                 <li key={f.id}>
                   <Link href={f.href}>{f.title}</Link>
                   <span className="gcs-dlStatus" data-status={f.status}>{t(`status.${f.status}`)}</span>
-                  {f.author && <GcsMemberLink user={f.author} size="sm" />}
+                  {f.author && <GcsMemberLink user={f.author} />}
                 </li>
               )))}
             </ul>
