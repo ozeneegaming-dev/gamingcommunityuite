@@ -21,6 +21,9 @@ const COMPOSERS: { file: string; how: RegExp; note: string }[] = [
   { file: "apps/web/app/(site)/_components/settings/GcsSettingsExtra.tsx", how: /mentionUrl/, note: "semnătura (fără notificări)" },
   { file: "apps/web/app/(site)/_components/editor/GcsRichTextInput.tsx", how: /includes\("mention"\)/, note: "câmpurile formatate cu `mention` permis" },
   { file: "apps/web/app/(site)/_components/servers/GcsTicketForm.tsx", how: /"mention"/, note: "tichete (aplicația Servere)" },
+  { file: "apps/web/app/(site)/_components/pages/GcsRecordForm.tsx", how: /mentionUrl/, note: "înregistrările din Pagini (trimitere, editare)" },
+  { file: "apps/web/app/(site)/_components/pages/GcsCommentComposer.tsx", how: /mentionUrl/, note: "comentariile la înregistrări (Pagini)" },
+  { file: "apps/web/app/admin/(panel)/pages/[id]/builder/GcsPageBuilder.tsx", how: /mentionUrl/, note: "blocurile de conținut din constructorul paginilor" },
 ];
 
 /** Profilurile câmpurilor formatate care primesc mențiuni (descrierea clanului, câmpurile de profil, semnătura). */
@@ -94,6 +97,8 @@ describe("mențiunile peste tot", () => {
       "apps/web/app/(site)/servers/tickets/[id]/page.tsx",
       "apps/web/app/(site)/clans/[ref]/page.tsx",
       "apps/web/app/(site)/settings/signature/page.tsx",
+      "apps/web/app/(site)/_components/pages/GcsRecordPage.tsx",
+      "apps/web/app/(site)/_components/pages/GcsPagesBlocks.tsx",
     ]) {
       expect(read(rel), rel).toMatch(/GcsNamedHtml/);
     }

@@ -29,7 +29,7 @@ export type GcsTemplateDef = {
   source: string;
 };
 
-export const TEMPLATE_GROUPS = ["layout", "forum", "postbit", "members", "widgets", "email"] as const;
+export const TEMPLATE_GROUPS = ["layout", "forum", "postbit", "members", "widgets", "pages", "email"] as const;
 export type GcsTemplateGroup = (typeof TEMPLATE_GROUPS)[number];
 export const TEMPLATE_GROUP_ICONS: Record<GcsTemplateGroup, string> = {
   layout: "fa-solid fa-table-columns",
@@ -37,6 +37,7 @@ export const TEMPLATE_GROUP_ICONS: Record<GcsTemplateGroup, string> = {
   postbit: "fa-solid fa-id-card",
   members: "fa-solid fa-users",
   widgets: "fa-solid fa-table-cells-large",
+  pages: "fa-solid fa-file-lines",
   email: "fa-solid fa-envelope",
 };
 
@@ -403,6 +404,29 @@ const EMAIL_LAYOUT = (() => {
 `;
 })();
 
+
+/** Cardul unei înregistrări din aplicația Pagini (listă, grilă, carusel), ca `GcsRecordList`. */
+const RECORD_CARD = `<article class="gcs-pgCard" data-testid="gcs-pages-record" data-record="{{ record.id }}">
+  {% if showImage %}<a href="{{ record.url }}" class="gcs-pgCard__media" tabindex="-1" aria-hidden="true">{% if record.image %}<img src="{{ record.image }}" alt="" loading="lazy">{% else %}{% icon record.icon, class: "gcs-pgCard__placeholder" %}{% endif %}</a>{% endif %}
+  <div class="gcs-pgCard__body">
+    <span class="gcs-pgFlags">
+      {%- if record.pinned %}<span class="gcs-pgFlag gcs-pgFlag--pinned">{% icon "fa-solid fa-thumbtack" %}{{ "pages.flags.pinned" | t }}</span>{% endif -%}
+      {%- if record.featured %}<span class="gcs-pgFlag gcs-pgFlag--featured">{% icon "fa-solid fa-star" %}{{ "pages.flags.featured" | t }}</span>{% endif -%}
+      {%- if record.isNew %}<span class="gcs-pgFlag gcs-pgFlag--new">{% icon "fa-solid fa-bolt" %}{{ "pages.flags.new" | t }}</span>{% endif -%}
+    </span>
+    {% if record.category %}<a href="{{ record.category.url }}" class="gcs-pgCard__cat"{% if record.category.color %} style="--gcs-pg-cat: {{ record.category.color }}"{% endif %}>{{ record.category.name }}</a>{% endif %}
+    <h3 class="gcs-pgCard__title"><a href="{{ record.url }}">{{ record.title }}</a></h3>
+    {% if record.excerpt %}<p class="gcs-pgCard__excerpt">{{ record.excerpt }}</p>{% endif %}
+    {% if record.fields.size > 0 %}<span class="gcs-pgCard__fields">{% for f in record.fields %}<span class="gcs-pgChip"{% if f.badge %} style="--gcs-pg-chip: {{ f.badge }}"{% endif %}><span class="gcs-pgChip__label">{{ f.label }}</span>{{ f.value }}</span>{% endfor %}</span>{% endif %}
+    <span class="gcs-pgCard__meta">
+      {%- if record.author %}{% username record.author %}{% endif -%}
+      {%- if record.publishedAt %} {% time record.publishedAt %}{% endif -%}
+      <span>{% icon "fa-regular fa-comment" %} {{ record.comments }}</span>
+      <span>{% icon "fa-regular fa-eye" %} {{ record.views }}</span>
+    </span>
+  </div>
+</article>`;
+
 const T = (ro: string, en: string): GcsTemplateText => ({ ro, en });
 const slot = (name: string, required: boolean, ro: string, en: string): GcsTemplateSlot => ({ name, required, text: { ro, en } });
 
@@ -643,6 +667,40 @@ export const DEFAULT_TEMPLATES: GcsTemplateDef[] = [
     mode: "site",
     partial: false,
     source: WIDGET_CARD,
+  },
+  {
+    key: "pages.record_card",
+    group: "pages",
+    icon: "fa-solid fa-id-card",
+    version: 1,
+    title: T("Cardul unei înregistrări", "Record card"),
+    description: T("O înregistrare dintr-o bază de date a aplicației Pagini (lista, grila, caruselul, blocurile).", "A record from a Pages database (list, grid, carousel, blocks)."),
+    variables: vars([
+      ...common,
+      ["record.id", "number", "ID-ul înregistrării", "Record ID"],
+      ["record.title", "string", "Titlul", "Title"],
+      ["record.url", "string", "Linkul", "Link"],
+      ["record.excerpt", "string", "Fragmentul din conținut", "Content excerpt"],
+      ["record.image", "string|nil", "Imaginea (URL)", "Image URL"],
+      ["record.icon", "string", "Iconița categoriei sau a bazei", "Category or database icon"],
+      ["record.category", "object|nil", "Categoria: name, url, color", "Category: name, url, color"],
+      ["record.fields", "list", "Câmpurile de pe card: label, value, badge (culoarea)", "Card fields: label, value, badge (colour)"],
+      ["record.pinned", "boolean", "Fixată", "Pinned"],
+      ["record.featured", "boolean", "Recomandată", "Featured"],
+      ["record.isNew", "boolean", "Nouă (ultimele zile)", "New (recent days)"],
+      ["record.publishedAt", "date|nil", "Data publicării", "Published at"],
+      ["record.views", "number", "Vizualizări", "Views"],
+      ["record.comments", "number", "Comentarii", "Comments"],
+      ["record.rating", "object", "Nota: avg, count", "Rating: avg, count"],
+      ["database.name", "string", "Baza de date", "Database"],
+      ["database.key", "string", "Cheia bazei", "Database key"],
+      ["showImage", "boolean", "Cardul arată imaginea", "The card shows the image"],
+      ...userVars("record.author", "Autorul (sau nil)", "Author (or nil)"),
+    ]),
+    slots: [],
+    mode: "site",
+    partial: false,
+    source: RECORD_CARD,
   },
   {
     key: "email.layout",

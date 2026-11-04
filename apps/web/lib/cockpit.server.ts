@@ -38,6 +38,9 @@ async function forumFeed(actor: GcsActor): Promise<GcsFeedItem[]> {
         return [{ key: i.key, kind: "status", at: i.at, user, name, href: i.owner ? memberHref(i.owner) : "/activity", params: {}, tag: "forum" }];
       case "member":
         return [{ key: i.key, kind: "member", at: i.at, user, name, href: memberHref(i.user), params: {}, tag: "new" }];
+      // Elementele aplicațiilor (ex. înregistrările din Pagini) au fluxul lor; cockpit-ul arată doar forumul.
+      case "app":
+        return [];
     }
   });
 }

@@ -2,6 +2,7 @@
 
 import { faStar as faStarEmpty } from "@fortawesome/free-regular-svg-icons";
 import { faChartSimple, faStar, faStarHalfStroke, faXmark } from "@fortawesome/free-solid-svg-icons";
+import type { GcsResult } from "@gcs/core";
 import { ratingStars } from "@gcs/core/rating-stars";
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
@@ -23,6 +24,10 @@ export type GcsTopicRatingProps = {
   /** Distribuția voturilor (5★ … 1★), pentru panoul „Distribuția notelor”. */
   distribution: { stars: number; count: number }[];
   loginHref: string;
+  /** Nota altui conținut (ex. o înregistrare din Pagini): acțiunile lui, în locul celor ale topicului. */
+  rate?: (value: number) => Promise<GcsResult<{ avg: number; count: number }>>;
+  unrate?: () => Promise<GcsResult<{ avg: number; count: number }>>;
+  testId?: string;
 };
 
 const LABELS = ["poor", "fair", "good", "great", "excellent"] as const;
@@ -62,7 +67,7 @@ export function GcsTopicRating(props: GcsTopicRatingProps) {
     setError(null);
     setPop(value);
     start(async () => {
-      const res = state.mine === value && props.canChange ? await unrateTopicAction({ topicId: props.topicId }) : await rateTopicAction({ topicId: props.topicId, value });
+      const res = state.mine === value && props.canChange ? await (props.unrate ? props.unrate() : unrateTopicAction({ topicId: props.topicId })) : await (props.rate ? props.rate(value) : rateTopicAction({ topicId: props.topicId, value }));
       if (!res.ok) {
         setPop(null);
         return setError(errorMessage(res.error));
@@ -75,7 +80,7 @@ export function GcsTopicRating(props: GcsTopicRatingProps) {
   const total = props.distribution.reduce((n, d) => n + d.count, 0);
 
   return (
-    <div className="gcs-topicRating" data-testid="gcs-topic-rating" data-avg={state.avg} data-count={state.count}>
+    <div className="gcs-topicRating" data-testid={props.testId ?? "gcs-topic-rating"} data-avg={state.avg} data-count={state.count}>
       {interactive ? (
         <div className="gcs-stars gcs-stars--md gcs-stars--input" role="radiogroup" aria-label={t("rateThis")} onMouseLeave={() => setHover(null)}>
           {[1, 2, 3, 4, 5].map((v) => {

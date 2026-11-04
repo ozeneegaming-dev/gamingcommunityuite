@@ -64,7 +64,7 @@ async function feed(viewer: GcsActor, query: GcsActivityQuery = {}): Promise<Gcs
 }
 
 const describeItem = (i: GcsStreamItem) =>
-  i.kind === "member" ? `member:${i.user.name}` : i.kind === "status" ? `status:${i.snippet}` : `${i.kind}:${i.topic.title}:${i.snippet}`;
+  i.kind === "member" ? `member:${i.user.name}` : i.kind === "status" ? `status:${i.snippet}` : i.kind === "app" ? `app:${i.title}` : `${i.kind}:${i.topic.title}:${i.snippet}`;
 
 /** Un forum în aceeași categorie pe care doar staff-ul îl poate citi (grupurile fără drept nu-l văd deloc). */
 async function staffForum() {

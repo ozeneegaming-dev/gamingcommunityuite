@@ -4,7 +4,7 @@ import type { GcsAcpApp, GcsAcpArea, GcsAcpMenuSection } from "../modules/regist
 export const ACP_DASHBOARD_HREF = "/admin";
 
 /** Ordinea zonelor din bara de iconițe (specul 2026-10-09-acp-navigatie-aplicatii §1.2). */
-export const GCS_ACP_AREAS = ["system", "community", "members", "appearance", "gaming", "vip", "stats", "apps"] as const satisfies readonly GcsAcpArea[];
+export const GCS_ACP_AREAS = ["system", "community", "members", "appearance", "gaming", "vip", "pages", "stats", "apps"] as const satisfies readonly GcsAcpArea[];
 
 /** Zona implicită a secțiunilor fără `area`, după aplicația lor ACP. */
 export const ACP_APP_AREA: Record<GcsAcpApp, GcsAcpArea> = {
@@ -13,7 +13,7 @@ export const ACP_APP_AREA: Record<GcsAcpApp, GcsAcpArea> = {
   members: "members",
   vip: "vip",
   gaming: "gaming",
-  pages: "apps",
+  pages: "pages",
   stats: "stats",
   appearance: "appearance",
 };
@@ -37,6 +37,7 @@ export const GCS_ACP_GROUP_ORDER: Record<GcsAcpArea, readonly string[]> = {
   appearance: ["acp.menu.appearance.style", "acp.menu.appearance.layout"],
   gaming: ["acp.menu.gaming.servers_group", "acp.menu.gaming.clans_group"],
   vip: ["acp.menu.vip.vip_group"],
+  pages: ["acp.menu.pages.content", "acp.menu.pages.setup"],
   stats: ["acp.menu.stats.overview_group", "acp.menu.stats.activity", "acp.menu.stats.apps"],
   apps: ["acp.menu.system.apps_manage", "acp.menu.system.apps_dev"],
 };

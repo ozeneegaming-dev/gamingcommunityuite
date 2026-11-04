@@ -151,6 +151,8 @@ export { GcsServerService, SERVERS_ACP_SECTION, SERVER_BANNER, SERVER_LIMITS, ty
 export { GcsServerPoller, POLL_INTERVAL_SETTING, serverRoom, STATUS_EVENT, SHOW_PLAYERS_SETTING } from "./servers/poller";
 export * from "./servers/playerStats";
 export * from "./servers/bridge";
+export * from "./pages";
+export * from "./community/contentSources";
 export { clansModule } from "./clans";
 export * from "./clans/text";
 export * from "./clans/options";

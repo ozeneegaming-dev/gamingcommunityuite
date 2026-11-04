@@ -146,6 +146,9 @@ import { RENDER_LABELS } from "./forums/labels";
 import { GcsImportService } from "./importer/service";
 import { GcsPortingService } from "./porting/service";
 import { GcsActivityStream } from "./community/activity";
+import { GcsContentSources } from "./community/contentSources";
+import { GcsPagesAccess, GcsPagesAdmin, GcsPagesQueries, GcsPagesRecords, PAGES_MEDIA_TYPE, PAGES_RECORD_TYPE, PAGES_SOURCE, pagesMemberData, registerPagesNotifications } from "./pages";
+import { publishPagesTopic, registerPagesRatings } from "./pages/wiring";
 import { GcsLeaderboard } from "./community/leaderboard";
 import { GcsOnlineTime, onlineTimeMemberData } from "./community/onlineTime";
 import { GcsVipPublic } from "./vip/public";
@@ -352,6 +355,13 @@ export type GcsServices = {
   porting: GcsPortingService;
   /** Fluxul de activitate (`/activity`). */
   activity: GcsActivityStream;
+  /** Sursele de conținut ale aplicațiilor: taburile căutării și elementele din fluxul de activitate. */
+  contentSources: GcsContentSources;
+  /** Aplicația Pagini: accesul (arborele și bazele în cache), citirile publice, ACP-ul și înregistrările. */
+  pagesAccess: GcsPagesAccess;
+  pagesQueries: GcsPagesQueries;
+  pagesAdmin: GcsPagesAdmin;
+  pagesRecords: GcsPagesRecords;
   /** Clasamentul (`/leaderboard`, widget-ul „Clasament”, panoul „Top” al consolei). */
   leaderboard: GcsLeaderboard;
   /** Timpul online al membrilor pe zile (clasamentul „Timp online”). */
@@ -949,6 +959,39 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
 
   const memberList = new GcsMemberList({ db, permissions, ranks, groups: groupDirectory });
   const topics = new GcsTopicService(posting, { polls, prefixes });
+
+  // Aplicația Pagini (specul 2026-11-03-pagini): accesul, citirile, ACP-ul, înregistrările, sursa de conținut (căutarea
+  // și fluxul), atașamentele, notele, notificările și publicarea automată ca topic.
+  const contentSources = new GcsContentSources({ registry, apps });
+  const pagesAccess = new GcsPagesAccess({ db, cache, permissions, acp, apps });
+  const pagesQueries = new GcsPagesQueries({ db, settings, access: pagesAccess, ratings });
+  const pagesAdmin = new GcsPagesAdmin({ db, acp, bus, registry, settings, attachments, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
+  const pagesRecords = new GcsPagesRecords({
+    db,
+    bus,
+    settings,
+    attachments,
+    rateLimiter,
+    access: pagesAccess,
+    render: (content, actor) => posting.render(content, { actor, blocks: true }),
+    renderComment: (content, actor) => posting.render(content, { actor, cooldown: true }),
+    checkWrite: (actor) => posting.checkFlood(actor),
+    servers: async () => ((await apps.enabled("servers")) ? new Set((await db.gameServer.findMany({ where: { enabled: true }, select: { id: true } })).map((s) => s.id)) : null),
+  });
+  contentSources.register(PAGES_SOURCE, { search: (actor, input) => pagesQueries.search(actor, input), stream: (viewer, query) => pagesQueries.stream(viewer, query) });
+  attachments.registerAccess(PAGES_MEDIA_TYPE, async () => true);
+  attachments.registerAccess(PAGES_RECORD_TYPE, (actor, id) => pagesQueries.canViewRecord(actor, Number(id)));
+  registerPagesRatings(ratings, { db, access: pagesAccess, queries: pagesQueries });
+  registerPagesNotifications({
+    db,
+    bus,
+    notifications,
+    settings,
+    access: pagesAccess,
+    queries: pagesQueries,
+    actors,
+    publishTopic: (recordId) => publishPagesTopic({ db, topics, actors, access: pagesAccess, queries: pagesQueries }, recordId),
+  });
   const forumModeration = new GcsForumModerationService(posting, { posts, reports, acp });
   const communityBot = new GcsCommunityBot({ db, settings, topics, posts, moderation: forumModeration, conversations, chat, acp, translator: () => translation.provider(), setAvatar: (actor, file) => profiles.setAvatar(actor, file) });
   // Bun venitul botului: din coadă (ascultătorii magistralei rulează în cererea de înregistrare).
@@ -970,6 +1013,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     },
     clansVisible: (actor) => clanQueries.canView(actor),
     serverIds: (actor) => serverQueries.visibleIds(actor),
+    appPages: (actor) => pagesQueries.sitemap(actor),
   });
 
   const services: GcsServices = {
@@ -1017,7 +1061,12 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     postbit: new GcsPostbitService({ db, cache, permissions, settings, groups: groupDirectory }),
     memberList,
     mentionQueries: new GcsMentionQueries({ db, cache, permissions, groupMentions }),
-    activity: new GcsActivityStream({ db, cache, permissions, social, settings }),
+    activity: new GcsActivityStream({ db, cache, permissions, social, settings, sources: contentSources }),
+    contentSources,
+    pagesAccess,
+    pagesQueries,
+    pagesAdmin,
+    pagesRecords,
     leaderboard: new GcsLeaderboard({ db, cache, permissions, settings, onlineTime }),
     onlineTime,
     // Fără magazin încă: planurile au butonul „Contactează staff-ul” (`checkout` vine odată cu plățile).
@@ -1136,7 +1185,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     clans,
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
-    memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge }),
+    memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge, pagesRecords }),
     memberAdmin: new GcsMemberAdmin({ db, bus, acp, bans }),
     optInGroups: new GcsOptInGroups({ db, bus, permissions }),
     staffPage: new GcsStaffPage({ db, bus, acp, permissions, members: memberList }),
@@ -1164,6 +1213,7 @@ function createMemberRemoval(d: {
   vip: GcsVipService;
   clans: GcsClanService;
   bridge: GcsBridge;
+  pagesRecords: GcsPagesRecords;
 }): GcsMemberRemovalService {
   const removal = new GcsMemberRemovalService({ db: d.db, bus: d.bus, acp: d.acp, settings: d.settings, jobs: d.jobs });
   removal.register(reactionDataHandler({ db: d.db, reactions: d.reactions }));
@@ -1176,6 +1226,7 @@ function createMemberRemoval(d: {
   removal.register(onlineTimeMemberData({ db: d.db }));
   removal.register(vipMemberData({ db: d.db, vip: d.vip }));
   removal.register(clanMemberData({ db: d.db, clans: d.clans }));
+  removal.register(pagesMemberData({ db: d.db, records: d.pagesRecords }));
   removal.register(serverMemberData({ db: d.db, store: d.bridge.store, players: d.bridge.players }));
   removal.register(importerMemberData({ db: d.db }));
   removal.register(notificationDataHandler({ db: d.db }));
