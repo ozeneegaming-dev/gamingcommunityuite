@@ -22,7 +22,8 @@
       "bans": "Bans",
       "serverAdmins": "Admins",
       "serverTickets": "Appeals",
-      "donations": "Пожертвования"
+      "donations": "Пожертвования",
+      "downloads": "Descărcări"
     },
     "acp": "ACP",
     "myProfile": "Мой профиль",
@@ -348,7 +349,16 @@
       "license_domain": "Лицензия недействительна для домена этого сайта.",
       "license_revoked": "Лицензия отозвана.",
       "tag_exists": "Există deja o etichetă cu acest nume.",
-      "login_required": "Trebuie să intri în cont."
+      "login_required": "Trebuie să intri în cont.",
+      "vip": "Fișierul e doar pentru membrii VIP.",
+      "token": "Linkul de descărcare a expirat: deschide din nou pagina fișierului.",
+      "download_first": "Descarcă fișierul înainte să scrii o recenzie.",
+      "import_disabled": "Importul de pe server e oprit.",
+      "scanning": "Fișierele încă se verifică.",
+      "infected": "Fișierul e infectat.",
+      "approved": "Versiunea e deja publicată.",
+      "version_pending": "O versiune nouă așteaptă deja aprobarea.",
+      "attached": "Fișierul face deja parte dintr-o trimitere."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -509,7 +519,19 @@
       "empty": "Niciun destinatar pentru publicul ales",
       "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
       "unknown_job": "Jobul nu se poate rula manual",
-      "invalid_area": "Zonă de cache invalidă"
+      "invalid_area": "Zonă de cache invalidă",
+      "no_extension": "Fișierul nu are extensie.",
+      "over_quota": "Ai atins limita de spațiu a grupului tău.",
+      "site_full": "Spațiul pentru descărcări al site-ului e plin.",
+      "incomplete": "Așteaptă să se termine încărcarea.",
+      "single": "Categoria acceptă un singur fișier pe intrare.",
+      "blocked_domain": "Domeniul acestui link nu e permis.",
+      "not_image": "Captura trebuie să fie o imagine.",
+      "process_failed": "Fișierul nu a putut fi procesat.",
+      "chunk_missing": "O parte din fișier lipsește: încarcă-l din nou.",
+      "size_mismatch": "Fișierul primit e incomplet: încarcă-l din nou.",
+      "same": "Versiunea are deja acest număr.",
+      "scan_error": "Antivirusul nu a putut verifica fișierul."
     }
   },
   "acp": {
@@ -651,7 +673,15 @@
         "chat_pro_emotes": "Emotes",
         "chat_moderation": "Модерация",
         "chat_moderators": "Модераторы",
-        "archive": "Архивирование"
+        "archive": "Архивирование",
+        "downloads_group": "Descărcări",
+        "downloads": "Prezentare",
+        "downloads_queue": "Coada de aprobare",
+        "downloads_files": "Fișiere",
+        "downloads_categories": "Categorii",
+        "downloads_fields": "Câmpuri suplimentare",
+        "downloads_antivirus": "Antivirus",
+        "downloads_settings": "Setări"
       },
       "vip": {
         "vip_group": "VIP",
@@ -700,7 +730,8 @@
         "apps": "Apps",
         "vip": "VIP",
         "servers": "Servers",
-        "clans": "Clans"
+        "clans": "Clans",
+        "downloads": "Descărcări"
       }
     },
     "comingSoon": {
@@ -3874,6 +3905,12 @@
         },
         "online_time": {
           "days": "Дни со временем онлайн в рейтинге"
+        },
+        "downloads": {
+          "files": "fișiere în Descărcări",
+          "reviews": "recenzii la fișiere",
+          "comments": "comentarii la fișiere",
+          "downloads": "descărcări în log"
         }
       },
       "steps": {
@@ -3891,7 +3928,8 @@
         "account": "Account data",
         "files": "Files",
         "chat_pro": "Chat Pro",
-        "online_time": "Время онлайн"
+        "online_time": "Время онлайн",
+        "downloads": "Descărcări"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -6149,6 +6187,343 @@
         "startUrl": "Pagina de pornire",
         "startHint": "O adresă din site, ex. / sau /forum."
       }
+    },
+    "downloads": {
+      "status": {
+        "scanning": "Se verifică",
+        "pending": "În așteptare",
+        "approved": "Publicat",
+        "rejected": "Respins",
+        "quarantined": "Carantină",
+        "hidden": "Ascuns"
+      },
+      "scan": {
+        "clean": "Curat",
+        "infected": "Infectat",
+        "error": "Eroare la scanare",
+        "skipped": "Fără antivirus",
+        "pending": "Se verifică",
+        "failed": "Respins la verificare"
+      },
+      "overview": {
+        "title": "Descărcări",
+        "help": "Fișierele comunității: coada de aprobare, antivirusul, spațiul folosit și cele mai descărcate fișiere.",
+        "openSite": "Deschide pe site",
+        "tiles": {
+          "approved": "Fișiere publicate",
+          "queue": "În coada de aprobare",
+          "quarantine": "În carantină",
+          "downloads": "Descărcări",
+          "categories": "Categorii"
+        },
+        "antivirus": "Antivirus",
+        "manage": "Administrează",
+        "storage": "Spațiu folosit: {used} din {limit}",
+        "unlimited": "fără limită",
+        "latest": "Ultimele trimiteri",
+        "all": "Toate",
+        "top": "Cele mai descărcate",
+        "stats": "Statistici",
+        "none": "Nimic încă.",
+        "downloadsN": "{count, plural, one {# descărcare} few {# descărcări} many {# de descărcări} other {# de descărcări}}"
+      },
+      "antivirus": {
+        "title": "Antivirus",
+        "help": "Fiecare fișier încărcat e verificat cu ClamAV înainte să ajungă în coada de aprobare. Fișierele infectate sunt blocate și puse în carantină, iar fișierele publicate se rescanează cu semnăturile noi.",
+        "status": "Starea",
+        "available": "Funcționează: {engine}, baza de semnături {signatures}",
+        "signaturesAt": "Semnăturile actualizate",
+        "reason": {
+          "disabled": "Oprit din setări: fișierele rămân doar cu aprobarea manuală.",
+          "no_address": "Nu e setată adresa serviciului.",
+          "unreachable": "Serviciul antivirus nu răspunde.",
+          "unsupported": "Indisponibil pe această ediție (găzduire partajată)."
+        },
+        "liteHint": "Pe găzduirea partajată nu rulează un antivirus: fiecare fișier ajunge în coada de aprobare și e verificat de staff.",
+        "manualHint": "Cât timp antivirusul nu răspunde, fișierele ajung în coadă marcate „neverificat”, iar staff-ul le verifică manual. Pe VPS, serviciul pornește cu `docker compose up -d` (profilul „antivirus”).",
+        "test": "Testează antivirusul",
+        "testOk": "Antivirusul a detectat fișierul de test ({signature}).",
+        "testFail": "Fișierul de test nu a fost detectat ({result}).",
+        "rescan": "Rescanează acum",
+        "rescanQueued": "Rescanarea a pornit; continuă în fundal.",
+        "counts": "Fișierele după rezultat",
+        "settings": "Setări",
+        "save": "Salvează",
+        "enabled": "Antivirus pornit",
+        "enabledHint": "Oprit, fișierele trec doar prin verificarea tipului și prin aprobarea staff-ului.",
+        "address": "Adresa serviciului",
+        "addressHint": "gazdă:port (implicit clamav:3310, serviciul din docker compose).",
+        "maxScanMb": "Mărimea maximă scanată (MB)",
+        "onError": "Când scanarea eșuează",
+        "onErrorOptions": {
+          "approval": "Trimite în coadă, marcat „neverificat”",
+          "block": "Respinge fișierul"
+        },
+        "rescanHours": "Rescanare (ore)",
+        "rescanHint": "Fișierele publicate se verifică din nou cu semnăturile noi, cel mult o dată la atâtea ore (0 = niciodată).",
+        "quarantineDays": "Carantina (zile)",
+        "quarantineHint": "Fișierele infectate ale trimiterilor respinse se șterg după atâtea zile (0 = păstrate).",
+        "forumAttachments": "Scanează și atașamentele din forum",
+        "forumAttachmentsHint": "Aceeași verificare pentru fișierele atașate la postări (în curând în forum; setarea se păstrează).",
+        "quarantine": "{count, plural, one {Carantina (# fișier)} few {Carantina (# fișiere)} many {Carantina (# de fișiere)} other {Carantina (# de fișiere)}}",
+        "quarantineEmpty": "Niciun fișier în carantină.",
+        "release": "Eliberează",
+        "releaseConfirm": "Eliberezi fișierul din carantină? Fă-o doar dacă ești sigur că e o alarmă falsă; versiunea revine în coada de aprobare.",
+        "delete": "Șterge definitiv",
+        "deleteConfirm": "Ștergi definitiv fișierul din carantină?"
+      },
+      "queue": {
+        "title": "Coada de aprobare",
+        "help": "Fișierele noi și versiunile noi care așteaptă, cele mai vechi primele. Deschide o trimitere ca să vezi fișierele, tipul real și rezultatul antivirusului.",
+        "empty": "Nimic de aprobat.",
+        "newFile": "Fișier nou",
+        "newVersion": "Versiune nouă {label}",
+        "review": "Verifică",
+        "files": "Fișierele",
+        "openPage": "Deschide pagina fișierului",
+        "approve": "Aprobă",
+        "reject": "Respinge",
+        "rejectConfirm": "Respingi trimiterea? Autorul primește motivul.",
+        "reason": "Motivul respingerii",
+        "reasonPlaceholder": "ex. fișier duplicat, lipsesc instrucțiunile",
+        "scanning": "Fișierele încă se verifică."
+      },
+      "files": {
+        "title": "Fișiere",
+        "help": "Toate intrările, pe stări. Recomandă, ascunde sau șterge; editarea completă e pe pagina fișierului.",
+        "filters": "Stări",
+        "filter": {
+          "all": "Toate",
+          "approved": "Publicate",
+          "pending": "În așteptare",
+          "scanning": "Se verifică",
+          "rejected": "Respinse",
+          "quarantined": "Carantină",
+          "hidden": "Ascunse",
+          "featured": "Recomandate"
+        },
+        "search": "Caută după titlu",
+        "empty": "Niciun fișier.",
+        "feature": "Recomandă",
+        "unfeature": "Nu mai recomanda",
+        "hide": "Ascunde",
+        "unhide": "Arată",
+        "delete": "Șterge",
+        "deleteConfirm": "Ștergi „{title}” cu toate versiunile lui?"
+      },
+      "categories": {
+        "title": "Categorii",
+        "help": "Categoriile fișierelor, cu regulile fiecăreia. Permisiunile (cine vede, descarcă, încarcă, comentează, scrie recenzii) se setează pe categorie; subcategoriile le moștenesc până le schimbi.",
+        "add": "Categorie nouă",
+        "create": "Creează",
+        "save": "Salvează",
+        "delete": "Șterge",
+        "deleteConfirm": "Ștergi categoria? Subcategoriile urcă un nivel.",
+        "moveTo": "Mută fișierele în",
+        "moveNone": "Alege…",
+        "deleteContent": "Șterge și fișierele",
+        "copy": "Copiază",
+        "copyName": "Numele copiei",
+        "permissions": "Permisiuni",
+        "view": "Pe site",
+        "empty": "Nicio categorie încă. Creează prima categorie.",
+        "disabled": "Oprită",
+        "clanFlag": "Clan",
+        "inherits": "moștenește permisiunile",
+        "files": "{count, plural, one {# fișier} few {# fișiere} many {# de fișiere} other {# de fișiere}}",
+        "secBasics": "De bază",
+        "name": "Numele",
+        "parent": "Categoria părinte",
+        "noParent": "Fără părinte",
+        "icon": "Iconița",
+        "description": "Descrierea",
+        "iconImage": "Imaginea iconiței",
+        "cover": "Coperta",
+        "clan": "Categoria unui clan",
+        "noClan": "Niciun clan",
+        "clanHint": "Membrii clanului încarcă și descarcă aici; ceilalți doar o văd.",
+        "enabled": "Activă",
+        "enabledHint": "Oprită, doar staff-ul o vede.",
+        "vipOnly": "Doar pentru VIP",
+        "vipOnlyHint": "Ceilalți membri văd fișierele și primesc invitația să devină VIP.",
+        "secDisplay": "Afișarea",
+        "sort": "Sortarea implicită",
+        "sorts": {
+          "updated": "Actualizate recent",
+          "newest": "Cele mai noi",
+          "downloads": "Cele mai descărcate",
+          "rating": "Cele mai bine notate",
+          "title": "Alfabetic"
+        },
+        "secFiles": "Fișierele permise",
+        "anyExtension": "Orice extensie",
+        "anyExtensionHint": "Conținutul se verifică oricum: un executabil deghizat e respins.",
+        "extensions": "Extensiile permise",
+        "extensionsHint": "Separate prin virgulă sau spațiu, fără punct (zip, rar, 7z, bsp, cfg…).",
+        "maxFileMb": "Mărimea maximă (MB)",
+        "maxFileDefault": "implicit",
+        "maxFileHint": "Gol = limita site-ului; 0 = fără limită de categorie. Se aplică cea mai mică dintre categorie și grup.",
+        "multipleFiles": "Mai multe fișiere într-o intrare",
+        "secVersions": "Versiunile",
+        "versioning": "Numărul versiunii",
+        "versioningModes": {
+          "off": "Fără versiuni",
+          "optional": "Opțional",
+          "required": "Obligatoriu"
+        },
+        "versionsToKeep": "Câte versiuni vechi se păstrează",
+        "versionsToKeepHint": "0 = toate.",
+        "keepVersions": "Păstrează versiunile vechi (descărcabile)",
+        "requireChangelog": "Lista schimbărilor e obligatorie",
+        "secScreenshots": "Capturile de ecran",
+        "screenshots": "Permite capturi",
+        "requireScreenshots": "Capturile sunt obligatorii",
+        "maxScreenshots": "Câte capturi",
+        "screenshotMaxKb": "Mărimea maximă a unei capturi (KB)",
+        "screenshotMaxKbHint": "0 = limita imaginilor grupului.",
+        "secModeration": "Moderarea, comentariile și recenziile",
+        "approval": "Fișierele trebuie aprobate",
+        "approvalHint": "Staff-ul și grupurile scutite publică direct.",
+        "tags": "Permite etichete",
+        "comments": "Permite comentarii",
+        "commentsApproval": "Comentariile trebuie aprobate",
+        "reviews": "Permite recenzii",
+        "reviewNeedsDownload": "Recenzia doar după descărcare",
+        "reviewsApproval": "Recenziile trebuie aprobate",
+        "secTerms": "Termeni și mesaje",
+        "terms": "Termenii descărcării",
+        "termsWhen": "Când se acceptă termenii",
+        "termsWhenOptions": {
+          "download": "La descărcare",
+          "submit": "La trimitere",
+          "both": "La descărcare și la trimitere",
+          "never": "Niciodată"
+        },
+        "submitTerms": "Termenii trimiterii",
+        "cannotView": "Mesajul pentru cine nu poate vedea fișierele",
+        "cannotDownload": "Mesajul pentru cine nu poate descărca",
+        "messagePlaceholder": "Gol = mesajul obișnuit",
+        "cannotDownloadPlaceholder": "ex. Fișierele sunt pentru membrii VIP: le găsești pe pagina VIP.",
+        "secTopic": "Topicul din forum",
+        "topicEnabled": "Creează un topic de suport la fiecare fișier nou",
+        "topicEnabledHint": "Topicul e creat de autor, în forumul ales, la publicare.",
+        "topicForum": "Forumul",
+        "chooseForum": "Alege forumul…",
+        "topicPrefix": "Prefixul titlului",
+        "topicSuffix": "Sufixul titlului",
+        "topicDelete": "Șterge topicul odată cu fișierul",
+        "topicScreenshot": "Include prima captură în topic",
+        "secLog": "Logul descărcărilor",
+        "logDownloads": "Ține logul descărcărilor",
+        "logDays": "Păstrează logul (zile)",
+        "logDaysHint": "0 = mereu.",
+        "authorSeesLog": "Autorul vede logul fișierelor lui",
+        "secFields": "Câmpurile suplimentare",
+        "noFields": "Nu există câmpuri.",
+        "manageFields": "Creează câmpuri"
+      },
+      "fields": {
+        "title": "Câmpuri suplimentare",
+        "help": "Câmpuri completate la trimiterea unui fișier (ex. co-autori, versiunea jocului, compatibilitatea), activate doar în categoriile unde au sens.",
+        "add": "Câmp nou",
+        "create": "Creează",
+        "save": "Salvează",
+        "delete": "Șterge",
+        "deleteConfirm": "Ștergi câmpul? Valorile completate dispar de pe pagini.",
+        "empty": "Niciun câmp încă.",
+        "noCategories": "Nicio categorie",
+        "secField": "Câmpul",
+        "name": "Numele",
+        "type": "Tipul",
+        "types": {
+          "text": "Text scurt",
+          "textarea": "Text lung",
+          "url": "Link",
+          "number": "Număr",
+          "select": "Listă de opțiuni",
+          "checkbox": "Da / Nu",
+          "member": "Membri (co-autori)",
+          "date": "Dată"
+        },
+        "location": "Locul pe pagină",
+        "locations": {
+          "sidebar": "În panoul lateral",
+          "below": "Sub descriere",
+          "tab": "Într-o secțiune separată"
+        },
+        "description": "Descrierea (ajutorul din formular)",
+        "options": "Opțiunile listei",
+        "optionsHint": "Una pe rând (doar pentru „Listă de opțiuni”).",
+        "multiple": "Mai multe valori",
+        "multipleHint": "Pentru liste și membri.",
+        "required": "Obligatoriu",
+        "secCategories": "Categoriile",
+        "secTopic": "Topicul din forum",
+        "inTopic": "Include câmpul în topicul de suport",
+        "topicFormat": "Formatul în topic",
+        "secGroups": "Cine vede și cine completează",
+        "groupsHint": "Niciun grup bifat = toate grupurile.",
+        "viewGroups": "Văd câmpul",
+        "editGroups": "Completează câmpul"
+      },
+      "settings": {
+        "title": "Setări",
+        "help": "Pagina principală, limitele fișierelor, watermark-ul capturilor, linkurile și RSS-ul.",
+        "save": "Salvează",
+        "secIndex": "Pagina principală",
+        "boxes": {
+          "featured": "Caseta „Recomandate”",
+          "new": "Caseta „Noutăți”",
+          "rated": "Caseta „Cele mai bine notate”",
+          "downloaded": "Caseta „Cele mai descărcate”"
+        },
+        "featuredCount": "Câte recomandate",
+        "boxCount": "Câte fișiere în celelalte casete",
+        "allCategories": "Din toate categoriile",
+        "someCategories": "{count, plural, one {Din # categorie} few {Din # categorii} many {Din # de categorii} other {Din # de categorii}}",
+        "secFiles": "Fișierele",
+        "maxFileMb": "Mărimea maximă implicită (MB)",
+        "maxFileHint": "O categorie o poate schimba; grupurile o pot micșora.",
+        "totalQuotaGb": "Spațiul total (GB)",
+        "totalQuotaHint": "0 = fără limită. Fiecare membru are și cota grupului.",
+        "perPage": "Fișiere pe pagină",
+        "unfinishedHours": "Încărcările neterminate se șterg după (ore)",
+        "groupLimits": "Mărimea pe grup, spațiul fiecărui membru, linkurile externe și trimiterea în bloc se setează pe grup.",
+        "groupsLink": "Grupuri",
+        "secWatermark": "Watermark pe capturi",
+        "watermark": "Imaginea de watermark",
+        "watermarkHint": "O imagine mică, cu fundal transparent; se pune pe capturile încărcate de acum înainte.",
+        "watermarkPosition": "Locul",
+        "positions": {
+          "bottom-right": "Jos, dreapta",
+          "bottom-left": "Jos, stânga",
+          "top-right": "Sus, dreapta",
+          "top-left": "Sus, stânga",
+          "center": "Centru"
+        },
+        "watermarkOpacity": "Opacitatea (%)",
+        "secLinks": "Linkuri și RSS",
+        "preventDirect": "Fără linkuri directe",
+        "preventDirectHint": "Linkul de descărcare e valabil doar din pagina fișierului (o oră, pentru membrul care l-a deschis).",
+        "rss": "Fluxul RSS al fișierelor noi",
+        "rssHint": "/downloads/rss.xml, plus câte unul pe categorie.",
+        "urlBlocklist": "Domenii blocate la trimiterea prin link",
+        "urlBlocklistHint": "Unul pe rând; subdomeniile sunt blocate și ele.",
+        "paidLater": "Fișierele cu plată vin odată cu aplicația Magazin."
+      },
+      "stats": {
+        "title": "Statistici: Descărcări",
+        "help": "Descărcările și trimiterile pe zile, fișierele cele mai descărcate, autorii și membrii cei mai activi.",
+        "range": "Perioada",
+        "days": "{count, plural, one {# zi} few {# zile} many {# de zile} other {# de zile}}",
+        "downloads": "Descărcări",
+        "submissions": "Trimiteri",
+        "chart": "Descărcări și trimiteri pe zile",
+        "topFiles": "Cele mai descărcate fișiere",
+        "topAuthors": "Autorii cu cele mai multe descărcări",
+        "topDownloaders": "Cine descarcă cel mai mult",
+        "authorRow": "{files} fișiere · {downloads} descărcări"
+      }
     }
   },
   "settings": {
@@ -6960,6 +7335,34 @@
     },
     "pwa": {
       "config": "Aplicația web"
+    },
+    "downloads": {
+      "max_file_mb": "Mărimea maximă implicită a unui fișier (MB)",
+      "total_quota_gb": "Spațiul total al descărcărilor (GB)",
+      "per_page": "Fișiere pe pagină",
+      "box_featured": "Caseta „Recomandate”",
+      "box_featured_count": "Câte fișiere recomandate",
+      "box_new": "Caseta „Noutăți”",
+      "box_new_categories": "Categoriile casetei „Noutăți”",
+      "box_rated": "Caseta „Cele mai bine notate”",
+      "box_rated_categories": "Categoriile casetei „Cele mai bine notate”",
+      "box_downloaded": "Caseta „Cele mai descărcate”",
+      "box_downloaded_categories": "Categoriile casetei „Cele mai descărcate”",
+      "box_count": "Câte fișiere într-o casetă",
+      "watermark_id": "Imaginea de watermark",
+      "watermark_position": "Locul watermark-ului",
+      "watermark_opacity": "Opacitatea watermark-ului",
+      "url_blocklist": "Domenii blocate la trimiterea prin link",
+      "prevent_direct": "Fără linkuri directe",
+      "rss": "Fluxul RSS al fișierelor",
+      "unfinished_hours": "Ștergerea încărcărilor neterminate (ore)",
+      "av_enabled": "Antivirus pornit",
+      "av_address": "Adresa antivirusului",
+      "av_max_scan_mb": "Mărimea maximă scanată (MB)",
+      "av_on_error": "Când scanarea eșuează",
+      "av_rescan_hours": "Rescanarea fișierelor (ore)",
+      "av_quarantine_days": "Păstrarea carantinei (zile)",
+      "av_forum_attachments": "Scanează atașamentele forumului"
     }
   },
   "permissions": {
@@ -7070,6 +7473,23 @@
     "chat_pro": {
       "history": "Can view the chat history (/chat/history)",
       "history_export": "Экспорт истории чата (CSV)"
+    },
+    "downloads": {
+      "see": "Vede categoria",
+      "view": "Vede fișierele",
+      "upload": "Încarcă fișiere",
+      "download": "Descarcă fișiere",
+      "comment": "Comentează",
+      "review": "Scrie recenzii",
+      "max_mb": "Mărimea maximă a unui fișier trimis (MB; -1 = fără limită de grup)",
+      "quota_mb": "Spațiul pentru fișierele trimise (MB; -1 = nelimitat)",
+      "vip_files": "Descarcă fișierele și categoriile VIP",
+      "bulk": "Trimite mai multe fișiere deodată",
+      "links": "Trimite fișiere prin link extern",
+      "import_path": "Importă fișiere din folderul serverului (doar staff de încredere)",
+      "skip_approval": "Fișierele lui nu trec prin aprobare",
+      "view_logs": "Vede logul descărcărilor oricărui fișier",
+      "moderate": "Staff pentru descărcări pe site (aprobă, editează, ascunde, mută, șterge)"
     }
   },
   "profile": {
@@ -8197,6 +8617,15 @@
         "confirmed": "Твои подтверждённые пожертвования",
         "rejected": "Твои неподтверждённые пожертвования",
         "submitted": "Новые пожертвования на подтверждение (команда)"
+      },
+      "downloads": {
+        "review": "Fișierele mele: aprobate, respinse sau blocate",
+        "version": "Versiuni noi la fișierele urmărite",
+        "new_file": "Fișiere noi în categoriile urmărite",
+        "feedback": "Recenzii și comentarii la fișierele mele",
+        "mention": "Mențiuni în descărcări",
+        "queue": "Fișiere noi în coada de aprobare (staff)",
+        "infected": "Fișiere infectate găsite de antivirus (staff)"
       }
     },
     "settingsLink": "Настройки уведомлений",
@@ -8568,7 +8997,8 @@
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
       "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
-      "groups_pro": "Легенда групп по категориям (со счётчиками и связанными группами) и страница «Группы сообщества»."
+      "groups_pro": "Легенда групп по категориям (со счётчиками и связанными группами) и страница «Группы сообщества».",
+      "downloads": "Fișierele comunității: hărți, moduri, configurații, cu aprobare, versiuni, antivirus și categorii VIP."
     },
     "sections": {
       "messages": "Private messages",
@@ -8576,10 +9006,12 @@
       "search": "Search",
       "chat_private": "Private rooms",
       "clans_create": "Create a clan",
-      "chat_pro_history": "Chat history"
+      "chat_pro_history": "Chat history",
+      "downloads_submit": "Trimite un fișier"
     },
     "chat_pro": "Chat Pro",
-    "groups_pro": "Группы Pro"
+    "groups_pro": "Группы Pro",
+    "downloads": "Descărcări"
   },
   "translate": {
     "translate": "Переводить",
@@ -9266,7 +9698,8 @@
       "rare": "Какие значки",
       "group": "Только участники группы",
       "tabs": "Вкладки рейтинга",
-      "layout": "Вид"
+      "layout": "Вид",
+      "downloadsKind": "Ce fișiere"
     },
     "periods": {
       "week": "на этой неделе",
@@ -9313,6 +9746,10 @@
       },
       "profile": {
         "recentBadges": "Значки, недавно полученные участниками, в реальном времени."
+      },
+      "downloads": {
+        "latest": "Cele mai noi, cele mai descărcate, cele mai bine notate sau recomandate fișiere.",
+        "categories": "Categoriile de descărcări, cu numărul de fișiere."
       }
     },
     "servers": {
@@ -9373,6 +9810,16 @@
       "allCount": "Все ({count})",
       "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
       "more": "и ещё {count}"
+    },
+    "downloads": {
+      "latest": "Descărcări",
+      "categories": "Categorii de descărcări"
+    },
+    "downloadsKind": {
+      "new": "Fișiere noi",
+      "downloaded": "Cele mai descărcate",
+      "rated": "Cele mai bine notate",
+      "featured": "Fișiere recomandate"
     }
   },
   "pageEditor": {
@@ -9451,7 +9898,8 @@
       "vip": "VIP-члены",
       "serversOnline": "Servers",
       "serverPlayers": "Players",
-      "clans": "Clans"
+      "clans": "Clans",
+      "downloads": "Fișiere"
     },
     "allOnline": "Смотреть все онлайн участники",
     "panel": {
@@ -12016,5 +12464,267 @@
     "invalid": "Link invalid",
     "invalidBody": "Linkul de dezabonare nu e valid sau contul nu mai există.",
     "settings": "Setările emailului"
+  },
+  "downloads": {
+    "title": "Descărcări",
+    "lead": "{count, plural, one {# fișier pentru comunitate} few {# fișiere pentru comunitate} many {# de fișiere pentru comunitate} other {# de fișiere pentru comunitate}}",
+    "leadEmpty": "Hărți, moduri, configurații și unelte pentru servere, trimise de comunitate.",
+    "viewAll": "Toate fișierele",
+    "mine": "Fișierele mele",
+    "submit": "Trimite un fișier",
+    "submitLead": "Alege categoria, încarcă fișierele și descrie-le. Fișierele sunt verificate automat, apoi aprobate de staff.",
+    "submitHere": "Trimite aici",
+    "searchLabel": "Caută în descărcări",
+    "searchPlaceholder": "Caută după nume sau descriere…",
+    "search": "Caută",
+    "boxes": {
+      "featured": "Recomandate",
+      "new": "Noutăți",
+      "rated": "Cele mai bine notate",
+      "downloaded": "Cele mai descărcate"
+    },
+    "seeMore": "Vezi tot",
+    "empty": "Nu există încă nicio categorie de descărcări.",
+    "categories": "Categorii",
+    "rss": "Fluxul RSS al fișierelor noi",
+    "featured": "Recomandat",
+    "deletedMember": "Membru șters",
+    "downloadsCount": "{count, plural, one {# descărcare} few {# descărcări} many {# de descărcări} other {# de descărcări}}",
+    "ratingLabel": "Nota {avg} din 5 ({count} recenzii)",
+    "noReviews": "Fără recenzii",
+    "filesShort": "{count, plural, one {fișier} few {fișiere} many {de fișiere} other {de fișiere}}",
+    "allFiles": "Toate fișierele",
+    "count": "{count, plural, one {# fișier} few {# fișiere} many {# de fișiere} other {# de fișiere}}",
+    "cannotView": "Nu ai acces la fișierele din această categorie.",
+    "sortLabel": "Sortare",
+    "sorts": {
+      "updated": "Actualizate recent",
+      "newest": "Cele mai noi",
+      "downloads": "Cele mai descărcate",
+      "rating": "Cele mai bine notate",
+      "title": "Alfabetic"
+    },
+    "taggedWith": "Fișierele cu eticheta #{tag}.",
+    "clearFilter": "Arată toate",
+    "noResults": "Niciun fișier nu se potrivește căutării.",
+    "emptyCategory": "Categoria nu are încă fișiere.",
+    "newVersion": "Versiune nouă",
+    "edit": "Editează",
+    "editTitle": "Editează „{title}”",
+    "newVersionTitle": "Versiune nouă pentru „{title}”",
+    "currentIs": "Versiunea curentă: {version}",
+    "status": {
+      "scanning": "Se verifică",
+      "pending": "Așteaptă aprobarea",
+      "approved": "Publicat",
+      "rejected": "Respins",
+      "quarantined": "Blocat de antivirus",
+      "hidden": "Ascuns"
+    },
+    "notices": {
+      "scanning": "Fișierele se verifică (tipul real și antivirusul). Pagina se actualizează când verificarea se termină.",
+      "pending": "Fișierul a trecut verificarea și așteaptă aprobarea staff-ului. Doar tu și staff-ul îl vedeți.",
+      "rejected": "Fișierul a fost respins.",
+      "quarantined": "Antivirusul a găsit o amenințare: fișierul a fost blocat și pus în carantină. Staff-ul a fost anunțat.",
+      "hidden": "Fișierul e ascuns de staff: doar tu și staff-ul îl vedeți."
+    },
+    "reason": "Motivul: {reason}",
+    "pendingVersion": {
+      "scanning": "Versiunea nouă ({label}) se verifică.",
+      "pending": "Versiunea nouă ({label}) așteaptă aprobarea staff-ului.",
+      "quarantined": "Versiunea nouă ({label}) a fost blocată de antivirus.",
+      "rejected": "Versiunea nouă ({label}) a fost respinsă."
+    },
+    "screenshots": "Capturi de ecran",
+    "openShot": "Deschide captura {n}",
+    "about": "Despre fișier",
+    "tags": "Etichete",
+    "versions": "Versiuni și schimbări",
+    "noLabel": "Fără număr",
+    "currentVersion": "Curentă",
+    "reviews": {
+      "title": "{count, plural, one {# recenzie} few {# recenzii} many {# de recenzii} other {# de recenzii}}",
+      "none": "Nicio recenzie încă.",
+      "stars": "{count, plural, one {# stea} few {# stele} many {# de stele} other {# de stele}}",
+      "denial": {
+        "guest": "Autentifică-te ca să scrii o recenzie.",
+        "no_permission": "Nu poți scrie recenzii în această categorie.",
+        "disabled": "Recenziile sunt oprite.",
+        "download_first": "Descarcă fișierul înainte să scrii o recenzie."
+      },
+      "yourRating": "Nota ta",
+      "updateRating": "Schimbă nota",
+      "text": "Recenzia (opțional)",
+      "submit": "Publică recenzia",
+      "update": "Actualizează recenzia"
+    },
+    "postStatus": {
+      "pending": "În așteptare",
+      "hidden": "Ascuns"
+    },
+    "comments": {
+      "title": "{count, plural, one {# comentariu} few {# comentarii} many {# de comentarii} other {# de comentarii}}",
+      "none": "Niciun comentariu încă.",
+      "locked": "Comentariile sunt închise.",
+      "login": "Autentifică-te ca să comentezi",
+      "write": "Scrie un comentariu",
+      "submit": "Comentează",
+      "pending": "Comentariul tău așteaptă aprobarea staff-ului."
+    },
+    "downloadPanel": "Descarcă",
+    "panel": {
+      "link": "Link extern ({host})",
+      "external": "pe alt site",
+      "noFiles": "Nicio versiune publicată încă.",
+      "guest": "Fișierele se descarcă doar de membri. Creează-ți un cont gratuit sau autentifică-te.",
+      "register": "Creează cont",
+      "login": "Autentificare",
+      "vip": "Fișier pentru membrii VIP. Devino VIP ca să îl descarci.",
+      "becomeVip": "Devino VIP",
+      "noPermission": "Grupul tău nu poate descărca fișierele din această categorie.",
+      "scan": {
+        "clean": "Verificat de antivirus",
+        "skipped": "Verificat manual de staff",
+        "error": "Neverificat de antivirus",
+        "pending": "Se verifică",
+        "infected": "Blocat"
+      }
+    },
+    "stats": {
+      "downloads": "Descărcări",
+      "views": "Vizualizări",
+      "size": "Mărime",
+      "rating": "Nota",
+      "updated": "Actualizat",
+      "submitted": "Trimis",
+      "category": "Categoria"
+    },
+    "log": {
+      "open": "Logul descărcărilor",
+      "title": "Logul descărcărilor",
+      "count": "{count, plural, one {# descărcare} few {# descărcări} many {# de descărcări} other {# de descărcări}}",
+      "empty": "Nicio descărcare încă.",
+      "member": "Membru",
+      "version": "Versiunea",
+      "size": "Mărime",
+      "when": "Când"
+    },
+    "supportTopic": "Topicul de suport",
+    "fieldYes": "Da",
+    "fieldNo": "Nu",
+    "noUploadCategory": "Nu există nicio categorie în care să poți trimite fișiere.",
+    "quotaUnlimited": "Ai folosit {used} (fără limită).",
+    "quotaUsed": "Ai folosit {used} din {limit}.",
+    "quotaLabel": "Spațiul folosit",
+    "mineEmpty": "Nu ai trimis încă niciun fișier.",
+    "mineVersion": "Versiunea {label}: {status}",
+    "widgetEmpty": "Niciun fișier încă.",
+    "widgetMeta": "{downloads} descărcări · {category}",
+    "browseCategories": "Toate categoriile",
+    "form": {
+      "category": "Categoria",
+      "chooseCategory": "Alege categoria…",
+      "changeCategory": "Schimbă categoria",
+      "continue": "Continuă",
+      "sections": {
+        "files": "Fișierele",
+        "details": "Detalii",
+        "version": "Versiunea",
+        "screenshots": "Capturi de ecran",
+        "terms": "Termeni"
+      },
+      "uploadTitle": "Încarcă fișierele",
+      "rulesMax": "Cel mult {max} pe fișier",
+      "rulesNoMax": "Fără limită de mărime",
+      "rulesTypes": "Tipuri: {types}",
+      "anyType": "orice tip de fișier",
+      "quota": "spațiu folosit: {used} din {limit}",
+      "state": {
+        "sending": "Se încarcă… {pct}%",
+        "checking": "Se verifică (tipul real și antivirusul)…",
+        "failed": "Eșuat"
+      },
+      "scan": {
+        "pending": "Se verifică…",
+        "clean": "Curat, verificat de antivirus",
+        "infected": "Infectat: blocat",
+        "error": "Antivirusul nu l-a putut verifica (îl verifică staff-ul)",
+        "skipped": "Gata (îl verifică staff-ul)"
+      },
+      "removeFile": "Scoate {name}",
+      "linkLabel": "Adresa fișierului",
+      "addLink": "Adaugă link",
+      "fromServer": "Din folderul serverului",
+      "importEmpty": "Folderul de import e gol",
+      "import": "Importă",
+      "separate": "Fiecare fișier ca intrare separată",
+      "separateHint": "Fiecare fișier devine o intrare cu titlul din numele lui și această descriere; restul se completează apoi pe fiecare.",
+      "title": "Titlul",
+      "summary": "Rezumatul",
+      "summaryHint": "O propoziție, arătată pe carduri și în căutare.",
+      "description": "Descrierea",
+      "tags": "Etichete",
+      "tagsPlaceholder": "cs2, hartă, aim",
+      "memberIds": "Id-urile membrilor, separate prin virgulă",
+      "choose": "Alege…",
+      "version": "Numărul versiunii",
+      "changelog": "Ce s-a schimbat",
+      "shotsTitle": "Încarcă capturi",
+      "shot": "Captura {n}",
+      "shotLeft": "Mută la stânga",
+      "shotRight": "Mută la dreapta",
+      "shotRemove": "Scoate captura",
+      "acceptTerms": "Am citit și accept termenii",
+      "approvalHint": "Fișierele noi apar după aprobarea staff-ului.",
+      "saving": "Se salvează…",
+      "submit": {
+        "submit": "Trimite fișierul",
+        "version": "Trimite versiunea",
+        "edit": "Salvează"
+      },
+      "errors": {
+        "category": "Alege întâi categoria.",
+        "single": "Categoria acceptă un singur fișier pe intrare.",
+        "tooManyShots": "Cel mult {max} capturi.",
+        "incomplete": "Așteaptă să se termine încărcarea fișierelor.",
+        "over_quota": "Ai atins limita de spațiu a grupului tău.",
+        "site_full": "Spațiul pentru descărcări al site-ului e plin.",
+        "no_extension": "Fișierul nu are extensie.",
+        "blocked_domain": "Domeniul acestui link nu e permis.",
+        "network": "Conexiunea s-a întrerupt. Încearcă din nou.",
+        "aborted": "Încărcarea a fost oprită."
+      }
+    },
+    "actions": {
+      "unfollow": "Nu mai urmări",
+      "followFile": "Urmărește",
+      "followCategory": "Urmărește categoria",
+      "download": "Descarcă",
+      "termsTitle": "Termenii descărcării",
+      "acceptTerms": "Am citit și accept termenii",
+      "cancel": "Renunță",
+      "approve": "Aprobă",
+      "reject": "Respinge",
+      "rejectTitle": "Respingi versiunea?",
+      "rejectReason": "Motivul (îl primește autorul)",
+      "feature": "Recomandă",
+      "unfeature": "Nu mai recomanda",
+      "hide": "Ascunde",
+      "unhide": "Arată",
+      "lockComments": "Închide comentariile",
+      "unlockComments": "Deschide comentariile",
+      "vip": "Doar VIP",
+      "unvip": "Pentru toți",
+      "move": "Mută",
+      "moveTitle": "Muți fișierul?",
+      "moveTo": "În categoria",
+      "delete": "Șterge",
+      "deleteTitle": "Ștergi fișierul?",
+      "deleteBody": "Se șterg toate versiunile, capturile, recenziile și comentariile lui. Nu se poate anula.",
+      "approvePost": "Aprobă",
+      "hidePost": "Ascunde",
+      "deletePost": "Șterge",
+      "deletePostBody": "Se șterge definitiv."
+    }
   }
 }
