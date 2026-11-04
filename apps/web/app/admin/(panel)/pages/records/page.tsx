@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
-import { memberHref } from "@/lib/forum-urls";
+import { GcsMemberLink } from "@/lib/member-names";
 import { services } from "@/lib/services";
 import { GcsActionForm } from "../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../_components/GcsAcpTitle";
@@ -102,7 +102,7 @@ export default async function AcpPagesRecords({ searchParams }: Props) {
                         <strong>{r.title}</strong>
                       )}
                       <span className="gcs-acpList__sub">
-                        {r.database.name} · {r.author ? <Link href={memberHref(r.author)}>{r.author.name}</Link> : t("deletedMember")} · {format.dateTime(new Date(r.createdAt), { dateStyle: "medium", timeStyle: "short" })}
+                        {r.database.name} · {r.author ? <GcsMemberLink user={r.author} /> : t("deletedMember")} · {format.dateTime(new Date(r.createdAt), { dateStyle: "medium", timeStyle: "short" })}
                         {r.rejectReason && <> · {t("reason", { reason: r.rejectReason })}</>}
                       </span>
                     </span>

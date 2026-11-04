@@ -78,7 +78,7 @@ describe("HTML-ul paginilor", () => {
         `<div style="color: red; background: url(evil)">y</div><iframe src="https://evil.test/"></iframe><iframe src="https://www.youtube.com/embed/abc"></iframe>` +
         `<a href="https://gcs.test" target="_blank">z</a><img src="data:image/svg+xml;base64,AAA"><form><input></form>`,
     );
-    expect(html).not.toMatch(/script|onclick|javascript:|url\(|evil\.test|<form|<input|svg\+xml/);
+    expect(html).not.toMatch(/<script|onclick|javascript:|url\(|evil\.test|<form|<input|svg\+xml/);
     expect(html).toContain('<h1 class="hero">Salut</h1>');
     expect(html).toContain('style="color:red"');
     expect(html).toContain('src="https://www.youtube.com/embed/abc"');

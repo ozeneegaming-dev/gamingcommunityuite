@@ -4,7 +4,6 @@ import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { CSSProperties } from "react";
-import { memberHref } from "@/lib/forum-urls";
 import { GcsMemberLink, GcsNamedHtml } from "@/lib/member-names";
 import { services } from "@/lib/services";
 import { GcsPagination } from "../forum/GcsPagination";
@@ -157,7 +156,7 @@ export async function GcsRecordPage({ actor, db, data, commentsPage, base }: { a
             {t("viewsCount", { count: r.views })}
             {r.editedAt && (
               <span className="gcs-pgRecord__edited">
-                {r.editedBy ? t.rich("editedBy", { name: () => <Link href={memberHref(r.editedBy!)}>{r.editedBy!.name}</Link>, when: format.relativeTime(new Date(r.editedAt)) }) : t("edited")}
+                {r.editedBy ? t.rich("editedBy", { name: () => <GcsMemberLink user={r.editedBy!} />, when: format.relativeTime(new Date(r.editedAt)) }) : t("edited")}
               </span>
             )}
           </p>

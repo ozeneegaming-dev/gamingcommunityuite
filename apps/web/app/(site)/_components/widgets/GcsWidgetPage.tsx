@@ -141,14 +141,11 @@ async function GcsPageEditorHost({ page, actor, children }: { page: GcsWidgetPag
   const channels = enabled("chat") ? await chatQueries.channels(actor) : [];
   // „Obiectivul lunii”: obiectivele de donații (gol = primul activ vizibil).
   const goals = enabled("vip") ? await services().donations.goals() : [];
-<<<<<<< HEAD
   // Aplicația Pagini: bazele de date și blocurile reutilizabile (widget-urile „Înregistrări” și „Bloc”).
   const pagesDbs = enabled("pages") ? await services().pagesAccess.databases() : [];
   const pagesBlocks = enabled("pages") ? await services().db.pagesBlock.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }) : [];
-=======
   // Widget-ul „Reclamă”: unitățile din ACP › Promovare › Reclame (gol = una la întâmplare).
   const adUnits = await services().ads.names();
->>>>>>> main
 
   const initial = Object.fromEntries(GCS_WIDGET_ZONES.map((z) => [z, [] as GcsPageEditorItem[]])) as Record<GcsWidgetZone, GcsPageEditorItem[]>;
   placements.forEach((p, i) => {
