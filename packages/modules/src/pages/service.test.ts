@@ -1,6 +1,7 @@
 import { GcsForbidden, GcsValidationError } from "@gcs/core";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createPagesWorld, pageDoc, presetT, type GcsPagesWorld } from "../../test/pagesWorld";
+import { GcsActivityStream } from "../community/activity";
 
 let w: GcsPagesWorld;
 
@@ -162,6 +163,20 @@ describe("bazele de date", () => {
     expect(revisions.map((r) => r.title)).toEqual(["Cererea Anei"]);
     await w.records.restoreRevision(w.root, revisions[0]!.id);
     expect((await w.db.pagesRecord.findUniqueOrThrow({ where: { id } })).title).toBe("Cererea Anei");
+  });
+
+  test("fluxul de activitate amestecă înregistrările (tipul `app`) cu forumul și le parcurge pe cursor fără dubluri", async () => {
+    const { databaseId } = await w.guides();
+    await w.admin.saveDatabase(w.root, databaseId, { name: "Ghiduri", approval: false });
+    for (let i = 1; i <= 3; i++) await w.records.create(w.root, databaseId, { title: `Ghidul ${i}`, content: pageDoc(`Text ${i}`) });
+    const social = { ignoredIds: async () => [] as string[] };
+    const stream = new GcsActivityStream({ db: w.db, cache: w.cache, permissions: w.permissions, social, sources: w.sources });
+    const first = await stream.page(w.guest, { limit: 2 });
+    const second = await stream.page(w.guest, { limit: 2, before: first.next });
+    const titles = [...first.items, ...second.items].flatMap((i) => (i.kind === "app" ? [i.title] : []));
+    expect(titles).toEqual(["Ghidul 3", "Ghidul 2", "Ghidul 1"]);
+    // „Topicuri” nu arată elementele aplicațiilor.
+    expect((await stream.page(w.guest, { filter: "topics" })).items.some((i) => i.kind === "app")).toBe(false);
   });
 
   test("exportul și importul unei baze: câmpurile, categoriile și înregistrările ajung într-o bază nouă", async () => {
