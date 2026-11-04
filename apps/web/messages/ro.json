@@ -11349,7 +11349,10 @@
       "allPlayers": "{count, plural, one {Jucătorul de pe server} few {Toți cei # jucători} other {Toți cei # de jucători}}",
       "playersHidden": "Lista jucătorilor nu e publică.",
       "noPlayerList": "Serverul nu trimite lista jucătorilor.",
-      "nobody": "Nimeni pe server acum."
+      "nobody": "Nimeni pe server acum.",
+      "upDays": "{count, plural, one {o zi} few {# zile} other {# de zile}}",
+      "upHours": "{count, plural, one {o oră} few {# ore} other {# de ore}}",
+      "upMinutes": "{count, plural, one {un minut} few {# minute} other {# de minute}}"
     }
   },
   "clans": {

@@ -11340,7 +11340,7 @@
       "summaryVoice": "{count} on TS",
       "summaryDiscord": "{count} on Discord",
       "currentMap": "Current map",
-      "onlineSince": "Online since {since}",
+      "onlineSince": "Online for {since}",
       "occupancy": "Occupancy",
       "peakToday": "Peak today",
       "last24h": "Players in the last 24 hours",
@@ -11349,7 +11349,10 @@
       "allPlayers": "{count, plural, one {The player on the server} other {All # players}}",
       "playersHidden": "The player list is not public.",
       "noPlayerList": "The server does not send its player list.",
-      "nobody": "Nobody on the server right now."
+      "nobody": "Nobody on the server right now.",
+      "upDays": "{count, plural, one {# day} other {# days}}",
+      "upHours": "{count, plural, one {# hour} other {# hours}}",
+      "upMinutes": "{count, plural, one {# minute} other {# minutes}}"
     }
   },
   "clans": {

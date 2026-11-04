@@ -4,7 +4,7 @@ import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
 import type { GcsServerFieldsShown, GcsServerPlayer } from "@gcs/modules";
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useNow, useTranslations } from "next-intl";
 import { useId, type CSSProperties } from "react";
 import { GcsCopyAddressButton, GcsServerAddress } from "../GcsServerAddress";
 import { GcsMapPicture, mapPicture } from "../GcsMapPicture";
@@ -61,7 +61,6 @@ type Props = {
 export function GcsForumServerCardLive({ server, fields, history, peakToday, playersAllowed }: Props) {
   const t = useTranslations("servers.forumLive");
   const ts = useTranslations("servers");
-  const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const status = useServerStatus(server.id, server.status);
   const listed = useServerPlayers();
@@ -71,7 +70,9 @@ export function GcsForumServerCardLive({ server, fields, history, peakToday, pla
   const map = online && status?.map ? status.map : null;
   const players: GcsServerPlayer[] = playersAllowed && online && listed ? [...listed].sort((a, b) => (b.score ?? -1) - (a.score ?? -1)) : [];
   const top = players.slice(0, 5);
-  const since = online && status?.onlineSince ? format.relativeTime(new Date(status.onlineSince), now) : null;
+  // „Online de 6 zile” (macheta D): durata de la pornire, în cea mai mare unitate întreagă.
+  const upMin = online && status?.onlineSince ? Math.max(0, Math.floor((now.getTime() - Date.parse(status.onlineSince)) / 60_000)) : null;
+  const since = upMin === null ? null : upMin >= 1440 ? t("upDays", { count: Math.floor(upMin / 1440) }) : upMin >= 60 ? t("upHours", { count: Math.floor(upMin / 60) }) : t("upMinutes", { count: Math.max(1, upMin) });
   const countLabel = server.kind === "voice" ? t("users") : server.kind === "community" ? t("membersOnline") : t("players");
   return (
     <section className="gcs-card gcsx-srvCard" data-state={state} data-testid="gcs-forum-server-card" data-server={server.id}>
