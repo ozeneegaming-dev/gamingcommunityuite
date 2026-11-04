@@ -509,7 +509,10 @@
       "empty": "Niciun destinatar pentru publicul ales",
       "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
       "unknown_job": "Jobul nu se poate rula manual",
-      "invalid_area": "Zonă de cache invalidă"
+      "invalid_area": "Zonă de cache invalidă",
+      "invalid_ga4": "ID-ul Google Analytics arată ca G-XXXXXXXXXX",
+      "invalid_uuid": "ID-ul arată ca xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "unresolvable": "Adresa nu poate fi găsită (domeniul nu răspunde). Verific-o și încearcă din nou."
     }
   },
   "acp": {
@@ -603,7 +606,8 @@
         "cron": "Cron",
         "bot": "Bot de la comunidad",
         "settings_uploads": "Subidas e imágenes",
-        "license": "Licencia"
+        "license": "Licencia",
+        "settings_messages": "Mesaje private"
       },
       "members": {
         "members": "Miembros",
@@ -1443,7 +1447,11 @@
         "remove": "Eliminar de {target}"
       },
       "delete": "Suprímase la función",
-      "userNotFound": "Ningún usuario con este nombre"
+      "userNotFound": "Ningún usuario con este nombre",
+      "rename": {
+        "name": "Redenumește rolul",
+        "submit": "Salvează numele"
+      }
     },
     "logs": {
       "title": "ACP log",
@@ -1491,7 +1499,8 @@
         "2fa": "Seguridad",
         "terms": "Términos y privacidad",
         "uploads": "Subidas e imágenes",
-        "seo": "SEO"
+        "seo": "SEO",
+        "messages": "Mesaje private"
       },
       "save": "Guardar ajustes",
       "secretSet": "••••• guardar (dejar vacío para mantener el valor)",
@@ -2162,8 +2171,12 @@
       "settings": {
         "profile": "Profilul",
         "faceit": "FACEIT",
-        "elsewhere": "În altă parte"
-      }
+        "elsewhere": "În altă parte",
+        "signature": "Semnătura"
+      },
+      "signatureMaxChars": "Lungimea maximă (caractere)",
+      "signatureMaxCharsHint": "0 oprește semnăturile pe tot site-ul. Grupurile pot avea și ele o limită, din Permisiuni.",
+      "signatureMaxImages": "Imagini în semnătură (0–5)"
     },
     "memberProfile": {
       "profileTitle": "Perfil",
@@ -5049,7 +5062,9 @@
         "valuePlaceholder": "nombre, IP / rango o email / @dominio",
         "duration": "Duración",
         "reason": "Motivo",
-        "submit": "Bloquear"
+        "submit": "Bloquear",
+        "what": "Ce se banează",
+        "details": "Durata și motivul"
       },
       "types": {
         "ACCOUNT": "Cuenta",
@@ -5085,7 +5100,12 @@
       "liftConfirm": "El bloqueo se levanta al instante; la persona recupera el acceso.",
       "prev": "‹ Anterior",
       "next": "Siguiente ›",
-      "page": "Página {page} de {pages}"
+      "page": "Página {page} de {pages}",
+      "save": "Salvează",
+      "keepUntil": "Neschimbată (până la {date})",
+      "keepPermanent": "Neschimbată (permanent)",
+      "fromNow": "{duration} de acum",
+      "liftedAt": "ridicat {date}"
     },
     "warnings": {
       "title": "Advertencias",
@@ -6149,6 +6169,267 @@
         "startUrl": "Pagina de pornire",
         "startHint": "O adresă din site, ex. / sau /forum."
       }
+    },
+    "ads": {
+      "title": "Reclame",
+      "description": "Bannere cu imagine și link sau blocuri HTML, ascunse grupurilor alese (ex. VIP), cu programare, afișări și click-uri.",
+      "add": "Reclamă nouă",
+      "create": "Adaugă reclama",
+      "save": "Salvează",
+      "placeHint": "Plasează reclamele din „Editează pagina” (pagina principală, forumuri, topicuri) cu widget-ul „Reclamă”.",
+      "empty": "Nicio reclamă încă.",
+      "secBasics": "Reclama",
+      "secImage": "Imagine cu link",
+      "secHtml": "Sau un bloc HTML",
+      "secAudience": "Cine o vede și când",
+      "name": "Numele (doar în ACP)",
+      "kind": "Tipul",
+      "kinds": {
+        "image": "Imagine cu link",
+        "html": "HTML"
+      },
+      "enabled": "Pornită",
+      "image": "Imaginea",
+      "link": "Linkul",
+      "alt": "Textul alternativ",
+      "html": "HTML-ul",
+      "htmlHint": "Se curăță ca postările: fără scripturi sau iframe-uri.",
+      "hideHint": "Grupurile bifate NU văd reclama (implicit VIP-urile).",
+      "startsAt": "De la",
+      "endsAt": "Până la",
+      "impressions": "{count, plural, one {# afișare} many {# de afișări} other {# de afișări}}",
+      "clicks": "{count, plural, one {# click} many {# de click-uri} other {# de click-uri}}",
+      "states": {
+        "live": "Activă",
+        "scheduled": "Programată",
+        "ended": "Încheiată",
+        "off": "Oprită"
+      },
+      "resetStats": "Resetează statisticile",
+      "resetConfirm": "Pornești afișările și click-urile de la zero?",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi reclama? Widget-urile care o arătau rămân goale."
+    },
+    "streams": {
+      "title": "Fluxuri",
+      "description": "Pagina Activitate: ce apare în fluxul „Tot”, forumurile scoase din activitate și fluxurile proprii, ca tab-uri (ex. „Știri”, „Servere”).",
+      "settings": "Fluxul „Tot”",
+      "save": "Salvează",
+      "add": "Flux nou",
+      "create": "Adaugă fluxul",
+      "allStream": "Tot (fluxul principal)",
+      "builtIn": "Implicit",
+      "kindsTitle": "Ce apare",
+      "kinds": {
+        "topic": "Topicuri noi",
+        "reply": "Răspunsuri",
+        "status": "Statusuri",
+        "member": "Membri noi"
+      },
+      "secPage": "Pagina",
+      "perPage": "Elemente pe pagină",
+      "perPageChip": "{n} pe pagină",
+      "exclude": "Forumuri scoase din activitate",
+      "excludeHint": "Topicurile și răspunsurile lor nu apar în niciun flux.",
+      "excluded": "Fără: {forums}",
+      "noExcluded": "Toate forumurile",
+      "secStream": "Fluxul",
+      "name": "Numele (tab-ul)",
+      "icon": "Iconița",
+      "forums": "Din forumurile",
+      "forumsHint": "Niciun forum bifat = toate (în afară de cele scoase din activitate).",
+      "allForums": "Din toate forumurile",
+      "inForums": "Din: {forums}",
+      "up": "Mută mai sus",
+      "down": "Mută mai jos",
+      "delete": "Șterge fluxul",
+      "confirmDelete": "Ștergi fluxul? Tab-ul dispare de pe pagina Activitate.",
+      "emptyCustom": "Niciun flux propriu încă. Adaugă unul pentru o secțiune importantă (ex. știrile sau serverele)."
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Trimite automat evenimentele site-ului spre alte servicii: un canal Discord (topicuri noi, membri noi…) sau propriul server, ca JSON semnat.",
+      "add": "Webhook nou",
+      "create": "Adaugă webhook-ul",
+      "save": "Salvează",
+      "empty": "Niciun webhook încă. Adaugă unul ca să anunți pe Discord topicurile noi.",
+      "secEndpoint": "Destinația",
+      "name": "Numele",
+      "url": "Adresa (URL)",
+      "urlHint": "Doar adrese publice https. Pentru Discord: Setările canalului › Integrări › Webhooks › Copiază URL-ul.",
+      "format": "Formatul",
+      "formats": {
+        "json": "JSON semnat (serverul tău)",
+        "discord": "Mesaj Discord"
+      },
+      "enabled": "Pornit",
+      "events": "Evenimentele",
+      "eventNames": {
+        "topic_created": "Topic nou",
+        "post_created": "Răspuns nou",
+        "post_approved": "Postare aprobată",
+        "user_registered": "Membru nou",
+        "user_banned": "Membru banat",
+        "user_warned": "Avertisment dat",
+        "report_created": "Raport nou",
+        "badge_awarded": "Badge acordat",
+        "vip_granted": "VIP nou",
+        "vip_expired": "VIP expirat"
+      },
+      "eventsCount": "{count, plural, one {# eveniment} many {# de evenimente} other {# de evenimente}}",
+      "lastDelivery": "ultima livrare {when}",
+      "disabled": "Oprit",
+      "never": "Nicio livrare",
+      "failed": "Eșuat",
+      "ok": "Funcționează",
+      "test": "Trimite un test",
+      "testHint": "Trimite acum evenimentul „ping” și îl notează mai jos.",
+      "secret": "Secretul de semnare",
+      "secretHint": "Antetul X-GCS-Signature = sha256=HMAC(secret, corpul cererii). Verifică-l pe serverul tău.",
+      "rotate": "Generează alt secret",
+      "rotateConfirm": "Generezi un secret nou? Serverul tău trebuie să-l folosească pe cel nou.",
+      "deliveries": "Ultimele livrări",
+      "noDeliveries": "Nicio livrare încă.",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi webhook-ul? Livrările în așteptare nu mai pleacă."
+    },
+    "api": {
+      "title": "API",
+      "description": "Chei pentru alte aplicații (bot Discord, site de prezentare, panou de servere) care citesc datele publice ale comunității. Fiecare cheie are doar drepturile alese și maximum {rate} de cereri pe minut.",
+      "add": "Cheie nouă",
+      "create": "Creează cheia",
+      "save": "Salvează",
+      "empty": "Nicio cheie încă. Creează una pentru botul tău de Discord sau pentru site-ul de prezentare.",
+      "name": "Numele",
+      "namePlaceholder": "ex. Bot Discord",
+      "nameHint": "Ca să știi pe unde e folosită.",
+      "scopes": "Ce poate citi",
+      "scopeNames": {
+        "stats_read": "Statistici",
+        "forums_read": "Topicuri recente",
+        "members_read": "Profiluri publice",
+        "servers_read": "Servere"
+      },
+      "createdHint": "Copiază cheia acum: din motive de siguranță nu se mai afișează. Dacă o pierzi, creează alta și o revoci pe cea veche.",
+      "copy": "Copiază cheia",
+      "copied": "Copiată",
+      "another": "Încă o cheie",
+      "lastUsed": "folosită {when}",
+      "neverUsed": "nefolosită încă",
+      "active": "Activă",
+      "unused": "Nefolosită",
+      "revoked": "Revocată",
+      "created": "Creată {when}",
+      "revokedAt": "revocată {when}",
+      "revoke": "Revocă cheia",
+      "revokeHint": "Cererile cu această cheie sunt refuzate imediat. Cheia rămâne în listă, cu jurnalul ei.",
+      "confirmRevoke": "Revoci cheia? Aplicațiile care o folosesc nu mai primesc date.",
+      "calls": "Ultimele cereri",
+      "noCalls": "Nicio cerere încă.",
+      "delete": "Șterge",
+      "confirmDelete": "Ștergi cheia și jurnalul ei?",
+      "docsTitle": "Cum se folosește",
+      "docsIntro": "Trimite cheia în antetul Authorization. Răspunsul e JSON, cu datele în câmpul data (sau codul în câmpul error). Datele sunt cele pe care le vede un vizitator.",
+      "endpoints": {
+        "stats_read": "Numărul de topicuri, postări și membri, plus cel mai nou membru.",
+        "forums_read": "Ultimele topicuri active din forumurile publice (limit până la 50).",
+        "members_read": "Profilul public al unui membru, după nume: grupul, postările, reputația, dacă e online.",
+        "servers_read": "Serverele publice cu jucătorii, harta și uptime-ul (aplicația Servere)."
+      },
+      "docsErrors": "Coduri: 403 = cheie greșită, revocată sau fără dreptul cerut; 404 = nu există; 429 = peste {rate} de cereri pe minut (vezi antetul Retry-After)."
+    },
+    "integrations": {
+      "title": "Integrări",
+      "description": "Serviciile externe ale comunității într-un singur loc: ce e conectat, ce lipsește și unde se configurează fiecare.",
+      "summary": "{on} din {all} integrări pornite",
+      "summaryHint": "Apasă „Configurează” ca să conectezi un serviciu.",
+      "summaryWarn": "Lipsește ceva la: {names}",
+      "configure": "Configurează",
+      "save": "Salvează",
+      "levels": {
+        "ok": "Conectat",
+        "warn": "Incomplet",
+        "off": "Neconectat"
+      },
+      "groups": {
+        "login": "Login cu alte conturi",
+        "security": "Protecție anti-spam",
+        "email": "Email",
+        "search": "Motoare de căutare",
+        "translate": "Traduceri automate",
+        "developers": "Dezvoltatori"
+      },
+      "items": {
+        "discord": {
+          "name": "Login cu Discord",
+          "hint": "Client ID și secretul aplicației Discord."
+        },
+        "google": {
+          "name": "Login cu Google",
+          "hint": "Client ID și secretul din Google Cloud."
+        },
+        "steam": {
+          "name": "Login cu Steam",
+          "hint": "Cheia Steam Web API."
+        },
+        "turnstile": {
+          "name": "Cloudflare Turnstile",
+          "hint": "Captcha invizibil la înregistrare și formulare."
+        },
+        "sfs": {
+          "name": "StopForumSpam",
+          "hint": "Verifică emailul și IP-ul conturilor noi în baza de spammeri."
+        },
+        "smtp": {
+          "name": "Server SMTP",
+          "hint": "Trimiterea emailurilor (confirmări, notificări, newsletter)."
+        },
+        "verification": {
+          "name": "Verificarea site-ului",
+          "hint": "Google Search Console, Bing, Yandex.",
+          "detail": "{detail}"
+        },
+        "indexnow": {
+          "name": "IndexNow",
+          "hint": "Anunță imediat motoarele de căutare despre paginile noi."
+        },
+        "translate": {
+          "name": "Traducerea postărilor",
+          "hint": "Furnizorul folosit pentru „Traduce”.",
+          "detail": "furnizor: {detail}"
+        },
+        "webhooks": {
+          "name": "Webhooks",
+          "hint": "Evenimentele site-ului trimise spre Discord sau alte servere.",
+          "detail": "{detail} pornite"
+        },
+        "api": {
+          "name": "Chei API",
+          "hint": "Aplicații care citesc datele publice.",
+          "detail": "{detail} active"
+        }
+      },
+      "analytics": {
+        "title": "Analiza traficului",
+        "hint": "Vizitatorii, paginile și sursele lor, în serviciul tău de statistici.",
+        "provider": "Serviciul",
+        "providers": {
+          "none": "Oprită",
+          "ga4": "Google Analytics 4",
+          "plausible": "Plausible",
+          "umami": "Umami"
+        },
+        "ga4Id": "ID-ul fluxului (Measurement ID)",
+        "ga4Hint": "Google Analytics › Administrare › Fluxuri de date › ID-ul care începe cu G-.",
+        "domain": "Domeniul",
+        "script": "Adresa scriptului",
+        "scriptHint": "Lasă-o pe cea implicită pentru varianta cloud; schimb-o dacă ai instalarea proprie.",
+        "websiteId": "ID-ul site-ului (Website ID)",
+        "who": "Cui se încarcă",
+        "skipStaff": "Nu număra staff-ul (cine are acces în ACP)",
+        "afterCookieNotice": "Pornește doar după „Am înțeles” pe banda de cookie-uri",
+        "cookieHint": "Google Analytics pune cookie-uri; Plausible și Umami nu. Banda de cookie-uri se pornește din Setări › Termeni și confidențialitate."
+      }
     }
   },
   "settings": {
@@ -6287,7 +6568,8 @@
       "sponsor_min_amount": "Umbral de la insignia «Sponsor» (donaciones confirmadas, en la moneda principal; 0 = desactivada)"
     },
     "pm": {
-      "messages_per_page": "Mensajes por página en una conversación"
+      "messages_per_page": "Mensajes por página en una conversación",
+      "messages_per_page_hint": "Câte mesaje se încarcă odată într-o conversație privată (5–100)."
     },
     "vip": {
       "warn_days": "Días antes de la expiración se advierte al miembro",
@@ -6960,6 +7242,12 @@
     },
     "pwa": {
       "config": "Aplicația web"
+    },
+    "streams": {
+      "config": "Fluxurile de activitate"
+    },
+    "integrations": {
+      "analytics": "Analiza traficului"
     }
   },
   "permissions": {
@@ -9237,7 +9525,8 @@
       "groupLegend": "Leyenda del grupo",
       "ranking": "Clasificación",
       "guestCta": "Bloque para visitantes",
-      "rankingTop": "{period, select, day {Top del día} week {Top de la semana} month {Top del mes} year {Top del año} other {Top histórico}}"
+      "rankingTop": "{period, select, day {Top del día} week {Top de la semana} month {Top del mes} year {Top del año} other {Top histórico}}",
+      "ad": "Reclamă"
     },
     "forums": {
       "stats": "Estadísticas",
@@ -9266,7 +9555,8 @@
       "rare": "Qué insignias",
       "group": "Solo miembros del grupo",
       "tabs": "Pestañas de la clasificación",
-      "layout": "Diseño"
+      "layout": "Diseño",
+      "adUnit": "Reclama"
     },
     "periods": {
       "week": "esta semana",
@@ -9286,7 +9576,8 @@
         "groupLegend": "Los grupos comunitarios, con sus estilos de nombre.",
         "newMembers": "Los nuevos miembros registrados.",
         "ranking": "Los mejores miembros por mensajes, temas, reputación o tiempo en línea, de hoy, la semana, el mes, el año o de siempre.",
-        "guestCta": "Registro, inicio de sesión y acceso con un clic. Solo lo ven los visitantes."
+        "guestCta": "Registro, inicio de sesión y acceso con un clic. Solo lo ven los visitantes.",
+        "ad": "O reclamă din ACP › Promovare › Reclame (una anume sau la întâmplare)."
       },
       "forums": {
         "stats": "Número de temas, puestos y miembros.",
@@ -9373,7 +9664,8 @@
       "allCount": "Todas ({count})",
       "players": "{count, plural, one {# jugador} many {# jugadores} other {# jugadores}}",
       "more": "y {count} más"
-    }
+    },
+    "adLabel": "Reclamă"
   },
   "pageEditor": {
     "title": "Editar página",
@@ -9436,7 +9728,8 @@
     "dropHere": "Arrastre widgets aquí",
     "done": "Edición final",
     "defaultGoal": "Primer objetivo activo",
-    "allGroups": "Todos los grupos"
+    "allGroups": "Todos los grupos",
+    "randomAd": "La întâmplare (dintre cele active)"
   },
   "stats": {
     "title": "Estadísticas comunitarias",

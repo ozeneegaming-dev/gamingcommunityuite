@@ -70,6 +70,21 @@ describe("GcsBanService", () => {
     expect(w.events.map((e) => e.name)).toContain("user.unbanned");
   });
 
+  test("update schimbă motivul și durata; un ban ridicat nu se mai prelungește", async () => {
+    const root = await rootActor();
+    const target = await w.createUser("Editat", "member");
+    const ban = await w.bans.ban({ type: "ACCOUNT", value: target.id, userId: target.id, reason: "spam" }, root);
+    const until = new Date(Date.now() + 86_400_000);
+    const edited = await w.bans.update(ban.id, { reason: "  spam repetat  ", expiresAt: until }, root);
+    expect(edited).toMatchObject({ reason: "spam repetat", expiresAt: until });
+    expect((await w.bans.update(ban.id, { reason: "spam" }, root)).expiresAt).toEqual(until);
+    await expect(w.bans.update(ban.id, { reason: " " }, root)).rejects.toBeInstanceOf(GcsValidationError);
+    await w.bans.lift(ban.id, root);
+    expect((await w.bans.update(ban.id, { reason: "ridicat", expiresAt: null }, root)).expiresAt).toEqual(until);
+    const member = await w.actorFor(await w.createUser("FaraDrept", "member"));
+    await expect(w.bans.update(ban.id, { reason: "x" }, member)).rejects.toBeInstanceOf(GcsForbidden);
+  });
+
   test("valori invalide → GcsValidationError", async () => {
     const root = await rootActor();
     await expect(w.bans.ban({ type: "IP", value: "nu-e-ip", reason: "x" }, root)).rejects.toBeInstanceOf(

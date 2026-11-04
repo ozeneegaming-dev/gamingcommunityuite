@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import type { GcsActor, GcsCache, GcsPermissionService } from "@gcs/core";
+import type { GcsActor, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
+import { DEFAULT_STREAMS, loadStreamsConfig } from "./streams";
 import { Prisma, type PrismaClient, sql } from "@gcs/db";
 import { forumContainer } from "../forums/posting";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
@@ -38,7 +39,8 @@ export type GcsStreamItem =
       context: { label: string; href: string } | null;
     };
 
-export type GcsActivityQuery = { filter?: GcsActivityFilter; unread?: boolean; before?: string | null; limit?: number };
+/** `stream` = cheia unui flux propriu din ACP › Fluxuri (tab-ul lui de pe pagina Activitate). */
+export type GcsActivityQuery = { filter?: GcsActivityFilter; unread?: boolean; before?: string | null; limit?: number; stream?: string | null };
 export type GcsActivityPage = { items: GcsStreamItem[]; next: string | null };
 
 /**
@@ -91,7 +93,8 @@ export class GcsActivityStream {
       cache: GcsCache;
       permissions: GcsPermissionService;
       social: Pick<GcsSocialService, "ignoredIds">;
-      /** Sursele de conținut ale aplicațiilor: elementele lor apar doar în „Tot”, fără „Doar necitite”. */
+      settings?: Pick<GcsSettingsService, "get">;
+      /** Sursele de conținut ale aplicațiilor: elementele lor apar doar în „Tot” (fluxul principal), fără „Doar necitite”. */
       sources?: Pick<GcsContentSources, "streamSources">;
     },
   ) {}
@@ -99,19 +102,25 @@ export class GcsActivityStream {
   async page(viewer: GcsActor, query: GcsActivityQuery = {}): Promise<GcsActivityPage> {
     const { db, cache, permissions, social } = this.deps;
     const filter = query.filter ?? "all";
-    const limit = Math.min(Math.max(query.limit ?? ACTIVITY_PER_PAGE, 1), 50);
+    // ACP › Fluxuri: tipurile din „Tot”, forumurile excluse, elementele pe pagină și fluxul propriu ales.
+    const cfg = this.deps.settings ? await loadStreamsConfig(this.deps.settings) : DEFAULT_STREAMS;
+    const stream = query.stream ? (cfg.custom.find((s) => s.key === query.stream) ?? null) : null;
+    const allowedKinds = new Set<Kind>(stream ? stream.kinds : cfg.kinds);
+    const limit = Math.min(Math.max(query.limit ?? cfg.perPage ?? ACTIVITY_PER_PAGE, 1), 50);
     const unread = Boolean(query.unread && viewer.userId);
     const cursor = parseActivityCursor(query.before);
 
     const forums = await db.forum.findMany({ select: { id: true } });
     const readable = await permissions.filterContainers(viewer, "forums.read", forums.map((f) => forumContainer(f.id)));
-    const forumIds = [...readable].map(Number).sort((a, b) => a - b);
+    const excluded = new Set(cfg.excludeForumIds);
+    const only = stream && stream.forumIds.length > 0 ? new Set(stream.forumIds) : null;
+    const forumIds = [...readable].map(Number).filter((id) => !excluded.has(id) && (!only || only.has(id))).sort((a, b) => a - b);
     const publicProfiles = !viewer.isBanned && (await permissions.can(viewer, "core.view_public"));
-    const sources = filter === "all" && !unread && this.deps.sources ? await this.deps.sources.streamSources() : [];
+    const sources = filter === "all" && !unread && !stream && this.deps.sources ? await this.deps.sources.streamSources() : [];
 
     const guestKey = viewer.userId
       ? null
-      : `activity:guest:${filter}:${limit}:${cursor ? encodeActivityCursor(cursor) : "first"}:${publicProfiles ? 1 : 0}:${createHash("sha1").update(forumIds.join(",")).digest("hex")}:${sources.map((s) => s.key).join(",")}`;
+      : `activity:guest:${filter}:${limit}:${cursor ? encodeActivityCursor(cursor) : "first"}:${publicProfiles ? 1 : 0}:${createHash("sha1").update(`${forumIds.join(",")}|${[...allowedKinds].join(",")}`).digest("hex")}:${sources.map((s) => s.key).join(",")}`;
     if (guestKey) {
       const cached = await cache.get<GcsActivityPage>(guestKey);
       if (cached) return cached;
@@ -121,6 +130,7 @@ export class GcsActivityStream {
     const ignored = await social.ignoredIds(viewer.userId, "posts");
     const cutoff = unread ? await this.unreadCutoff(viewer.userId!) : null;
     const wants = (k: Kind) =>
+      allowedKinds.has(k) &&
       (filter === "all" || (filter === "topics" && k === "topic") || (filter === "replies" && k === "reply") || (filter === "statuses" && k === "status")) &&
       (!unread || k === "topic" || k === "reply") &&
       (k === "topic" || k === "reply" ? forumIds.length > 0 : publicProfiles);

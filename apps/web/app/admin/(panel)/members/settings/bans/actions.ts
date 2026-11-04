@@ -36,3 +36,14 @@ export async function liftBanAction(banId: string): Promise<GcsResult<null>> {
     return null;
   });
 }
+
+/** Motivul și durata unui ban existent (`keep` = expirarea rămâne; celelalte se socotesc de acum). */
+export async function updateBanAction(banId: string, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    const duration = field(fd, "duration");
+    const days = DURATIONS[duration];
+    const expiresAt = duration === "keep" || days === undefined ? undefined : days ? new Date(Date.now() + days * 86_400_000) : null;
+    await services().bans.update(banId, { reason: field(fd, "reason"), ...(expiresAt !== undefined ? { expiresAt } : {}) }, actor, SECTION);
+    return null;
+  });
+}

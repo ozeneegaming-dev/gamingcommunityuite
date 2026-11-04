@@ -578,6 +578,58 @@ model Referral {
   @@map("referrals")
 }
 
+/// Reclamele (ACP › Promovare › Reclame): o imagine cu link sau un bloc HTML (curățat), plasate prin widget-ul „Reclamă”
+/// în zonele paginilor. `hideGroups` = grupurile care nu le văd (ex. VIP); `startsAt` / `endsAt` = programarea.
+/// Afișările și click-urile se numără în stocarea cheilor (`gcs:ads:stats`).
+model AdUnit {
+  id         Int       @id @default(autoincrement())
+  name       String
+  kind       String    @default("image")
+  imageUrl   String    @default("")
+  linkUrl    String    @default("")
+  alt        String    @default("")
+  html       String    @default("")
+  enabled    Boolean   @default(true)
+  hideGroups Json      @default("[]")
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("ad_units")
+}
+
+/// Webhook-urile (ACP › Sistem › Funcții site › Webhooks): la evenimentele alese, un POST spre `url` — JSON semnat cu
+/// `secret` (HMAC SHA-256, antetul `X-GCS-Signature`) sau mesajul unui webhook Discord (`format` = discord).
+/// Jurnalul ultimelor livrări stă în stocarea cheilor (`gcs:webhooks:log:<id>`).
+model WebhookEndpoint {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  format    String   @default("json")
+  secret    String
+  events    Json     @default("[]")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("webhook_endpoints")
+}
+
+/// Cheile API (ACP › Sistem › Funcții site › API): `gcs_<prefix>_<secret>`, afișată o singură dată; se păstrează doar
+/// prefixul și hash-ul SHA-256. `scopes` = ce poate citi cheia. Jurnalul cererilor stă în stocarea cheilor.
+model ApiKey {
+  id          Int       @id @default(autoincrement())
+  name        String
+  prefix      String    @unique
+  hash        String
+  scopes      Json      @default("[]")
+  createdById String?
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  @@map("api_keys")
+}
+
 model WarningAction {
   id            Int               @id @default(autoincrement())
   threshold     Int               @unique

@@ -56,13 +56,15 @@ export default async function AcpProfilesPage({ searchParams }: Props) {
   const tab: Tab = TABS.find((k) => k === sp.tab) ?? "fields";
   const t = await getTranslations("acp.profiles");
   const { profiles, settings, profileFields } = services();
-  const [fields, coverMaxMb, wallEnabled, postbitOrder, groups, faceitKey] = await Promise.all([
+  const [fields, coverMaxMb, wallEnabled, postbitOrder, groups, faceitKey, sigMaxChars, sigMaxImages] = await Promise.all([
     profiles.fields(),
     settings.get<number>("profile.cover_max_mb"),
     settings.get<boolean>("profile.wall_enabled"),
     settings.get<string[]>("postbit.fields"),
     profileFields.groups(),
     settings.get<string>("profile.faceit_api_key"),
+    settings.get<number>("profile.signature_max_chars"),
+    settings.get<number>("profile.signature_max_images"),
   ]);
   type Field = (typeof fields)[number];
   type Group = (typeof groups)[number];
@@ -312,6 +314,20 @@ export default async function AcpProfilesPage({ searchParams }: Props) {
                 <span>{t("wallEnabled")}</span>
                 <input type="checkbox" role="switch" className="gcs-switch" name="wallEnabled" defaultChecked={wallEnabled} />
               </label>
+            </fieldset>
+            <fieldset className="gcs-formSec">
+              <legend>{t("settings.signature")}</legend>
+              <div className="gcs-formGrid">
+                <label className="gcs-field">
+                  {t("signatureMaxChars")}
+                  <input className="gcs-input" name="signatureMaxChars" type="number" min={0} max={5000} step={1} defaultValue={sigMaxChars} />
+                  <span className="gcs-field__hint">{t("signatureMaxCharsHint")}</span>
+                </label>
+                <label className="gcs-field">
+                  {t("signatureMaxImages")}
+                  <input className="gcs-input" name="signatureMaxImages" type="number" min={0} max={5} step={1} defaultValue={sigMaxImages} />
+                </label>
+              </div>
             </fieldset>
             <fieldset className="gcs-formSec">
               <legend>{t("settings.faceit")}</legend>

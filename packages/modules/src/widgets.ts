@@ -42,6 +42,16 @@ export const coreWidgets: GcsWidgetDef[] = [
       { key: "body", labelKey: "widgets.fields.body", type: "richtext", maxLength: 5000, profile: "announcement" },
     ],
   }),
+  // Reclamele (ACP › Promovare › Reclame): una anume sau, fără alegere, una la întâmplare dintre cele active.
+  widget({
+    key: "core.ad",
+    labelKey: "widgets.core.ad",
+    descriptionKey: "widgets.desc.core.ad",
+    icon: "fa-solid fa-rectangle-ad",
+    iconOverride: false,
+    defaultConfig: { unit: "" },
+    fields: [{ key: "unit", labelKey: "widgets.fields.adUnit", type: "select", optionsFrom: "ads.units" }],
+  }),
   widget({ key: "core.online", labelKey: "widgets.core.online", descriptionKey: "widgets.desc.core.online", icon: "fa-solid fa-signal", defaultConfig: {} }),
   widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", descriptionKey: "widgets.desc.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom"], defaultConfig: {} }),
   widget({ key: "core.onlineDay", labelKey: "widgets.core.onlineDay", descriptionKey: "widgets.desc.core.onlineDay", icon: "fa-solid fa-clock", defaultConfig: {} }),

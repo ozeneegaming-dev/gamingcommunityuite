@@ -2,6 +2,7 @@ import { STEAM_PLACEHOLDER_DOMAIN, type GcsAnnouncementPosition } from "@gcs/mod
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type ReactNode } from "react";
+import { GcsAnalytics } from "./_components/GcsAnalytics";
 import { GcsDesignSync } from "./_components/GcsDesignSync";
 import { GcsCockpitSlot } from "./_components/cockpit/GcsCockpitSlot";
 import { GcsNavProgress } from "./_components/GcsNavProgress";
@@ -132,6 +133,12 @@ export default async function SiteLayout({ children, modal }: { children: ReactN
       <GcsImageViewerHost labels={viewerLabels} locale={locale} />
       {phishing && <GcsLinkGuard lists={phishing} />}
       {cookieNotice && !preview && <GcsCookieBanner {...cookieNotice} />}
+      {/* Analiza traficului (ACP › Integrări), nu și în previzualizarea editoarelor. */}
+      {!preview && (
+        <Suspense fallback={null}>
+          <GcsAnalytics actor={actor} />
+        </Suspense>
+      )}
       <GcsHoverCardHost
         locale={locale}
         labels={{

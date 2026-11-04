@@ -13,6 +13,13 @@ export async function createRole(fd: FormData): Promise<GcsResult<{ id: number }
   });
 }
 
+export async function renameRole(roleId: number, fd: FormData): Promise<GcsResult<null>> {
+  return runAcpAction(SECTION, "edit", async (actor) => {
+    await services().acp.renameRole(roleId, field(fd, "name"), actor);
+    return null;
+  });
+}
+
 /** Matricea secțiune × {view, edit, delete}: câmpurile `right:<secțiune>:<drept>`. */
 export async function saveRolePermissions(roleId: number, fd: FormData): Promise<GcsResult<null>> {
   return runAcpAction(SECTION, "edit", async (actor) => {

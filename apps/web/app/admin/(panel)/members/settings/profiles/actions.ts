@@ -116,6 +116,9 @@ export async function saveProfileSettings(fd: FormData): Promise<GcsResult<null>
     const { settings } = services();
     await settings.set("profile.cover_max_mb", Number(field(fd, "coverMaxMb")), actor);
     await settings.set("profile.wall_enabled", fd.get("wallEnabled") === "on", actor);
+    // Semnătura: lungimea maximă (0 = fără semnături) și câte imagini poate avea.
+    await settings.set("profile.signature_max_chars", Number(field(fd, "signatureMaxChars")), actor);
+    await settings.set("profile.signature_max_images", Number(field(fd, "signatureMaxImages")), actor);
     // Profil gaming v2: cheia FACEIT (goală = neschimbată; „șterge” o golește). Pragul insignei „Sponsor” e în Donații › Setări.
     const faceit = field(fd, "faceitKey").trim();
     if (fd.get("faceitClear") === "on") await settings.set("profile.faceit_api_key", "", actor);
