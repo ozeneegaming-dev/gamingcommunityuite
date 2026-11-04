@@ -51,6 +51,10 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.community.chat_group", ["community.chat_channels", "community.chat_settings", "community.chat_moderation", "community.chat_moderators"]],
         ["acp.menu.community.chat_pro_group", ["community.chat_pro_settings", "community.chat_pro_bar", "community.chat_pro_emotes"]],
         ["acp.menu.members.moderation", ["members.queue", "members.reports", "members.antispam", "members.warnings", "members.tickets"]],
+        [
+          "acp.menu.community.downloads_group",
+          ["community.downloads", "community.downloads_queue", "community.downloads_files", "community.downloads_categories", "community.downloads_fields", "community.downloads_antivirus", "community.downloads_settings"],
+        ],
       ],
       members: [
         ["acp.menu.members.members", ["members.members", "members.groups", "members.promotions", "members.ip_tools", "members.gdpr", "members.groups_legend"]],
@@ -75,7 +79,7 @@ describe("zonele ACP ale aplicației", () => {
       stats: [
         ["acp.menu.stats.overview_group", ["stats.overview"]],
         ["acp.menu.stats.activity", ["stats.registrations", "stats.members", "stats.content", "stats.online"]],
-        ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans"]],
+        ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans", "stats.downloads"]],
       ],
       apps: [
         ["acp.menu.system.apps_manage", ["system.applications"]],

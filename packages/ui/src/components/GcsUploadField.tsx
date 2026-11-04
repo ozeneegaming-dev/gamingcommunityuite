@@ -154,7 +154,7 @@ export function GcsUploadField({ title, name, rules, labels, current, onFile, up
 
   return (
     <div className={cx("gcs-upfield", disabled && "gcs-upfield--disabled", className)} data-testid={testId}>
-      {name && <input ref={hidden} type="file" name={name} accept={rules.accept.join(",")} multiple={multiple} required={required && !current?.url} className="gcs-upfield__input" tabIndex={-1} aria-hidden="true" data-testid={testId ? `${testId}-input` : undefined} />}
+      {name && <input ref={hidden} type="file" name={name} accept={rules.accept.includes("*") ? undefined : rules.accept.join(",")} multiple={multiple} required={required && !current?.url} className="gcs-upfield__input" tabIndex={-1} aria-hidden="true" data-testid={testId ? `${testId}-input` : undefined} />}
       <span className={cx("gcs-upfield__thumb", !shownUrl && "gcs-upfield__thumb--empty")} aria-hidden="true">
         {shownUrl && isImage ? <img src={shownUrl} alt="" /> : <GcsIconSvg icon={isImage ? faImage : faFile} />}
       </span>
@@ -346,7 +346,7 @@ export function GcsUploadDialog({ title, rules, labels, upload, onClose, onAccep
         <input
           ref={picker}
           type="file"
-          accept={rules.accept.join(",")}
+          accept={rules.accept.includes("*") ? undefined : rules.accept.join(",")}
           multiple={multiple}
           className="gcs-srOnly"
           onChange={(e) => {

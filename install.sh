@@ -193,6 +193,7 @@ S3_SECRET_KEY=$(secret)
 S3_BUCKET=gcs
 GCS_SECRET=$(secret)
 GCS_CONFIG_DIR=/app/config
+COMPOSE_PROFILES=antivirus
 $VERSION_LINE
 EOF
     else

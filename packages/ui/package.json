@@ -63,7 +63,8 @@
     "./icon-registry": "./src/icons/registry.ts",
     "./badge-art": "./src/badges/index.ts",
     "./badge-art/server": "./src/badges/server.ts",
-    "./member-name": "./src/components/GcsMemberName.tsx"
+    "./member-name": "./src/components/GcsMemberName.tsx",
+    "./downloads.css": "./src/downloads.css"
   },
   "scripts": {
     "lint": "eslint .",

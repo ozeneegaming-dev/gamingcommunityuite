@@ -22,7 +22,8 @@
       "bans": "Bans",
       "serverAdmins": "Admins",
       "serverTickets": "Appeals",
-      "donations": "Donations"
+      "donations": "Donations",
+      "downloads": "Downloads"
     },
     "acp": "ACP",
     "myProfile": "My profile",
@@ -348,7 +349,16 @@
       "license_domain": "The licence isn’t valid for this site’s domain.",
       "license_revoked": "The licence has been revoked.",
       "tag_exists": "A tag with this name already exists.",
-      "login_required": "You need to sign in."
+      "login_required": "You need to sign in.",
+      "vip": "This file is for VIP members only.",
+      "token": "The download link expired: open the file page again.",
+      "download_first": "Download the file before reviewing it.",
+      "import_disabled": "Importing from the server is turned off.",
+      "scanning": "The files are still being checked.",
+      "infected": "The file is infected.",
+      "approved": "This version is already published.",
+      "version_pending": "A new version is already waiting for approval.",
+      "attached": "This file is already part of a submission."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -509,7 +519,19 @@
       "empty": "No recipients for the chosen audience",
       "tag_not_allowed": "The tag is not on the list allowed by the admins",
       "unknown_job": "This job cannot be run manually",
-      "invalid_area": "Invalid cache area"
+      "invalid_area": "Invalid cache area",
+      "no_extension": "The file has no extension.",
+      "over_quota": "You've reached your group's storage limit.",
+      "site_full": "The site's download storage is full.",
+      "incomplete": "Wait until the upload finishes.",
+      "single": "This category accepts one file per entry.",
+      "blocked_domain": "Links to this domain aren't allowed.",
+      "not_image": "The screenshot must be an image.",
+      "process_failed": "The file couldn't be processed.",
+      "chunk_missing": "Part of the file is missing: upload it again.",
+      "size_mismatch": "The file arrived incomplete: upload it again.",
+      "same": "The version already has this number.",
+      "scan_error": "The antivirus couldn't check the file."
     }
   },
   "acp": {
@@ -651,7 +673,15 @@
         "chat_pro_emotes": "Emotes",
         "chat_moderation": "Moderation",
         "chat_moderators": "Moderators",
-        "archive": "Archiving"
+        "archive": "Archiving",
+        "downloads_group": "Downloads",
+        "downloads": "Overview",
+        "downloads_queue": "Approval queue",
+        "downloads_files": "Files",
+        "downloads_categories": "Categories",
+        "downloads_fields": "Extra fields",
+        "downloads_antivirus": "Antivirus",
+        "downloads_settings": "Settings"
       },
       "vip": {
         "vip_group": "VIP",
@@ -700,7 +730,8 @@
         "apps": "Apps",
         "vip": "VIP",
         "servers": "Servers",
-        "clans": "Clans"
+        "clans": "Clans",
+        "downloads": "Downloads"
       }
     },
     "comingSoon": {
@@ -3874,6 +3905,12 @@
         },
         "online_time": {
           "days": "Days with time online in the ranking"
+        },
+        "downloads": {
+          "files": "files in Downloads",
+          "reviews": "file reviews",
+          "comments": "file comments",
+          "downloads": "downloads in the log"
         }
       },
       "steps": {
@@ -3891,7 +3928,8 @@
         "account": "Account data",
         "files": "Files",
         "chat_pro": "Chat Pro",
-        "online_time": "Time online"
+        "online_time": "Time online",
+        "downloads": "Downloads"
       },
       "notes": {
         "topic_replies": "Their topics have {count} replies by other members: with “Delete content too” they are deleted as well.",
@@ -6149,6 +6187,343 @@
         "startUrl": "Start page",
         "startHint": "An address on the site, e.g. / or /forum."
       }
+    },
+    "downloads": {
+      "status": {
+        "scanning": "Checking",
+        "pending": "Pending",
+        "approved": "Published",
+        "rejected": "Rejected",
+        "quarantined": "Quarantined",
+        "hidden": "Hidden"
+      },
+      "scan": {
+        "clean": "Clean",
+        "infected": "Infected",
+        "error": "Scan error",
+        "skipped": "No antivirus",
+        "pending": "Checking",
+        "failed": "Failed the check"
+      },
+      "overview": {
+        "title": "Downloads",
+        "help": "Community files: the approval queue, the antivirus, storage used and the most downloaded files.",
+        "openSite": "Open on the site",
+        "tiles": {
+          "approved": "Published files",
+          "queue": "In the approval queue",
+          "quarantine": "Quarantined",
+          "downloads": "Downloads",
+          "categories": "Categories"
+        },
+        "antivirus": "Antivirus",
+        "manage": "Manage",
+        "storage": "Storage used: {used} of {limit}",
+        "unlimited": "no limit",
+        "latest": "Latest submissions",
+        "all": "All",
+        "top": "Most downloaded",
+        "stats": "Statistics",
+        "none": "Nothing yet.",
+        "downloadsN": "{count, plural, one {# download} other {# downloads}}"
+      },
+      "antivirus": {
+        "title": "Antivirus",
+        "help": "Every uploaded file is checked with ClamAV before it reaches the approval queue. Infected files are blocked and quarantined, and published files are rescanned with new signatures.",
+        "status": "Status",
+        "available": "Working: {engine}, signature database {signatures}",
+        "signaturesAt": "Signatures updated",
+        "reason": {
+          "disabled": "Turned off in the settings: files rely on manual approval.",
+          "no_address": "No service address is set.",
+          "unreachable": "The antivirus service isn't responding.",
+          "unsupported": "Unavailable on this edition (shared hosting)."
+        },
+        "liteHint": "Shared hosting doesn't run an antivirus: every file goes to the approval queue and is checked by staff.",
+        "manualHint": "While the antivirus isn't responding, files reach the queue marked “not checked” and staff check them by hand. On a VPS the service starts with `docker compose up -d` (the “antivirus” profile).",
+        "test": "Test the antivirus",
+        "testOk": "The antivirus detected the test file ({signature}).",
+        "testFail": "The test file wasn't detected ({result}).",
+        "rescan": "Rescan now",
+        "rescanQueued": "The rescan started and continues in the background.",
+        "counts": "Files by result",
+        "settings": "Settings",
+        "save": "Save",
+        "enabled": "Antivirus on",
+        "enabledHint": "When off, files only go through the type check and staff approval.",
+        "address": "Service address",
+        "addressHint": "host:port (default clamav:3310, the docker compose service).",
+        "maxScanMb": "Largest file scanned (MB)",
+        "onError": "When a scan fails",
+        "onErrorOptions": {
+          "approval": "Send it to the queue marked “not checked”",
+          "block": "Reject the file"
+        },
+        "rescanHours": "Rescan (hours)",
+        "rescanHint": "Published files are checked again with new signatures, at most once every this many hours (0 = never).",
+        "quarantineDays": "Quarantine (days)",
+        "quarantineHint": "Infected files of rejected submissions are deleted after this many days (0 = kept).",
+        "forumAttachments": "Also scan forum attachments",
+        "forumAttachmentsHint": "The same check for files attached to posts (coming to the forum; the setting is kept).",
+        "quarantine": "{count, plural, one {Quarantine (# file)} other {Quarantine (# files)}}",
+        "quarantineEmpty": "No quarantined files.",
+        "release": "Release",
+        "releaseConfirm": "Release this file from quarantine? Only do it if you're sure it's a false alarm; the version goes back to the approval queue.",
+        "delete": "Delete permanently",
+        "deleteConfirm": "Delete this quarantined file permanently?"
+      },
+      "queue": {
+        "title": "Approval queue",
+        "help": "New files and new versions waiting, oldest first. Open a submission to see its files, their real type and the antivirus result.",
+        "empty": "Nothing to approve.",
+        "newFile": "New file",
+        "newVersion": "New version {label}",
+        "review": "Review",
+        "files": "Files",
+        "openPage": "Open the file page",
+        "approve": "Approve",
+        "reject": "Reject",
+        "rejectConfirm": "Reject this submission? The author gets the reason.",
+        "reason": "Rejection reason",
+        "reasonPlaceholder": "e.g. duplicate file, missing instructions",
+        "scanning": "The files are still being checked."
+      },
+      "files": {
+        "title": "Files",
+        "help": "All entries, by status. Feature, hide or delete; full editing is on the file page.",
+        "filters": "Statuses",
+        "filter": {
+          "all": "All",
+          "approved": "Published",
+          "pending": "Pending",
+          "scanning": "Checking",
+          "rejected": "Rejected",
+          "quarantined": "Quarantined",
+          "hidden": "Hidden",
+          "featured": "Featured"
+        },
+        "search": "Search by title",
+        "empty": "No files.",
+        "feature": "Feature",
+        "unfeature": "Unfeature",
+        "hide": "Hide",
+        "unhide": "Show",
+        "delete": "Delete",
+        "deleteConfirm": "Delete “{title}” and all its versions?"
+      },
+      "categories": {
+        "title": "Categories",
+        "help": "File categories and their rules. Permissions (who sees, downloads, uploads, comments, reviews) are set per category; subcategories inherit them until you change them.",
+        "add": "New category",
+        "create": "Create",
+        "save": "Save",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this category? Its subcategories move up a level.",
+        "moveTo": "Move the files to",
+        "moveNone": "Choose…",
+        "deleteContent": "Delete the files too",
+        "copy": "Copy",
+        "copyName": "Name of the copy",
+        "permissions": "Permissions",
+        "view": "On the site",
+        "empty": "No categories yet. Create the first one.",
+        "disabled": "Off",
+        "clanFlag": "Clan",
+        "inherits": "inherits permissions",
+        "files": "{count, plural, one {# file} other {# files}}",
+        "secBasics": "Basics",
+        "name": "Name",
+        "parent": "Parent category",
+        "noParent": "No parent",
+        "icon": "Icon",
+        "description": "Description",
+        "iconImage": "Icon image",
+        "cover": "Cover",
+        "clan": "A clan's category",
+        "noClan": "No clan",
+        "clanHint": "The clan's members upload and download here; everyone else can only see it.",
+        "enabled": "Active",
+        "enabledHint": "When off, only staff can see it.",
+        "vipOnly": "VIP only",
+        "vipOnlyHint": "Other members see the files and get an invitation to become VIP.",
+        "secDisplay": "Display",
+        "sort": "Default sort",
+        "sorts": {
+          "updated": "Recently updated",
+          "newest": "Newest",
+          "downloads": "Most downloaded",
+          "rating": "Highest rated",
+          "title": "A–Z"
+        },
+        "secFiles": "Allowed files",
+        "anyExtension": "Any extension",
+        "anyExtensionHint": "The content is checked anyway: a disguised executable is rejected.",
+        "extensions": "Allowed extensions",
+        "extensionsHint": "Separated by commas or spaces, no dot (zip, rar, 7z, bsp, cfg…).",
+        "maxFileMb": "Maximum size (MB)",
+        "maxFileDefault": "default",
+        "maxFileHint": "Empty = the site limit; 0 = no category limit. The smaller of category and group applies.",
+        "multipleFiles": "Several files in one entry",
+        "secVersions": "Versions",
+        "versioning": "Version number",
+        "versioningModes": {
+          "off": "No versions",
+          "optional": "Optional",
+          "required": "Required"
+        },
+        "versionsToKeep": "How many old versions to keep",
+        "versionsToKeepHint": "0 = all.",
+        "keepVersions": "Keep old versions (downloadable)",
+        "requireChangelog": "A changelog is required",
+        "secScreenshots": "Screenshots",
+        "screenshots": "Allow screenshots",
+        "requireScreenshots": "Screenshots are required",
+        "maxScreenshots": "How many screenshots",
+        "screenshotMaxKb": "Largest screenshot (KB)",
+        "screenshotMaxKbHint": "0 = the group's image limit.",
+        "secModeration": "Moderation, comments and reviews",
+        "approval": "Files must be approved",
+        "approvalHint": "Staff and exempt groups publish directly.",
+        "tags": "Allow tags",
+        "comments": "Allow comments",
+        "commentsApproval": "Comments must be approved",
+        "reviews": "Allow reviews",
+        "reviewNeedsDownload": "Review only after downloading",
+        "reviewsApproval": "Reviews must be approved",
+        "secTerms": "Terms and messages",
+        "terms": "Download terms",
+        "termsWhen": "When the terms are accepted",
+        "termsWhenOptions": {
+          "download": "On download",
+          "submit": "On submission",
+          "both": "On download and submission",
+          "never": "Never"
+        },
+        "submitTerms": "Submission terms",
+        "cannotView": "Message for those who can't view the files",
+        "cannotDownload": "Message for those who can't download",
+        "messagePlaceholder": "Empty = the usual message",
+        "cannotDownloadPlaceholder": "e.g. These files are for VIP members: see the VIP page.",
+        "secTopic": "Forum topic",
+        "topicEnabled": "Create a support topic for each new file",
+        "topicEnabledHint": "The topic is created by the author, in the chosen forum, when the file is published.",
+        "topicForum": "Forum",
+        "chooseForum": "Choose a forum…",
+        "topicPrefix": "Title prefix",
+        "topicSuffix": "Title suffix",
+        "topicDelete": "Delete the topic with the file",
+        "topicScreenshot": "Include the first screenshot in the topic",
+        "secLog": "Download log",
+        "logDownloads": "Keep a download log",
+        "logDays": "Keep the log (days)",
+        "logDaysHint": "0 = forever.",
+        "authorSeesLog": "Authors see the log of their files",
+        "secFields": "Extra fields",
+        "noFields": "There are no fields.",
+        "manageFields": "Create fields"
+      },
+      "fields": {
+        "title": "Extra fields",
+        "help": "Fields filled in when submitting a file (e.g. co-authors, game version, compatibility), turned on only in the categories where they make sense.",
+        "add": "New field",
+        "create": "Create",
+        "save": "Save",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this field? Its values disappear from the pages.",
+        "empty": "No fields yet.",
+        "noCategories": "No categories",
+        "secField": "Field",
+        "name": "Name",
+        "type": "Type",
+        "types": {
+          "text": "Short text",
+          "textarea": "Long text",
+          "url": "Link",
+          "number": "Number",
+          "select": "Option list",
+          "checkbox": "Yes / No",
+          "member": "Members (co-authors)",
+          "date": "Date"
+        },
+        "location": "Place on the page",
+        "locations": {
+          "sidebar": "In the side panel",
+          "below": "Below the description",
+          "tab": "In its own section"
+        },
+        "description": "Description (form help)",
+        "options": "List options",
+        "optionsHint": "One per line (only for “Option list”).",
+        "multiple": "Several values",
+        "multipleHint": "For lists and members.",
+        "required": "Required",
+        "secCategories": "Categories",
+        "secTopic": "Forum topic",
+        "inTopic": "Include the field in the support topic",
+        "topicFormat": "Format in the topic",
+        "secGroups": "Who sees and who fills it in",
+        "groupsHint": "No group ticked = all groups.",
+        "viewGroups": "See the field",
+        "editGroups": "Fill in the field"
+      },
+      "settings": {
+        "title": "Settings",
+        "help": "The main page, file limits, screenshot watermark, links and RSS.",
+        "save": "Save",
+        "secIndex": "Main page",
+        "boxes": {
+          "featured": "“Featured” box",
+          "new": "“What's new” box",
+          "rated": "“Highest rated” box",
+          "downloaded": "“Most downloaded” box"
+        },
+        "featuredCount": "How many featured",
+        "boxCount": "Files in the other boxes",
+        "allCategories": "From all categories",
+        "someCategories": "{count, plural, one {From # category} other {From # categories}}",
+        "secFiles": "Files",
+        "maxFileMb": "Default maximum size (MB)",
+        "maxFileHint": "A category can change it; groups can lower it.",
+        "totalQuotaGb": "Total storage (GB)",
+        "totalQuotaHint": "0 = no limit. Each member also has the group quota.",
+        "perPage": "Files per page",
+        "unfinishedHours": "Unfinished uploads are deleted after (hours)",
+        "groupLimits": "Per-group size, each member's storage, external links and bulk submission are set per group.",
+        "groupsLink": "Groups",
+        "secWatermark": "Screenshot watermark",
+        "watermark": "Watermark image",
+        "watermarkHint": "A small image with a transparent background; added to screenshots uploaded from now on.",
+        "watermarkPosition": "Position",
+        "positions": {
+          "bottom-right": "Bottom right",
+          "bottom-left": "Bottom left",
+          "top-right": "Top right",
+          "top-left": "Top left",
+          "center": "Center"
+        },
+        "watermarkOpacity": "Opacity (%)",
+        "secLinks": "Links and RSS",
+        "preventDirect": "No direct links",
+        "preventDirectHint": "The download link only works from the file page (one hour, for the member who opened it).",
+        "rss": "RSS feed of new files",
+        "rssHint": "/downloads/rss.xml, plus one per category.",
+        "urlBlocklist": "Domains blocked for link submissions",
+        "urlBlocklistHint": "One per line; subdomains are blocked too.",
+        "paidLater": "Paid files come with the Shop app."
+      },
+      "stats": {
+        "title": "Statistics: Downloads",
+        "help": "Downloads and submissions per day, the most downloaded files, the most active authors and members.",
+        "range": "Period",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "downloads": "Downloads",
+        "submissions": "Submissions",
+        "chart": "Downloads and submissions per day",
+        "topFiles": "Most downloaded files",
+        "topAuthors": "Authors with the most downloads",
+        "topDownloaders": "Who downloads the most",
+        "authorRow": "{files} files · {downloads} downloads"
+      }
     }
   },
   "settings": {
@@ -6960,6 +7335,34 @@
     },
     "pwa": {
       "config": "Web app"
+    },
+    "downloads": {
+      "max_file_mb": "Default maximum file size (MB)",
+      "total_quota_gb": "Total downloads storage (GB)",
+      "per_page": "Files per page",
+      "box_featured": "“Featured” box",
+      "box_featured_count": "How many featured files",
+      "box_new": "“What's new” box",
+      "box_new_categories": "Categories of the “What's new” box",
+      "box_rated": "“Highest rated” box",
+      "box_rated_categories": "Categories of the “Highest rated” box",
+      "box_downloaded": "“Most downloaded” box",
+      "box_downloaded_categories": "Categories of the “Most downloaded” box",
+      "box_count": "Files in a box",
+      "watermark_id": "Watermark image",
+      "watermark_position": "Watermark position",
+      "watermark_opacity": "Watermark opacity",
+      "url_blocklist": "Domains blocked for link submissions",
+      "prevent_direct": "No direct links",
+      "rss": "Files RSS feed",
+      "unfinished_hours": "Unfinished uploads cleanup (hours)",
+      "av_enabled": "Antivirus on",
+      "av_address": "Antivirus address",
+      "av_max_scan_mb": "Largest file scanned (MB)",
+      "av_on_error": "When a scan fails",
+      "av_rescan_hours": "Rescan files (hours)",
+      "av_quarantine_days": "Keep quarantine (days)",
+      "av_forum_attachments": "Scan forum attachments"
     }
   },
   "permissions": {
@@ -7070,6 +7473,23 @@
     "chat_pro": {
       "history": "Can view the chat history (/chat/history)",
       "history_export": "Export the chat history (CSV)"
+    },
+    "downloads": {
+      "see": "Sees the category",
+      "view": "Sees the files",
+      "upload": "Uploads files",
+      "download": "Downloads files",
+      "comment": "Comments",
+      "review": "Writes reviews",
+      "max_mb": "Largest file submitted (MB; -1 = no group limit)",
+      "quota_mb": "Storage for submitted files (MB; -1 = unlimited)",
+      "vip_files": "Downloads VIP files and categories",
+      "bulk": "Submits several files at once",
+      "links": "Submits files as external links",
+      "import_path": "Imports files from the server folder (trusted staff only)",
+      "skip_approval": "Their files skip approval",
+      "view_logs": "Sees the download log of any file",
+      "moderate": "Downloads staff on the site (approve, edit, hide, move, delete)"
     }
   },
   "profile": {
@@ -8197,6 +8617,15 @@
         "confirmed": "Your confirmed donations",
         "rejected": "Your unconfirmed donations",
         "submitted": "New donations to confirm (staff)"
+      },
+      "downloads": {
+        "review": "My files: approved, rejected or blocked",
+        "version": "New versions of files I follow",
+        "new_file": "New files in categories I follow",
+        "feedback": "Reviews and comments on my files",
+        "mention": "Mentions in downloads",
+        "queue": "New files in the approval queue (staff)",
+        "infected": "Infected files found by the antivirus (staff)"
       }
     },
     "settingsLink": "Notification settings",
@@ -8568,7 +8997,8 @@
       "servers": "Game servers: live status, statistics, mix matches with ELO, bans, admins and appeals.",
       "clans": "Community clans: members and roles, the clan page, the private forum and join requests.",
       "chat_pro": "The advanced chat: 7 layouts, per-member settings, announcement bar, badges, emotes, GIFs, commands, ranking and history.",
-      "groups_pro": "Group legend by category (with counts and linked groups) and the “Community groups” page."
+      "groups_pro": "Group legend by category (with counts and linked groups) and the “Community groups” page.",
+      "downloads": "Community files: maps, mods, configs, with approval, versions, antivirus and VIP categories."
     },
     "sections": {
       "messages": "Private messages",
@@ -8576,10 +9006,12 @@
       "search": "Search",
       "chat_private": "Private rooms",
       "clans_create": "Create a clan",
-      "chat_pro_history": "Chat history"
+      "chat_pro_history": "Chat history",
+      "downloads_submit": "Submit a file"
     },
     "chat_pro": "Chat Pro",
-    "groups_pro": "Groups Pro"
+    "groups_pro": "Groups Pro",
+    "downloads": "Downloads"
   },
   "translate": {
     "translate": "Translate",
@@ -9266,7 +9698,8 @@
       "rare": "Which badges",
       "group": "Only members of the group",
       "tabs": "Leaderboard tabs",
-      "layout": "Layout"
+      "layout": "Layout",
+      "downloadsKind": "Which files"
     },
     "periods": {
       "week": "this week",
@@ -9313,6 +9746,10 @@
       },
       "profile": {
         "recentBadges": "Badges members earned recently, live."
+      },
+      "downloads": {
+        "latest": "The newest, most downloaded, highest rated or featured files.",
+        "categories": "Download categories with their file counts."
       }
     },
     "servers": {
@@ -9373,6 +9810,16 @@
       "allCount": "All ({count})",
       "players": "{count, plural, one {# player} other {# players}}",
       "more": "and {count} more"
+    },
+    "downloads": {
+      "latest": "Downloads",
+      "categories": "Download categories"
+    },
+    "downloadsKind": {
+      "new": "New files",
+      "downloaded": "Most downloaded",
+      "rated": "Highest rated",
+      "featured": "Featured files"
     }
   },
   "pageEditor": {
@@ -9451,7 +9898,8 @@
       "vip": "VIP members",
       "serversOnline": "Servers",
       "serverPlayers": "Players",
-      "clans": "Clans"
+      "clans": "Clans",
+      "downloads": "Files"
     },
     "allOnline": "See all online members →",
     "panel": {
@@ -12016,5 +12464,267 @@
     "invalid": "Invalid link",
     "invalidBody": "The unsubscribe link is not valid or the account no longer exists.",
     "settings": "Email settings"
+  },
+  "downloads": {
+    "title": "Downloads",
+    "lead": "{count, plural, one {# file for the community} other {# files for the community}}",
+    "leadEmpty": "Maps, mods, configs and server tools shared by the community.",
+    "viewAll": "All files",
+    "mine": "My files",
+    "submit": "Submit a file",
+    "submitLead": "Pick a category, upload the files and describe them. Files are checked automatically, then approved by staff.",
+    "submitHere": "Submit here",
+    "searchLabel": "Search downloads",
+    "searchPlaceholder": "Search by name or description…",
+    "search": "Search",
+    "boxes": {
+      "featured": "Featured",
+      "new": "What's new",
+      "rated": "Highest rated",
+      "downloaded": "Most downloaded"
+    },
+    "seeMore": "See all",
+    "empty": "There are no download categories yet.",
+    "categories": "Categories",
+    "rss": "RSS feed of new files",
+    "featured": "Featured",
+    "deletedMember": "Deleted member",
+    "downloadsCount": "{count, plural, one {# download} other {# downloads}}",
+    "ratingLabel": "Rated {avg} out of 5 ({count} reviews)",
+    "noReviews": "No reviews",
+    "filesShort": "{count, plural, one {file} other {files}}",
+    "allFiles": "All files",
+    "count": "{count, plural, one {# file} other {# files}}",
+    "cannotView": "You can't view the files in this category.",
+    "sortLabel": "Sort",
+    "sorts": {
+      "updated": "Recently updated",
+      "newest": "Newest",
+      "downloads": "Most downloaded",
+      "rating": "Highest rated",
+      "title": "A–Z"
+    },
+    "taggedWith": "Files tagged #{tag}.",
+    "clearFilter": "Show all",
+    "noResults": "No files match your search.",
+    "emptyCategory": "This category has no files yet.",
+    "newVersion": "New version",
+    "edit": "Edit",
+    "editTitle": "Edit “{title}”",
+    "newVersionTitle": "New version of “{title}”",
+    "currentIs": "Current version: {version}",
+    "status": {
+      "scanning": "Being checked",
+      "pending": "Waiting for approval",
+      "approved": "Published",
+      "rejected": "Rejected",
+      "quarantined": "Blocked by the antivirus",
+      "hidden": "Hidden"
+    },
+    "notices": {
+      "scanning": "The files are being checked (real type and antivirus). The page updates when the check is done.",
+      "pending": "The file passed the check and is waiting for staff approval. Only you and the staff can see it.",
+      "rejected": "The file was rejected.",
+      "quarantined": "The antivirus found a threat: the file was blocked and quarantined. Staff were alerted.",
+      "hidden": "Staff hid this file: only you and the staff can see it."
+    },
+    "reason": "Reason: {reason}",
+    "pendingVersion": {
+      "scanning": "The new version ({label}) is being checked.",
+      "pending": "The new version ({label}) is waiting for staff approval.",
+      "quarantined": "The new version ({label}) was blocked by the antivirus.",
+      "rejected": "The new version ({label}) was rejected."
+    },
+    "screenshots": "Screenshots",
+    "openShot": "Open screenshot {n}",
+    "about": "About this file",
+    "tags": "Tags",
+    "versions": "Versions and changes",
+    "noLabel": "No number",
+    "currentVersion": "Current",
+    "reviews": {
+      "title": "{count, plural, one {# review} other {# reviews}}",
+      "none": "No reviews yet.",
+      "stars": "{count, plural, one {# star} other {# stars}}",
+      "denial": {
+        "guest": "Sign in to write a review.",
+        "no_permission": "You can't review files in this category.",
+        "disabled": "Reviews are turned off.",
+        "download_first": "Download the file before reviewing it."
+      },
+      "yourRating": "Your rating",
+      "updateRating": "Change your rating",
+      "text": "Review (optional)",
+      "submit": "Post review",
+      "update": "Update review"
+    },
+    "postStatus": {
+      "pending": "Waiting",
+      "hidden": "Hidden"
+    },
+    "comments": {
+      "title": "{count, plural, one {# comment} other {# comments}}",
+      "none": "No comments yet.",
+      "locked": "Comments are closed.",
+      "login": "Sign in to comment",
+      "write": "Write a comment",
+      "submit": "Comment",
+      "pending": "Your comment is waiting for staff approval."
+    },
+    "downloadPanel": "Download",
+    "panel": {
+      "link": "External link ({host})",
+      "external": "on another site",
+      "noFiles": "No published version yet.",
+      "guest": "Only members can download files. Create a free account or sign in.",
+      "register": "Create account",
+      "login": "Sign in",
+      "vip": "This file is for VIP members. Become VIP to download it.",
+      "becomeVip": "Become VIP",
+      "noPermission": "Your group can't download files from this category.",
+      "scan": {
+        "clean": "Checked by the antivirus",
+        "skipped": "Checked by staff",
+        "error": "Not checked by the antivirus",
+        "pending": "Being checked",
+        "infected": "Blocked"
+      }
+    },
+    "stats": {
+      "downloads": "Downloads",
+      "views": "Views",
+      "size": "Size",
+      "rating": "Rating",
+      "updated": "Updated",
+      "submitted": "Submitted",
+      "category": "Category"
+    },
+    "log": {
+      "open": "Download log",
+      "title": "Download log",
+      "count": "{count, plural, one {# download} other {# downloads}}",
+      "empty": "No downloads yet.",
+      "member": "Member",
+      "version": "Version",
+      "size": "Size",
+      "when": "When"
+    },
+    "supportTopic": "Support topic",
+    "fieldYes": "Yes",
+    "fieldNo": "No",
+    "noUploadCategory": "There is no category you can submit files to.",
+    "quotaUnlimited": "You've used {used} (no limit).",
+    "quotaUsed": "You've used {used} of {limit}.",
+    "quotaLabel": "Space used",
+    "mineEmpty": "You haven't submitted any files yet.",
+    "mineVersion": "Version {label}: {status}",
+    "widgetEmpty": "No files yet.",
+    "widgetMeta": "{downloads} downloads · {category}",
+    "browseCategories": "All categories",
+    "form": {
+      "category": "Category",
+      "chooseCategory": "Choose a category…",
+      "changeCategory": "Change category",
+      "continue": "Continue",
+      "sections": {
+        "files": "Files",
+        "details": "Details",
+        "version": "Version",
+        "screenshots": "Screenshots",
+        "terms": "Terms"
+      },
+      "uploadTitle": "Upload files",
+      "rulesMax": "Up to {max} per file",
+      "rulesNoMax": "No size limit",
+      "rulesTypes": "Types: {types}",
+      "anyType": "any file type",
+      "quota": "space used: {used} of {limit}",
+      "state": {
+        "sending": "Uploading… {pct}%",
+        "checking": "Checking (real type and antivirus)…",
+        "failed": "Failed"
+      },
+      "scan": {
+        "pending": "Checking…",
+        "clean": "Clean, checked by the antivirus",
+        "infected": "Infected: blocked",
+        "error": "The antivirus couldn't check it (staff will)",
+        "skipped": "Ready (staff will check it)"
+      },
+      "removeFile": "Remove {name}",
+      "linkLabel": "File address",
+      "addLink": "Add link",
+      "fromServer": "From the server folder",
+      "importEmpty": "The import folder is empty",
+      "import": "Import",
+      "separate": "Submit each file as its own entry",
+      "separateHint": "Each file becomes an entry titled after its name, with this description; fill in the rest on each one later.",
+      "title": "Title",
+      "summary": "Summary",
+      "summaryHint": "One sentence, shown on cards and in search.",
+      "description": "Description",
+      "tags": "Tags",
+      "tagsPlaceholder": "cs2, map, aim",
+      "memberIds": "Member ids, separated by commas",
+      "choose": "Choose…",
+      "version": "Version number",
+      "changelog": "What changed",
+      "shotsTitle": "Upload screenshots",
+      "shot": "Screenshot {n}",
+      "shotLeft": "Move left",
+      "shotRight": "Move right",
+      "shotRemove": "Remove screenshot",
+      "acceptTerms": "I have read and accept the terms",
+      "approvalHint": "New files appear after staff approval.",
+      "saving": "Saving…",
+      "submit": {
+        "submit": "Submit file",
+        "version": "Submit version",
+        "edit": "Save"
+      },
+      "errors": {
+        "category": "Choose a category first.",
+        "single": "This category accepts one file per entry.",
+        "tooManyShots": "At most {max} screenshots.",
+        "incomplete": "Wait until the files finish uploading.",
+        "over_quota": "You've reached your group's storage limit.",
+        "site_full": "The site's download storage is full.",
+        "no_extension": "The file has no extension.",
+        "blocked_domain": "Links to this domain aren't allowed.",
+        "network": "The connection dropped. Try again.",
+        "aborted": "The upload was stopped."
+      }
+    },
+    "actions": {
+      "unfollow": "Unfollow",
+      "followFile": "Follow",
+      "followCategory": "Follow category",
+      "download": "Download",
+      "termsTitle": "Download terms",
+      "acceptTerms": "I have read and accept the terms",
+      "cancel": "Cancel",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectTitle": "Reject this version?",
+      "rejectReason": "Reason (sent to the author)",
+      "feature": "Feature",
+      "unfeature": "Unfeature",
+      "hide": "Hide",
+      "unhide": "Show",
+      "lockComments": "Close comments",
+      "unlockComments": "Open comments",
+      "vip": "VIP only",
+      "unvip": "For everyone",
+      "move": "Move",
+      "moveTitle": "Move this file?",
+      "moveTo": "To category",
+      "delete": "Delete",
+      "deleteTitle": "Delete this file?",
+      "deleteBody": "All its versions, screenshots, reviews and comments are deleted. This can't be undone.",
+      "approvePost": "Approve",
+      "hidePost": "Hide",
+      "deletePost": "Delete",
+      "deletePostBody": "This is deleted permanently."
+    }
   }
 }
