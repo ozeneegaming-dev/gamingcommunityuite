@@ -352,7 +352,20 @@
       "login_required": "Trebuie să intri în cont.",
       "not_empty": "Folderul are pagini; mută-le sau șterge-le întâi.",
       "not_pending": "Înregistrarea nu mai e în așteptare.",
-      "invalid_state": "Starea înregistrării s-a schimbat între timp."
+      "invalid_state": "Starea înregistrării s-a schimbat între timp.",
+      "app_not_licensed": "Aplicația premium nu e în licența ta. O poți cumpăra din Sistem › Marketplace.",
+      "market_licence_missing": "Site-ul nu are încă o licență.",
+      "market_licence_unmanaged": "Licențele offline nu pot cumpăra din Marketplace.",
+      "market_licence_invalid": "Data Center-ul nu recunoaște licența.",
+      "market_licence_inactive": "Licența nu e activă.",
+      "market_domain": "Domeniul site-ului nu e în licență.",
+      "market_not_found": "Elementul nu mai e în Marketplace.",
+      "market_not_owned": "Elementul nu e încă cumpărat.",
+      "market_no_package": "Elementul nu are încă un pachet de instalat.",
+      "market_rate_limited": "Prea multe comenzi într-o oră. Mai încearcă puțin mai târziu.",
+      "market_bad_package": "Pachetul descărcat nu se potrivește cu cel din catalog. Încearcă din nou.",
+      "market_unreachable": "Data Center-ul nu răspunde. Încearcă din nou peste câteva minute.",
+      "market_disabled": "Legătura cu Data Center-ul e oprită."
     },
     "fields": {
       "invalid_color": "Недействительный цвет (#RRGGBB)",
@@ -624,7 +637,8 @@
         "bot": "Бот сообщества",
         "settings_uploads": "Загрузки и изображения",
         "license": "Лицензия",
-        "settings_messages": "Mesaje private"
+        "settings_messages": "Mesaje private",
+        "marketplace": "Marketplace"
       },
       "members": {
         "members": "Участники",
@@ -4064,7 +4078,7 @@
     "appsPage": {
       "description": "Turn the site's apps on and off, put them in order, pick the landing page and choose who can use each app.",
       "checkUpdates": "Check for updates",
-      "checkUpdatesHint": "Available with licences",
+      "marketplace": "Marketplace",
       "appsTitle": "Apps",
       "pluginsTitle": "Plugins",
       "pluginsEmpty": "No plugins installed. Upload a .zip package below.",
@@ -7014,6 +7028,103 @@
         "toGroups": "Grupuri",
         "toDatabases": "Baze de date",
         "toMenu": "Manager meniu"
+      }
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "description": "Aplicații premium, pluginuri, teme și widget-uri pentru comunitatea ta, cu cumpărare și activare direct de aici.",
+      "all": "Toate",
+      "categoriesLabel": "Categorii",
+      "search": "Caută în Marketplace",
+      "mine": "Doar ce am",
+      "manualPayments": "Plata cu cardul nu e deschisă încă: o comandă se confirmă de mână, apoi se activează singură aici.",
+      "featured": "Recomandat",
+      "seeDetails": "Vezi detaliile",
+      "empty": "Marketplace-ul nu are încă nimic de oferit. Revino curând.",
+      "noMatch": "Niciun element nu se potrivește filtrelor.",
+      "close": "Închide",
+      "official": "Oficial GCS",
+      "free": "Gratuit",
+      "included": "Inclus în licență",
+      "owned": "Cumpărat",
+      "state": {
+        "buy": "De cumpărat",
+        "get": "Gratuit",
+        "pending": "Plata în așteptare",
+        "activate": "Cumpărat, oprit",
+        "enabled": "Pornit",
+        "install": "Gata de instalat",
+        "update": "Versiune nouă",
+        "installed": "Instalat",
+        "unavailable": "Indisponibil în această versiune"
+      },
+      "buy": "Cumpără cu {price}",
+      "getFree": "Ia-l gratuit",
+      "pay": "Plătește {price} pe pagina securizată",
+      "checkPayment": "Am plătit: verifică",
+      "payNoteCard": "Plata se face pe pagina Data Center-ului (card, Apple Pay, Google Pay). După plată, apasă „Am plătit: verifică”.",
+      "payNoteManual": "Pagina de plată arată cum plătești. După ce plata e confirmată, apasă „Am plătit: verifică”.",
+      "notPaidYet": "Plata nu a ajuns încă. Dacă abia ai plătit, mai încearcă peste câteva secunde.",
+      "notConfirmedYet": "Plata nu e confirmată încă. Revino după confirmare.",
+      "orderClosed": "Comanda a fost anulată sau rambursată. Poți începe o comandă nouă.",
+      "boughtApp": "Gata: aplicația e în licența ta. Pornește-o cu „Pornește aplicația”.",
+      "boughtPackage": "Gata: pachetul e al tău. Instalează-l cu „Instalează”.",
+      "activate": "Pornește aplicația",
+      "activated": "Aplicația e pornită.",
+      "install": "Instalează",
+      "updateTo": "Actualizează la {version}",
+      "manage": "Gestionează în Aplicații",
+      "enlarge": "Mărește imaginea",
+      "screenshots": "Capturi",
+      "showImage": "Arată imaginea {n}",
+      "changelog": "Ce e nou",
+      "facts": {
+        "type": "Tip",
+        "app": "Aplicație premium",
+        "package": "Pachet de instalat",
+        "version": "Versiune",
+        "installed": "instalată: {version}",
+        "needs": "Necesită",
+        "size": "Mărime"
+      },
+      "goLicense": "Deschide pagina Licență",
+      "categories": {
+        "application": "Aplicații",
+        "plugin": "Pluginuri",
+        "theme": "Teme",
+        "widget": "Widget-uri",
+        "language": "Pachete de limbă",
+        "integration": "Integrări"
+      },
+      "errors": {
+        "licence_missing": {
+          "title": "Site-ul nu are încă o licență",
+          "body": "Marketplace-ul are nevoie de licența site-ului. Adaug-o în Sistem › Licență."
+        },
+        "licence_unmanaged": {
+          "title": "Licența nu e de la Data Center",
+          "body": "Licențele offline nu pot cumpăra din Marketplace. Activează o cheie GCS-XXXX-XXXX-XXXX în Sistem › Licență."
+        },
+        "licence_invalid": {
+          "title": "Licența nu a fost recunoscută",
+          "body": "Data Center-ul nu recunoaște licența acestui site. Verifică-o în Sistem › Licență."
+        },
+        "licence_inactive": {
+          "title": "Licența nu e activă",
+          "body": "Licența e suspendată, revocată sau expirată. Verifică-o în Sistem › Licență sau contactează-ne."
+        },
+        "domain": {
+          "title": "Domeniul nu e al licenței",
+          "body": "Site-ul rulează pe un domeniu care nu e în licență. Verifică domeniile în Sistem › Licență."
+        },
+        "disabled": {
+          "title": "Legătura cu Data Center-ul e oprită",
+          "body": "Instalarea are verificarea online oprită (GCS_LICENSE_SERVER=off), deci Marketplace-ul nu se poate încărca."
+        },
+        "unreachable": {
+          "title": "Data Center-ul nu răspunde",
+          "body": "Catalogul nu s-a putut încărca acum. Reîncarcă pagina peste câteva minute."
+        }
       }
     }
   },

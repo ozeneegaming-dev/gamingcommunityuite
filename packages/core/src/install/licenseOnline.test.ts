@@ -117,6 +117,28 @@ describe("verificarea zilnică a licenței la Data Center", () => {
   });
 });
 
+describe("un token nou din Marketplace (adopt)", () => {
+  test("aceeași licență, cu aplicația cumpărată: preluat", async () => {
+    const token = signLicense(payload(), privateKey);
+    const bought = signLicense(payload({ apps: ["servers", "chat_pro"] }), privateKey);
+    const s = await setup(token, []);
+    expect(await s.online.adopt(bought)).toBe(true);
+    expect(await s.state.readLicense()).toBe(bought);
+    expect((await s.online.read())?.tokenUpdatedAt).not.toBeNull();
+    s.restoreEnv();
+  });
+  test("altă licență, alt domeniu, semnătură greșită sau același token: refuzat", async () => {
+    const token = signLicense(payload(), privateKey);
+    const s = await setup(token, []);
+    expect(await s.online.adopt(signLicense(payload({ id: "dc-8" }), privateKey))).toBe(false);
+    expect(await s.online.adopt(signLicense(payload({ domains: ["alt.ro"] }), privateKey))).toBe(false);
+    expect(await s.online.adopt(token.slice(0, -4) + "AAAA")).toBe(false);
+    expect(await s.online.adopt(token)).toBe(false);
+    expect(await s.state.readLicense()).toBe(token);
+    s.restoreEnv();
+  });
+});
+
 describe("activarea unei chei scurte (installer, ACP)", () => {
   const prevEnv = { ...process.env };
   afterAll(() => {

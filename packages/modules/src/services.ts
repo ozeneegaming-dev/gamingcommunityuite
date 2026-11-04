@@ -5,6 +5,9 @@ import {
   remoteImageShown,
   GcsInstallState,
   GcsLicenseOnline,
+  GCS_PREMIUM_APPS,
+  installDomain,
+  verifyLicense,
   GcsAcpDashboardService,
   GcsContentRatingService,
   GcsAcpRoleService,
@@ -402,6 +405,8 @@ export type GcsServices = {
   memberPanels: GcsMemberPanelData;
   /** Verificarea zilnică a licenței la platforma-mamă (Data Center) și perioada de grație. */
   licenseOnline: GcsLicenseOnline;
+  /** Uită aplicațiile premium citite din licență (după un token nou, ex. o cumpărare din Marketplace). */
+  resetLicensedApps: () => void;
 };
 
 export type GcsServicesOptions = {
@@ -516,7 +521,25 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     if (!premiumBlockedMemo || Date.now() - premiumBlockedMemo.at > 60_000) premiumBlockedMemo = { at: Date.now(), value: licenseOnline.premiumBlocked().catch(() => false) };
     return premiumBlockedMemo.value;
   };
-  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings, premiumBlocked });
+  // Aplicațiile premium din licența instalării (verificată offline): o aplicație necumpărată nu se poate porni. Fără
+  // licență salvată (dezvoltare, teste) nu se restrânge nimic; o licență invalidă nu permite nicio aplicație premium.
+  // Citirea se ține minte un minut; un token nou (Marketplace) o resetează (`resetLicensedApps`).
+  const licenseState = new GcsInstallState(opts.configDir);
+  const readLicensedApps = async (): Promise<readonly string[] | null> => {
+    const token = await licenseState.readLicense();
+    if (!token) return null;
+    const result = verifyLicense(token, { domain: installDomain(), premiumApps: GCS_PREMIUM_APPS });
+    return result.ok ? result.license.apps : [];
+  };
+  let licensedMemo: { at: number; value: Promise<readonly string[] | null> } | null = null;
+  const licensedApps = () => {
+    if (!licensedMemo || Date.now() - licensedMemo.at > 60_000) licensedMemo = { at: Date.now(), value: readLicensedApps().catch(() => null) };
+    return licensedMemo.value;
+  };
+  const resetLicensedApps = () => {
+    licensedMemo = null;
+  };
+  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings, premiumBlocked, licensedApps });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry, apps, settings });
   const push = new GcsPushService({ db });
@@ -913,6 +936,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const appearance = new GcsMemberAppearanceService({ db, cache, kv, bus });
   const pluginMedia = new GcsPluginMediaService({ db, store: files, rateLimiter });
   const pluginAdmin = new GcsPluginService({
+    licensedApps,
     db,
     acp,
     database: pluginDatabase,
@@ -1019,6 +1043,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   const services: GcsServices = {
     db,
     licenseOnline,
+    resetLicensedApps,
     edition: infra.edition,
     infra,
     kv,

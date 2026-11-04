@@ -79,7 +79,7 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans"]],
       ],
       apps: [
-        ["acp.menu.system.apps_manage", ["system.applications"]],
+        ["acp.menu.system.apps_manage", ["system.applications", "system.marketplace"]],
         ["acp.menu.system.apps_dev", ["system.hooks", "system.porting"]],
       ],
     });

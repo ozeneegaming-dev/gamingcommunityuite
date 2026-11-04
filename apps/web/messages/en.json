@@ -352,7 +352,20 @@
       "login_required": "You need to sign in.",
       "not_empty": "The folder has pages; move or delete them first.",
       "not_pending": "The record is no longer pending.",
-      "invalid_state": "The record's status changed in the meantime."
+      "invalid_state": "The record's status changed in the meantime.",
+      "app_not_licensed": "This premium app is not in your licence. You can buy it in System › Marketplace.",
+      "market_licence_missing": "The site has no licence yet.",
+      "market_licence_unmanaged": "Offline licences cannot buy from the Marketplace.",
+      "market_licence_invalid": "The Data Center does not recognise the licence.",
+      "market_licence_inactive": "The licence is not active.",
+      "market_domain": "The site’s domain is not in the licence.",
+      "market_not_found": "The item is no longer in the Marketplace.",
+      "market_not_owned": "The item is not purchased yet.",
+      "market_no_package": "The item has no package to install yet.",
+      "market_rate_limited": "Too many orders in an hour. Try again a little later.",
+      "market_bad_package": "The downloaded package does not match the catalogue. Try again.",
+      "market_unreachable": "The Data Center is not answering. Try again in a few minutes.",
+      "market_disabled": "The Data Center link is off."
     },
     "fields": {
       "invalid_color": "Invalid color (#RRGGBB)",
@@ -624,7 +637,8 @@
         "bot": "Community bot",
         "settings_uploads": "Uploads & images",
         "license": "Licence",
-        "settings_messages": "Private messages"
+        "settings_messages": "Private messages",
+        "marketplace": "Marketplace"
       },
       "members": {
         "members": "Members",
@@ -4064,7 +4078,7 @@
     "appsPage": {
       "description": "Turn the site's apps on and off, put them in order, pick the landing page and choose who can use each app.",
       "checkUpdates": "Check for updates",
-      "checkUpdatesHint": "Available with licences",
+      "marketplace": "Marketplace",
       "appsTitle": "Apps",
       "pluginsTitle": "Plugins",
       "pluginsEmpty": "No plugins installed. Upload a .zip package below.",
@@ -7014,6 +7028,103 @@
         "toGroups": "Groups",
         "toDatabases": "Databases",
         "toMenu": "Menu manager"
+      }
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "description": "Premium apps, plugins, themes and widgets for your community, bought and activated right here.",
+      "all": "All",
+      "categoriesLabel": "Categories",
+      "search": "Search the Marketplace",
+      "mine": "Only mine",
+      "manualPayments": "Card payments are not open yet: an order is confirmed by hand, then activates here by itself.",
+      "featured": "Featured",
+      "seeDetails": "See details",
+      "empty": "The Marketplace has nothing to offer yet. Check back soon.",
+      "noMatch": "No item matches the filters.",
+      "close": "Close",
+      "official": "Official GCS",
+      "free": "Free",
+      "included": "Included in the licence",
+      "owned": "Purchased",
+      "state": {
+        "buy": "For sale",
+        "get": "Free",
+        "pending": "Payment pending",
+        "activate": "Purchased, off",
+        "enabled": "On",
+        "install": "Ready to install",
+        "update": "New version",
+        "installed": "Installed",
+        "unavailable": "Not available in this version"
+      },
+      "buy": "Buy for {price}",
+      "getFree": "Get it free",
+      "pay": "Pay {price} on the secure page",
+      "checkPayment": "I paid: check",
+      "payNoteCard": "Payment happens on the Data Center page (card, Apple Pay, Google Pay). After paying, press “I paid: check”.",
+      "payNoteManual": "The payment page shows how to pay. Once the payment is confirmed, press “I paid: check”.",
+      "notPaidYet": "The payment has not arrived yet. If you just paid, try again in a few seconds.",
+      "notConfirmedYet": "The payment is not confirmed yet. Come back once it is.",
+      "orderClosed": "The order was cancelled or refunded. You can start a new order.",
+      "boughtApp": "Done: the app is in your licence. Turn it on with “Turn on the app”.",
+      "boughtPackage": "Done: the package is yours. Install it with “Install”.",
+      "activate": "Turn on the app",
+      "activated": "The app is on.",
+      "install": "Install",
+      "updateTo": "Update to {version}",
+      "manage": "Manage in Applications",
+      "enlarge": "Enlarge the image",
+      "screenshots": "Screenshots",
+      "showImage": "Show image {n}",
+      "changelog": "What’s new",
+      "facts": {
+        "type": "Type",
+        "app": "Premium app",
+        "package": "Package to install",
+        "version": "Version",
+        "installed": "installed: {version}",
+        "needs": "Needs",
+        "size": "Size"
+      },
+      "goLicense": "Open the Licence page",
+      "categories": {
+        "application": "Applications",
+        "plugin": "Plugins",
+        "theme": "Themes",
+        "widget": "Widgets",
+        "language": "Language packs",
+        "integration": "Integrations"
+      },
+      "errors": {
+        "licence_missing": {
+          "title": "The site has no licence yet",
+          "body": "The Marketplace needs the site’s licence. Add it in System › Licence."
+        },
+        "licence_unmanaged": {
+          "title": "The licence is not from the Data Center",
+          "body": "Offline licences cannot buy from the Marketplace. Activate a GCS-XXXX-XXXX-XXXX key in System › Licence."
+        },
+        "licence_invalid": {
+          "title": "The licence was not recognised",
+          "body": "The Data Center does not recognise this site’s licence. Check it in System › Licence."
+        },
+        "licence_inactive": {
+          "title": "The licence is not active",
+          "body": "The licence is suspended, revoked or expired. Check it in System › Licence or contact us."
+        },
+        "domain": {
+          "title": "The domain is not in the licence",
+          "body": "The site runs on a domain the licence does not cover. Check the domains in System › Licence."
+        },
+        "disabled": {
+          "title": "The Data Center link is off",
+          "body": "This install has the online check turned off (GCS_LICENSE_SERVER=off), so the Marketplace cannot load."
+        },
+        "unreachable": {
+          "title": "The Data Center is not answering",
+          "body": "The catalogue could not load right now. Reload the page in a few minutes."
+        }
       }
     }
   },

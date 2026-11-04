@@ -258,15 +258,17 @@ export default async function AcpApplicationsPage() {
         description={t("description")}
         actions={
           <>
-            {/* Verificarea actualizărilor vine odată cu licențele (etapa 11): butonul rămâne dezactivat, cu explicația. */}
-            <span className="gcs-appUpdates" tabIndex={0} aria-describedby="gcs-app-updates-hint" data-testid="gcs-apps-check-updates">
-              <GcsButton variant="ghost" disabled icon={<GcsIcon name="fa-solid fa-rotate" />}>
+            {/* Actualizările vin din Marketplace (Data Center): ce are licența, cu versiunile noi marcate. */}
+            <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-rotate" />}>
+              <a href="/admin/system/marketplace?mine=1" data-testid="gcs-apps-check-updates">
                 {t("checkUpdates")}
-              </GcsButton>
-              <span id="gcs-app-updates-hint" role="tooltip" className="gcs-appUpdates__tip">
-                {t("checkUpdatesHint")}
-              </span>
-            </span>
+              </a>
+            </GcsButton>
+            <GcsButton variant="ghost" asChild icon={<GcsIcon name="fa-solid fa-store" />}>
+              <a href="/admin/system/marketplace" data-testid="gcs-apps-marketplace">
+                {t("marketplace")}
+              </a>
+            </GcsButton>
             {canEdit && (
               <GcsButton variant="primary" asChild icon={<GcsIcon name="fa-solid fa-upload" />}>
                 <a href="#upload">{tp("upload.title")}</a>
