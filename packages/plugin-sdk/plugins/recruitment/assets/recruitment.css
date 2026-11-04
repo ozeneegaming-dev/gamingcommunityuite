@@ -1,0 +1,446 @@
+/*
+ * Recrutare: totul în containerul pluginului; culorile din tokenurile temei GCS (închisă sau deschisă, orice accent).
+ * Etichetele ON / OFF / NOU folosesc culorile de stare ale temei.
+ */
+
+/* ─── Rândul „Recrutare” pe index (posturile, ca lista de subforumuri) ─────────────── */
+.gcsp-rec__subs {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+}
+.gcsp-rec__subs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.gcsp-rec__sub {
+  color: var(--gcs-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+.gcsp-rec__sub::before {
+  content: "–";
+  color: var(--gcs-accent);
+  margin-right: 6px;
+  font-weight: 700;
+}
+.gcsp-rec__sub:hover,
+.gcsp-rec__sub:focus-visible {
+  color: var(--gcs-text);
+}
+.gcsp-rec__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border: 1px solid currentColor;
+}
+.gcsp-rec__tag--on {
+  color: var(--gcs-ok);
+  background: color-mix(in srgb, var(--gcs-ok) 12%, transparent);
+}
+.gcsp-rec__tag--off {
+  color: var(--gcs-muted);
+  background: color-mix(in srgb, var(--gcs-muted) 10%, transparent);
+}
+.gcsp-rec__tag--new {
+  color: var(--gcs-warn);
+  background: color-mix(in srgb, var(--gcs-warn) 12%, transparent);
+}
+
+/* ─── Cardul din pagina forumului ───────────────────────────────────────────── */
+.gcsp-rec__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__cardIcon,
+.gcsp-rec__postIcon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #3ddc97, #14532d);
+}
+.gcsp-rec__cardText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcsp-rec__cardText span {
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+}
+
+/* ─── Pagina publică și formularul ──────────────────────────────────────────── */
+.gcsp-rec {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--gcs-text);
+  min-width: 0;
+}
+.gcsp-rec__intro,
+.gcsp-rec__mine {
+  padding: 14px 16px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__mine h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.gcsp-rec__mine ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gcsp-rec__mine li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.gcsp-rec__posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+}
+.gcsp-rec__post {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__post header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gcsp-rec__post h2 {
+  margin: 0;
+  font-size: 16px;
+  flex: 1;
+  min-width: 0;
+}
+.gcsp-rec__post footer {
+  margin-top: auto;
+}
+.gcsp-rec__desc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--gcs-text);
+}
+.gcsp-rec__desc p {
+  margin: 0 0 8px;
+}
+.gcsp-rec__group {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gcsp-rec-group, var(--gcs-accent));
+  border: 1px solid color-mix(in srgb, var(--gcsp-rec-group, var(--gcs-accent)) 55%, transparent);
+  background: color-mix(in srgb, var(--gcsp-rec-group, var(--gcs-accent)) 10%, transparent);
+}
+.gcsp-rec__form,
+.gcsp-rec__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__panel h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.gcsp-rec__panel--empty {
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--gcs-muted);
+  text-align: center;
+}
+.gcsp-rec__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.gcsp-rec__field legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+.gcsp-rec__field small {
+  font-weight: 400;
+}
+.gcsp-rec__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-bg);
+  color: var(--gcs-text);
+  font: inherit;
+  font-weight: 400;
+}
+.gcsp-rec__input:focus {
+  outline: 2px solid color-mix(in srgb, var(--gcs-accent) 60%, transparent);
+  outline-offset: 1px;
+}
+.gcsp-rec__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.gcsp-rec__seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-bg);
+  align-self: flex-start;
+}
+.gcsp-rec__seg label {
+  position: relative;
+  cursor: pointer;
+}
+.gcsp-rec__seg input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.gcsp-rec__seg span {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gcs-muted);
+}
+.gcsp-rec__seg input:checked + span {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+.gcsp-rec__seg input:focus-visible + span {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+.gcsp-rec__actions,
+.gcsp-rec__toolbar,
+.gcsp-rec__decide,
+.gcsp-rec__danger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gcsp-rec__danger {
+  margin-top: 10px;
+}
+.gcsp-rec__decide .gcsp-rec__input {
+  flex: 1 1 220px;
+}
+.gcsp-rec__notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid;
+}
+.gcsp-rec__notice--ok {
+  color: var(--gcs-ok);
+  border-color: color-mix(in srgb, var(--gcs-ok) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-ok) 8%, transparent);
+}
+.gcsp-rec__notice--warn {
+  color: var(--gcs-warn);
+  border-color: color-mix(in srgb, var(--gcs-warn) 45%, transparent);
+  background: color-mix(in srgb, var(--gcs-warn) 8%, transparent);
+}
+
+/* ─── ACP: listă + panou ────────────────────────────────────────────────────── */
+.gcsp-rec__split {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.gcsp-rec__items {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--gcs-text);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.gcsp-rec__item:hover {
+  background: var(--gcs-surface2);
+}
+.gcsp-rec__item--on {
+  border-color: var(--gcs-accent);
+  background: color-mix(in srgb, var(--gcs-accent) 8%, transparent);
+}
+.gcsp-rec__item .gcsp-rec__postIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.gcsp-rec__itemText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gcsp-rec__itemText small {
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+}
+.gcsp-rec__count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.gcsp-rec__emptyList {
+  padding: 12px;
+}
+.gcsp-rec__hint {
+  margin: 0;
+  font-size: 12.5px;
+}
+.gcsp-rec__tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.gcsp-rec__tab {
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--gcs-muted);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+.gcsp-rec__tab--on {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+.gcsp-rec__apps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gcsp-rec__appCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--gcs-radius, 12px);
+  background: var(--gcs-surface);
+  border: 1px solid var(--gcs-border);
+}
+.gcsp-rec__appCard header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.gcsp-rec__app {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+.gcsp-rec__mine .gcsp-rec__app {
+  margin-left: 0;
+}
+.gcsp-rec__app--pending {
+  color: var(--gcs-warn);
+}
+.gcsp-rec__app--accepted {
+  color: var(--gcs-ok);
+}
+.gcsp-rec__app--rejected {
+  color: var(--gcs-danger);
+}
+@media (max-width: 860px) {
+  .gcsp-rec__split,
+  .gcsp-rec__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcsp-rec__tabs {
+    margin-left: 0;
+  }
+}

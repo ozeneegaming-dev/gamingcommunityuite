@@ -26,6 +26,12 @@ const idOf = (v: unknown) => (Number.isSafeInteger(v) && (v as number) > 0 ? (v 
 export class GcsPluginPublicApi {
   constructor(private readonly deps: { db: PrismaClient; forumQueries: GcsForumQueries; posting: GcsForumPosting; servers?: Pick<GcsServerQueries, "byForums"> }) {}
 
+  /** Grupurile site-ului (nume, culoare): date publice, ca în legendă; fără membri sau permisiuni. */
+  private async groups(): Promise<{ id: number; key: string | null; name: string; color: string | null }[]> {
+    const rows = await this.deps.db.group.findMany({ orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, key: true, name: true, color: true }, take: 200 });
+    return rows.map((g) => ({ id: g.id, key: g.key ?? null, name: g.name, color: g.color ?? null }));
+  }
+
   async call(method: string, args: unknown[], actor: GcsActor): Promise<unknown> {
     switch (method) {
       case "api.users.get":
@@ -40,6 +46,8 @@ export class GcsPluginPublicApi {
         return this.recentPosts(actor, args[0]);
       case "api.forums.list":
         return this.forums(actor);
+      case "api.groups.list":
+        return this.groups();
       case "api.vip.plans":
         return this.vipPlans();
       case "api.vip.status":

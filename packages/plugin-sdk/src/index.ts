@@ -290,6 +290,8 @@ export interface GcsPluginContext {
     topics: { get(id: number): Promise<GcsPluginTopic | null>; recent(limit?: number): Promise<GcsPluginTopic[]> };
     posts: { get(id: number): Promise<GcsPluginPost | null>; recent(limit?: number): Promise<GcsPluginPost[]> };
     forums: { list(): Promise<GcsPluginForum[]> };
+    /** GCS ≥ 0.11.1: grupurile site-ului (id, cheie, nume, culoare), ca în legenda publică. */
+    groups: { list(): Promise<{ id: number; key: string | null; name: string; color: string | null }[]> };
     stats(): Promise<GcsPluginStats>;
     /** Planurile VIP, abonamentele active (≤ 100 de useri) și membrii VIP (online întâi). */
     /**

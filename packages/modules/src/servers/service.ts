@@ -330,6 +330,27 @@ export class GcsServerService {
     await this.changed(null);
   }
 
+  /** Erorile câmpurilor de rețea ale unui server nou (asistentul „Creează categorie de servere”), fără scriere. */
+  async checkTarget(input: Partial<GcsServerTestInput>): Promise<Record<string, string>> {
+    const errors: Record<string, string> = {};
+    this.validateTarget(input, errors);
+    return errors;
+  }
+
+  /** Leagă un server existent de un forum (asistentul): doar `forumId`, restul serverului rămâne neschimbat. */
+  async linkForum(actor: GcsActor, id: number, forumId: number | null): Promise<void> {
+    const { db, acp } = this.deps;
+    await acp.assert(actor, SERVERS_ACP_SECTION, "edit");
+    const before = await db.gameServer.findUnique({ where: { id }, select: { forumId: true } });
+    if (!before) throw new GcsNotFound();
+    if (forumId !== null && !(await db.forum.findUnique({ where: { id: forumId }, select: { id: true } }))) throw new GcsValidationError({ forumId: "invalid" });
+    await db.$transaction(async (tx) => {
+      await tx.gameServer.update({ where: { id }, data: { forumId } });
+      await writeAudit(tx, { actorId: actor.userId, action: "servers.link_forum", targetType: "game_server", targetId: String(id), before, after: { forumId }, ip: actor.ip });
+    });
+    await this.changed(id);
+  }
+
   /** „Testează” din formular: o interogare cu aceleași gărzi ca worker-ul, max 10 pe minut pe admin. */
   async test(actor: GcsActor, input: Partial<GcsServerTestInput>): Promise<GcsServerStatus> {
     const { acp, rateLimiter } = this.deps;

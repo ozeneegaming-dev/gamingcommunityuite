@@ -146,6 +146,7 @@ export { DONATION_TARGET, DONATIONS_PAGE, registerDonationNotifications } from "
 export { serversModule } from "./servers";
 export * from "./servers/games";
 export * from "./servers/forum";
+export * from "./servers/wizard";
 export * from "./servers/types";
 export { GcsServerQueries, GCS_HISTORY_RANGES, type GcsHistoryRange, type GcsHistoryBucket, type GcsServerDetails, type GcsServerHistory, type GcsServerView } from "./servers/queries";
 export { GcsServerService, SERVERS_ACP_SECTION, SERVER_BANNER, SERVER_LIMITS, type GcsServerAcpRow, type GcsServerEdit, type GcsServerInput, type GcsServerTestInput } from "./servers/service";
