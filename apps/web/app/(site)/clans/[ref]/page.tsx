@@ -49,7 +49,8 @@ export default async function ClanPage({ params }: Props) {
   const clan = await load(ref);
   if (!clan) notFound();
   if (ref !== `${clan.id}-${clan.slug}`) permanentRedirect(clan.href);
-  const [t, format] = await Promise.all([getTranslations("clans"), getFormatter()]);
+  // Categoria de descărcări a clanului (aplicația Descărcări, prin interfața ei publică), dacă există și se vede.
+  const [t, format, downloadsCategory] = await Promise.all([getTranslations("clans"), getFormatter(), currentActor().then((actor) => services().downloads.queries.clanCategory(actor, clan.id)).catch(() => null)]);
   const date = (iso: string) => format.dateTime(new Date(iso), { dateStyle: "medium" });
   const byRole = (role: "LEADER" | "OFFICER" | "MEMBER") => clan.members.filter((m) => m.role === role);
   const links = CLAN_LINK_KINDS.filter((k) => clan.links[k]);
@@ -211,6 +212,12 @@ export default async function ClanPage({ params }: Props) {
         </div>
 
         <aside className="gcs-clanLayout__side">
+          {downloadsCategory && (
+            <a className="gcs-card gcs-clanDownloads" href={downloadsCategory.href} data-testid="gcs-clan-downloads">
+              <GcsIcon name="fa-solid fa-download" />
+              <span>{t("downloads", { count: downloadsCategory.filesCount })}</span>
+            </a>
+          )}
           <section className="gcs-card gcs-titledBox gcs-clanBox" aria-labelledby="gcs-clan-stats">
             <h2 id="gcs-clan-stats" className="gcs-titleBand gcs-clanBox__title">
               <GcsIcon name="fa-solid fa-ranking-star" className="gcs-hIcon" />

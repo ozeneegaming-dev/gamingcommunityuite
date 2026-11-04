@@ -531,7 +531,8 @@
       "chunk_missing": "O parte din fișier lipsește: încarcă-l din nou.",
       "size_mismatch": "Fișierul primit e incomplet: încarcă-l din nou.",
       "same": "Versiunea are deja acest număr.",
-      "scan_error": "Antivirusul nu a putut verifica fișierul."
+      "scan_error": "Antivirusul nu a putut verifica fișierul.",
+      "infected": "Antivirusul a găsit o amenințare în fișier: încărcarea a fost refuzată."
     }
   },
   "acp": {
@@ -6264,7 +6265,7 @@
         "quarantineDays": "Carantina (zile)",
         "quarantineHint": "Fișierele infectate ale trimiterilor respinse se șterg după atâtea zile (0 = păstrate).",
         "forumAttachments": "Scanează și atașamentele din forum",
-        "forumAttachmentsHint": "Aceeași verificare pentru fișierele atașate la postări (în curând în forum; setarea se păstrează).",
+        "forumAttachmentsHint": "Aceeași verificare pentru fișierele atașate la postări, mesaje și chat: un fișier infectat e refuzat la încărcare, iar staff-ul e alertat.",
         "quarantine": "{count, plural, one {Carantina (# fișier)} other {Carantina (# de fișiere)}}",
         "quarantineEmpty": "Niciun fișier în carantină.",
         "release": "Eliberează",
@@ -6523,7 +6524,9 @@
         "topAuthors": "Autorii cu cele mai multe descărcări",
         "topDownloaders": "Cine descarcă cel mai mult",
         "authorRow": "{files} fișiere · {downloads} descărcări"
-      }
+      },
+      "moveUp": "Mută {name} mai sus",
+      "moveDown": "Mută {name} mai jos"
     }
   },
   "settings": {

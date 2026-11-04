@@ -549,7 +549,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   const files = createFileStore(opts.configDir);
   // Extensiile permise și imaginile (latura, calitatea, WebP, metadatele, miniaturile): ACP → Setări → Încărcări și imagini.
-  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter, policy: () => loadUploadPolicy(settings) });
+  // Antivirusul aplicației Descărcări scanează și atașamentele membrilor (setarea din ACP › Descărcări › Antivirus).
+  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter, policy: () => loadUploadPolicy(settings), scan: (file) => downloads.uploads.scanAttachment(file) });
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);

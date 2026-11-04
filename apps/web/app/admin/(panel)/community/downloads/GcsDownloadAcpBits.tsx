@@ -1,6 +1,6 @@
 "use client";
 
-import { faFlask, faRotate } from "@fortawesome/free-solid-svg-icons";
+import { faArrowDown, faArrowUp, faFlask, faRotate } from "@fortawesome/free-solid-svg-icons";
 import { GcsButton, GcsIconSvg } from "@gcs/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,7 +9,7 @@ import { GcsUploadInput } from "@/lib/ui-inputs";
 import { UPLOAD_RULES } from "@/lib/ui-labels";
 import { useUploadPost } from "@/lib/upload-request";
 import { useErrorMessage } from "@/lib/use-error-message";
-import { rescanNow, testAntivirus } from "./actions";
+import { reorderCategories, reorderFields, rescanNow, testAntivirus } from "./actions";
 
 /**
  * O imagine a Descărcărilor în ACP (iconița / coperta categoriei, watermark-ul): popupul sistemului încarcă imaginea
@@ -88,5 +88,37 @@ export function GcsAntivirusTools({ canEdit }: { canEdit: boolean }) {
         </p>
       )}
     </div>
+  );
+}
+
+/** Butoanele ↑ / ↓ ale unui rând (categoriile între frați, câmpurile): ordinea se salvează imediat. */
+export function GcsDownloadOrderButtons({ kind, parentId = null, ids, index, name }: { kind: "category" | "field"; parentId?: number | null; ids: number[]; index: number; name: string }) {
+  const t = useTranslations("acp.downloads");
+  const router = useRouter();
+  const errorMessage = useErrorMessage();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const move = (delta: -1 | 1) =>
+    start(async () => {
+      const next = [...ids];
+      const [row] = next.splice(index, 1);
+      next.splice(index + delta, 0, row!);
+      const res = kind === "category" ? await reorderCategories(parentId, next) : await reorderFields(next);
+      if (!res.ok) setError(errorMessage(res.error));
+      else {
+        setError(null);
+        router.refresh();
+      }
+    });
+  return (
+    <span className="gcs-dlOrder">
+      <button type="button" className="gcs-dlIconBtn gcs-sweep" disabled={pending || index === 0} onClick={() => move(-1)} aria-label={t("moveUp", { name })} title={t("moveUp", { name })}>
+        <GcsIconSvg icon={faArrowUp} />
+      </button>
+      <button type="button" className="gcs-dlIconBtn gcs-sweep" disabled={pending || index === ids.length - 1} onClick={() => move(1)} aria-label={t("moveDown", { name })} title={t("moveDown", { name })}>
+        <GcsIconSvg icon={faArrowDown} />
+      </button>
+      {error && <span role="alert" className="gcs-formError">{error}</span>}
+    </span>
   );
 }

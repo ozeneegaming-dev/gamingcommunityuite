@@ -10,6 +10,7 @@ import { GcsAcpEditPanel } from "../../../_components/GcsAcpEditPanel";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { deleteField, saveField } from "../actions";
+import { GcsDownloadOrderButtons } from "../GcsDownloadAcpBits";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.downloads"))("fields.title") };
@@ -123,8 +124,9 @@ export default async function AcpDownloadFields() {
         <p className="gcs-card gcs-dlAcpEmpty">{t("empty")}</p>
       ) : (
         <ul className="gcs-card gcs-dlAcpRows" data-testid="gcs-acp-dlfields">
-          {rows.map((f) => (
+          {rows.map((f, i) => (
             <li key={f.id} className="gcs-dlAcpRow" data-testid="gcs-acp-dlfield">
+              <GcsDownloadOrderButtons kind="field" ids={rows.map((r) => r.id)} index={i} name={f.name} />
               <span className="gcs-dlAcpRow__main">
                 <GcsIcon name={TYPE_ICONS[f.type] ?? "fa-solid fa-font"} />
                 <strong>{f.name}</strong>

@@ -118,6 +118,11 @@ export class GcsAttachmentService {
       rateLimiter: GcsRateLimiter;
       /** Setările încărcărilor (extensiile permise, imaginile), citite la fiecare upload; lipsă = valorile implicite. */
       policy?: () => Promise<GcsUploadPolicy>;
+      /**
+       * Antivirusul încărcărilor membrilor (aplicația Descărcări, setarea „Scanează și atașamentele”): întoarce semnătura
+       * găsită sau `null` (curat, scanare oprită sau antivirus indisponibil: încărcarea nu se blochează).
+       */
+      scan?: (file: GcsUploadedFile) => Promise<string | null>;
     },
   ) {}
 
@@ -143,6 +148,8 @@ export class GcsAttachmentService {
     const limit = await rateLimiter.consume(`upload:${actor.userId}`, UPLOAD_LIMIT);
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
 
+    const signature = this.deps.scan ? await this.deps.scan(file).catch(() => null) : null;
+    if (signature) throw new GcsValidationError({ file: "infected" }, { signature });
     const filename = cleanFilename(file.name);
     const prepared = await this.prepare(file.bytes, filename, await this.policy());
     return this.save(actor.userId, withExtension(filename, prepared.ext), prepared);

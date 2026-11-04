@@ -354,6 +354,23 @@ export class GcsDownloadUploads {
     }
   }
 
+  /**
+   * Atașamentele membrilor din restul site-ului (forum, mesaje, chat): antivirusul, dacă setarea „Scanează și
+   * atașamentele” e pornită. Întoarce semnătura găsită (încărcarea e refuzată, staff-ul alertat) sau `null`.
+   */
+  async scanAttachment(file: { name: string; bytes: Buffer }): Promise<string | null> {
+    const opts = await readDownloadOptions(this.deps.settings);
+    if (!opts.av.forumAttachments || !(await this.deps.access.appEnabled())) return null;
+    const scanner = this.scannerFor(opts);
+    if (!scanner) return null;
+    const verdict = await scanner.scan((async function* () {
+      yield file.bytes;
+    })(), opts.av.maxScanMb * 1024 * 1024);
+    if (verdict.status !== "infected") return null;
+    await this.deps.bus.emit({ name: "downloads.infected", payload: { assetId: "attachment", uploaderId: null, signature: verdict.signature, name: file.name }, tags: [] });
+    return verdict.signature;
+  }
+
   /** Antivirusul pe un fișier de pe disc; fără scanner: `skipped`. */
   async scanFile(file: string, opts: GcsDownloadOptions): Promise<GcsScanVerdict | { status: "skipped" }> {
     const scanner = this.scannerFor(opts);
@@ -530,6 +547,10 @@ export class GcsDownloadUploads {
       take: 200,
     });
     for (const row of rows) await this.removeAsset(row);
+    // Logul descărcărilor: păstrat cât spune fiecare categorie (0 = mereu).
+    for (const c of await this.deps.access.categories()) {
+      if (c.options.logDays > 0) await db.downloadLog.deleteMany({ where: { file: { categoryId: c.id }, createdAt: { lt: new Date(now.getTime() - c.options.logDays * 86_400_000) } } });
+    }
     return { removed: rows.length };
   }
 

@@ -26,7 +26,7 @@ import {
 import { jsonInts, jsonStrings, type DownloadAsset, type Prisma, type PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
 import type { GcsCategoryRights, GcsCategoryRow, GcsDownloadAccess } from "./access";
-import { validateFieldValues, type GcsDownloadFieldDef } from "./fields";
+import { fieldTopicLine, validateFieldValues, type GcsDownloadFieldDef } from "./fields";
 import { readDownloadOptions } from "./options";
 import type { GcsDownloadUploads } from "./uploads";
 import { DOWNLOAD_FILE_CONTENT, DOWNLOAD_SCREENSHOT, DOWNLOADS_CACHE_TAG, downloadFileHref } from "./text";
@@ -456,7 +456,7 @@ export class GcsDownloadService {
     if (first && category?.options.forumTopic.enabled && this.deps.topics && v.file.topicId === null) {
       const topicId = await this.deps.topics
         .create(
-          { id: v.file.id, title: v.file.title, slug: v.file.slug, authorId: v.file.authorId, summary: v.file.summary, screenshotUrl: jsonStrings(v.file.screenshotIds)[0] ? `/files/${jsonStrings(v.file.screenshotIds)[0]}` : null, fieldsText: [] },
+          { id: v.file.id, title: v.file.title, slug: v.file.slug, authorId: v.file.authorId, summary: v.file.summary, screenshotUrl: jsonStrings(v.file.screenshotIds)[0] ? `/files/${jsonStrings(v.file.screenshotIds)[0]}` : null, fieldsText: await this.topicFieldLines(category, v.file.fields) },
           { forumId: category.options.forumTopic.forumId, prefix: category.options.forumTopic.prefix, suffix: category.options.forumTopic.suffix },
         )
         .catch(() => null);
@@ -468,6 +468,17 @@ export class GcsDownloadService {
     }
     await this.deps.bus.emit({ name: "downloads.published", payload: { fileId: v.fileId, versionId: v.id, authorId: v.file.authorId, first, approverId, categoryId: v.file.categoryId, title: v.file.title, label: v.label }, tags: [] });
     await this.changed([v.fileId]);
+  }
+
+  /** Rândurile câmpurilor marcate „în topic”, după formatul fiecăruia (`{title}: {content}`). */
+  private async topicFieldLines(category: GcsCategoryRow, raw: unknown): Promise<string[]> {
+    const values = (raw ?? {}) as Record<string, unknown>;
+    return (await this.categoryFields(category))
+      .filter((f) => f.inTopic && values[String(f.id)] !== undefined && f.type !== "member")
+      .map((f) => {
+        const v = values[String(f.id)];
+        return fieldTopicLine(f, Array.isArray(v) ? v.map(String).join(", ") : typeof v === "boolean" ? (v ? "✓" : "✗") : String(v));
+      });
   }
 
   /** Versiunile vechi peste limita categoriei (sau toate, fără păstrare) dispar, cu fișierele lor. */
@@ -580,7 +591,8 @@ export class GcsDownloadService {
     const file = await db.downloadFile.findUnique({ where: { id: fileId }, include: { versions: { include: { assets: true } } } });
     if (!file) throw new GcsNotFound();
     const rights = await access.rights(actor, file.categoryId);
-    const ownDraft = file.authorId === actor.userId && file.status !== "APPROVED" && file.status !== "HIDDEN" && file.status !== "QUARANTINED";
+    // `actor.userId !== null`: un fișier al unui cont șters (`authorId` gol) nu e „al” unui vizitator.
+    const ownDraft = actor.userId !== null && file.authorId === actor.userId && file.status !== "APPROVED" && file.status !== "HIDDEN" && file.status !== "QUARANTINED";
     if (!rights.moderate && !ownDraft) throw new GcsForbidden({ permission: "downloads.moderate" });
     await this.purge(file, actor);
   }
@@ -773,6 +785,8 @@ export class GcsDownloadService {
   /** Editarea unui comentariu (autorul sau staff-ul). */
   async editComment(actor: GcsActor, commentId: number, raw: unknown): Promise<void> {
     const { db, access } = this.deps;
+    await this.requireApp(actor);
+    if (!actor.userId) throw new GcsForbidden({ reason: "guest" });
     const c = await db.downloadComment.findUnique({ where: { id: commentId }, include: { file: { select: { categoryId: true } } } });
     if (!c) throw new GcsNotFound();
     const rights = await access.rights(actor, c.file.categoryId);

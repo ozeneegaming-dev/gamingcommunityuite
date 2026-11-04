@@ -947,8 +947,25 @@
   margin-inline-start: auto;
 }
 
+/* Categoria de descărcări a unui clan, în coloana paginii clanului. */
+.gcs-clanDownloads {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-weight: 600;
+  transition: background-color var(--gcs-motion-fast, 0.15s) ease;
+}
+.gcs-clanDownloads:hover {
+  background-color: color-mix(in srgb, var(--gcs-text) 3%, var(--gcs-surface));
+}
+
 /* ─── ACP ───────────────────────────────────────────────────────────────────────────────────────────── */
 
+.gcs-dlOrder {
+  display: inline-flex;
+  gap: 4px;
+}
 .gcs-dlAcpRows {
   list-style: none;
   margin: 0;

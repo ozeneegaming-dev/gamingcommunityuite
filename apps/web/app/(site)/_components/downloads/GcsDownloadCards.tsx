@@ -77,7 +77,7 @@ export async function GcsCategoryList({ categories, testId = "gcs-download-categ
       {categories.map((c) => (
         <li key={c.id} className="gcs-card gcs-dlCat" data-testid="gcs-download-category">
           <span className="gcs-dlCat__icon" aria-hidden="true">
-            {c.iconUrl ? <img src={c.iconUrl} alt="" /> : <GcsIcon name={c.icon || "fa-solid fa-folder"} />}
+            {c.iconUrl || c.coverUrl ? <img src={(c.iconUrl ?? c.coverUrl)!} alt="" /> : <GcsIcon name={c.icon || "fa-solid fa-folder"} />}
           </span>
           <div className="gcs-dlCat__body">
             <h3 className="gcs-dlCat__name">

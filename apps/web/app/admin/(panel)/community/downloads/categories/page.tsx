@@ -15,7 +15,7 @@ import { GcsAcpEditPanel } from "../../../_components/GcsAcpEditPanel";
 import { GcsActionForm } from "../../../_components/GcsActionForm";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { copyCategory, deleteCategory, saveCategory } from "../actions";
-import { GcsDownloadImageField } from "../GcsDownloadAcpBits";
+import { GcsDownloadImageField, GcsDownloadOrderButtons } from "../GcsDownloadAcpBits";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("acp.downloads"))("categories.title") };
@@ -301,6 +301,10 @@ export default async function AcpDownloadCategories() {
               </span>
               <span className="gcs-muted">{t("files", { count: c.filesCount })}</span>
               <span className="gcs-dlAcpRow__tools">
+                {(() => {
+                  const siblings = data.rows.filter((x) => x.parentId === c.parentId).map((x) => x.id);
+                  return <GcsDownloadOrderButtons kind="category" parentId={c.parentId} ids={siblings} index={siblings.indexOf(c.id)} name={c.name} />;
+                })()}
                 <Link className="gcs-btn gcs-btn--ghost gcs-btn--sm" href={`/admin/permissions/downloads/${c.id}`} data-testid="gcs-acp-dlcat-perms">
                   <GcsIcon name="fa-solid fa-user-lock" />
                   {t("permissions")}

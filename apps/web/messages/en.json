@@ -531,7 +531,8 @@
       "chunk_missing": "Part of the file is missing: upload it again.",
       "size_mismatch": "The file arrived incomplete: upload it again.",
       "same": "The version already has this number.",
-      "scan_error": "The antivirus couldn't check the file."
+      "scan_error": "The antivirus couldn't check the file.",
+      "infected": "The antivirus found a threat in the file: the upload was refused."
     }
   },
   "acp": {
@@ -6264,7 +6265,7 @@
         "quarantineDays": "Quarantine (days)",
         "quarantineHint": "Infected files of rejected submissions are deleted after this many days (0 = kept).",
         "forumAttachments": "Also scan forum attachments",
-        "forumAttachmentsHint": "The same check for files attached to posts (coming to the forum; the setting is kept).",
+        "forumAttachmentsHint": "The same check for files attached to posts, messages and chat: an infected file is refused on upload and staff are alerted.",
         "quarantine": "{count, plural, one {Quarantine (# file)} other {Quarantine (# files)}}",
         "quarantineEmpty": "No quarantined files.",
         "release": "Release",
@@ -6523,7 +6524,9 @@
         "topAuthors": "Authors with the most downloads",
         "topDownloaders": "Who downloads the most",
         "authorRow": "{files} files · {downloads} downloads"
-      }
+      },
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down"
     }
   },
   "settings": {
@@ -10824,7 +10827,8 @@
     },
     "manageLink": "Manage",
     "bannerImage": "Clan banner",
-    "logoImage": "Clan logo"
+    "logoImage": "Clan logo",
+    "downloads": "{count, plural, one {Clan downloads: # file} other {Clan downloads: # files}}"
   },
   "bridge": {
     "identity": {

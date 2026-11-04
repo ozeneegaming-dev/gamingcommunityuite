@@ -189,3 +189,23 @@ describe("categoriile din ACP", () => {
     expect((await w.db.downloadFile.findUniqueOrThrow({ where: { id: s.fileId } })).categoryId).toBe(b);
   });
 });
+
+describe("atașamentele din restul site-ului", () => {
+  test("cu setarea pornită, un atașament infectat e găsit; oprită sau fără antivirus, nu se scanează", async () => {
+    expect(await w.dl.uploads.scanAttachment({ name: "a.zip", bytes: Buffer.from("VIRUS") })).toBe("Test.Virus-1");
+    expect(await w.dl.uploads.scanAttachment({ name: "b.png", bytes: Buffer.from("curat") })).toBeNull();
+    await w.settings.set("downloads.av_forum_attachments", false, w.root);
+    const before = w.av.state.scans;
+    expect(await w.dl.uploads.scanAttachment({ name: "a.zip", bytes: Buffer.from("VIRUS") })).toBeNull();
+    expect(w.av.state.scans).toBe(before);
+  });
+});
+
+describe("ștergerea de către vizitatori", () => {
+  test("un vizitator nu poate șterge trimiterea nepublicată a unui cont șters (autor gol)", async () => {
+    const s = await submit();
+    await w.db.downloadFile.update({ where: { id: s.fileId }, data: { authorId: null } });
+    await expect(w.dl.service.remove(w.guest, s.fileId)).rejects.toBeInstanceOf(GcsForbidden);
+    expect(await w.db.downloadFile.count({ where: { id: s.fileId } })).toBe(1);
+  });
+});
