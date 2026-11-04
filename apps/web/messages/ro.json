@@ -429,6 +429,7 @@
       "unknown": "Necunoscut.",
       "migration_failed": "O migrație a bazei de date a eșuat.",
       "invalid_host": "Host invalid (un IP sau un nume de domeniu public, fără port)",
+      "invalid_guild": "ID-ul serverului de Discord are 17–20 cifre",
       "blocked_address": "Adresa nu e publică (rețele interne sau localhost nu sunt permise)",
       "duplicate_server": "Serverul există deja (același joc, host și port)",
       "invalid_chars": "Conține caractere nepermise",
@@ -3145,7 +3146,23 @@
         "groups": "Cine vede serverul",
         "groupsHint": "Nicio bifă = toți cei care au dreptul de a vedea serverele.",
         "enabled": "Activ (apare pe site și e interogat)",
-        "bannerUpload": "Încarcă bannerul"
+        "bannerUpload": "Încarcă bannerul",
+        "guildId": "ID-ul serverului de Discord",
+        "guildIdHint": "Din Discord: Setări server › Widget › ID server (17–20 cifre). Pornește și „Activează widget-ul serverului”.",
+        "voicePort": "Portul de voce",
+        "tsQueryPortHint": "ServerQuery: 10011 · WebQuery: 10080 (gol = implicit).",
+        "queryMode": "Interogarea TeamSpeak",
+        "queryModes": {
+          "raw": "ServerQuery (cont de interogare)",
+          "http": "WebQuery (cheie API)"
+        },
+        "queryUser": "Utilizatorul de interogare",
+        "queryPassword": "Parola de interogare",
+        "queryKey": "Cheia API (WebQuery)",
+        "querySecretSaved": "•••••• salvată",
+        "querySecretKeep": "Lasă gol ca să rămână cea salvată. Nu se mai afișează niciodată.",
+        "querySecretHint": "Opțional. Folosește un cont doar cu drept de vizualizare; se salvează criptat și nu se mai afișează.",
+        "querySecretClear": "Șterge parola / cheia salvată"
       },
       "test": "Testează",
       "testing": "Se interoghează…",
@@ -3165,7 +3182,10 @@
         "unreachable": "Serverul nu poate fi contactat.",
         "invalid_response": "Răspunsul nu e al acestui joc (verifică jocul și portul).",
         "too_large": "Răspunsul serverului e prea mare.",
-        "unknown_game": "Joc necunoscut."
+        "unknown_game": "Joc necunoscut.",
+        "auth_failed": "Contul de interogare sau cheia API nu e bun (ori nu are dreptul de a vedea serverul).",
+        "widget_disabled": "Widget-ul serverului e oprit: în Discord, Setări server › Widget › „Activează widget-ul serverului”.",
+        "not_found": "Serverul nu există la această adresă sau ID."
       },
       "save": "Salvează",
       "create": "Adaugă serverul",
@@ -11136,6 +11156,13 @@
       "servers": "Servere",
       "players": "Jucători",
       "fill": "Ocupare"
+    },
+    "users": "{players} / {max} utilizatori",
+    "membersOnline": "{players} membri online",
+    "joinVia": {
+      "teamspeak": "Intră pe TeamSpeak",
+      "mumble": "Intră pe Mumble",
+      "discord": "Intră pe Discord"
     }
   },
   "clans": {

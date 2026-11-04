@@ -26,7 +26,7 @@ export default async function AcpEditServerPage({ params }: Props) {
   if (!server) notFound();
   const [t, data] = await Promise.all([getTranslations("acp.servers"), serverFormData()]);
   const current = gameDef(server.game);
-  const games = data.games.some((g) => g.key === server.game) || !current ? data.games : [...data.games, { key: current.key, name: current.name, defaultPort: current.defaultPort, icon: iconDef(current.icon) }];
+  const games = data.games.some((g) => g.key === server.game) || !current ? data.games : [...data.games, { key: current.key, name: current.name, defaultPort: current.defaultPort, defaultQueryPort: current.defaultQueryPort ?? null, protocol: current.protocol, icon: iconDef(current.icon) }];
   return (
     <>
       <Link href="/admin/gaming/servers" className="gcs-acpBack">
@@ -63,6 +63,7 @@ export default async function AcpEditServerPage({ params }: Props) {
             enabled: server.enabled,
             bannerUrl: server.bannerId ? `/files/${server.bannerId}` : null,
             admins: server.admins,
+            query: server.query,
           }}
           games={games}
           forums={data.forums}

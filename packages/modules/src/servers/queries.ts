@@ -1,7 +1,7 @@
 import type { GcsActor, GcsAppService, GcsCache, GcsPermissionService, GcsSettingsService } from "@gcs/core";
 import { type PrismaClient, jsonInts, sql } from "@gcs/db";
 import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
-import { connectHref, gameDef, serverAddress } from "./games";
+import { connectHref, gameDef, joinHref, serverAddress, type GcsGameKind } from "./games";
 import { SERVERS_APP, SHOW_PLAYERS_SETTING } from "./poller";
 import { SERVERS_CACHE_TAG } from "./service";
 import type { GcsServerStatusStore } from "./store";
@@ -42,9 +42,11 @@ export type GcsServerView = {
   id: number;
   slug: string;
   name: string;
-  game: { key: string; name: string; family: string; icon: string; hasMap: boolean };
+  game: { key: string; name: string; family: string; icon: string; hasMap: boolean; kind: GcsGameKind };
   address: string;
   connectHref: string | null;
+  /** „Intră pe TeamSpeak / Mumble / Discord” (linkul clientului sau invitația); `null` la jocuri. */
+  joinHref: string | null;
   bannerUrl: string | null;
   bannerGradient: string;
   /** `null` = încă neinterogat sau statusul e prea vechi (worker oprit). */
@@ -137,9 +139,10 @@ export class GcsServerQueries {
       id: s.id,
       slug: s.slug,
       name: s.name,
-      game: { key: s.game, name: game?.name ?? s.game, family: game?.family ?? s.game, icon: game?.icon ?? "fa-solid fa-server", hasMap: game?.hasMap ?? true },
+      game: { key: s.game, name: game?.name ?? s.game, family: game?.family ?? s.game, icon: game?.icon ?? "fa-solid fa-server", hasMap: game?.hasMap ?? true, kind: game?.kind ?? "game" },
       address: serverAddress(game, s.host, s.port),
       connectHref: connectHref(game, s.host, s.port),
+      joinHref: joinHref(game, s.host, s.port, status?.invite),
       bannerUrl: s.bannerId ? `/files/${s.bannerId}` : null,
       bannerGradient: game?.banner ?? "linear-gradient(120deg, #14161C, #262A34)",
       status,

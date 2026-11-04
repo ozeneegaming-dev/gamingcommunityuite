@@ -429,6 +429,7 @@
       "unknown": "Unknown.",
       "migration_failed": "A database migration failed.",
       "invalid_host": "Invalid host (a public IP or domain name, without a port)",
+      "invalid_guild": "A Discord server ID has 17–20 digits",
       "blocked_address": "The address is not public (internal networks or localhost are not allowed)",
       "duplicate_server": "The server already exists (same game, host and port)",
       "invalid_chars": "Contains characters that are not allowed",
@@ -3145,7 +3146,23 @@
         "groups": "Who sees the server",
         "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
         "enabled": "Active (shown on the site and queried)",
-        "bannerUpload": "Upload the banner"
+        "bannerUpload": "Upload the banner",
+        "guildId": "Discord server ID",
+        "guildIdHint": "In Discord: Server Settings › Widget › Server ID (17–20 digits). Also turn on “Enable Server Widget”.",
+        "voicePort": "Voice port",
+        "tsQueryPortHint": "ServerQuery: 10011 · WebQuery: 10080 (empty = default).",
+        "queryMode": "TeamSpeak query",
+        "queryModes": {
+          "raw": "ServerQuery (query account)",
+          "http": "WebQuery (API key)"
+        },
+        "queryUser": "Query user",
+        "queryPassword": "Query password",
+        "queryKey": "API key (WebQuery)",
+        "querySecretSaved": "•••••• saved",
+        "querySecretKeep": "Leave empty to keep the saved one. It is never shown again.",
+        "querySecretHint": "Optional. Use an account that can only view; it is stored encrypted and never shown again.",
+        "querySecretClear": "Remove the saved password / key"
       },
       "test": "Test",
       "testing": "Querying…",
@@ -3165,7 +3182,10 @@
         "unreachable": "The server can't be reached.",
         "invalid_response": "The answer isn't from this game (check the game and the port).",
         "too_large": "The server's answer is too large.",
-        "unknown_game": "Unknown game."
+        "unknown_game": "Unknown game.",
+        "auth_failed": "The query account or API key is wrong (or cannot view the server).",
+        "widget_disabled": "The server widget is off: in Discord, Server Settings › Widget › “Enable Server Widget”.",
+        "not_found": "No server at this address or ID."
       },
       "save": "Save",
       "create": "Add the server",
@@ -11136,6 +11156,13 @@
       "servers": "Servers",
       "players": "Players",
       "fill": "Fill"
+    },
+    "users": "{players} / {max} users",
+    "membersOnline": "{players} members online",
+    "joinVia": {
+      "teamspeak": "Join TeamSpeak",
+      "mumble": "Join Mumble",
+      "discord": "Join Discord"
     }
   },
   "clans": {

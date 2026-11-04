@@ -1,12 +1,13 @@
 import { isIP, type BlockList } from "node:net";
-import { GcsNotFound, GcsRateLimited, GcsValidationError, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRateLimiter } from "@gcs/core";
+import { GcsNotFound, GcsRateLimited, GcsValidationError, sealSecret, writeAudit, type GcsAcpRoleService, type GcsActor, type GcsAttachmentService, type GcsEventBus, type GcsRateLimiter } from "@gcs/core";
 import { type Prisma, type PrismaClient, jsonInts } from "@gcs/db";
 import { slugify } from "../forums/slug";
-import { enabledGames } from "./games";
+import { DISCORD_GUILD_RE, enabledGames, gameDef } from "./games";
 import { isQueryableAddress, normalizeHost, serversAllowNets } from "./net";
 import { GcsPlayerStatsHub } from "./playerStats";
 import { MAX_SERVERS, SERVERS_STATS_TAG, type GcsServerQueryFn } from "./poller";
-import { queryGameServer } from "./query";
+import { serverAuth } from "./auth";
+import { queryGameServer, type GcsServerAuth } from "./query";
 import type { GcsServerStatusStore } from "./store";
 import type { GcsServerStatus } from "./types";
 
@@ -35,9 +36,17 @@ export type GcsServerInput = {
   adminIds: string[];
   enabled: boolean;
   bannerId?: string | null;
+  /**
+   * Contul de interogare al serverelor de voce (TeamSpeak): modul și utilizatorul; `secret` e „doar scris”: lipsă sau
+   * `undefined` = neschimbat, `""` = șters, altfel noul secret (se criptează și nu se mai afișează niciodată).
+   */
+  query?: { mode: "raw" | "http"; user: string; secret?: string | undefined };
 };
 
-export type GcsServerTestInput = Pick<GcsServerInput, "game" | "host" | "port" | "queryPort">;
+export type GcsServerTestInput = Pick<GcsServerInput, "game" | "host" | "port" | "queryPort" | "query"> & {
+  /** Serverul existent al cărui secret salvat se folosește când formularul nu are unul nou. */
+  serverId?: number | null;
+};
 
 /** Un server în lista din ACP. */
 export type GcsServerAcpRow = {
@@ -53,14 +62,19 @@ export type GcsServerAcpRow = {
 };
 
 /** Un server în formularul de editare. */
-export type GcsServerEdit = Omit<GcsServerInput, "adminIds" | "bannerId"> & {
+export type GcsServerEdit = Omit<GcsServerInput, "adminIds" | "bannerId" | "query"> & {
   id: number;
   slug: string;
   bannerId: string | null;
   admins: { id: string; name: string }[];
+  /** Contul de interogare, fără secret: doar dacă există unul salvat. */
+  query: { mode: "raw" | "http"; user: string; hasSecret: boolean };
 };
 
-type Normalized = Omit<GcsServerInput, "bannerId"> & { slug: string };
+type Normalized = Omit<GcsServerInput, "bannerId" | "query"> & { slug: string; queryMode: "raw" | "http"; queryUser: string; secret: string | undefined };
+
+const QUERY_LIMITS = { user: 100, secret: 200 } as const;
+
 
 /** Textul scris de admin: fără caractere de control (rândurile noi rămân doar unde e voie). */
 const plain = (v: unknown, keepNewlines: boolean) =>
@@ -145,13 +159,22 @@ export class GcsServerService {
       enabled: row.enabled,
       bannerId: row.bannerId,
       admins: row.admins.map((a) => ({ id: a.user.id, name: a.user.name })),
+      query: { mode: row.queryMode === "http" ? "http" : "raw", user: row.queryUser, hasSecret: row.querySecret !== null },
     };
   }
 
-  /** Validarea câmpurilor de rețea (și pentru „Testează”). */
+  /**
+   * Validarea câmpurilor de rețea (și pentru „Testează”). Discord nu are adresă: „host” e ID-ul serverului de Discord
+   * (17–20 cifre), iar portul rămâne 443.
+   */
   private validateTarget(input: Partial<GcsServerTestInput>, errors: Record<string, string>): { game: string; host: string; port: number; queryPort: number | null } {
     const game = typeof input.game === "string" && enabledGames().some((g) => g.key === input.game) ? input.game : "";
     if (!game) errors.game = "invalid";
+    if (gameDef(game)?.protocol === "discord") {
+      const id = typeof input.host === "string" ? input.host.trim() : "";
+      if (!DISCORD_GUILD_RE.test(id)) errors.host = "invalid_guild";
+      return { game, host: id, port: 443, queryPort: null };
+    }
     const host = normalizeHost(input.host);
     if (!host) errors.host = "invalid_host";
     // Un IP scris direct se verifică la salvare; un nume se verifică la fiecare interogare (DNS-ul se poate schimba).
@@ -159,6 +182,17 @@ export class GcsServerService {
     if (!isPort(input.port)) errors.port = "invalid_range";
     if (input.queryPort !== null && input.queryPort !== undefined && !isPort(input.queryPort)) errors.queryPort = "invalid_range";
     return { game, host: host ?? "", port: input.port ?? 0, queryPort: input.queryPort ?? null };
+  }
+
+  /** Contul de interogare scris în formular: doar la TeamSpeak; fără caractere de control, cu lungimi limitate. */
+  private validateQuery(game: string, input: GcsServerInput["query"], errors: Record<string, string>): { queryMode: "raw" | "http"; queryUser: string; secret: string | undefined } {
+    if (gameDef(game)?.protocol !== "teamspeak" || !input) return { queryMode: "raw", queryUser: "", secret: undefined };
+    const queryMode = input.mode === "http" ? "http" : "raw";
+    const queryUser = plain(input.user, false);
+    if ([...queryUser].length > QUERY_LIMITS.user || /\s/.test(queryUser)) errors.queryUser = "invalid";
+    const secret = typeof input.secret === "string" ? input.secret.trim() : undefined;
+    if (secret !== undefined && (secret.length > QUERY_LIMITS.secret || /[\u0000-\u001f\u007f]/.test(secret))) errors.querySecret = "invalid";
+    return { queryMode, queryUser, secret };
   }
 
   private async validate(input: GcsServerInput): Promise<Normalized> {
@@ -175,6 +209,7 @@ export class GcsServerService {
       if (!forum || forum.type === "LINK") errors.forumId = "invalid";
       else forumId = input.forumId;
     }
+    const query = this.validateQuery(target.game, input.query, errors);
     const groups = [...new Set(Array.isArray(input.groups) ? input.groups : [])];
     if (groups.length > 0) {
       const found = await db.group.count({ where: { id: { in: groups.filter(Number.isInteger) } } });
@@ -184,7 +219,7 @@ export class GcsServerService {
     if (adminIds.length > SERVER_LIMITS.admins) errors.adminIds = "too_many";
     else if (adminIds.length > 0 && (await db.user.count({ where: { id: { in: adminIds } } })) !== adminIds.length) errors.adminIds = "invalid";
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
-    return { ...target, name, slug: serverSlug(name), description, forumId, groups, adminIds, enabled: input.enabled !== false };
+    return { ...target, name, slug: serverSlug(name), description, forumId, groups, adminIds, enabled: input.enabled !== false, queryMode: query.queryMode, queryUser: query.queryUser, secret: query.secret };
   }
 
   /** Atașamentul ales ca banner: încărcat de admin (încă nelegat) sau bannerul curent al aceluiași server; doar imagini. */
@@ -203,7 +238,11 @@ export class GcsServerService {
     if (typeof input.bannerId === "string") await this.checkBanner(actor, input.bannerId, id);
     if (id === null && (await db.gameServer.count()) >= MAX_SERVERS) throw new GcsValidationError({ servers: "too_many" });
 
-    const { adminIds, ...fields } = data;
+    const { adminIds, secret, ...base } = data;
+    // Secretul: doar scris (criptat); lipsă = neschimbat, gol = șters.
+    // Alt joc decât TeamSpeak: niciun cont de interogare salvat.
+    const voice = gameDef(base.game)?.protocol === "teamspeak";
+    const fields = { ...base, ...(!voice ? { querySecret: null } : secret === undefined ? {} : { querySecret: secret === "" ? null : sealSecret(secret) }) };
     let row;
     try {
       row = await db.$transaction(async (tx) => {
@@ -219,8 +258,9 @@ export class GcsServerService {
           action: id === null ? "servers.create" : "servers.update",
           targetType: "game_server",
           targetId: String(saved.id),
-          before: before ? { ...before, admins: before.admins.map((a) => a.userId) } : undefined,
-          after: { ...fields, adminIds },
+          before: before ? { ...before, querySecret: before.querySecret ? "set" : null, admins: before.admins.map((a) => a.userId) } : undefined,
+          // Secretul nu intră în jurnal (nici criptat).
+          after: { ...base, adminIds, querySecret: secret === undefined ? "unchanged" : secret === "" ? "removed" : "set" },
           ip: actor.ip,
         });
         return saved;
@@ -237,7 +277,8 @@ export class GcsServerService {
       await db.gameServer.update({ where: { id: row.id }, data: { bannerId: input.bannerId } });
     }
     // Altă adresă (sau alt joc): statusul vechi nu mai e valabil, serverul se interoghează la runda următoare.
-    const moved = !before || before.game !== data.game || before.host !== data.host || before.port !== data.port || before.queryPort !== data.queryPort || !before.enabled;
+    const moved =
+      !before || before.game !== data.game || before.host !== data.host || before.port !== data.port || before.queryPort !== data.queryPort || before.queryMode !== data.queryMode || before.queryUser !== data.queryUser || secret !== undefined || !before.enabled;
     if (moved) await store.reset(row.id);
     await this.changed(row.id);
     return { id: row.id };
@@ -292,10 +333,21 @@ export class GcsServerService {
     await acp.assert(actor, SERVERS_ACP_SECTION, "edit");
     const errors: Record<string, string> = {};
     const target = this.validateTarget(input, errors);
+    const query = this.validateQuery(target.game, input.query, errors);
     if (Object.keys(errors).length > 0) throw new GcsValidationError(errors);
     const limit = await rateLimiter.consume(`servers-test:${actor.userId}`, TEST_LIMIT);
     if (!limit.allowed) throw new GcsRateLimited({ retryAfter: String(limit.retryAfter) });
-    return this.query(target, { allow: this.allow(), players: true });
+    // Secretul: cel nou din formular sau, fără el, cel salvat al serverului editat.
+    let auth: GcsServerAuth | null = null;
+    if (gameDef(target.game)?.protocol === "teamspeak") {
+      let secret = query.secret ?? "";
+      if (query.secret === undefined && Number.isInteger(input.serverId)) {
+        const row = await this.deps.db.gameServer.findUnique({ where: { id: input.serverId! }, select: { queryMode: true, queryUser: true, querySecret: true } });
+        secret = row ? (serverAuth(row)?.secret ?? "") : "";
+      }
+      if (query.queryUser || secret) auth = { mode: query.queryMode, user: query.queryUser, secret };
+    }
+    return this.query({ ...target, auth }, { allow: this.allow(), players: true });
   }
 
   private async changed(id: number | null): Promise<void> {
