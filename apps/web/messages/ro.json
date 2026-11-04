@@ -22,7 +22,8 @@
       "bans": "Banuri",
       "serverAdmins": "Admini",
       "serverTickets": "Contestații",
-      "donations": "Donații"
+      "donations": "Donații",
+      "pages": "Pagini"
     },
     "acp": "ACP",
     "myProfile": "Profilul meu",
@@ -348,7 +349,10 @@
       "license_domain": "Licența nu e valabilă pentru domeniul acestui site.",
       "license_revoked": "Licența a fost revocată.",
       "tag_exists": "Există deja o etichetă cu acest nume.",
-      "login_required": "Trebuie să intri în cont."
+      "login_required": "Trebuie să intri în cont.",
+      "not_empty": "Folderul are pagini; mută-le sau șterge-le întâi.",
+      "not_pending": "Înregistrarea nu mai e în așteptare.",
+      "invalid_state": "Starea înregistrării s-a schimbat între timp."
     },
     "fields": {
       "invalid_color": "Culoare invalidă (#RRGGBB)",
@@ -509,7 +513,20 @@
       "empty": "Niciun destinatar pentru publicul ales",
       "tag_not_allowed": "Eticheta nu e în lista permisă de admini",
       "unknown_job": "Jobul nu se poate rula manual",
-      "invalid_area": "Zonă de cache invalidă"
+      "invalid_area": "Zonă de cache invalidă",
+      "invalid_slug": "Doar litere mici, cifre și cratimă.",
+      "reserved": "Adresa e rezervată de sistem.",
+      "too_deep": "Prea multe niveluri de foldere.",
+      "in_use": "Baza are deja o pagină.",
+      "invalid_package": "Fișierul nu e un pachet de bază de date GCS.",
+      "invalid_member": "Membrul nu există.",
+      "invalid_widget": "Widget invalid.",
+      "invalid_database": "Baza de date nu există.",
+      "invalid_media": "Fișierul nu mai e în bibliotecă.",
+      "invalid_block": "Bloc invalid.",
+      "invalid_section": "Secțiune invalidă.",
+      "too_many_sections": "Prea multe secțiuni.",
+      "too_many_blocks": "Prea multe blocuri."
     }
   },
   "acp": {
@@ -701,6 +718,17 @@
         "vip": "VIP",
         "servers": "Servere",
         "clans": "Clanuri"
+      },
+      "pages": {
+        "content": "Conținut",
+        "setup": "Aspect și setări",
+        "pages": "Pagini",
+        "blocks": "Blocuri",
+        "databases": "Baze de date",
+        "records": "Înregistrări",
+        "media": "Media",
+        "templates": "Șabloane",
+        "settings": "Setări"
       }
     },
     "comingSoon": {
@@ -2637,7 +2665,8 @@
         "postbit": "Postări",
         "members": "Membri",
         "widgets": "Widget-uri",
-        "email": "Emailuri"
+        "email": "Emailuri",
+        "pages": "Pagini"
       },
       "status": {
         "default": "original",
@@ -2700,7 +2729,10 @@
         "emailHello": "Salut, {name}!",
         "emailItem": "Ana a răspuns în „Bine ați venit!”",
         "emailFooter": "Alege ce emailuri primești din setările notificărilor.",
-        "emailSubject": "O notificare nouă — {site}"
+        "emailSubject": "O notificare nouă — {site}",
+        "recordTitle": "Crosshair curat pentru CS2",
+        "recordExcerpt": "Setările pas cu pas pentru un crosshair care se vede pe orice hartă.",
+        "recordDatabase": "Ghiduri"
       }
     },
     "plugins": {
@@ -3874,6 +3906,10 @@
         },
         "online_time": {
           "days": "Zile cu timp online în clasament"
+        },
+        "pages": {
+          "records": "Înregistrări în Pagini",
+          "comments": "Comentarii în Pagini"
         }
       },
       "steps": {
@@ -3891,7 +3927,8 @@
         "account": "Date de cont",
         "files": "Fișiere",
         "chat_pro": "Chat Pro",
-        "online_time": "Timp online"
+        "online_time": "Timp online",
+        "pages": "Pagini (înregistrări și comentarii)"
       },
       "notes": {
         "topic_replies": "Topicurile lui au {count} răspunsuri ale altor membri: în modul „Șterge și conținutul” se șterg și ele.",
@@ -4000,7 +4037,8 @@
       "gaming": "Gaming",
       "vip": "VIP & Magazin",
       "stats": "Statistici",
-      "apps": "Aplicații"
+      "apps": "Aplicații",
+      "pages": "Pagini"
     },
     "stats": {
       "title": "Prezentare generală",
@@ -6149,6 +6187,553 @@
         "startUrl": "Pagina de pornire",
         "startHint": "O adresă din site, ex. / sau /forum."
       }
+    },
+    "pages": {
+      "title": "Pagini",
+      "lead": "Folderele și paginile site-ului: conținutul, cine le vede, SEO și meniul. Paginile se construiesc din blocuri sau se scriu în HTML.",
+      "newPage": "Pagină nouă",
+      "newFolder": "Folder nou",
+      "create": "Creează",
+      "save": "Salvează",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi „{title}”? Itemul din meniu dispare și el.",
+      "deleteFolderFirst": "Folderul „{title}” are pagini. Mută sau șterge întâi paginile din el.",
+      "empty": "Nicio pagină încă. Creează prima pagină sau o bază de date din șablon.",
+      "secDetails": "Detalii",
+      "secAccess": "Cine o vede",
+      "secMenu": "Meniu și pagina de pornire",
+      "secSeo": "SEO și distribuire",
+      "titleField": "Titlu",
+      "slug": "Adresă (slug)",
+      "slugAuto": "din titlu",
+      "slugHint": "Litere mici, cifre și cratimă. Adresa completă e /pages/folder/slug.",
+      "parent": "Folder",
+      "noParent": "Fără folder (rădăcina)",
+      "icon": "Iconiță",
+      "contentType": "Conținut",
+      "contentTypeHint": "Constructorul (blocuri), HTML scris de mână sau înregistrările unei baze de date.",
+      "types": {
+        "layout": "Constructor de blocuri",
+        "html": "HTML manual",
+        "database": "Bază de date"
+      },
+      "database": {
+        "title": "Bază de date",
+        "lead": "Detaliile, câmpurile, categoriile, funcțiile și permisiunile bazei.",
+        "back": "Înapoi la baze",
+        "view": "Vezi pagina",
+        "export": "Descarcă",
+        "noPage": "Baza nu are pagină, deci nu apare pe site.",
+        "noPageLink": "Creează o pagină de tip „Bază de date”.",
+        "tabs": "Secțiunile bazei",
+        "tab": {
+          "details": "Detalii",
+          "fields": "Câmpuri",
+          "categories": "Categorii",
+          "features": "Funcții",
+          "permissions": "Permisiuni",
+          "forum": "Forum"
+        },
+        "save": "Salvează",
+        "create": "Creează",
+        "delete": "Șterge",
+        "secIdentity": "Identitate",
+        "secLanguage": "Cum se numesc înregistrările",
+        "secDisplay": "Afișare",
+        "name": "Nume",
+        "key": "Cheie",
+        "keyHint": "Eticheta în paginile HTML: '{'database=\"{key}\"'}'; și adresa fluxului RSS.",
+        "description": "Descriere",
+        "icon": "Iconiță",
+        "languageHint": "Apar în butoane și mesaje („Adaugă un ghid”, „Niciun ghid încă”).",
+        "recordLabel": "O înregistrare",
+        "recordLabelPh": "ex. Ghid",
+        "recordPlural": "Mai multe",
+        "recordPluralPh": "ex. Ghiduri",
+        "indexMode": "Pagina bazei arată",
+        "indexModes": {
+          "all": "Toate înregistrările",
+          "categories": "Cuprinsul categoriilor",
+          "featured": "Doar recomandatele"
+        },
+        "listLayout": "Aspectul listei",
+        "layouts": {
+          "list": "Listă",
+          "grid": "Grilă de carduri",
+          "table": "Tabel"
+        },
+        "sort": "Ordinea implicită",
+        "sorts": {
+          "newest": "Cele mai noi",
+          "updated": "Actualizate recent",
+          "title": "După titlu",
+          "rating": "Cele mai bine notate",
+          "views": "Cele mai văzute",
+          "comments": "Cele mai comentate"
+        },
+        "perPage": "Pe pagină",
+        "fieldsHint": "Titlul și conținutul există mereu; aici adaugi câmpurile proprii ale bazei.",
+        "categoriesHint": "Categoriile apar ca filtre și au pagina lor; una privată arată fiecărui membru doar înregistrările lui.",
+        "categoriesOff": "Categoriile sunt oprite din Funcții; le poți pregăti oricum.",
+        "addCategory": "Categorie nouă",
+        "noCategories": "Nicio categorie.",
+        "recordsCount": "{count, plural, one {o înregistrare} few {# înregistrări} other {# de înregistrări}}",
+        "private": "Privată",
+        "restricted": "Acces restrâns",
+        "deleteCategoryConfirm": "Ștergi categoria „{name}”? Înregistrările ei rămân fără categorie.",
+        "secCategory": "Categoria",
+        "secCategoryAccess": "Acces",
+        "slug": "Adresă (slug)",
+        "slugAuto": "din nume",
+        "parentCategory": "Categoria părinte",
+        "noParentCategory": "Fără părinte",
+        "color": "Culoare",
+        "cover": "Copertă",
+        "noCover": "Fără copertă",
+        "privateHint": "Membrii văd doar propriile înregistrări (ex. cereri către staff); înregistrările nu apar în blocuri, căutare sau flux.",
+        "categoryGroupsHint": "Nimic bifat = ca baza de date.",
+        "secContent": "Conținut",
+        "secSubmissions": "Trimiteri",
+        "secCommunity": "Comentarii și note",
+        "secDiscovery": "Căutare, flux, RSS",
+        "f": {
+          "useCategories": "Categorii",
+          "useCategoriesHint": "Oprite, pagina bazei e direct lista înregistrărilor.",
+          "recordImage": "Imaginea înregistrării",
+          "revisions": "Revizii",
+          "revisionsHint": "Fiecare editare păstrează versiunea de dinainte, restaurabilă de staff.",
+          "submissions": "Trimiteri de la membri",
+          "submissionsHint": "Cine are dreptul (Permisiuni) adaugă înregistrări de pe site.",
+          "approval": "Trimiterile se aprobă",
+          "approvalHint": "Fără dreptul de a sări aprobarea, înregistrarea așteaptă staff-ul.",
+          "authorEdit": "Autorul își poate edita înregistrarea",
+          "wiki": "Editare wiki",
+          "wikiHint": "Oricine poate trimite în bază editează și înregistrările altora (cu revizii).",
+          "comments": "Comentarii",
+          "commentApproval": "Comentariile se aprobă",
+          "ratings": "Note cu stele",
+          "searchable": "În căutarea site-ului",
+          "inStream": "În fluxul de activitate",
+          "rss": "Flux RSS",
+          "rssHint": "/pages/rss/{key}, doar ce văd vizitatorii."
+        },
+        "permissionsHint": "Nimic bifat = permisiunea grupului (ACP › Grupuri). Bifele restrâng acțiunea la grupurile alese.",
+        "perm": {
+          "view": "Cine vede baza",
+          "submit": "Cine trimite",
+          "comment": "Cine comentează",
+          "rate": "Cine notează"
+        },
+        "forumHint": "Fiecare înregistrare publicată devine un topic în forumul ales (titlul, un fragment și linkul), postat de autor.",
+        "forum": "Forumul",
+        "noForum": "Fără publicare în forum",
+        "deleteHint": "Ștergerea scoate baza cu toate cele {count} înregistrări, comentariile, notele și fișierele lor. Pagina ei rămâne goală.",
+        "deleteDb": "Șterge baza de date",
+        "deleteDbConfirm": "Ștergi definitiv baza „{name}” cu tot conținutul?"
+      },
+      "published": "Publicată",
+      "publishedHint": "Nepublicată, o văd doar editorii paginilor (cu banda „Ciornă”).",
+      "showTitle": "Arată titlul paginii",
+      "accessHint": "Nimic bifat = toți cei care pot vedea aplicația Pagini. Grupurile unui folder se aplică și paginilor din el.",
+      "inMenu": "În meniul site-ului",
+      "inMenuHint": "Adaugă pagina la sfârșitul meniului principal; o poți muta apoi din Manager meniu.",
+      "homeGroupsHint": "Pagina de pornire a aplicației pentru grupurile bifate (după grupul principal). Pentru toți, folosește steaua din listă.",
+      "seoTitle": "Titlul pentru motoarele de căutare",
+      "seoDescription": "Descriere",
+      "seoImage": "Imaginea de distribuire",
+      "seoImageNone": "Fără imagine",
+      "seoImageHint": "Din biblioteca media; apare când pagina e distribuită pe rețele.",
+      "noindex": "Ascunde pagina de motoarele de căutare",
+      "chips": {
+        "draft": "Ciornă",
+        "menu": "În meniu",
+        "home": "Pagina de pornire",
+        "homeGroups": "Pornire pentru {count, plural, one {un grup} few {# grupuri} other {# de grupuri}}",
+        "restricted": "Acces restrâns"
+      },
+      "build": "Construiește",
+      "editHtml": "HTML",
+      "revisions": {
+        "title": "Versiuni",
+        "titleFor": "Versiuni: {title}",
+        "lead": "Fiecare salvare păstrează versiunea de dinainte (ultimele 30). Restaurarea păstrează și versiunea de acum.",
+        "back": "Înapoi la pagini",
+        "empty": "Nicio versiune salvată încă.",
+        "unknown": "necunoscut",
+        "htmlSize": "HTML, {n} caractere",
+        "blocks": "{count, plural, one {un bloc} few {# blocuri} other {# de blocuri}}",
+        "restore": "Restaurează",
+        "restoreConfirm": "Restaurezi această versiune? Versiunea de acum rămâne în listă."
+      },
+      "view": "Vezi pagina",
+      "setHome": "Fă-o pagina de pornire",
+      "unsetHome": "Nu mai e pagina de pornire",
+      "duplicate": "Copiază",
+      "order": "Ordinea",
+      "moveUp": "Mai sus",
+      "moveDown": "Mai jos",
+      "builder": {
+        "title": "Constructor",
+        "titleFor": "Construiește: {title}",
+        "lead": "Secțiuni cu coloane și blocuri. Trage blocurile între coloane sau folosește săgețile; un bloc se editează în panoul din dreapta.",
+        "back": "Înapoi la pagini",
+        "width": "Lățimea paginii",
+        "widths": {
+          "normal": "Normală",
+          "wide": "Lată",
+          "full": "Toată lățimea"
+        },
+        "unsaved": "Modificări nesalvate",
+        "saved": "Pagina a fost salvată.",
+        "preview": "Vezi pagina",
+        "save": "Salvează pagina",
+        "empty": "Pagina e goală. Adaugă o secțiune, apoi blocuri în ea.",
+        "sectionN": "Secțiunea {n}",
+        "sectionTitle": "Titlul secțiunii (opțional)",
+        "columns": "Coloanele",
+        "cols": {
+          "1": "O coloană",
+          "1-1": "Două coloane egale",
+          "2-1": "Lată + îngustă",
+          "1-2": "Îngustă + lată",
+          "1-1-1": "Trei coloane"
+        },
+        "style": "Stilul secțiunii",
+        "styles": {
+          "plain": "Simplă",
+          "card": "Card",
+          "accent": "Evidențiată"
+        },
+        "moveUp": "Mai sus",
+        "moveDown": "Mai jos",
+        "deleteSection": "Șterge secțiunea",
+        "addSection": "Adaugă o secțiune",
+        "addBlock": "Adaugă un bloc",
+        "editBlock": "Editează blocul",
+        "deleteBlock": "Scoate blocul",
+        "cancel": "Renunță",
+        "close": "Închide",
+        "done": "Gata",
+        "types": {
+          "content": "Conținut",
+          "html": "HTML",
+          "widget": "Widget",
+          "records": "Înregistrări",
+          "image": "Imagine",
+          "block": "Bloc reutilizabil",
+          "pages": "Meniu de secțiune"
+        },
+        "typeHints": {
+          "content": "Text formatat cu imagini, secțiuni, carduri și butoane",
+          "html": "HTML scris de mână, curățat la salvare",
+          "widget": "Servere, clasament, clanuri, mix, chat și restul widget-urilor GCS",
+          "records": "Ultimele înregistrări dintr-o bază de date",
+          "image": "O imagine din biblioteca media",
+          "block": "Un bloc salvat, folosit pe mai multe pagini",
+          "pages": "Linkurile paginilor unui folder"
+        },
+        "noDatabase": "Nicio bază aleasă",
+        "noImage": "Nicio imagine aleasă",
+        "noBlock": "Niciun bloc ales",
+        "currentFolder": "Folderul acestei pagini",
+        "htmlChars": "{n} caractere",
+        "emptyContent": "Fără conținut încă",
+        "secBlock": "Blocul",
+        "blockTitle": "Titlul blocului",
+        "blockIcon": "Iconița titlului",
+        "card": "În card",
+        "content": "Conținut",
+        "html": "HTML",
+        "htmlHint": "Scripturile, evenimentele și adresele periculoase se scot la salvare.",
+        "widget": "Widget-ul",
+        "database": "Baza de date",
+        "category": "Categoria",
+        "allCategories": "Toate categoriile",
+        "view": "Aspectul",
+        "views": {
+          "list": "Listă",
+          "grid": "Grilă",
+          "compact": "Compact",
+          "featured": "Prima mare",
+          "carousel": "Carusel"
+        },
+        "sort": "Ordinea",
+        "sorts": {
+          "newest": "Cele mai noi",
+          "updated": "Actualizate recent",
+          "rating": "Cele mai bine notate",
+          "views": "Cele mai văzute",
+          "comments": "Cele mai comentate",
+          "featured": "Recomandatele întâi"
+        },
+        "limit": "Câte",
+        "hideImages": "Fără imagini",
+        "noImages": "Biblioteca media nu are încă imagini.",
+        "openMedia": "Deschide biblioteca",
+        "pickImage": "Alege imaginea",
+        "caption": "Text sub imagine",
+        "link": "Link la click",
+        "size": "Mărimea",
+        "sizes": {
+          "normal": "Normală",
+          "wide": "Lată",
+          "full": "Toată lățimea"
+        },
+        "manageBlocks": "Administrează blocurile",
+        "folder": "Folderul",
+        "visibility": "Cine vede blocul",
+        "visibilityHint": "Nimic bifat = toți cei care văd pagina.",
+        "errors": {
+          "invalid_widget": "Widget-ul nu mai există sau setările lui nu sunt valide.",
+          "invalid_database": "Baza de date aleasă nu mai există.",
+          "invalid_media": "Imaginea aleasă nu mai e în bibliotecă.",
+          "invalid_block": "Blocul nu e complet sau nu mai există.",
+          "invalid_url": "Linkul trebuie să înceapă cu / sau https://.",
+          "duplicate": "Bloc dublat.",
+          "too_long": "Conținutul e prea lung."
+        }
+      },
+      "html": {
+        "title": "HTML",
+        "titleFor": "HTML: {title}",
+        "lead": "Pagina scrisă de mână. Etichetele GCS din dreapta pun un bloc sau ultimele înregistrări ale unei baze oriunde în pagină.",
+        "back": "Înapoi la pagini",
+        "notHtml": "Pagina nu e de tip „HTML manual”: schimbă tipul conținutului din panoul ei ca HTML-ul să apară pe site.",
+        "code": "Codul paginii",
+        "saved": "HTML-ul a fost salvat (și curățat).",
+        "save": "Salvează",
+        "view": "Vezi pagina",
+        "tags": "Etichete GCS",
+        "tagsHint": "Un click pune eticheta la cursor.",
+        "noTags": "Niciun bloc și nicio bază de date încă."
+      },
+      "blocks": {
+        "title": "Blocuri",
+        "lead": "Blocuri salvate o dată și folosite în orice pagină, în paginile HTML (eticheta lor) și ca widget pe forum.",
+        "add": "Bloc nou",
+        "create": "Creează",
+        "save": "Salvează",
+        "delete": "Șterge",
+        "deleteConfirm": "Ștergi blocul „{name}”? Paginile care îl folosesc rămân fără el.",
+        "empty": "Niciun bloc încă.",
+        "uncategorized": "Fără categorie",
+        "secDetails": "Detalii",
+        "secContent": "Conținut",
+        "secFields": "Câmpurile șablonului",
+        "name": "Nume",
+        "key": "Cheie",
+        "keyAuto": "din nume",
+        "category": "Categorie",
+        "description": "Descriere",
+        "kind": "Tipul blocului",
+        "kinds": {
+          "content": "Conținut",
+          "html": "HTML",
+          "template": "Șablon cu câmpuri"
+        },
+        "kindHints": {
+          "content": "Editorul postărilor, cu secțiuni, carduri, butoane și mențiuni.",
+          "html": "HTML scris de mână, curățat la salvare.",
+          "template": "HTML cu '{{'cheie'}}': staff-ul completează doar câmpurile, aspectul rămâne același."
+        },
+        "html": "HTML",
+        "template": "Șablonul (HTML)",
+        "templateHint": "Pune '{{'cheie'}}' unde apare valoarea unui câmp. Valorile se escapează.",
+        "fieldKey": "Cheie",
+        "fieldLabel": "Etichetă",
+        "fieldType": "Tip",
+        "fieldTypes": {
+          "text": "Text",
+          "textarea": "Text lung",
+          "url": "Link",
+          "image": "Imagine (adresă)"
+        },
+        "value": "Valoarea: {label}",
+        "addField": "Adaugă un câmp",
+        "removeField": "Scoate câmpul"
+      },
+      "databases": {
+        "title": "Baze de date",
+        "lead": "Zone de conținut cu câmpuri proprii: ghiduri, regulamente pe servere, config-uri, recrutări. Fiecare bază are pagina ei.",
+        "add": "Bază nouă",
+        "create": "Creează baza și pagina ei",
+        "import": "Importă",
+        "importSubmit": "Importă baza",
+        "importHint": "Pachetul .json descărcat dintr-o bază (de pe acest site sau altul). Se creează o bază nouă cu pagina ei.",
+        "pickPreset": "Pornește de la",
+        "name": "Nume",
+        "nameFromPreset": "numele șablonului",
+        "parent": "Pagina ei stă în folderul",
+        "noParent": "Rădăcină (/pages/…)",
+        "createHint": "Câmpurile, categoriile și funcțiile șablonului se pot schimba apoi oricând.",
+        "empty": "Nicio bază de date încă. Pornește de la un șablon.",
+        "noPage": "Fără pagină",
+        "row": "{records} înregistrări · {categories} categorii · {fields} câmpuri",
+        "pending": "{count, plural, one {una în așteptare} few {# în așteptare} other {# în așteptare}}",
+        "edit": "Editează",
+        "view": "Vezi pagina"
+      },
+      "fields": {
+        "empty": "Niciun câmp propriu.",
+        "untitled": "Câmp fără nume",
+        "required": "Obligatoriu",
+        "listed": "Pe card",
+        "listedHint": "Apare ca insignă pe cardul din listă.",
+        "filter": "Filtru",
+        "filterHint": "Vizitatorii filtrează lista după el.",
+        "moveUp": "Mai sus",
+        "moveDown": "Mai jos",
+        "edit": "Editează câmpul",
+        "remove": "Scoate câmpul",
+        "add": "Adaugă un câmp",
+        "label": "Etichetă",
+        "key": "Cheie",
+        "keyHint": "Litere mici, cifre, _. Valorile rămân legate de cheie.",
+        "type": "Tip",
+        "help": "Ajutor (sub câmp, în formular)",
+        "options": "Opțiuni",
+        "optionsHint": "Câte una pe rând.",
+        "position": "Pe pagina înregistrării",
+        "positions": {
+          "top": "Deasupra conținutului",
+          "bottom": "Sub conținut"
+        },
+        "badge": "Culoarea insignei",
+        "badgeDefault": "Culoarea temei",
+        "types": {
+          "text": "Text",
+          "textarea": "Text lung",
+          "number": "Număr",
+          "select": "Listă",
+          "multiselect": "Listă (mai multe)",
+          "checkbox": "Da / nu",
+          "url": "Link",
+          "date": "Dată",
+          "code": "Cod (config)",
+          "image": "Imagine",
+          "file": "Fișier",
+          "server": "Server de joc",
+          "youtube": "Video YouTube",
+          "member": "Membru"
+        }
+      },
+      "records": {
+        "title": "Înregistrări",
+        "lead": "Coada staff-ului: trimiterile de aprobat, înregistrările publicate, ascunse sau respinse, și comentariile în așteptare.",
+        "filters": "Starea",
+        "status": {
+          "pending": "În așteptare ({count})",
+          "published": "Publicate ({count})",
+          "hidden": "Ascunse ({count})",
+          "rejected": "Respinse ({count})"
+        },
+        "database": "Baza de date",
+        "allDatabases": "Toate bazele",
+        "search": "Caută",
+        "apply": "Aplică",
+        "empty": {
+          "pending": "Nimic de aprobat.",
+          "published": "Nicio înregistrare publicată.",
+          "hidden": "Nicio înregistrare ascunsă.",
+          "rejected": "Nicio înregistrare respinsă."
+        },
+        "select": "Alege „{title}”",
+        "deletedMember": "Membru șters",
+        "reason": "Motiv: {reason}",
+        "applyBulk": "Aplică celor alese",
+        "action": "Acțiunea",
+        "actions": {
+          "approve": "Aprobă",
+          "reject": "Respinge",
+          "hide": "Ascunde",
+          "unhide": "Arată din nou",
+          "delete": "Șterge"
+        },
+        "rejectReason": "Motivul respingerii (trimis autorului)",
+        "prev": "Înapoi",
+        "next": "Înainte",
+        "pendingComments": "Comentarii în așteptare ({count})",
+        "noPendingComments": "Niciun comentariu în așteptare."
+      },
+      "media": {
+        "title": "Media",
+        "lead": "Fișierele paginilor, în foldere: imagini, video, fonturi, documente (până la {mb} MB fiecare). Adresa fiecăruia se copiază dintr-un click.",
+        "upload": "Încarcă fișiere",
+        "types": "Imagini, video, audio, PDF, fonturi, arhive",
+        "newFolder": "Folder nou",
+        "create": "Creează",
+        "save": "Salvează",
+        "folderName": "Numele folderului",
+        "parentFolder": "În folderul",
+        "root": "Biblioteca",
+        "path": "Calea",
+        "search": "Caută în bibliotecă",
+        "editFolder": "Editează folderul",
+        "deleteFolder": "Șterge folderul",
+        "deleteFolderConfirm": "Ștergi folderul? Fișierele și subfolderele lui urcă un nivel.",
+        "empty": "Folderul e gol. Încarcă fișiere sau creează un subfolder.",
+        "noResults": "Nimic găsit pentru „{q}”.",
+        "folderCount": "{items} fișiere · {folders} foldere",
+        "copyUrl": "Copiază adresa",
+        "delete": "Șterge",
+        "deleteConfirm": "Ștergi fișierul? Paginile care îl folosesc rămân fără el.",
+        "itemTitle": "Titlu",
+        "alt": "Text alternativ",
+        "altHint": "Descrie imaginea pentru cititoarele de ecran.",
+        "folder": "Folder",
+        "prev": "Înapoi",
+        "next": "Înainte"
+      },
+      "templates": {
+        "title": "Șabloane",
+        "lead": "Șabloanele aplicației Pagini din fiecare temă, editate în editorul de cod (cu previzualizare și versiuni). Tema le restilizează; funcțiile rămân ale sistemului.",
+        "original": "original",
+        "modified": "modificat",
+        "edit": "Editează",
+        "tagsTitle": "Etichetele GCS",
+        "tagBlock": "Un bloc reutilizabil, în paginile HTML.",
+        "tagDatabase": "Ultimele înregistrări ale unei baze de date, în paginile HTML.",
+        "tagField": "Valoarea unui câmp, în blocurile-șablon.",
+        "toBlocks": "Blocurile",
+        "toEditor": "Editorul de șabloane"
+      },
+      "settings": {
+        "title": "Setări",
+        "lead": "Pagina de pornire, afișarea, trimiterile și biblioteca media ale aplicației Pagini.",
+        "save": "Salvează",
+        "secHome": "Pagina de pornire",
+        "homePage": "/pages deschide",
+        "homeDirectory": "Cuprinsul paginilor",
+        "homePageHint": "Pentru toți; o pagină poate fi și pagina de pornire doar a unor grupuri (panoul ei).",
+        "directoryFolders": "Cuprinsul arată și folderele",
+        "directoryFoldersHint": "Cu paginile lor, câte un nivel.",
+        "secDisplay": "Afișare",
+        "breadcrumbs": "Firimituri (calea paginii)",
+        "showUpdated": "Arată „actualizat la”",
+        "recordsPerPage": "Înregistrări pe pagină",
+        "recordsPerPageHint": "Pentru bazele fără valoare proprie.",
+        "commentsPerPage": "Comentarii pe pagină",
+        "commentOrder": "Ordinea comentariilor",
+        "orders": {
+          "oldest": "Cele mai vechi întâi",
+          "newest": "Cele mai noi întâi"
+        },
+        "newDays": "Insigna „Nou” (zile)",
+        "newDaysHint": "0 = fără insignă.",
+        "secSubmissions": "Trimiteri",
+        "submitCooldown": "Pauza între trimiteri (secunde)",
+        "submitCooldownHint": "Pentru membrii fără drept de staff; 0 = fără pauză.",
+        "notifyStaff": "Anunță staff-ul la trimiterile în așteptare",
+        "notifyStaffHint": "Grupurile cu „Moderează paginile”.",
+        "notifyAuthor": "Anunță autorul la comentarii noi",
+        "secMedia": "Biblioteca media",
+        "mediaMaxMb": "Mărimea maximă a unui fișier (MB)",
+        "permsTitle": "Permisiuni",
+        "permsHint": "Cine vede, trimite, comentează, notează și moderează se alege pe grupuri; fiecare bază de date își poate restrânge grupurile.",
+        "toGroups": "Grupuri",
+        "toDatabases": "Baze de date",
+        "toMenu": "Manager meniu"
+      }
     }
   },
   "settings": {
@@ -6960,6 +7545,20 @@
     },
     "pwa": {
       "config": "Aplicația web"
+    },
+    "pages": {
+      "home_page": "Pagina de pornire a aplicației",
+      "directory_folders": "Cuprinsul arată și folderele",
+      "breadcrumbs": "Firimituri",
+      "show_updated": "Arată „actualizat la”",
+      "records_per_page": "Înregistrări pe pagină",
+      "comments_per_page": "Comentarii pe pagină",
+      "comment_order": "Ordinea comentariilor",
+      "media_max_mb": "Mărimea maximă a fișierelor din bibliotecă (MB)",
+      "notify_staff": "Anunță staff-ul la trimiteri",
+      "notify_author": "Anunță autorul la comentarii",
+      "submit_cooldown": "Pauza între trimiteri (secunde)",
+      "new_days": "Insigna „Nou” (zile)"
     }
   },
   "permissions": {
@@ -7070,6 +7669,14 @@
     "chat_pro": {
       "history": "Vede istoricul chat-ului (/chat/history)",
       "history_export": "Exportă istoricul chat-ului (CSV)"
+    },
+    "pages": {
+      "view": "Vede aplicația Pagini",
+      "submit": "Trimite înregistrări în bazele de date",
+      "comment": "Comentează înregistrările",
+      "rate": "Notează înregistrările",
+      "skip_approval": "Trimiterile lui nu așteaptă aprobarea",
+      "moderate": "Moderează paginile (aprobă, editează, ascunde, șterge)"
     }
   },
   "profile": {
@@ -8049,7 +8656,10 @@
     "tooShort": "Scrie cel puțin {min} caractere.",
     "rateLimited": "Prea multe căutări. Încearcă din nou peste un minut.",
     "in": "în {forum}",
-    "loginRequired": "Căutarea e doar pentru membri: intră în cont ca să cauți."
+    "loginRequired": "Căutarea e doar pentru membri: intră în cont ca să cauți.",
+    "sources": {
+      "pages_records": "Baze de date (Pagini)"
+    }
   },
   "tags": {
     "title": "Tag: #{tag}",
@@ -8197,6 +8807,12 @@
         "confirmed": "Donațiile tale confirmate",
         "rejected": "Donațiile tale neconfirmate",
         "submitted": "Donații noi de confirmat (echipa)"
+      },
+      "pages": {
+        "submission": "Trimiteri în Pagini care așteaptă aprobarea (staff)",
+        "review": "Aprobarea înregistrărilor trimise de tine",
+        "comment": "Comentarii la înregistrările tale",
+        "followed": "Înregistrări noi în bazele urmărite"
       }
     },
     "settingsLink": "Setările notificărilor",
@@ -8568,7 +9184,8 @@
       "servers": "Serverele de joc: starea live, statistici, meciuri mix cu ELO, banuri, admini și contestații.",
       "clans": "Clanurile comunității: membri și roluri, pagina clanului, forumul privat și cererile de intrare.",
       "chat_pro": "Chat-ul avansat: 7 aranjamente, setări pe membru, bara de anunțuri, insigne, emoticoane, GIF-uri, comenzi, clasament și istoric.",
-      "groups_pro": "Legenda grupurilor pe categorii (cu numărători și grupuri legate) și pagina „Grupurile comunității”."
+      "groups_pro": "Legenda grupurilor pe categorii (cu numărători și grupuri legate) și pagina „Grupurile comunității”.",
+      "pages": "Pagini proprii construite din blocuri, baze de date cu câmpuri (ghiduri, regulamente, config-uri, recrutări), bibliotecă media și trimiteri de la membri cu aprobare."
     },
     "sections": {
       "messages": "Mesaje private",
@@ -8579,7 +9196,8 @@
       "chat_pro_history": "Istoricul chat-ului"
     },
     "chat_pro": "Chat Pro",
-    "groups_pro": "Grupuri Pro"
+    "groups_pro": "Grupuri Pro",
+    "pages": "Pagini"
   },
   "translate": {
     "translate": "Traduce",
@@ -9266,7 +9884,10 @@
       "rare": "Ce badge-uri",
       "group": "Doar membrii grupului",
       "tabs": "Tab-urile clasamentului",
-      "layout": "Aspectul"
+      "layout": "Aspectul",
+      "database": "Baza de date",
+      "sort": "Ordinea",
+      "block": "Blocul"
     },
     "periods": {
       "week": "săptămâna aceasta",
@@ -9313,6 +9934,10 @@
       },
       "profile": {
         "recentBadges": "Badge-urile primite recent de membri, live."
+      },
+      "pages": {
+        "records": "Ultimele înregistrări ale unei baze de date: ghiduri, config-uri, recrutări…",
+        "block": "Un bloc reutilizabil din aplicația Pagini."
       }
     },
     "servers": {
@@ -9373,6 +9998,18 @@
       "allCount": "Toate ({count})",
       "players": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
       "more": "și încă {count}"
+    },
+    "pages": {
+      "records": "Înregistrări (Pagini)",
+      "block": "Bloc (Pagini)"
+    },
+    "pagesSort": {
+      "newest": "Cele mai noi",
+      "featured": "Recomandatele întâi",
+      "rating": "Cele mai bine notate",
+      "views": "Cele mai văzute",
+      "comments": "Cele mai comentate",
+      "updated": "Actualizate recent"
     }
   },
   "pageEditor": {
@@ -9451,7 +10088,8 @@
       "vip": "Membri VIP",
       "serversOnline": "Servere",
       "serverPlayers": "Jucători",
-      "clans": "Clanuri"
+      "clans": "Clanuri",
+      "pages_records": "Înregistrări în Pagini"
     },
     "allOnline": "Vezi toți membrii online →",
     "panel": {
@@ -9898,13 +10536,15 @@
       "reply": "<user></user> a răspuns în <topic></topic>",
       "status": "<user></user> și-a actualizat statusul",
       "wall": "<user></user> a scris pe profilul lui <owner></owner>",
-      "member": "<user></user> s-a alăturat comunității"
+      "member": "<user></user> s-a alăturat comunității",
+      "app": "<user></user> a publicat <title></title> în {place}"
     },
     "kind": {
       "topic": "Topic nou",
       "reply": "Răspuns",
       "status": "Status",
-      "member": "Membru nou"
+      "member": "Membru nou",
+      "app": "Conținut"
     },
     "seeWall": "Vezi profilul",
     "deletedUser": "Membru șters",
@@ -12016,5 +12656,315 @@
     "invalid": "Link invalid",
     "invalidBody": "Linkul de dezabonare nu e valid sau contul nu mai există.",
     "settings": "Setările emailului"
+  },
+  "pages": {
+    "title": "Pagini",
+    "breadcrumb": "Calea",
+    "emptyDirectory": "Nicio pagină publicată încă.",
+    "recordsCount": "{count, plural, one {o înregistrare} few {{n} înregistrări} other {{n} de înregistrări}}",
+    "draft": "Ciornă",
+    "draftBanner": "Pagina nu e publicată: o văd doar editorii paginilor.",
+    "editPage": "Editează pagina",
+    "viewAll": "Vezi tot din {name}",
+    "record": "Înregistrare",
+    "add": "Adaugă {noun}",
+    "editing": "Editezi: {title}",
+    "edit": "Editează",
+    "rss": "Flux RSS",
+    "follow": "Urmărește",
+    "following": "Urmărești",
+    "searchIn": "Caută în {name}",
+    "any": "Oricare",
+    "yes": "Da",
+    "no": "Nu",
+    "sortBy": "Ordinea",
+    "sort": {
+      "newest": "Cele mai noi",
+      "updated": "Actualizate recent",
+      "title": "După titlu",
+      "rating": "Cele mai bine notate",
+      "views": "Cele mai văzute",
+      "comments": "Cele mai comentate"
+    },
+    "apply": "Aplică",
+    "queues": "Ce vezi",
+    "queue": {
+      "published": "Publicate",
+      "mine": "Trimiterile mele",
+      "pending": "În așteptare",
+      "hidden": "Ascunse"
+    },
+    "emptyRecords": "Nimic aici încă: nicio înregistrare în {name}.",
+    "deletedMember": "Membru șters",
+    "commentsCount": "{count, plural, one {un comentariu} few {# comentarii} other {# de comentarii}}",
+    "viewsCount": "{count, plural, one {o vizualizare} few {# vizualizări} other {# de vizualizări}}",
+    "ratingShort": "{avg} din 5 ({count})",
+    "updated": "Actualizat",
+    "flags": {
+      "pinned": "Fixată",
+      "featured": "Recomandată",
+      "new": "Nou",
+      "pending": "În așteptare",
+      "hidden": "Ascunsă",
+      "rejected": "Respinsă"
+    },
+    "status": {
+      "PENDING": "Trimiterea așteaptă aprobarea staff-ului.",
+      "REJECTED": "Trimiterea a fost respinsă.",
+      "HIDDEN": "Înregistrarea e ascunsă de staff."
+    },
+    "rejectReason": "Motivul: {reason}",
+    "by": "de <name></name>",
+    "edited": "Editat",
+    "editedBy": "Editat de <name></name>, {when}",
+    "discussTopic": "Discută în forum",
+    "copy": "Copiază",
+    "copied": "Copiat",
+    "mod": {
+      "label": "Uneltele staff-ului",
+      "approve": "Aprobă",
+      "reject": "Respinge",
+      "hide": "Ascunde",
+      "unhide": "Arată din nou",
+      "feature": "Recomandă",
+      "unfeature": "Nu mai recomanda",
+      "pin": "Fixează",
+      "unpin": "Desprinde",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi definitiv înregistrarea?",
+      "cancel": "Renunță",
+      "reason": "Motivul (trimis autorului)"
+    },
+    "revisions": {
+      "title": "{count, plural, one {O revizie} few {# revizii} other {# de revizii}}",
+      "restore": "Restaurează"
+    },
+    "comments": {
+      "title": "{count, plural, =0 {Comentarii} one {Un comentariu} few {# comentarii} other {# de comentarii}}",
+      "empty": "Niciun comentariu încă. Scrie primul.",
+      "write": "Scrie un comentariu",
+      "send": "Trimite comentariul",
+      "pendingNote": "Comentariul tău așteaptă aprobarea staff-ului.",
+      "signIn": "Autentifică-te ca să comentezi."
+    },
+    "form": {
+      "basics": "{noun}",
+      "title": "Titlu",
+      "category": "Categoria",
+      "noCategory": "Fără categorie",
+      "image": "Imaginea",
+      "details": "Detalii",
+      "content": "Conținut",
+      "fields": "Mai multe detalii",
+      "staff": "Staff",
+      "featured": "Recomandată",
+      "pinned": "Fixată sus",
+      "choose": "Alege…",
+      "yes": "Da",
+      "memberPlaceholder": "Numele membrului",
+      "fileTypes": "Config-uri, arhive, documente, imagini",
+      "cancel": "Renunță",
+      "save": "Salvează",
+      "publish": "Publică",
+      "submitForReview": "Trimite spre aprobare",
+      "approvalNote": "O vede toată lumea după ce o aprobă staff-ul; primești o notificare."
+    },
+    "presets": {
+      "guides": {
+        "name": "Ghiduri",
+        "description": "Ghiduri pentru jucători: instalare, setări, strategii, scrise de comunitate.",
+        "record": "Ghid",
+        "fields": {
+          "game": {
+            "label": "Joc",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Alt joc"
+            }
+          },
+          "difficulty": {
+            "label": "Nivel",
+            "options": {
+              "0": "Începător",
+              "1": "Mediu",
+              "2": "Avansat"
+            }
+          },
+          "minutes": {
+            "label": "Minute de citit",
+            "help": "Aproximativ."
+          },
+          "video": {
+            "label": "Video",
+            "help": "Un link YouTube sau Twitch (opțional)."
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Începători",
+            "description": "Primii pași pe servere."
+          },
+          "1": {
+            "name": "Avansați",
+            "description": "Tactici, setări fine, trucuri."
+          },
+          "2": {
+            "name": "Servere",
+            "description": "Cum funcționează serverele comunității."
+          }
+        }
+      },
+      "rules": {
+        "name": "Regulamente servere",
+        "description": "Regulile fiecărui server de joc, la un loc.",
+        "record": "Regulament",
+        "fields": {
+          "server": {
+            "label": "Server",
+            "help": "Serverul la care se aplică (din aplicația Servere)."
+          },
+          "game": {
+            "label": "Joc",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Alt joc"
+            }
+          },
+          "applies": {
+            "label": "Se aplică",
+            "options": {
+              "0": "Tuturor jucătorilor",
+              "1": "VIP",
+              "2": "Adminilor"
+            }
+          },
+          "updated": {
+            "label": "Actualizat la"
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "General",
+            "description": "Regulile de bază ale serverelor."
+          },
+          "1": {
+            "name": "VIP",
+            "description": "Ce au în plus VIP-urile și ce nu au voie."
+          },
+          "2": {
+            "name": "Staff",
+            "description": "Regulile adminilor."
+          }
+        }
+      },
+      "configs": {
+        "name": "Config-uri",
+        "description": "Config-uri de jucător și de server, gata de copiat.",
+        "record": "Config",
+        "fields": {
+          "game": {
+            "label": "Joc",
+            "options": {
+              "0": "CS2",
+              "1": "CS 1.6",
+              "2": "Minecraft",
+              "3": "GTA V / FiveM",
+              "4": "Rust",
+              "5": "Alt joc"
+            }
+          },
+          "kind": {
+            "label": "Tip",
+            "options": {
+              "0": "Config jucător",
+              "1": "Config server",
+              "2": "HUD",
+              "3": "Crosshair"
+            }
+          },
+          "config": {
+            "label": "Config",
+            "help": "Lipește conținutul fișierului; vizitatorii îl copiază dintr-un click."
+          },
+          "file": {
+            "label": "Fișier",
+            "help": "Arhiva sau fișierul .cfg (opțional)."
+          },
+          "resolution": {
+            "label": "Rezoluție"
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Jucători",
+            "description": "Config-uri personale."
+          },
+          "1": {
+            "name": "Servere",
+            "description": "Config-uri pentru servere."
+          },
+          "2": {
+            "name": "HUD și crosshair",
+            "description": "Aspectul interfeței de joc."
+          }
+        }
+      },
+      "recruitment": {
+        "name": "Recrutări",
+        "description": "Posturile deschise în echipă: cerințe, locuri, cum aplici.",
+        "record": "Post",
+        "fields": {
+          "status": {
+            "label": "Stare",
+            "options": {
+              "0": "Deschis",
+              "1": "Închis"
+            }
+          },
+          "slots": {
+            "label": "Locuri"
+          },
+          "group": {
+            "label": "Grupul",
+            "help": "Grupul în care intră cine e acceptat."
+          },
+          "requirements": {
+            "label": "Cerințe",
+            "help": "Câte una pe rând."
+          },
+          "apply": {
+            "label": "Link de aplicare",
+            "help": "Formularul sau topicul unde se aplică."
+          }
+        },
+        "categories": {
+          "0": {
+            "name": "Staff",
+            "description": "Moderatori și administratori."
+          },
+          "1": {
+            "name": "Servere",
+            "description": "Admini pe serverele de joc."
+          },
+          "2": {
+            "name": "Clanuri",
+            "description": "Clanurile care recrutează."
+          }
+        }
+      },
+      "blank": {
+        "name": "Bază goală",
+        "description": "Doar titlu și conținut; adaugi tu câmpurile și categoriile.",
+        "record": "Înregistrare"
+      }
+    }
   }
 }
