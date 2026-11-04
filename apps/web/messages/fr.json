@@ -11120,7 +11120,8 @@
     },
     "manageLink": "Manage",
     "bannerImage": "Clan banner",
-    "logoImage": "Clan logo"
+    "logoImage": "Clan logo",
+    "downloads": "{count, plural, one {Descărcările clanului: # fișier} many {Descărcările clanului: # de fișiere} other {Descărcările clanului: # de fișiere}}"
   },
   "bridge": {
     "identity": {
