@@ -1,4 +1,5 @@
 import type { GcsMail } from "@gcs/core";
+import { DOWNLOAD_NOTIFICATION_TEXTS } from "../downloads/notifyTexts";
 
 /** Textele notificărilor (email și clopoțel), în limba site-ului. Valorile vin escapate de cine construiește HTML-ul. */
 type Locale = "ro" | "en";
@@ -98,6 +99,7 @@ const TEXTS: Record<string, Record<Locale, (a: string, t: string, n: number, dat
     ro: (_a, _t, _n, d) => (d.kind === "disk" ? `Spațiu pe disc scăzut: doar ${Number(d.freePct) || 0}% liber` : `Jobul programat „${String(d.job ?? "")}” a picat${d.error ? `: ${String(d.error)}` : ""}`),
     en: (_a, _t, _n, d) => (d.kind === "disk" ? `Low disk space: only ${Number(d.freePct) || 0}% free` : `The scheduled job “${String(d.job ?? "")}” failed${d.error ? `: ${String(d.error)}` : ""}`),
   },
+  ...DOWNLOAD_NOTIFICATION_TEXTS,
   "clans.invite": { ro: (a, t) => `${a} te-a invitat în clanul „${t}”`, en: (a, t) => `${a} invited you to the clan “${t}”` },
   "clans.request": {
     ro: (a, t, n) => (n > 1 ? `${n} cereri noi de intrare în clanul „${t}”` : `${a} vrea să intre în clanul „${t}”`),
