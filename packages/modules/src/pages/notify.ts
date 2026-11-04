@@ -53,7 +53,7 @@ export function registerPagesNotifications(deps: {
   /** Mențiunile din conținut (membrii și grupurile), prin notificarea comună. */
   const mentions = async (targetType: string, targetId: string, authorId: string | null, userIds: string[], groupIds: number[]) => {
     if (userIds.length === 0 && groupIds.length === 0) return;
-    await bus.emit({ name: "mentions.created", payload: { targetType, targetId, authorId, userIds, groupIds } });
+    await bus.emit({ name: "mentions.created", payload: { targetType, targetId, authorId, userIds, groupIds }, tags: [] });
   };
 
   /** O înregistrare tocmai publicată: mențiunile, urmăritorii bazei și topicul din forum. */

@@ -329,7 +329,7 @@ export class GcsPagesRecords {
 
   // ─── Comentariile ──────────────────────────────────────────────────────────────────────────────────────────
 
-  async comment(actor: GcsActor, recordId: number, content: unknown): Promise<{ id: number }> {
+  async comment(actor: GcsActor, recordId: number, content: unknown): Promise<{ id: number; pending: boolean }> {
     const { db, bus, access, renderComment, checkWrite } = this.deps;
     const record = await db.pagesRecord.findUnique({ where: { id: recordId }, select: { id: true, status: true, databaseId: true, authorId: true } });
     if (!record || record.status !== "PUBLISHED") throw new GcsNotFound();

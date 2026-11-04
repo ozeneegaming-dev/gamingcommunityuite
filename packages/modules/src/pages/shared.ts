@@ -25,7 +25,7 @@ export const PAGES_NOTICE_TYPE = "pages.notice";
 export const PAGES_SOURCE = "pages.records";
 
 /** Segmentele rezervate sub o pagină de bază de date (`/c/<categorie>`, `/submit`). */
-export const RESERVED_SEGMENTS = new Set(["c", "submit", "edit"]);
+export const RESERVED_SEGMENTS = new Set(["c", "submit", "edit", "rss"]);
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
 
 /** Grupurile unei liste (`viewGroupIds`…) permit actorul: lista goală permite pe oricine. */

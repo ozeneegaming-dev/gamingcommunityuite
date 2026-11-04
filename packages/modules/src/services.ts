@@ -1165,7 +1165,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     clans,
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
-    memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge }),
+    memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge, pagesRecords }),
     memberAdmin: new GcsMemberAdmin({ db, bus, acp, bans }),
     optInGroups: new GcsOptInGroups({ db, bus, permissions }),
     staffPage: new GcsStaffPage({ db, bus, acp, permissions, members: memberList }),
@@ -1193,6 +1193,7 @@ function createMemberRemoval(d: {
   vip: GcsVipService;
   clans: GcsClanService;
   bridge: GcsBridge;
+  pagesRecords: GcsPagesRecords;
 }): GcsMemberRemovalService {
   const removal = new GcsMemberRemovalService({ db: d.db, bus: d.bus, acp: d.acp, settings: d.settings, jobs: d.jobs });
   removal.register(reactionDataHandler({ db: d.db, reactions: d.reactions }));

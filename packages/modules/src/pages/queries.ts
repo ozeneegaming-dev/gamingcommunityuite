@@ -186,12 +186,13 @@ export class GcsPagesQueries {
     const [tree, editor, withFolders, dbs] = await Promise.all([access.tree(), access.isEditor(actor), settings.get<boolean>("pages.directory_folders"), access.databases()]);
     const counts = new Map(dbs.map((d) => [d.id, d.recordsCount]));
     const visible = async (n: GcsPagesTreeNode) => access.canViewNode(actor, n, { tree, editor, app: true });
-    const entry = (n: GcsPagesTreeNode) => ({ id: n.id, kind: n.kind, title: n.title, href: pageHref(n.path), icon: n.icon, published: n.published, records: n.databaseId ? (counts.get(n.databaseId) ?? 0) : null, updatedAt: n.updatedAt });
-    const out = [];
+    type Entry = { id: number; kind: "folder" | "page"; title: string; href: string; icon: string | null; published: boolean; records: number | null; updatedAt: string };
+    const entry = (n: GcsPagesTreeNode): Entry => ({ id: n.id, kind: n.kind, title: n.title, href: pageHref(n.path), icon: n.icon, published: n.published, records: n.databaseId ? (counts.get(n.databaseId) ?? 0) : null, updatedAt: n.updatedAt });
+    const out: (Entry & { children: Entry[] | null })[] = [];
     for (const n of tree.filter((x) => x.parentId === folderId)) {
       if (n.kind === "folder" && folderId === null && !withFolders) continue;
       if (!(await visible(n))) continue;
-      const children = n.kind === "folder" ? [] : null;
+      const children: Entry[] | null = n.kind === "folder" ? [] : null;
       if (children) for (const c of tree.filter((x) => x.parentId === n.id)) if (await visible(c)) children.push(entry(c));
       out.push({ ...entry(n), children });
     }
