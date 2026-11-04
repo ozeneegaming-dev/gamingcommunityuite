@@ -31,6 +31,8 @@ const html = async (a: GcsActor, path = "/", query: Record<string, string> = {},
   return r.status === 200 ? r.html : `STATUS ${r.status}`;
 };
 const api = (a: GcsActor, path: string, body: Record<string, unknown>) => services.plugins.handleApi(KEY, { method: "POST", path, query: {}, body, actor: a, locale: "ro", form: true });
+/** Rutele ACP (`acp: edit / delete`): gazda le primește doar cu `acp: true`, după verificarea rolului ACP din web. */
+const acpApi = (a: GcsActor, path: string, body: Record<string, unknown>) => services.plugins.handleApi(KEY, { method: "POST", path, query: {}, body, actor: a, locale: "ro", form: true, acp: true });
 
 describe("Recrutare (pluginul premium)", () => {
   test("e un pachet de aplicație premium: pornește doar cu licența care îl include", () => {
@@ -40,11 +42,11 @@ describe("Recrutare (pluginul premium)", () => {
 
   test("ACP: lista + panoul; posturile cu stare, grup și modul de aplicare", async () => {
     expect(await html(root, "/", { new: "1" }, "acp")).toContain(`action="/api/plugins/${KEY}/positions/save"`);
-    expect(await api(root, "/positions/save", { name: "Moderator", description: "Moderezi forumul.", status: "open", groupId: String(groups.moderator), applyMode: "form", questions: "Câți ani ai?\nDe ce tu?" })).toMatchObject({ body: { ok: true, id: 1 } });
-    expect(await api(root, "/positions/save", { name: "Designer", status: "closed", applyMode: "form" })).toMatchObject({ body: { ok: true, id: 2 } });
-    expect(await api(root, "/positions/save", { name: "Editor știri", status: "new", applyMode: "link", applyUrl: "https://forms.exemplu.ro/stiri" })).toMatchObject({ body: { ok: true, id: 3 } });
-    expect(await api(root, "/positions/save", { name: "Rău", status: "open", applyMode: "link", applyUrl: "javascript:alert(1)" })).toMatchObject({ status: 422, redirect: expect.stringContaining("error=position_url") });
-    // Doar staff-ul ACP poate salva.
+    expect(await acpApi(root, "/positions/save", { name: "Moderator", description: "Moderezi forumul.", status: "open", groupId: String(groups.moderator), applyMode: "form", questions: "Câți ani ai?\nDe ce tu?" })).toMatchObject({ body: { ok: true, id: 1 } });
+    expect(await acpApi(root, "/positions/save", { name: "Designer", status: "closed", applyMode: "form" })).toMatchObject({ body: { ok: true, id: 2 } });
+    expect(await acpApi(root, "/positions/save", { name: "Editor știri", status: "new", applyMode: "link", applyUrl: "https://forms.exemplu.ro/stiri" })).toMatchObject({ body: { ok: true, id: 3 } });
+    expect(await acpApi(root, "/positions/save", { name: "Rău", status: "open", applyMode: "link", applyUrl: "javascript:alert(1)" })).toMatchObject({ status: 422, redirect: expect.stringContaining("error=position_url") });
+    // Fără trecerea prin ACP (rolul verificat de web), ruta e refuzată.
     expect((await api(member, "/positions/save", { name: "Hack", status: "open" })).status).toBe(403);
     const acp = await html(root, "/", { edit: "1" }, "acp");
     expect(acp).toContain("Editează: Moderator");
@@ -68,7 +70,7 @@ describe("Recrutare (pluginul premium)", () => {
     const apps = await html(root, "/applications", {}, "acp");
     expect(apps).toContain("Câți ani ai?");
     expect(apps).toContain("Sunt activ zilnic.");
-    expect(await api(root, "/applications/1/status", { status: "accepted", note: "Bun venit!" })).toMatchObject({ body: { ok: true, status: "accepted" } });
+    expect(await acpApi(root, "/applications/1/status", { status: "accepted", note: "Bun venit!" })).toMatchObject({ body: { ok: true, status: "accepted" } });
     expect(await html(member)).toContain("Acceptată");
   });
 

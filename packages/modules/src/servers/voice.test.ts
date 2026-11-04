@@ -37,7 +37,7 @@ describe("Mumble și Discord: răspunsurile", () => {
   test("pongul Mumble: versiunea, utilizatorii și sloturile; un ecou greșit e refuzat", () => {
     const ident = Buffer.from("12345678");
     const pong = Buffer.alloc(24);
-    pong.writeUInt32BE((1 << 16) | (5 << 8) | 634, 0);
+    pong.writeUInt32BE((1 << 16) | (5 << 8) | 122, 0);
     ident.copy(pong, 4);
     pong.writeUInt32BE(7, 12);
     pong.writeUInt32BE(50, 16);

@@ -9,7 +9,7 @@ import { useState, type CSSProperties } from "react";
 import { GcsCopyAddressButton } from "../GcsServerAddress";
 import { GcsMapPicture, mapPicture } from "../GcsMapPicture";
 import { serverState, useServerStatus, useServerStatuses } from "../GcsServerLive";
-import { countKey, fillPercent, isBridgeGameKey, type GcsServerCardData } from "../types";
+import { fillPercent, isBridgeGameKey, type GcsServerCardData } from "../types";
 
 /**
  * Serverele ca forumuri (macheta `ServerForum`), partea live: eticheta ON / OFF, bara compactă a rândului, cipurile
