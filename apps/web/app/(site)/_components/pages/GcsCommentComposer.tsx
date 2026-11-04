@@ -57,7 +57,7 @@ export function GcsCommentComposer({ recordId, databaseId }: { recordId: number;
             {message.text}
           </span>
         )}
-        <GcsButton onClick={send} disabled={pending} icon={<GcsIcon name="fa-solid fa-paper-plane" />} data-testid="gcs-pages-comment-send">
+        <GcsButton variant="primary" onClick={send} disabled={pending} icon={<GcsIcon name="fa-solid fa-paper-plane" />} data-testid="gcs-pages-comment-send">
           {t("send")}
         </GcsButton>
       </div>

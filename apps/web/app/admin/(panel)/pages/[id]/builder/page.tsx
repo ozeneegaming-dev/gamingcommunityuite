@@ -8,7 +8,7 @@ import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
 import { GcsAcpTitle } from "../../../_components/GcsAcpTitle";
 import { mediaImages, pagesGroups } from "../../_parts";
-import { GcsPageBuilder, type GcsBuilderWidget } from "./GcsPageBuilder";
+import { GcsPageBuilder, type GcsBuilderField, type GcsBuilderWidget } from "./GcsPageBuilder";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -55,7 +55,7 @@ export default async function AcpPageBuilder({ params }: Props) {
       description: def.descriptionKey ? label(def.descriptionKey) : "",
       icon: def.icon,
       defaults: def.defaultConfig,
-      fields: (def.fields ?? []).flatMap((f) => {
+      fields: (def.fields ?? []).flatMap((f): GcsBuilderField[] => {
         if (f.type === "richtext") return [];
         if (f.type === "select") {
           const options = f.optionsFrom ? [{ value: "", label: "—" }, ...(dynamic[f.optionsFrom] ?? [])] : (f.options ?? []).map((o) => ({ value: o.value, label: label(o.labelKey) }));

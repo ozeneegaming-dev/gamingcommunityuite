@@ -65,7 +65,7 @@ export function GcsHtmlEditor({ nodeId, initial, viewHref, tags }: { nodeId: num
             <GcsIcon name="fa-solid fa-eye" />
             {t("view")}
           </Link>
-          <GcsButton onClick={save} disabled={pending} icon={<GcsIcon name="fa-solid fa-floppy-disk" />} data-testid="gcs-pages-html-save">
+          <GcsButton variant="primary" onClick={save} disabled={pending} icon={<GcsIcon name="fa-solid fa-floppy-disk" />} data-testid="gcs-pages-html-save">
             {t("save")}
           </GcsButton>
         </div>

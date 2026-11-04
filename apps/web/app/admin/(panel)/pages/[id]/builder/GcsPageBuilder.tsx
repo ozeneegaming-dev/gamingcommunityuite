@@ -202,7 +202,7 @@ export function GcsPageBuilder(props: Props) {
           <GcsIcon name="fa-solid fa-eye" />
           {t("preview")}
         </Link>
-        <GcsButton onClick={save} disabled={pending} icon={<GcsIcon name="fa-solid fa-floppy-disk" />} data-testid="gcs-pages-builder-save">
+        <GcsButton variant="primary" onClick={save} disabled={pending} icon={<GcsIcon name="fa-solid fa-floppy-disk" />} data-testid="gcs-pages-builder-save">
           {t("save")}
         </GcsButton>
       </div>
@@ -376,7 +376,7 @@ export function GcsPageBuilder(props: Props) {
       </button>
 
       {current && editing && (
-        <GcsDrawer title={current.title || t(`types.${current.type}`)} closeLabel={t("close")} size="lg" onClose={() => setEditing(null)} testId="gcs-pages-block-panel" footer={<GcsButton onClick={() => setEditing(null)}>{t("done")}</GcsButton>}>
+        <GcsDrawer title={current.title || t(`types.${current.type}`)} closeLabel={t("close")} size="lg" onClose={() => setEditing(null)} testId="gcs-pages-block-panel" footer={<GcsButton variant="primary" onClick={() => setEditing(null)}>{t("done")}</GcsButton>}>
           <BlockForm block={current} onChange={setCurrent} props={props} widgetsByKey={widgetsByKey} />
         </GcsDrawer>
       )}

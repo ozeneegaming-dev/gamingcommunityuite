@@ -332,7 +332,7 @@ export function GcsRecordForm(props: Props) {
         <a className="gcs-btn gcs-btn--ghost" href={props.cancelHref}>
           {t("cancel")}
         </a>
-        <GcsButton type="submit" disabled={pending} icon={<GcsIcon name={init ? "fa-solid fa-floppy-disk" : "fa-solid fa-paper-plane"} />} data-testid="gcs-pages-save">
+        <GcsButton variant="primary" type="submit" disabled={pending} icon={<GcsIcon name={init ? "fa-solid fa-floppy-disk" : "fa-solid fa-paper-plane"} />} data-testid="gcs-pages-save">
           {init ? t("save") : props.needsApproval ? t("submitForReview") : t("publish")}
         </GcsButton>
       </div>
