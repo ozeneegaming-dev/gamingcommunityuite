@@ -1,11 +1,37 @@
 {
-  "page": { "list": "Recrutare", "apply": "Aplică", "applyTo": "Aplică: {name}" },
-  "tag": { "on": "ON", "off": "OFF", "new": "NOU" },
-  "status": { "open": "Deschis (ON)", "new": "Nou (NOU)", "closed": "Închis (OFF)" },
-  "mode": { "form": "Formular", "topic": "Topic", "link": "Link" },
-  "index": { "label": "Posturile din echipă" },
-  "card": { "open": "Posturi deschise: {count}", "none": "Momentan nu recrutăm.", "all": "Vezi posturile" },
-  "list": { "mine": "Aplicațiile mele", "closed": "Post închis", "empty": "Nu există încă posturi." },
+  "page": {
+    "list": "Recrutare",
+    "apply": "Aplică",
+    "applyTo": "Aplică: {name}"
+  },
+  "tag": {
+    "on": "ON",
+    "off": "OFF",
+    "new": "NOU"
+  },
+  "status": {
+    "open": "Deschis (ON)",
+    "new": "Nou (NOU)",
+    "closed": "Închis (OFF)"
+  },
+  "mode": {
+    "form": "Formular",
+    "topic": "Topic",
+    "link": "Link"
+  },
+  "index": {
+    "label": "Posturile din echipă"
+  },
+  "card": {
+    "open": "Posturi deschise: {count}",
+    "none": "Momentan nu recrutăm.",
+    "all": "Vezi posturile"
+  },
+  "list": {
+    "mine": "Aplicațiile mele",
+    "closed": "Post închis",
+    "empty": "Nu există încă posturi."
+  },
   "apply": {
     "form": "Aplică",
     "topic": "Aplică printr-un topic",
@@ -67,7 +93,13 @@
     "icon": "Iconița (Font Awesome)",
     "sort": "Ordinea"
   },
-  "done": { "applied": "Aplicația a fost trimisă. Staff-ul îți va răspunde.", "saved": "Postul a fost salvat.", "deleted": "Postul a fost șters.", "accepted": "Aplicația a fost acceptată.", "rejected": "Aplicația a fost respinsă." },
+  "done": {
+    "applied": "Aplicația a fost trimisă. Staff-ul îți va răspunde.",
+    "saved": "Postul a fost salvat.",
+    "deleted": "Postul a fost șters.",
+    "accepted": "Aplicația a fost acceptată.",
+    "rejected": "Aplicația a fost respinsă."
+  },
   "error": {
     "guest": "Autentifică-te ca să aplici.",
     "pending": "Ai deja o aplicație în așteptare pentru acest post.",
@@ -87,7 +119,9 @@
     "invalid_status": "Decizie necunoscută."
   },
   "settings": {
-    "tabs": { "general": "General" },
+    "tabs": {
+      "general": "General"
+    },
     "intro": "Textul de sus al paginii Recrutare",
     "introHint": "Opțional: ce oferă echipa, regulile pentru aplicanți.",
     "oneOpen": "O singură aplicație în așteptare pe post",
@@ -95,7 +129,9 @@
     "minLength": "Lungimea minimă a aplicației (caractere)",
     "minLengthHint": "Doar pentru formularul fără întrebări."
   },
-  "permissions": { "apply": "Poate aplica la posturi", "manage": "Gestionează recrutarea" },
+  "permissions": {
+    "apply": "Poate aplica la posturi"
+  },
   "tabs": {
     "recruitment": "Recrutare",
     "recruitmentHint": "Arată posturile din echipă pe rândul acestui forum (ca în lista de subforumuri), cu starea fiecăruia.",

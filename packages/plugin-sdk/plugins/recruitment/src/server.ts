@@ -3,7 +3,7 @@
  * `pnpm --filter @gcs/plugin-sdk build:recruitment`. Rulează doar dacă licența site-ului include aplicația
  * „recruitment” (pachetul `gcs.<aplicație>`, ca Studio VIP).
  *
- * Drepturile: `apply` = poate aplica prin formular; ACP-ul (`acp: edit / delete` pe rute) = posturile și aplicațiile.
+ * Drepturile: `apply` = poate aplica prin formular; posturile și aplicațiile = rolurile ACP (`acp: edit / delete` pe rute).
  */
 import { definePlugin, type GcsPluginApiRequest, type GcsPluginApiResponse, type GcsPluginContext, type GcsPluginForumListInput, type GcsPluginForumListResult } from "../../../src/index";
 import { ACP, field, idOf, isAppStatus, LIMITS, questionList, readApplication, readPosition, readSettings, SITE } from "./model";

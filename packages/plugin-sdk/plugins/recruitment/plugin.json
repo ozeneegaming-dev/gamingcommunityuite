@@ -29,8 +29,7 @@
       "scope": "group",
       "label": "permissions.apply",
       "default": { "root_admin": true, "admin": true, "super_moderator": true, "moderator": true, "member": true, "vip_bronze": true, "vip_silver": true, "vip_gold": true, "vip_legend": true }
-    },
-    { "key": "manage", "scope": "group", "label": "permissions.manage", "default": { "root_admin": true, "admin": true, "super_moderator": true } }
+    }
   ],
   "hooks": [{ "point": "forum.list" }, { "point": "forum.page" }],
   "forumTabs": [

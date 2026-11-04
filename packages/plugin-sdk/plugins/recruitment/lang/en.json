@@ -1,11 +1,37 @@
 {
-  "page": { "list": "Recruitment", "apply": "Apply", "applyTo": "Apply: {name}" },
-  "tag": { "on": "ON", "off": "OFF", "new": "NEW" },
-  "status": { "open": "Open (ON)", "new": "New (NEW)", "closed": "Closed (OFF)" },
-  "mode": { "form": "Form", "topic": "Topic", "link": "Link" },
-  "index": { "label": "Team positions" },
-  "card": { "open": "Open positions: {count}", "none": "We are not recruiting right now.", "all": "See the positions" },
-  "list": { "mine": "My applications", "closed": "Position closed", "empty": "No positions yet." },
+  "page": {
+    "list": "Recruitment",
+    "apply": "Apply",
+    "applyTo": "Apply: {name}"
+  },
+  "tag": {
+    "on": "ON",
+    "off": "OFF",
+    "new": "NEW"
+  },
+  "status": {
+    "open": "Open (ON)",
+    "new": "New (NEW)",
+    "closed": "Closed (OFF)"
+  },
+  "mode": {
+    "form": "Form",
+    "topic": "Topic",
+    "link": "Link"
+  },
+  "index": {
+    "label": "Team positions"
+  },
+  "card": {
+    "open": "Open positions: {count}",
+    "none": "We are not recruiting right now.",
+    "all": "See the positions"
+  },
+  "list": {
+    "mine": "My applications",
+    "closed": "Position closed",
+    "empty": "No positions yet."
+  },
   "apply": {
     "form": "Apply",
     "topic": "Apply with a topic",
@@ -67,7 +93,13 @@
     "icon": "Icon (Font Awesome)",
     "sort": "Order"
   },
-  "done": { "applied": "Your application was sent. The staff will answer you.", "saved": "The position was saved.", "deleted": "The position was deleted.", "accepted": "The application was accepted.", "rejected": "The application was rejected." },
+  "done": {
+    "applied": "Your application was sent. The staff will answer you.",
+    "saved": "The position was saved.",
+    "deleted": "The position was deleted.",
+    "accepted": "The application was accepted.",
+    "rejected": "The application was rejected."
+  },
   "error": {
     "guest": "Sign in to apply.",
     "pending": "You already have a pending application for this position.",
@@ -87,7 +119,9 @@
     "invalid_status": "Unknown decision."
   },
   "settings": {
-    "tabs": { "general": "General" },
+    "tabs": {
+      "general": "General"
+    },
     "intro": "Intro text of the Recruitment page",
     "introHint": "Optional: what the team offers, rules for applicants.",
     "oneOpen": "One pending application per position",
@@ -95,7 +129,9 @@
     "minLength": "Minimum application length (characters)",
     "minLengthHint": "Only for the form without questions."
   },
-  "permissions": { "apply": "Can apply to positions", "manage": "Manages recruitment" },
+  "permissions": {
+    "apply": "Can apply to positions"
+  },
   "tabs": {
     "recruitment": "Recruitment",
     "recruitmentHint": "Shows the team positions on this forum's row (like the subforum list), each with its status.",
