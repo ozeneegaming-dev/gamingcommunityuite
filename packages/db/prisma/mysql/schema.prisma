@@ -2737,6 +2737,205 @@ model ClanRequest {
   @@map("clan_requests")
 }
 
+// ─── Aplicația Pagini (specul 2026-11-03-pagini) ──────────────────────────────
+// Autorii și atașamentele sunt id-uri simple: ștergerea / unirea membrilor le tratează `pages/memberData.ts`.
+
+/// Starea unei înregistrări: publicată, trimitere în așteptare, respinsă sau ascunsă de staff.
+enum PagesRecordStatus {
+  PUBLISHED
+  PENDING
+  REJECTED
+  HIDDEN
+}
+
+/// Un folder sau o pagină din arborele aplicației Pagini. `path` = slug-urile părinților + slug-ul (unic).
+model PagesNode {
+  id             Int      @id @default(autoincrement())
+  parentId       Int?
+  /// `folder` sau `page`.
+  kind           String @db.LongText   @default("page")
+  title          String @db.LongText
+  slug           String @db.LongText
+  path           String @db.VarChar(191)   @unique
+  position       Int      @default(0)
+  icon           String? @db.LongText
+  /// Conținutul unei pagini: `layout` (constructorul) sau `database` (înregistrările unei baze de date).
+  contentType    String @db.LongText   @default("layout")
+  /// Layout-ul constructorului (`{ v, width, sections }`), validat și randat de modul.
+  layout         Json     @default("{}")
+  databaseId     Int?     @unique
+  published      Boolean  @default(true)
+  showTitle      Boolean  @default(true)
+  /// Grupurile care văd pagina (gol = toți cei cu `pages.view`).
+  viewGroupIds   Json     @default("[]")
+  seoTitle       String? @db.LongText
+  seoDescription String? @db.LongText
+  /// Imaginea de distribuire (un element din biblioteca media).
+  seoImageId     String? @db.LongText
+  noindex        Boolean  @default(false)
+  /// Pagina are un item în meniul site-ului (Manager meniu, `appKey = pages`), recunoscut după adresa ei.
+  inMenu         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  updatedById    String? @db.LongText
+
+  parent   PagesNode?     @relation("PagesTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children PagesNode[]    @relation("PagesTree")
+  database PagesDatabase? @relation(fields: [databaseId], references: [id], onDelete: SetNull)
+
+  @@index([parentId, position])
+  @@map("pages_nodes")
+}
+
+/// O bază de date a aplicației Pagini: câmpurile, categoriile, funcțiile și grupurile pe acțiuni.
+model PagesDatabase {
+  id              Int      @id @default(autoincrement())
+  key             String @db.VarChar(191)   @unique
+  name            String @db.LongText
+  description     String @db.LongText   @default("")
+  icon            String? @db.LongText
+  /// Șablonul de pornire (`guides`, `rules`, `configs`, `recruitment`, `blank`).
+  template        String @db.LongText   @default("blank")
+  /// Cum se numește o înregistrare (ex. „Ghid”), în butoane și mesaje.
+  recordLabel     String @db.LongText   @default("")
+  /// Câmpurile proprii: `[{ key, label, type, required, options, help, listed, filter }]`.
+  fields          Json     @default("[]")
+  /// Aspectul listei: `list`, `grid` sau `table`.
+  listLayout      String @db.LongText   @default("list")
+  /// Ordinea implicită: `newest`, `updated`, `title`, `rating`, `views`, `comments`.
+  sort            String @db.LongText   @default("newest")
+  perPage         Int      @default(20)
+  comments        Boolean  @default(true)
+  ratings         Boolean  @default(true)
+  submissions     Boolean  @default(false)
+  approval        Boolean  @default(true)
+  authorEdit      Boolean  @default(true)
+  searchable      Boolean  @default(true)
+  inStream        Boolean  @default(true)
+  /// Grupurile pe acțiuni (gol = permisiunea globală a grupului).
+  viewGroupIds    Json     @default("[]")
+  submitGroupIds  Json     @default("[]")
+  commentGroupIds Json     @default("[]")
+  rateGroupIds    Json     @default("[]")
+  recordsCount    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  node       PagesNode?
+  categories PagesCategory[]
+  records    PagesRecord[]
+
+  @@map("pages_databases")
+}
+
+model PagesCategory {
+  id           Int     @id @default(autoincrement())
+  databaseId   Int
+  name         String @db.LongText
+  slug         String @db.VarChar(191)
+  description  String @db.LongText  @default("")
+  icon         String? @db.LongText
+  color        String? @db.LongText
+  position     Int     @default(0)
+  recordsCount Int     @default(0)
+
+  database PagesDatabase @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  records  PagesRecord[]
+
+  @@unique([databaseId, slug])
+  @@index([databaseId, position])
+  @@map("pages_categories")
+}
+
+/// O înregistrare dintr-o bază de date: conținutul (editorul comun), imaginea, valorile câmpurilor și starea.
+model PagesRecord {
+  id            Int               @id @default(autoincrement())
+  databaseId    Int
+  categoryId    Int?
+  authorId      String? @db.VarChar(191)
+  title         String @db.LongText
+  slug          String @db.LongText
+  contentJson   Json?
+  contentHtml   String @db.LongText            @default("")
+  /// Imaginea înregistrării (un atașament).
+  imageId       String? @db.LongText
+  /// Valorile câmpurilor proprii, după cheia câmpului.
+  fields        Json              @default("{}")
+  /// Textul căutabil (titlul, conținutul și câmpurile), fără diacritice, cu litere mici.
+  searchText    String @db.LongText            @default("")
+  status        PagesRecordStatus @default(PUBLISHED)
+  rejectReason  String? @db.LongText
+  featured      Boolean           @default(false)
+  pinned        Boolean           @default(false)
+  views         Int               @default(0)
+  commentsCount Int               @default(0)
+  /// Media și numărul notelor (copia locală a `content_rating_summaries`, pentru ordinea „Cele mai bine notate”).
+  ratingAvg     Float             @default(0)
+  ratingCount   Int               @default(0)
+  publishedAt   DateTime?
+  reviewedById  String? @db.LongText
+  lastCommentAt DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  database PagesDatabase  @relation(fields: [databaseId], references: [id], onDelete: Cascade)
+  category PagesCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments PagesComment[]
+
+  @@index([databaseId, status, publishedAt])
+  @@index([status, createdAt])
+  @@index([authorId])
+  @@map("pages_records")
+}
+
+model PagesComment {
+  id          Int       @id @default(autoincrement())
+  recordId    Int
+  authorId    String? @db.VarChar(191)
+  contentJson Json
+  contentHtml String @db.LongText
+  hidden      Boolean   @default(false)
+  editedAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  record PagesRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId, createdAt])
+  @@index([authorId])
+  @@map("pages_comments")
+}
+
+/// Un folder din biblioteca media (ștergerea lui mută fișierele la rădăcină).
+model PagesMediaFolder {
+  id        Int      @id @default(autoincrement())
+  parentId  Int?
+  name      String @db.LongText
+  createdAt DateTime @default(now())
+
+  parent   PagesMediaFolder?  @relation("PagesMediaTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children PagesMediaFolder[] @relation("PagesMediaTree")
+  items    PagesMedia[]
+
+  @@index([parentId])
+  @@map("pages_media_folders")
+}
+
+/// Un fișier din biblioteca media (atașamentul `pages.media`, servit la `/files/<id>`).
+model PagesMedia {
+  id           Int      @id @default(autoincrement())
+  folderId     Int?
+  attachmentId String @db.VarChar(191)   @unique
+  title        String @db.LongText
+  alt          String @db.LongText   @default("")
+  uploadedById String? @db.LongText
+  createdAt    DateTime @default(now())
+
+  folder PagesMediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([folderId, createdAt])
+  @@map("pages_media")
+}
+
 // ─── Puntea cu serverele de joc (specul 2026-10-08-servere-bridge) ───────────
 
 /// Tipul unei identități de joc: Steam (dovedit), non-Steam (ID-ul emulatorului) sau numele.

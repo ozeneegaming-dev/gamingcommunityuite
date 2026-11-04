@@ -6,6 +6,7 @@ import { toRef, userRefSelect, type GcsUserRef } from "../forums/queries";
 import { UNREAD_DAYS } from "../forums/readMarkers";
 import { snippetOf } from "../profile/queries";
 import type { GcsSocialService } from "../profile/social";
+import type { GcsContentSources } from "./contentSources";
 import { notBannedSql, pgTimestamp, profileAudience, profileVisibleSql } from "./sql";
 
 export const GCS_ACTIVITY_FILTERS = ["all", "topics", "replies", "statuses"] as const;
@@ -21,18 +22,44 @@ type ForumRef = { id: number; name: string; slug: string };
 export type GcsStreamItem =
   | { kind: "topic" | "reply"; key: string; at: string; user: GcsUserRef | null; topic: TopicRef; forum: ForumRef; postId: number; snippet: string }
   | { kind: "status"; key: string; at: string; user: GcsUserRef | null; owner: GcsUserRef | null; statusId: number; snippet: string }
-  | { kind: "member"; key: string; at: string; user: GcsUserRef };
+  | { kind: "member"; key: string; at: string; user: GcsUserRef }
+  /** Un element adus de sursa de conținut a unei aplicații (ex. o înregistrare nouă din Pagini). */
+  | {
+      kind: "app";
+      key: string;
+      at: string;
+      user: GcsUserRef | null;
+      source: string;
+      icon: string;
+      labelKey: string;
+      title: string;
+      href: string;
+      snippet: string;
+      context: { label: string; href: string } | null;
+    };
 
 export type GcsActivityQuery = { filter?: GcsActivityFilter; unread?: boolean; before?: string | null; limit?: number };
 export type GcsActivityPage = { items: GcsStreamItem[]; next: string | null };
 
-/** Tipurile de evenimente; la același moment, ordinea (coloana `k` din cursor) e topic 4, răspuns 3, status 2, membru 1. */
+/**
+ * Tipurile de evenimente; la același moment, ordinea (coloana `k` din cursor) e element de aplicație 5, topic 4,
+ * răspuns 3, status 2, membru 1.
+ */
 type Kind = "topic" | "reply" | "status" | "member";
 type Cursor = { at: string; k: number; ref: string };
 type Row = { kind: Kind; k: number; ref: string; at: Date; atKey: string; userId: string | null; topicId: number | null; postId: number | null; ownerId: string | null };
+type AppRow = { kind: "app"; k: 5; ref: string; at: Date; atKey: string; item: Extract<GcsStreamItem, { kind: "app" }> };
 
 /** Momentul din cursor e textul exact din bază (UTC, până la microsecunde), ca paginile să nu sară rânduri. */
-const CURSOR_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?)_([1-4])_([A-Za-z0-9]{1,40})$/;
+const CURSOR_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?)_([1-5])_([A-Za-z0-9]{1,40})$/;
+const APP_K = 5;
+
+/** `a < b` pe tuplul (moment, tip, referință), ordinea fluxului (cele mai noi primele). */
+function beforeCursor(at: Date, k: number, ref: string, c: Cursor): boolean {
+  const ca = Date.parse(`${c.at}Z`);
+  const ms = at.getTime();
+  return ms < ca || (ms === ca && (k < c.k || (k === c.k && ref < c.ref)));
+}
 
 export function encodeActivityCursor(c: Cursor): string {
   return `${c.at}_${c.k}_${c.ref}`;
@@ -58,7 +85,16 @@ export function parseActivityCursor(raw: string | null | undefined): Cursor | nu
  * Fluxul vizitatorilor e cache-uit 30 s (tag `forums-tree`); al membrilor depinde de urmăriri, ignorări și necitite.
  */
 export class GcsActivityStream {
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService; social: Pick<GcsSocialService, "ignoredIds"> }) {}
+  constructor(
+    private readonly deps: {
+      db: PrismaClient;
+      cache: GcsCache;
+      permissions: GcsPermissionService;
+      social: Pick<GcsSocialService, "ignoredIds">;
+      /** Sursele de conținut ale aplicațiilor: elementele lor apar doar în „Tot”, fără „Doar necitite”. */
+      sources?: Pick<GcsContentSources, "streamSources">;
+    },
+  ) {}
 
   async page(viewer: GcsActor, query: GcsActivityQuery = {}): Promise<GcsActivityPage> {
     const { db, cache, permissions, social } = this.deps;
@@ -71,10 +107,11 @@ export class GcsActivityStream {
     const readable = await permissions.filterContainers(viewer, "forums.read", forums.map((f) => forumContainer(f.id)));
     const forumIds = [...readable].map(Number).sort((a, b) => a - b);
     const publicProfiles = !viewer.isBanned && (await permissions.can(viewer, "core.view_public"));
+    const sources = filter === "all" && !unread && this.deps.sources ? await this.deps.sources.streamSources() : [];
 
     const guestKey = viewer.userId
       ? null
-      : `activity:guest:${filter}:${limit}:${cursor ? encodeActivityCursor(cursor) : "first"}:${publicProfiles ? 1 : 0}:${createHash("sha1").update(forumIds.join(",")).digest("hex")}`;
+      : `activity:guest:${filter}:${limit}:${cursor ? encodeActivityCursor(cursor) : "first"}:${publicProfiles ? 1 : 0}:${createHash("sha1").update(forumIds.join(",")).digest("hex")}:${sources.map((s) => s.key).join(",")}`;
     if (guestKey) {
       const cached = await cache.get<GcsActivityPage>(guestKey);
       if (cached) return cached;
@@ -147,20 +184,64 @@ export class GcsActivityStream {
     }
 
     let result: GcsActivityPage = { items: [], next: null };
-    if (parts.length > 0) {
-      const rows = await db.$queryRaw<Row[]>(sql`
+    const appRows = await this.appRows(viewer, sources, cursor, take);
+    if (parts.length > 0 || appRows.length > 0) {
+      const sqlRows =
+        parts.length > 0
+          ? await db.$queryRaw<Row[]>(sql`
         SELECT x.*, to_char(x.at, 'YYYY-MM-DD"T"HH24:MI:SS.US') AS "atKey" FROM (${Prisma.join(parts, " UNION ALL ")}) x
         ORDER BY x.at DESC, x.k DESC, x.ref DESC
-        LIMIT ${take}`);
+        LIMIT ${take}`)
+          : [];
+      // Elementele aplicațiilor intră în aceeași ordine (moment, tip, referință) ca rândurile din bază.
+      const rows = [...sqlRows, ...appRows]
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime() || Number(b.k) - Number(a.k) || (a.ref < b.ref ? 1 : a.ref > b.ref ? -1 : 0))
+        .slice(0, take);
       const page = rows.slice(0, limit);
       const last = page[page.length - 1];
+      const hydrated = await this.hydrate(page.filter((r): r is Row => r.kind !== "app"));
+      const byKey = new Map(hydrated.map((i) => [i.key, i]));
       result = {
-        items: await this.hydrate(page),
+        items: page.flatMap((r) => (r.kind === "app" ? [r.item] : (byKey.get(`${r.kind}-${r.ref}`) ?? []))),
         next: rows.length > limit && last ? encodeActivityCursor({ at: last.atKey, k: Number(last.k), ref: last.ref }) : null,
       };
     }
     if (guestKey) await cache.set(guestKey, result, { ttlSec: GUEST_TTL, tags: ["forums-tree", "activity"] });
     return result;
+  }
+
+  /**
+   * Elementele surselor de conținut de dinaintea cursorului (cel mult `take` din fiecare). Referința din cursor e
+   * `s<sursa>` + id-ul pe 12 cifre; o sursă care aruncă o eroare lipsește din flux (eroarea ajunge în log).
+   */
+  private async appRows(viewer: GcsActor, sources: Awaited<ReturnType<GcsContentSources["streamSources"]>>, cursor: Cursor | null, take: number): Promise<AppRow[]> {
+    const until = cursor ? new Date(`${cursor.at}Z`) : null;
+    const lists = await Promise.all(
+      sources.map(async (s) => {
+        try {
+          const entries = await s.run(viewer, { until, limit: take + 1 });
+          return entries.flatMap((e): AppRow[] => {
+            const ref = `s${String(s.index).padStart(2, "0")}${String(e.id).padStart(12, "0")}`;
+            if (cursor && !beforeCursor(e.at, APP_K, ref, cursor)) return [];
+            const at = e.at.toISOString();
+            return [
+              {
+                kind: "app",
+                k: APP_K,
+                ref,
+                at: e.at,
+                atKey: at.slice(0, 23),
+                item: { kind: "app", key: `app-${ref}`, at, user: e.user, source: s.key, icon: s.icon, labelKey: s.labelKey, title: e.title, href: e.href, snippet: e.snippet, context: e.context },
+              },
+            ];
+          });
+        } catch (error) {
+          console.error(`[GCS] activity source ${s.key}:`, error);
+          return [];
+        }
+      }),
+    );
+    return lists.flat();
   }
 
   /** Momentul de dinaintea căruia totul e citit (ca la indicatorul de necitit): înregistrarea sau acum `UNREAD_DAYS` zile. */
