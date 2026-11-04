@@ -5,6 +5,9 @@ import {
   remoteImageShown,
   GcsInstallState,
   GcsLicenseOnline,
+  GCS_PREMIUM_APPS,
+  installDomain,
+  verifyLicense,
   GcsAcpDashboardService,
   GcsContentRatingService,
   GcsAcpRoleService,
@@ -506,7 +509,16 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     if (!premiumBlockedMemo || Date.now() - premiumBlockedMemo.at > 60_000) premiumBlockedMemo = { at: Date.now(), value: licenseOnline.premiumBlocked().catch(() => false) };
     return premiumBlockedMemo.value;
   };
-  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings, premiumBlocked });
+  // Aplicațiile premium din licența instalării (verificată offline): o aplicație necumpărată nu se poate porni. Fără
+  // licență salvată (dezvoltare, teste) nu se restrânge nimic; o licență invalidă nu permite nicio aplicație premium.
+  const licenseState = new GcsInstallState(opts.configDir);
+  const licensedApps = async (): Promise<readonly string[] | null> => {
+    const token = await licenseState.readLicense();
+    if (!token) return null;
+    const result = verifyLicense(token, { domain: installDomain(), premiumApps: GCS_PREMIUM_APPS });
+    return result.ok ? result.license.apps : [];
+  };
+  const apps = new GcsAppService({ db, cache, bus, registry, acp, permissions, settings, premiumBlocked, licensedApps });
   const members = new GcsMemberDirectory({ db });
   const notifications = new GcsNotificationService({ db, bus, cache, registry, apps, settings });
   const push = new GcsPushService({ db });

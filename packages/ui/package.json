@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
+    "./marketplace.css": "./src/marketplace.css",
     "./base.css": "./src/base.css",
     "./theme.css": "./src/theme.css",
     "./themes.css": "./src/themes.css",

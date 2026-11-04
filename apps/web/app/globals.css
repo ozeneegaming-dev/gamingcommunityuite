@@ -42,6 +42,8 @@
 @import "@gcs/ui/acp-announce.css";
 @import "@gcs/ui/acp-misc.css";
 @import "@gcs/ui/acp-system.css";
+/* Marketplace (ACP › Sistem): cardurile catalogului, vitrina și previzualizarea. */
+@import "@gcs/ui/marketplace.css";
 /* Ultimul: banda titlurilor (fiecare titlu pe fundalul lui) peste regulile componentelor. */
 @import "@gcs/ui/titles.css";
 /* Componentele sistemului (în orice temă, pe tokenurile temei): antetul construit cu panourile lui, consola, bara de jos. */

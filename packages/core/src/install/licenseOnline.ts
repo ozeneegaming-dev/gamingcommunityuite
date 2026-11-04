@@ -164,6 +164,25 @@ export class GcsLicenseOnline {
     return next;
   }
 
+  /**
+   * Un token mai nou primit de la Data Center pe altă cale decât verificarea zilnică (ex. Marketplace-ul, după o aplicație
+   * premium cumpărată): păstrat doar dacă e valid offline pentru domeniul instalării și e al aceleiași licențe.
+   * `true` dacă a înlocuit licența salvată.
+   */
+  async adopt(token: string): Promise<boolean> {
+    const env = this.deps.env ?? process.env;
+    const domain = installDomain(env);
+    const current = await this.deps.state.readLicense();
+    if (!current || current === token) return false;
+    const before = verifyLicense(current, { domain, premiumApps: GCS_PREMIUM_APPS });
+    const next = verifyLicense(token, { domain, premiumApps: GCS_PREMIUM_APPS });
+    if (!next.ok || next.license.dev || (before.ok && before.license.id !== next.license.id)) return false;
+    await this.deps.state.saveLicense(token);
+    const prev = (await this.read()) ?? this.fresh();
+    await this.write({ ...prev, tokenUpdatedAt: new Date(this.now()).toISOString() });
+    return true;
+  }
+
   /** Până când rămân pornite aplicațiile premium (`null` = licența nu e declarată invalidă). */
   graceEndsAt(state: GcsLicenseOnlineState | null): Date | null {
     if (!state?.invalidSince) return null;

@@ -66,8 +66,9 @@ test("rândurile: versiunea, autorul, starea; Nucleu și Forum sunt blocate; opr
   await expect(page.getByTestId("gcs-app-section-servers-bans")).toContainText("/bans");
   await expect(page.getByTestId("gcs-app-section-servers-bans")).toContainText("toate grupurile");
 
-  // „Verifică actualizări”: dezactivat până la licențe.
-  await expect(page.getByTestId("gcs-apps-check-updates").getByRole("button")).toBeDisabled();
+  // „Verifică actualizări” și „Marketplace”: duc la Marketplace (ce are licența, respectiv tot catalogul).
+  await expect(page.getByTestId("gcs-apps-check-updates")).toHaveAttribute("href", "/admin/system/marketplace?mine=1");
+  await expect(page.getByTestId("gcs-apps-marketplace")).toHaveAttribute("href", "/admin/system/marketplace");
 });
 
 test("accesul pe grup: un membru fără acces primește 404, iar meniul ascunde aplicația", async ({ page, context, browser }) => {

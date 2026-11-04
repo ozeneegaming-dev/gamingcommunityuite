@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@gcs/db";
 import type { GcsAcpRoleService } from "../acp/roles";
 import { writeAudit } from "../audit";
 import type { GcsCache } from "../cache";
-import { GcsNotFound, GcsValidationError } from "../errors";
+import { GcsConflict, GcsNotFound, GcsValidationError } from "../errors";
 import type { GcsEventBus } from "../events";
 import { appAccessKey, type GcsAppLanding, type GcsAppSection, type GcsModule, type GcsModuleRegistry } from "../modules/registry";
 import type { GcsPermissionService } from "../permissions/service";
@@ -100,6 +100,12 @@ export class GcsAppService {
       settings: GcsSettingsService;
       /** Licența declarată invalidă de platforma-mamă de peste 30 de zile: aplicațiile premium sunt oprite. */
       premiumBlocked?: () => Promise<boolean>;
+      /**
+       * Aplicațiile premium din licența instalării: o aplicație premium care nu e în licență nu se poate porni (se
+       * cumpără din Marketplace); cele deja pornite rămân așa. `null` = nicio licență salvată (dezvoltare, teste):
+       * fără restricție. O licență salvată, dar invalidă, nu permite nicio aplicație premium (`[]`).
+       */
+      licensedApps?: () => Promise<readonly string[] | null>;
     },
   ) {}
 
@@ -150,6 +156,10 @@ export class GcsAppService {
     if (!m?.app?.optional) throw new GcsNotFound();
     // Pornirea cere dependențele pornite (ex. Chat Pro → Chat); oprirea unei dependențe oprește singură aplicația.
     if (enabled) {
+      const licensed = m.app.premium && this.deps.licensedApps ? await this.deps.licensedApps() : null;
+      if (licensed && !licensed.includes(key)) {
+        throw new GcsConflict({ reason: "app_not_licensed" });
+      }
       const missing = (m.app.requires ?? []).filter((dep) => !this.deps.registry.module(dep));
       const filter = await this.enabledFilter();
       const off = (m.app.requires ?? []).filter((dep) => !filter(dep));
