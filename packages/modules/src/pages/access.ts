@@ -1,4 +1,4 @@
-import type { GcsAcpRoleService, GcsActor, GcsCache, GcsPermissionService } from "@gcs/core";
+import type { GcsAcpRoleService, GcsActor, GcsAppService, GcsCache, GcsPermissionService } from "@gcs/core";
 import { jsonInts, type PrismaClient } from "@gcs/db";
 import { fieldDefsOf, type GcsPagesFieldDef } from "./fields";
 import { PAGES_ACP, PAGES_CACHE_TAG, groupsAllow } from "./shared";
@@ -70,7 +70,16 @@ export type GcsPagesDb = {
  * și bazele de date stau în cache (tag `pages`), invalidate de orice salvare din ACP.
  */
 export class GcsPagesAccess {
-  constructor(private readonly deps: { db: PrismaClient; cache: GcsCache; permissions: GcsPermissionService; acp: GcsAcpRoleService }) {}
+  constructor(
+    private readonly deps: {
+      db: PrismaClient;
+      cache: GcsCache;
+      permissions: GcsPermissionService;
+      acp: GcsAcpRoleService;
+      /** Aplicația pornită (ACP › Aplicații): oprită, nimic din ea nu se vede (pagini, fișiere, căutare, flux, încărcări). */
+      apps?: Pick<GcsAppService, "enabled">;
+    },
+  ) {}
 
   async tree(): Promise<GcsPagesTreeNode[]> {
     const cached = await this.deps.cache.get<GcsPagesTreeNode[]>(TREE_KEY);
@@ -142,7 +151,7 @@ export class GcsPagesAccess {
   chain(tree: GcsPagesTreeNode[], node: GcsPagesTreeNode): GcsPagesTreeNode[] {
     const byId = new Map(tree.map((n) => [n.id, n]));
     const out = [node];
-    for (let cur = node.parentId === null ? undefined : byId.get(node.parentId); cur && out.length < 10; cur = cur.parentId === null ? undefined : byId.get(cur.parentId)) out.unshift(cur);
+    for (let cur = node.parentId === null ? undefined : byId.get(node.parentId); cur && out.length < 64; cur = cur.parentId === null ? undefined : byId.get(cur.parentId)) out.unshift(cur);
     return out;
   }
 
@@ -156,7 +165,19 @@ export class GcsPagesAccess {
   }
 
   async canUseApp(actor: GcsActor): Promise<boolean> {
+    if (this.deps.apps && !(await this.deps.apps.enabled("pages"))) return false;
     return this.deps.permissions.can(actor, "pages.view");
+  }
+
+  /**
+   * Categoria unei înregistrări o lasă pe actor să o vadă: grupurile categoriei; într-o categorie privată, doar autorul.
+   * Staff-ul vede tot; fără categorie, nimic de verificat.
+   */
+  async categoryAllows(actor: GcsActor, row: { categoryId: number | null; authorId: string | null }): Promise<boolean> {
+    if (row.categoryId === null || (await this.isStaff(actor))) return true;
+    const c = await this.deps.db.pagesCategory.findUnique({ where: { id: row.categoryId }, select: { viewGroupIds: true, private: true } });
+    if (!c) return true;
+    return groupsAllow(actor, c.viewGroupIds) && (!c.private || (actor.userId !== null && row.authorId === actor.userId));
   }
 
   /**

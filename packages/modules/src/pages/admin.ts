@@ -14,7 +14,7 @@ import {
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 import { Prisma, ci, jsonInts, type PrismaClient } from "@gcs/db";
 import { slugify } from "../forums/slug";
-import { fieldDefsOf, parseFieldDefs, type GcsPagesFieldDef } from "./fields";
+import { fieldDefsOf, parseFieldDefs, parseFieldValues, type GcsPagesFieldDef } from "./fields";
 import { MAX_PAGE_HTML, blockFieldsOf, fillBlockTemplate, sanitizePageHtml } from "./html";
 import { EMPTY_LAYOUT, isSafeLink, layoutBlocks, layoutOf, parseLayout, type GcsPagesLayout } from "./layout";
 import { PAGES_PRESET_DEFS, presetData, type GcsPagesPreset } from "./presets";
@@ -310,6 +310,8 @@ export class GcsPagesAdmin {
       return row;
     });
     await this.syncMenu({ path: saved.path, title: saved.title, icon: saved.icon, inMenu: saved.inMenu && saved.published }, existing?.path ?? null);
+    // Un folder mutat / redenumit schimbă și linkurile din meniu ale paginilor de sub el.
+    if (existing && existing.path !== saved.path) await this.deps.bus.emit({ name: "nav.updated", payload: {}, tags: ["nav"] });
     await this.changed({ nodeId: saved.id });
     return { id: saved.id, path: saved.path };
   }
@@ -913,7 +915,9 @@ export class GcsPagesAdmin {
       } catch {
         continue;
       }
-      const values = Object.fromEntries(fields.filter((f) => !["image", "file", "member", "server"].includes(f.type)).flatMap((f) => (r.fields && f.key in r.fields ? [[f.key, r.fields[f.key]]] : [])));
+      // Valorile trec prin aceeași validare ca un formular (un pachet străin nu aduce linkuri javascript: etc.).
+      const portable = fields.filter((f) => !["image", "file", "member", "server"].includes(f.type));
+      const values = parseFieldValues(portable.map((f) => ({ ...f, required: false })), r.fields && typeof r.fields === "object" ? r.fields : {}).values;
       await db.pagesRecord.create({
         data: {
           databaseId,
@@ -1043,13 +1047,23 @@ export class GcsPagesAdmin {
     return { id: row.id };
   }
 
-  /** Șterge o categorie; înregistrările ei rămân fără categorie. */
+  /**
+   * Șterge o categorie: subcategoriile și înregistrările ei urcă în categoria părinte (sau rămân fără categorie). O
+   * categorie privată sau cu acces restrâns, fără părinte, nu se șterge cât are înregistrări: ar deveni publice.
+   */
   async deleteCategory(actor: GcsActor, databaseId: number, id: number): Promise<void> {
     const { db, acp } = this.deps;
     await acp.assert(actor, PAGES_ACP.databases, "delete");
     const c = await db.pagesCategory.findFirst({ where: { id, databaseId } });
     if (!c) throw new GcsNotFound();
-    await db.$transaction([db.pagesCategory.updateMany({ where: { parentId: id }, data: { parentId: c.parentId } }), db.pagesCategory.delete({ where: { id } })]);
+    const restricted = c.private || jsonInts(c.viewGroupIds).length > 0;
+    if (restricted && c.parentId === null && (await db.pagesRecord.count({ where: { categoryId: id } })) > 0) throw new GcsConflict({ reason: "has_content" });
+    await db.$transaction([
+      db.pagesRecord.updateMany({ where: { categoryId: id }, data: { categoryId: c.parentId } }),
+      db.pagesCategory.updateMany({ where: { parentId: id }, data: { parentId: c.parentId } }),
+      db.pagesCategory.delete({ where: { id } }),
+    ]);
+    if (c.parentId) await db.pagesCategory.update({ where: { id: c.parentId }, data: { recordsCount: await db.pagesRecord.count({ where: { categoryId: c.parentId, status: "PUBLISHED" } }) } });
     await writeAudit(db, { actorId: actor.userId, action: "pages.category.delete", targetType: "pages_database", targetId: String(databaseId), before: { name: c.name }, after: null, ip: actor.ip });
     await this.changed({ databaseId });
   }

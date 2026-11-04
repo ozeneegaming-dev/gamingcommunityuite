@@ -948,7 +948,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   // Aplicația Pagini (specul 2026-11-03-pagini): accesul, citirile, ACP-ul, înregistrările, sursa de conținut (căutarea
   // și fluxul), atașamentele, notele, notificările și publicarea automată ca topic.
   const contentSources = new GcsContentSources({ registry, apps });
-  const pagesAccess = new GcsPagesAccess({ db, cache, permissions, acp });
+  const pagesAccess = new GcsPagesAccess({ db, cache, permissions, acp, apps });
   const pagesQueries = new GcsPagesQueries({ db, settings, access: pagesAccess, ratings });
   const pagesAdmin = new GcsPagesAdmin({ db, acp, bus, registry, settings, attachments, render: (content, actor) => posting.render(content, { actor, blocks: true }) });
   const pagesRecords = new GcsPagesRecords({

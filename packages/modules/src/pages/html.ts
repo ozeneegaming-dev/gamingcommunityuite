@@ -25,7 +25,7 @@ const STYLE_PROPS = [
   "width", "max-width", "min-width", "height", "max-height", "min-height", "display", "flex", "flex-direction", "flex-wrap", "gap", "row-gap", "column-gap",
   "justify-content", "align-items", "align-self", "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "text-align", "vertical-align",
   "font-size", "font-weight", "font-style", "line-height", "letter-spacing", "text-transform", "text-decoration", "white-space", "opacity", "box-shadow",
-  "overflow", "aspect-ratio", "object-fit", "list-style", "position", "top", "left", "right", "bottom", "z-index", "transform",
+  "overflow", "aspect-ratio", "object-fit", "list-style",
 ];
 const allowedStyles = Object.fromEntries(STYLE_PROPS.map((p) => [p, [SAFE_VALUE]]));
 
@@ -38,7 +38,7 @@ const OPTIONS: sanitizeHtml.IOptions = {
     source: ["src", "srcset", "type", "media"],
     video: [...COMMON, "src", "poster", "controls", "muted", "loop", "playsinline", "autoplay", "width", "height"],
     audio: [...COMMON, "src", "controls", "loop"],
-    iframe: [...COMMON, "src", "width", "height", "loading", "allowfullscreen", "allow", "frameborder"],
+    iframe: [...COMMON, "src", "width", "height", "loading", "allowfullscreen", "allow", "frameborder", "sandbox"],
     td: [...COMMON, "colspan", "rowspan"],
     th: [...COMMON, "colspan", "rowspan", "scope"],
     col: [...COMMON, "span"],

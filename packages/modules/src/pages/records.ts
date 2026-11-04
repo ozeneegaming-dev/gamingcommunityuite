@@ -82,6 +82,12 @@ export class GcsPagesRecords {
     }
   }
 
+  /** Numărul comentariilor vizibile (nici ascunse, nici în așteptare), după orice schimbare. */
+  private async recountComments(tx: Prisma.TransactionClient, recordId: number): Promise<void> {
+    const n = await tx.pagesComment.count({ where: { recordId, hidden: false, pending: false } });
+    await tx.pagesRecord.update({ where: { id: recordId }, data: { commentsCount: n } });
+  }
+
   /** Datele validate ale unei înregistrări (titlul, categoria, conținutul randat, câmpurile, atașamentele noi). */
   private async prepare(actor: GcsActor, d: GcsPagesDb, input: GcsPagesRecordInput, current: { fields: unknown; contentJson: unknown } | null) {
     const { db, render, servers } = this.deps;
@@ -90,7 +96,7 @@ export class GcsPagesRecords {
     if (title.length < 3) errors.title = "too_short";
     else if (title.length > 150) errors.title = "too_long";
     const categoryId = input.categoryId ?? null;
-    if (categoryId !== null && !(await db.pagesCategory.findFirst({ where: { id: categoryId, databaseId: d.id }, select: { id: true } }))) errors.categoryId = "invalid_choice";
+    if (categoryId !== null && (!(await db.pagesCategory.findFirst({ where: { id: categoryId, databaseId: d.id }, select: { id: true } })) || !(await this.deps.access.categoryAllows(actor, { categoryId, authorId: actor.userId })))) errors.categoryId = "invalid_choice";
     let rendered: GcsRendered | null = null;
     if (input.content !== undefined && input.content !== null) {
       try {
@@ -136,15 +142,16 @@ export class GcsPagesRecords {
     const d = await this.loadDb(databaseId);
     if (!(await access.canViewDatabase(actor, d)) || !(await access.canSubmit(actor, d))) throw new GcsForbidden({ permission: "pages.submit" });
     const staff = await access.isStaff(actor);
+    if (!staff) await this.deps.checkWrite(actor);
+    // Validarea întâi: o greșeală în formular nu consumă pauza dintre trimiteri.
+    const data = await this.prepare(actor, d, input, null);
     if (!staff) {
-      await this.deps.checkWrite(actor);
       const cooldown = await settings.get<number>(PAGES_SETTING.submitCooldown);
       if (cooldown > 0) {
         const res = await rateLimiter.consume(`pages-submit:${actor.userId}`, { window: cooldown, max: 1 });
         if (!res.allowed) throw new GcsRateLimited({ retryAfter: String(res.retryAfter) });
       }
     }
-    const data = await this.prepare(actor, d, input, null);
     const status: PagesRecordStatus = !d.approval || (await access.skipsApproval(actor)) ? "PUBLISHED" : "PENDING";
     const fileIds = [...new Set([...(input.imageId ? [input.imageId] : []), ...attachmentIdsOf(d.fields, data.values), ...(data.rendered?.attachments ?? [])])];
     const record = await db.$transaction(async (tx) => {
@@ -218,7 +225,10 @@ export class GcsPagesRecords {
           title: data.title,
           slug: data.slug,
           categoryId: data.categoryId,
-          ...(data.rendered ? { contentJson: data.rendered.json as Prisma.InputJsonValue, contentHtml: data.rendered.html } : {}),
+          // `content: null` = conținutul a fost golit; lipsă = neschimbat.
+          ...(data.rendered ? { contentJson: data.rendered.json as Prisma.InputJsonValue, contentHtml: data.rendered.html } : input.content === null ? { contentJson: Prisma.DbNull, contentHtml: "" } : {}),
+          // Autorul își corectează trimiterea respinsă: intră din nou în coada de aprobare.
+          ...(record.status === "REJECTED" && !staff ? { status: (d.approval ? "PENDING" : "PUBLISHED") as PagesRecordStatus, rejectReason: null, ...(d.approval ? {} : { publishedAt: new Date() }) } : {}),
           imageId,
           fields: data.values as Prisma.InputJsonValue,
           searchText: data.searchText,
@@ -230,9 +240,12 @@ export class GcsPagesRecords {
       await this.recount(tx, record.databaseId, [record.categoryId, data.categoryId]);
       await writeAudit(tx, { actorId: actor.userId, action: "pages.record.update", targetType: "pages_record", targetId: String(recordId), before: { title: record.title }, after: { title: data.title }, ip: actor.ip });
     });
-    // Imaginea / fișierele înlocuite nu mai sunt folosite: se șterg.
+    // Imaginea / fișierele înlocuite nu mai sunt folosite: se șterg (dar nu cât reviziile le pot readuce).
     const dropped = [...(before.imageId ? [before.imageId] : []), ...before.files].filter((id) => !wanted.includes(id));
-    if (dropped.length > 0) await attachments.removeAny(dropped);
+    if (dropped.length > 0 && !d.revisions) await attachments.removeAny(dropped);
+    if (record.status === "REJECTED" && !staff && d.approval) {
+      await bus.emit({ name: "pages.record.created", payload: { recordId, databaseId: record.databaseId, authorId: record.authorId, status: "PENDING", mentions: [], groupMentions: [] }, tags: CHANGE_TAGS });
+    }
     await bus.emit({ name: "pages.record.updated", payload: { recordId, databaseId: record.databaseId }, tags: CHANGE_TAGS });
     return { id: recordId, slug: data.slug };
   }
@@ -343,10 +356,10 @@ export class GcsPagesRecords {
 
   async comment(actor: GcsActor, recordId: number, content: unknown): Promise<{ id: number; pending: boolean }> {
     const { db, bus, access, renderComment, checkWrite } = this.deps;
-    const record = await db.pagesRecord.findUnique({ where: { id: recordId }, select: { id: true, status: true, databaseId: true, authorId: true } });
+    const record = await db.pagesRecord.findUnique({ where: { id: recordId }, select: { id: true, status: true, databaseId: true, authorId: true, categoryId: true } });
     if (!record || record.status !== "PUBLISHED") throw new GcsNotFound();
     const d = await this.loadDb(record.databaseId);
-    if (!(await access.canViewDatabase(actor, d))) throw new GcsNotFound();
+    if (!(await access.canViewDatabase(actor, d)) || !(await access.categoryAllows(actor, record))) throw new GcsNotFound();
     if (!(await access.canComment(actor, d))) throw new GcsForbidden({ permission: "pages.comment" });
     await checkWrite(actor);
     const rendered = await renderComment(content, actor);
@@ -355,7 +368,10 @@ export class GcsPagesRecords {
     const pending = d.commentApproval && !(await access.skipsApproval(actor));
     const row = await db.$transaction(async (tx) => {
       const c = await tx.pagesComment.create({ data: { recordId, authorId: actor.userId, contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, pending } });
-      if (!pending) await tx.pagesRecord.update({ where: { id: recordId }, data: { commentsCount: { increment: 1 }, lastCommentAt: c.createdAt } });
+      // Imaginile din comentariu se leagă de înregistrare (le vede cine vede înregistrarea).
+      await this.deps.attachments.attach(tx, rendered.attachments, { contentType: PAGES_RECORD_TYPE, contentId: String(recordId), ownerId: actor.userId! });
+      if (!pending) await tx.pagesRecord.update({ where: { id: recordId }, data: { lastCommentAt: c.createdAt } });
+      await this.recountComments(tx, recordId);
       return c;
     });
     await bus.emit({
@@ -375,7 +391,8 @@ export class GcsPagesRecords {
     if (!c.pending) return;
     await db.$transaction(async (tx) => {
       await tx.pagesComment.update({ where: { id: commentId }, data: { pending: false } });
-      await tx.pagesRecord.update({ where: { id: c.recordId }, data: { commentsCount: { increment: 1 }, lastCommentAt: c.createdAt } });
+      await tx.pagesRecord.update({ where: { id: c.recordId }, data: { lastCommentAt: c.createdAt } });
+      await this.recountComments(tx, c.recordId);
       await writeAudit(tx, { actorId: actor.userId, action: "pages.comment.approve", targetType: "pages_comment", targetId: String(commentId), before: null, after: null, ip: actor.ip });
     });
     const refs = contentRefs(c.contentJson);
@@ -421,10 +438,14 @@ export class GcsPagesRecords {
     const { db, bus, access, renderComment } = this.deps;
     const c = await db.pagesComment.findUnique({ where: { id: commentId }, select: { id: true, authorId: true, recordId: true } });
     if (!c) throw new GcsNotFound();
-    if (c.authorId !== actor.userId && !(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
+    if ((actor.userId === null || c.authorId !== actor.userId) && !(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
     const rendered = await renderComment(content, actor);
     if (!rendered.text.trim()) throw new GcsValidationError({ content: "required" });
-    await db.pagesComment.update({ where: { id: commentId }, data: { contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, editedAt: new Date() } });
+    await db.$transaction(async (tx) => {
+      await tx.pagesComment.update({ where: { id: commentId }, data: { contentJson: rendered.json as Prisma.InputJsonValue, contentHtml: rendered.html, editedAt: new Date() } });
+      const fresh = (await tx.attachment.findMany({ where: { id: { in: rendered.attachments }, contentType: null }, select: { id: true } })).map((a) => a.id);
+      await this.deps.attachments.attach(tx, fresh, { contentType: PAGES_RECORD_TYPE, contentId: String(c.recordId), ownerId: actor.userId! });
+    });
     await bus.emit({ name: "pages.comment.updated", payload: { commentId, recordId: c.recordId }, tags: CHANGE_TAGS });
   }
 
@@ -436,7 +457,7 @@ export class GcsPagesRecords {
     if (c.hidden === hidden) return;
     await db.$transaction(async (tx) => {
       await tx.pagesComment.update({ where: { id: commentId }, data: { hidden } });
-      await tx.pagesRecord.update({ where: { id: c.recordId }, data: { commentsCount: { increment: hidden ? -1 : 1 } } });
+      await this.recountComments(tx, c.recordId);
       await writeAudit(tx, { actorId: actor.userId, action: hidden ? "pages.comment.hide" : "pages.comment.unhide", targetType: "pages_comment", targetId: String(commentId), before: null, after: null, ip: actor.ip });
     });
     await bus.emit({ name: "pages.comment.updated", payload: { commentId, recordId: c.recordId }, tags: CHANGE_TAGS });
@@ -446,10 +467,10 @@ export class GcsPagesRecords {
     const { db, bus, access } = this.deps;
     const c = await db.pagesComment.findUnique({ where: { id: commentId }, select: { id: true, authorId: true, recordId: true, hidden: true, contentHtml: true } });
     if (!c) throw new GcsNotFound();
-    if (c.authorId !== actor.userId && !(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
+    if ((actor.userId === null || c.authorId !== actor.userId) && !(await access.isStaff(actor))) throw new GcsForbidden({ permission: "pages.moderate" });
     await db.$transaction(async (tx) => {
       await tx.pagesComment.delete({ where: { id: commentId } });
-      if (!c.hidden) await tx.pagesRecord.update({ where: { id: c.recordId }, data: { commentsCount: { decrement: 1 } } });
+      await this.recountComments(tx, c.recordId);
       await writeAudit(tx, { actorId: actor.userId, action: "pages.comment.delete", targetType: "pages_comment", targetId: String(commentId), before: { text: plainText(c.contentHtml, 200) }, after: null, ip: actor.ip });
     });
     await bus.emit({ name: "pages.comment.updated", payload: { commentId, recordId: c.recordId }, tags: CHANGE_TAGS });

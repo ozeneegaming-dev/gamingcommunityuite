@@ -295,7 +295,8 @@ export class GcsPagesQueries {
           case "youtube":
             return [{ ...base, display: String(x), url: `https://www.youtube-nocookie.com/embed/${String(x)}` }];
           case "url":
-            return [{ ...base, display: String(x).replace(/^https?:\/\//, ""), url: String(x) }];
+            // Doar adrese http(s): o valoare veche sau importată cu altă schemă rămâne text simplu.
+            return [{ ...base, display: String(x).replace(/^https?:\/\//, ""), url: /^https?:\/\/[^\s<>"']+$/i.test(String(x)) ? String(x) : null }];
           case "multiselect":
             return [{ ...base, display: Array.isArray(x) ? x.join(", ") : String(x) }];
           default:
@@ -508,11 +509,8 @@ export class GcsPagesQueries {
   }
 
   /** Categoria înregistrării o lasă pe actor să o vadă (grupurile categoriei; categoria privată = doar autorul). */
-  private async categoryAllowsRow(actor: GcsActor, row: { categoryId: number | null; authorId: string | null }): Promise<boolean> {
-    if (row.categoryId === null || (await this.deps.access.isStaff(actor))) return true;
-    const c = await this.deps.db.pagesCategory.findUnique({ where: { id: row.categoryId }, select: { viewGroupIds: true, private: true } });
-    if (!c) return true;
-    return groupsAllow(actor, c.viewGroupIds) && (!c.private || (actor.userId !== null && row.authorId === actor.userId));
+  private categoryAllowsRow(actor: GcsActor, row: { categoryId: number | null; authorId: string | null }): Promise<boolean> {
+    return this.deps.access.categoryAllows(actor, row);
   }
 
   /** Actorul vede înregistrarea (atașamentele, notificările, notele): publicată într-o bază vizibilă, sau a lui / staff. */
@@ -656,7 +654,7 @@ export class GcsPagesQueries {
     const dbs = await access.visibleDatabases(guest);
     for (const d of dbs) {
       if (d.nodeId !== null && noindex.has(d.nodeId)) continue;
-      const rows = await db.pagesRecord.findMany({ where: { databaseId: d.id, status: "PUBLISHED" }, orderBy: { id: "desc" }, take: 5000, select: { id: true, slug: true, updatedAt: true } });
+      const rows = await db.pagesRecord.findMany({ where: { databaseId: d.id, status: "PUBLISHED", ...(await this.categoryWhere(guest, [d.id], true)) }, orderBy: { id: "desc" }, take: 5000, select: { id: true, slug: true, updatedAt: true } });
       for (const r of rows) out.push({ path: recordHref(d.path!, r), lastModified: r.updatedAt });
     }
     return out;

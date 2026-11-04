@@ -6280,7 +6280,7 @@
         "recordsCount": "{count, plural, one {one record} other {# records}}",
         "private": "Private",
         "restricted": "Restricted",
-        "deleteCategoryConfirm": "Delete the category “{name}”? Its records stay without a category.",
+        "deleteCategoryConfirm": "Delete the category “{name}”? Its records and subcategories move to the parent category (or stay without one).",
         "secCategory": "Category",
         "secCategoryAccess": "Access",
         "slug": "Address (slug)",

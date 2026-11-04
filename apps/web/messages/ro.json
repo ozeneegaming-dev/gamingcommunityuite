@@ -6280,7 +6280,7 @@
         "recordsCount": "{count, plural, one {o înregistrare} few {# înregistrări} other {# de înregistrări}}",
         "private": "Privată",
         "restricted": "Acces restrâns",
-        "deleteCategoryConfirm": "Ștergi categoria „{name}”? Înregistrările ei rămân fără categorie.",
+        "deleteCategoryConfirm": "Ștergi categoria „{name}”? Înregistrările și subcategoriile ei urcă în categoria părinte (sau rămân fără categorie).",
         "secCategory": "Categoria",
         "secCategoryAccess": "Acces",
         "slug": "Adresă (slug)",

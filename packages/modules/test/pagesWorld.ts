@@ -23,7 +23,7 @@ export async function createPagesWorld() {
   const w = await createForumWorld();
   const apps = new GcsAppService({ db: w.db, cache: w.cache, bus: w.bus, registry: w.registry, acp: w.acp, permissions: w.permissions, settings: w.settings });
   const ratings = new GcsContentRatingService({ db: w.db, bus: w.bus });
-  const access = new GcsPagesAccess({ db: w.db, cache: w.cache, permissions: w.permissions, acp: w.acp });
+  const access = new GcsPagesAccess({ db: w.db, cache: w.cache, permissions: w.permissions, acp: w.acp, apps });
   const queries = new GcsPagesQueries({ db: w.db, settings: w.settings, access, ratings });
   const admin = new GcsPagesAdmin({ db: w.db, acp: w.acp, bus: w.bus, registry: w.registry, settings: w.settings, attachments: w.attachments, render: (c, actor) => w.posting.render(c, { actor, blocks: true }) });
   const records = new GcsPagesRecords({
