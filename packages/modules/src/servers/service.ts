@@ -58,6 +58,8 @@ export type GcsServerAcpRow = {
   port: number;
   enabled: boolean;
   restricted: boolean;
+  /** Forumul ales în fișa serverului (legătura implicită a tabului „Server” al forumului). */
+  forumId: number | null;
   status: GcsServerStatus | null;
 };
 
@@ -135,6 +137,7 @@ export class GcsServerService {
       port: r.port,
       enabled: r.enabled,
       restricted: jsonInts(r.groups).length > 0,
+      forumId: r.forumId,
       status: r.enabled ? (statuses.get(r.id) ?? null) : null,
     }));
   }

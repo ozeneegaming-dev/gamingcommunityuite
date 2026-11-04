@@ -7146,6 +7146,41 @@
           "body": "Catalogul nu s-a putut încărca acum. Reîncarcă pagina peste câteva minute."
         }
       }
+    },
+    "forumServer": {
+      "tab": "Server",
+      "description": "Leagă forumul (sau subforumul) de un server: statisticile live apar în liste, în cardul mare și, opțional, în topicuri. Un forum fără server legat rămâne un forum normal.",
+      "save": "Salvează",
+      "server": "Serverul legat",
+      "serverAuto": "Automat: {name} (din fișa serverului)",
+      "serverNone": "Niciun server (forum normal)",
+      "serverHint": "Poate fi orice forum sau subforum, la orice nivel. Serverele se adaugă în ACP › Gaming › Servere.",
+      "disabled": "oprit",
+      "style": "Stilul în liste",
+      "styles": {
+        "full": "Complet",
+        "compact": "Compact",
+        "status": "Doar ON/OFF"
+      },
+      "whereTitle": "Unde apar statisticile",
+      "where": {
+        "row": "Pe rândul forumului, în liste",
+        "rowHint": "index și pagina forumului părinte",
+        "parent": "În lista de subforumuri a părintelui",
+        "parentHint": "cipurile compacte de pe index",
+        "card": "Card mare sus, în pagina forumului",
+        "topic": "Bară mică în topicurile forumului"
+      },
+      "showTitle": "Ce se afișează",
+      "show": {
+        "status": "Status online / offline",
+        "players": "Jucători + bară",
+        "map": "Hartă / versiune",
+        "address": "IP + copiere",
+        "connect": "Buton Conectează-te",
+        "top": "Top jucători și grafic 24 h",
+        "topHint": "doar în cardul mare"
+      }
     }
   },
   "settings": {
@@ -11163,6 +11198,39 @@
       "teamspeak": "Intră pe TeamSpeak",
       "mumble": "Intră pe Mumble",
       "discord": "Intră pe Discord"
+    },
+    "connectFull": "Conectează-te",
+    "forumLive": {
+      "on": "ON",
+      "off": "OFF",
+      "unknown": "?",
+      "players": "Jucători",
+      "users": "Utilizatori",
+      "membersOnline": "Membri online",
+      "map": "Hartă",
+      "version": "Versiune",
+      "channels": "Canale",
+      "lastSeen": "Ultima dată",
+      "offline": "Offline",
+      "unknown_state": "Necunoscut",
+      "chipsLabel": "Serverele din subforumuri",
+      "serversCount": "{count, plural, one {# server} few {# servere} other {# de servere}}",
+      "live": "LIVE",
+      "summarySlots": "{players} / {slots} jucători online",
+      "summaryPlayers": "{count, plural, one {# jucător} few {# jucători} other {# de jucători}}",
+      "summaryVoice": "{count} pe TS",
+      "summaryDiscord": "{count} pe Discord",
+      "currentMap": "Harta curentă",
+      "onlineSince": "Online de {since}",
+      "occupancy": "Ocupare",
+      "peakToday": "Maxim azi",
+      "last24h": "Jucători în ultimele 24 de ore",
+      "onServerNow": "Pe server acum",
+      "kills": "{count, plural, one {# ucidere} few {# ucideri} other {# de ucideri}}",
+      "allPlayers": "{count, plural, one {Jucătorul de pe server} few {Toți cei # jucători} other {Toți cei # de jucători}}",
+      "playersHidden": "Lista jucătorilor nu e publică.",
+      "noPlayerList": "Serverul nu trimite lista jucătorilor.",
+      "nobody": "Nimeni pe server acum."
     }
   },
   "clans": {

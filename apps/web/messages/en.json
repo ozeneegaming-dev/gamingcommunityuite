@@ -7146,6 +7146,41 @@
           "body": "The catalogue could not load right now. Reload the page in a few minutes."
         }
       }
+    },
+    "forumServer": {
+      "tab": "Server",
+      "description": "Link the forum (or subforum) to a server: live stats show in lists, in the big card and, optionally, in topics. A forum without a linked server stays a normal forum.",
+      "save": "Save",
+      "server": "Linked server",
+      "serverAuto": "Automatic: {name} (from the server settings)",
+      "serverNone": "No server (normal forum)",
+      "serverHint": "Any forum or subforum, at any level. Servers are added in ACP › Gaming › Servers.",
+      "disabled": "off",
+      "style": "Style in lists",
+      "styles": {
+        "full": "Full",
+        "compact": "Compact",
+        "status": "ON/OFF only"
+      },
+      "whereTitle": "Where the stats appear",
+      "where": {
+        "row": "On the forum row, in lists",
+        "rowHint": "index and the parent forum page",
+        "parent": "In the parent's subforum list",
+        "parentHint": "the compact chips on the index",
+        "card": "Big card at the top of the forum page",
+        "topic": "Small bar in the forum's topics"
+      },
+      "showTitle": "What is shown",
+      "show": {
+        "status": "Online / offline status",
+        "players": "Players + bar",
+        "map": "Map / version",
+        "address": "IP + copy",
+        "connect": "Connect button",
+        "top": "Top players and 24 h chart",
+        "topHint": "big card only"
+      }
     }
   },
   "settings": {
@@ -11163,6 +11198,39 @@
       "teamspeak": "Join TeamSpeak",
       "mumble": "Join Mumble",
       "discord": "Join Discord"
+    },
+    "connectFull": "Connect",
+    "forumLive": {
+      "on": "ON",
+      "off": "OFF",
+      "unknown": "?",
+      "players": "Players",
+      "users": "Users",
+      "membersOnline": "Members online",
+      "map": "Map",
+      "version": "Version",
+      "channels": "Channels",
+      "lastSeen": "Last seen",
+      "offline": "Offline",
+      "unknown_state": "Unknown",
+      "chipsLabel": "Servers in the subforums",
+      "serversCount": "{count, plural, one {# server} other {# servers}}",
+      "live": "LIVE",
+      "summarySlots": "{players} / {slots} players online",
+      "summaryPlayers": "{count, plural, one {# player} other {# players}}",
+      "summaryVoice": "{count} on TS",
+      "summaryDiscord": "{count} on Discord",
+      "currentMap": "Current map",
+      "onlineSince": "Online since {since}",
+      "occupancy": "Occupancy",
+      "peakToday": "Peak today",
+      "last24h": "Players in the last 24 hours",
+      "onServerNow": "On the server now",
+      "kills": "{count, plural, one {# kill} other {# kills}}",
+      "allPlayers": "{count, plural, one {The player on the server} other {All # players}}",
+      "playersHidden": "The player list is not public.",
+      "noPlayerList": "The server does not send its player list.",
+      "nobody": "Nobody on the server right now."
     }
   },
   "clans": {

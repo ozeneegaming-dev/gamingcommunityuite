@@ -1,0 +1,591 @@
+/*
+ * Serverele ca forumuri (aplicația Servere, macheta aprobată `ServerForum`): bara live compactă a rândului, cipurile
+ * subforumurilor-server de pe index, sumarul din banda categoriei, cardul mare al subforumului, bara din topicuri și
+ * tabul „Server” din ACP. Doar tokenurile temei: merge în orice temă (închisă sau deschisă). Clasele sunt `gcsx-*`
+ * (aplicații), puse de extensia de forum a aplicației.
+ */
+
+/* ── Bara live din rând (A / C) ─────────────────────────────────────────────────────────────────────── */
+.gcsx-srv {
+  position: relative;
+  z-index: 2; /* peste linkul întins al rândului: butoanele și copierea rămân clicabile */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gcs-bg) 55%, transparent);
+  border: 1px solid var(--gcs-border);
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.gcsx-srv--compact {
+  display: inline-flex;
+  padding: 4px 8px;
+  gap: 6px 12px;
+}
+.gcsx-srv__thumb {
+  flex: none;
+  width: 46px;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--gcs-server-banner, var(--gcs-surface2));
+  border: 1px solid var(--gcs-border);
+}
+.gcsx-srv__thumb[data-state="offline"] {
+  filter: grayscale(1) brightness(0.7);
+}
+.gcsx-srv__thumb .gcs-mapPic,
+.gcsx-srv__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gcsx-srv__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--gcs-text);
+}
+.gcsx-srv__status .gcs-dot,
+.gcsx-srvChip .gcs-dot,
+.gcsx-srvSummary__pill .gcs-dot {
+  background: var(--gcs-muted);
+}
+.gcsx-srv[data-state="online"] .gcsx-srv__status .gcs-dot,
+.gcsx-srv__status[data-state="online"] .gcs-dot,
+.gcsx-srvChip[data-state="online"] .gcs-dot,
+.gcsx-srvSummary__pill[data-state="online"] .gcs-dot {
+  background: var(--gcs-ok);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--gcs-ok) 70%, transparent);
+}
+.gcsx-srv[data-state="offline"] .gcsx-srv__status,
+.gcsx-srv__status[data-state="offline"] {
+  color: var(--gcs-danger);
+}
+.gcsx-srv[data-state="offline"] .gcsx-srv__status .gcs-dot,
+.gcsx-srv__status[data-state="offline"] .gcs-dot,
+.gcsx-srvChip[data-state="offline"] .gcs-dot {
+  background: var(--gcs-danger);
+}
+.gcsx-srv__kv {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.gcsx-srv__k {
+  color: var(--gcs-muted);
+  font-size: 12px;
+}
+.gcsx-srv__kv strong,
+.gcsx-srv__detail {
+  color: var(--gcs-text);
+  font-weight: 700;
+}
+.gcsx-srv__count[data-fill="ok"] {
+  color: var(--gcs-ok);
+}
+.gcsx-srv__count[data-fill="warm"] {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcsx-srv__count[data-fill="full"] {
+  color: var(--gcs-danger);
+}
+.gcsx-srv__bar {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gcs-surface2);
+  overflow: hidden;
+}
+.gcsx-srv__bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--gcs-fill, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gcs-accent), var(--gcs-accentInk, var(--gcs-accent)));
+}
+.gcsx-srv__bar[data-fill="ok"] > span {
+  background: var(--gcs-ok);
+}
+.gcsx-srv__bar[data-fill="full"] > span {
+  background: var(--gcs-danger);
+}
+.gcsx-srv__addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 6px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-surface);
+  color: var(--gcs-text);
+  font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+  max-width: 100%;
+}
+.gcsx-srv__addr > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsx-srv__addr svg {
+  width: 11px;
+  height: 11px;
+  color: var(--gcs-muted);
+}
+.gcsx-srv__addr:hover,
+.gcsx-srv__addr:focus-visible {
+  border-color: var(--gcs-accent);
+}
+.gcsx-srv__go.gcs-btn {
+  height: 26px;
+  min-height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.gcsx-srv__go--small.gcs-btn {
+  height: 22px;
+  min-height: 22px;
+  padding: 0 9px;
+  font-size: 11.5px;
+}
+.gcsx-srv__go--off,
+.gcsx-srv__go--off.gcs-btn {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.gcsx-srv__go--teamspeak.gcs-btn {
+  background: #3d6fb0;
+  border-color: #3d6fb0;
+  color: #fff;
+}
+.gcsx-srv__go--discord.gcs-btn {
+  background: #5865f2;
+  border-color: #5865f2;
+  color: #fff;
+}
+.gcsx-srv__faces {
+  display: inline-flex;
+}
+.gcsx-srv__faces i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--gcs-surface);
+  margin-left: -5px;
+}
+.gcsx-srv__faces i:first-child {
+  margin-left: 0;
+}
+.gcsx-srv__state {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Cipurile subforumurilor-server pe index (B) ────────────────────────────────────────────────────── */
+.gcsx-servers--chips .gcs-forumRow__subs {
+  display: none;
+}
+.gcsx-srvChips {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 6px;
+  max-width: 660px;
+}
+.gcsx-srvChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--gcs-border);
+  background: color-mix(in srgb, var(--gcs-bg) 55%, transparent);
+  color: var(--gcs-text);
+  font-size: 12.5px;
+  text-decoration: none;
+  transition: border-color var(--gcs-brand-duration-fast, 0.15s);
+}
+.gcsx-srvChip:hover,
+.gcsx-srvChip:focus-visible {
+  border-color: var(--gcs-accent);
+}
+.gcsx-srvChip__name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.gcsx-srvChip strong {
+  font-weight: 700;
+}
+.gcsx-srvChip__map {
+  color: var(--gcs-muted);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 96px;
+}
+.gcsx-srvChip__off {
+  color: var(--gcs-danger);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+/* ── Banda categoriei: câte servere + sumarul live ──────────────────────────────────────────────────── */
+.gcs-category__slot:has(.gcsx-srvSummary) {
+  flex: 1;
+  margin-left: 12px;
+  min-width: 0;
+}
+.gcsx-srvSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.gcsx-srvSummary__count {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--gcs-accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.gcsx-srvSummary__pill {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gcs-border);
+  background: color-mix(in srgb, var(--gcs-bg) 65%, transparent);
+  color: var(--gcs-text);
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── Cardul mare din subforumul unui server (D) ─────────────────────────────────────────────────────── */
+.gcsx-srvCard {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1.2fr) minmax(0, 1fr) minmax(200px, 0.8fr);
+  gap: 20px;
+  padding: 16px;
+  align-items: stretch;
+}
+.gcsx-srvCard__map {
+  position: relative;
+  min-height: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--gcs-server-banner, var(--gcs-surface2));
+  border: 1px solid var(--gcs-border);
+}
+.gcsx-srvCard__map > img,
+.gcsx-srvCard__map > .gcs-mapPic {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gcsx-srvCard[data-state="offline"] .gcsx-srvCard__map {
+  filter: grayscale(1) brightness(0.75);
+}
+.gcsx-srvCard__mapName {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 12px 10px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  color: #fff;
+}
+.gcsx-srvCard__mapName span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gcs-accentInk, var(--gcs-accent));
+}
+.gcsx-srvCard__mapName strong {
+  font-size: 14px;
+}
+.gcsx-srvCard__main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcsx-srvCard__name {
+  margin: 0;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.gcsx-srvCard__name a {
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcsx-srvCard__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--gcs-muted);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.gcsx-srvCard__sub .gcsx-srv__status[data-state="online"] {
+  color: var(--gcs-ok);
+}
+.gcsx-srvCard__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+}
+.gcsx-srvCard__facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gcsx-srvCard__facts .gcsx-srv__k {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcsx-srvCard__big {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--gcs-text);
+}
+.gcsx-srvCard__big small {
+  font-size: 13px;
+  color: var(--gcs-muted);
+  font-weight: 600;
+}
+.gcsx-srvCard__occRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.gcsx-srvCard__occ .gcsx-srv__bar {
+  width: 96px;
+  height: 6px;
+  border-radius: 3px;
+}
+.gcsx-srvCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.gcsx-srvCard__chart,
+.gcsx-srvCard__now {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.gcsx-srvCard__chart .gcsx-srv__k,
+.gcsx-srvCard__now .gcsx-srv__k {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gcsx-srvCard__spark {
+  width: 100%;
+  height: 96px;
+  display: block;
+}
+.gcsx-srvCard__players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gcsx-srvCard__players li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--gcs-border);
+  font-size: 12.5px;
+}
+.gcsx-srvCard__rank {
+  color: var(--gcs-muted);
+  font-weight: 700;
+}
+.gcsx-srvCard__pname {
+  font-weight: 700;
+  color: var(--gcs-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gcsx-srvCard__kills {
+  color: var(--gcs-text);
+  font-weight: 600;
+}
+.gcsx-srvCard__time {
+  color: var(--gcs-muted);
+  min-width: 52px;
+  text-align: right;
+}
+.gcsx-srvCard__all {
+  color: var(--gcs-accentInk, var(--gcs-accent));
+  font-weight: 700;
+  font-size: 12.5px;
+  text-decoration: none;
+}
+.gcsx-srvCard__empty {
+  margin: 0;
+  font-size: 12.5px;
+}
+@media (max-width: 1100px) {
+  .gcsx-srvCard {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .gcsx-srvCard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gcsx-srvCard__map {
+    min-height: 120px;
+  }
+  .gcsx-srv:not(.gcsx-srv--compact) {
+    gap: 6px 12px;
+  }
+  .gcsx-srvSummary__pill {
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+}
+
+/* ── Bara din topicuri ──────────────────────────────────────────────────────────────────────────────── */
+.gcsx-srvTopicBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.gcsx-srvTopicBar__name {
+  font-weight: 700;
+  color: var(--gcs-text);
+  text-decoration: none;
+}
+.gcsx-srvTopicBar .gcsx-srv {
+  margin-top: 0;
+}
+
+/* ── ACP › Forumuri › Editează › Server (E) ─────────────────────────────────────────────────────────── */
+.gcsx-srvTab {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.gcsx-srvTab__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.gcsx-srvTab__set {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.gcsx-srvTab__h {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gcs-muted);
+  padding: 0;
+  margin-bottom: 6px;
+}
+.gcsx-srvTab__check {
+  align-items: flex-start;
+}
+.gcsx-srvTab__check > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcsx-srvTab__check small {
+  font-size: 11.5px;
+}
+.gcsx-srvTab__seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--gcs-border);
+  background: var(--gcs-bg);
+  gap: 2px;
+}
+.gcsx-srvTab__segItem {
+  position: relative;
+  cursor: pointer;
+}
+.gcsx-srvTab__segItem input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.gcsx-srvTab__segItem span {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--gcs-muted);
+}
+.gcsx-srvTab__segItem input:checked + span {
+  background: var(--gcs-accent);
+  color: #fff;
+}
+.gcsx-srvTab__segItem input:focus-visible + span {
+  outline: 2px solid var(--gcs-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .gcsx-srvTab {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

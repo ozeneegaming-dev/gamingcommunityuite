@@ -435,6 +435,11 @@ export type GcsForumEditTab = {
   types?: readonly ForumType[];
   fields?: readonly GcsForumExtField[];
   component?: string;
+  /**
+   * Componenta (`component`) desenează singură formularul câmpurilor (aceleași nume, salvate de aceeași acțiune), cu
+   * aspectul ei; formularul generic nu se mai desenează. Câmpurile rămân sursa valorilor implicite și a validării.
+   */
+  customForm?: boolean;
   /** Doar pluginuri: corpul tabului vine din punctul `forum.edit` (HTML cu formulare spre rutele pluginului). */
   pluginHook?: boolean;
 };
