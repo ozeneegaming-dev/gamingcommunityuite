@@ -180,7 +180,7 @@ export function GcsForumServerCardLive({ server, fields, history, peakToday, pla
           ) : (
             <p className="gcs-muted gcsx-srvCard__empty">{!playersAllowed ? t("playersHidden") : online ? t("noPlayerList") : t("nobody")}</p>
           )}
-          {players.length > top.length && (
+          {online && status!.players > 0 && (
             <Link href={server.href} className="gcsx-srvCard__all">
               {t("allPlayers", { count: online ? status!.players : players.length })} →
             </Link>

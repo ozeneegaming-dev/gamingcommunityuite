@@ -5,12 +5,23 @@
  *
  * Drepturile: `apply` = poate aplica prin formular; posturile și aplicațiile = rolurile ACP (`acp: edit / delete` pe rute).
  */
-import { definePlugin, type GcsPluginApiRequest, type GcsPluginApiResponse, type GcsPluginContext, type GcsPluginForumListInput, type GcsPluginForumListResult } from "../../../src/index";
+import { definePlugin, type GcsPluginApiRequest, type GcsPluginApiResponse, type GcsPluginContext, type GcsPluginForumListInput, type GcsPluginForumListResult, type GcsPluginJson } from "../../../src/index";
 import { ACP, field, idOf, isAppStatus, LIMITS, questionList, readApplication, readPosition, readSettings, SITE } from "./model";
-import { countPositions, createApplication, deletePosition, getPosition, hasPending, listApplications, listPositions, pendingCount, savePosition, setApplicationStatus } from "./store";
+import { countPositions, createApplication, deletePosition, getPosition, hasPending, listApplications, listPositions, pendingCount, savePosition, setApplicationStatus, type Position } from "./store";
 import { renderAcp, renderApplications, renderApply, renderForumCard, renderIndexMeta, renderList, type Forum, type Group, type Users } from "./views";
 
 const settingsOf = (ctx: GcsPluginContext) => readSettings(ctx.settings.all());
+
+/** Posturile pentru rândul de pe index (pagina cea mai vizitată): cache de 5 minute, golit la orice schimbare. */
+const POSITIONS_CACHE = "positions:v1";
+async function cachedPositions(ctx: GcsPluginContext): Promise<Position[]> {
+  const hit = await ctx.cache.get<Position[]>(POSITIONS_CACHE).catch(() => null);
+  if (hit) return hit;
+  const list = await listPositions(ctx);
+  await ctx.cache.set(POSITIONS_CACHE, list as unknown as GcsPluginJson, 300).catch(() => undefined);
+  return list;
+}
+const forgetPositions = (ctx: GcsPluginContext) => ctx.cache.delete(POSITIONS_CACHE).catch(() => undefined);
 
 async function groups(ctx: GcsPluginContext): Promise<Group[]> {
   return (await ctx.api.groups.list().catch(() => [])).map((g) => ({ id: g.id, name: g.name, color: g.color }));
@@ -95,12 +106,14 @@ async function saveAction(req: GcsPluginApiRequest, ctx: GcsPluginContext): Prom
   if (parsed.value.id === null && (await countPositions(ctx)) >= LIMITS.positions) return fail(back, "too_many");
   const id = await savePosition(ctx, parsed.value);
   if (id === null) return { status: 404, body: { ok: false, error: "not_found" } };
+  await forgetPositions(ctx);
   return reply(`${ACP}?edit=${id}&done=saved`, { ok: true, id });
 }
 
 async function deleteAction(req: GcsPluginApiRequest, ctx: GcsPluginContext): Promise<GcsPluginApiResponse> {
   const id = idOf(req.params.id);
   if (!id || !(await deletePosition(ctx, id))) return { status: 404, body: { ok: false, error: "not_found" } };
+  await forgetPositions(ctx);
   return reply(`${ACP}?done=deleted`, { ok: true });
 }
 
@@ -120,7 +133,7 @@ async function forumList(data: Record<string, unknown>, ctx: GcsPluginContext): 
   const input = data as unknown as GcsPluginForumListInput;
   const shown = input.nodes.filter((n) => n.data.positions === true);
   if (shown.length === 0) return {};
-  const [positions, fs] = await Promise.all([listPositions(ctx), forums(ctx)]);
+  const [positions, fs] = await Promise.all([cachedPositions(ctx), forums(ctx)]);
   const forumMap = new Map(fs.map((f) => [f.id, f]));
   const out: GcsPluginForumListResult = {};
   for (const node of shown) {
@@ -134,7 +147,7 @@ async function forumList(data: Record<string, unknown>, ctx: GcsPluginContext): 
 async function forumPage(data: Record<string, unknown>, ctx: GcsPluginContext): Promise<string | null> {
   const values = (data.data ?? {}) as Record<string, unknown>;
   if (values.positions !== true || values.card === false) return null;
-  return renderForumCard(ctx, await listPositions(ctx));
+  return renderForumCard(ctx, await cachedPositions(ctx));
 }
 
 export default definePlugin({

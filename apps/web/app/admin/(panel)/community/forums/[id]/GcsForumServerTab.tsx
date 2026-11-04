@@ -17,7 +17,7 @@ const STYLES = ["full", "compact", "status"] as const;
 export async function GcsForumServerTab({ forumId, extension, tab, values }: GcsForumTabComponentProps) {
   const t = await getTranslations("acp.forumServer");
   const rows = await services().servers.list();
-  const linked = rows.find((r) => r.enabled && !values.server && r.forumId === forumId);
+  const linked = rows.find((r) => r.enabled && r.forumId === forumId);
   const chosen = typeof values.server === "string" ? values.server : "";
   const style = typeof values.style === "string" && (STYLES as readonly string[]).includes(values.style) ? values.style : "full";
   const on = (k: string, d = true) => (typeof values[k] === "boolean" ? (values[k] as boolean) : d);

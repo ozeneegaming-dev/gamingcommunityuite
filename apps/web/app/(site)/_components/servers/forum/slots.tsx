@@ -58,13 +58,12 @@ const chipProps = (v: GcsSlotJson | undefined): ChipProp[] =>
 
 export async function ServersChipsSlot(props: GcsSlotComponentProps) {
   const { byId, pollSeconds } = await forumServerData();
-  const items = chipProps(props.items).flatMap((c) => {
-    const server = byId.get(c.serverId);
-    return server ? [{ server, name: c.name, href: forumHref({ id: c.forumId, slug: c.slug }) }] : [];
-  });
+  // Toate subforumurile rămân (lista lor obișnuită e ascunsă de cipuri); unul cu server ascuns apare fără date live.
+  const items = chipProps(props.items).map((c) => ({ server: byId.get(c.serverId) ?? null, name: c.name, href: forumHref({ id: c.forumId, slug: c.slug }) }));
   if (items.length === 0) return null;
+  const visible = items.flatMap((i) => (i.server ? [i.server] : []));
   return (
-    <GcsServerLiveProvider initial={Object.fromEntries(items.map((i) => [i.server.id, i.server.status]))} pollSeconds={pollSeconds}>
+    <GcsServerLiveProvider initial={Object.fromEntries(visible.map((s) => [s.id, s.status]))} pollSeconds={pollSeconds}>
       <GcsServerChips items={items} />
     </GcsServerLiveProvider>
   );

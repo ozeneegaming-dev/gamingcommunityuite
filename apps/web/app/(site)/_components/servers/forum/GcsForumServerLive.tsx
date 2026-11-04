@@ -5,8 +5,8 @@ import type { GcsServerFieldsShown, GcsServerListStyle, GcsServerLive } from "@g
 import { GcsIconSvg } from "@gcs/ui";
 import Link from "next/link";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { useState, type CSSProperties } from "react";
-import { GcsCopyAddressButton } from "../GcsServerAddress";
+import type { CSSProperties } from "react";
+import { GcsCopyAddressButton, useCopy } from "../GcsServerAddress";
 import { GcsMapPicture, mapPicture } from "../GcsMapPicture";
 import { serverState, useServerStatus, useServerStatuses } from "../GcsServerLive";
 import { fillPercent, isBridgeGameKey, type GcsServerCardData } from "../types";
@@ -24,24 +24,11 @@ export function fillTone(status: GcsServerLive | null): "ok" | "warm" | "full" |
   return fillPercent(status) > 70 ? "warm" : "ok";
 }
 
-function useCopied(text: string) {
-  const [ok, setOk] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setOk(true);
-      setTimeout(() => setOk(false), 2000);
-    } catch {
-      setOk(false);
-    }
-  }
-  return { ok, copy };
-}
-
 /** Adresa cu iconița de copiere (un singur buton, cu textul adresei). */
 function AddressChip({ address }: { address: string }) {
   const t = useTranslations("servers");
-  const { ok, copy } = useCopied(address);
+  const { state, copy } = useCopy(address);
+  const ok = state === "ok";
   return (
     <button type="button" className="gcsx-srv__addr" onClick={() => void copy()} aria-label={`${t("copyAddress")}: ${address}`} data-testid="gcs-forum-server-address">
       <span>{address}</span>
@@ -123,7 +110,7 @@ export function GcsServerStrip({ server, style, fields }: { server: GcsServerCar
   const state = serverState(status);
   const online = state === "online";
   const pct = fillPercent(status);
-  const detail = server.hasMap ? status?.map : server.kind === "game" ? status?.version : status?.channels !== undefined && status?.channels !== null ? String(status.channels) : null;
+  const detail = server.hasMap ? status?.map : server.kind === "game" ? status?.version : server.kind === "voice" && typeof status?.channels === "number" ? String(status.channels) : null;
   const detailLabel = server.hasMap ? t("map") : server.kind === "game" ? t("version") : t("channels");
   const countLabel = server.kind === "voice" ? t("users") : server.kind === "community" ? t("membersOnline") : t("players");
   const compact = style === "compact";
@@ -164,12 +151,22 @@ export function GcsServerStrip({ server, style, fields }: { server: GcsServerCar
 }
 
 /** Cipurile compacte ale subforumurilor-server pe index: numele, jucătorii și harta; click = subforumul. */
-export function GcsServerChips({ items }: { items: { server: GcsServerCardData; href: string; name: string }[] }) {
+export function GcsServerChips({ items }: { items: { server: GcsServerCardData | null; href: string; name: string }[] }) {
   const t = useTranslations("servers.forumLive");
   const statuses = useServerStatuses();
   return (
     <ul className="gcsx-srvChips" aria-label={t("chipsLabel")} data-testid="gcs-forum-server-chips">
       {items.map(({ server, href, name }) => {
+        if (!server) {
+          // Un server ascuns vizitatorului (grupuri): subforumul rămâne în rând, fără datele live.
+          return (
+            <li key={href}>
+              <Link href={href} className="gcsx-srvChip" data-state="hidden" data-testid="gcs-forum-server-chip">
+                <span className="gcsx-srvChip__name">{name}</span>
+              </Link>
+            </li>
+          );
+        }
         const status = server.id in statuses ? (statuses[server.id] ?? null) : server.status;
         const state = serverState(status);
         const detail = server.hasMap ? status?.map : status?.version;

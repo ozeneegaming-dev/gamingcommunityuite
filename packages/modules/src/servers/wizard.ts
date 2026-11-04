@@ -4,6 +4,7 @@ import type { GcsForumService } from "../forums/forums";
 import { FORUMS_ACP_SECTION } from "../forums/forums";
 import type { GcsForumSlotService } from "../forums/slots";
 import { gameDef } from "./games";
+import { normalizeHost } from "./net";
 import { SERVERS_FORUM_EXTENSION } from "./forum";
 import { MAX_SERVERS } from "./poller";
 import { SERVERS_ACP_SECTION, type GcsServerService } from "./service";
@@ -83,7 +84,8 @@ export class GcsServerWizard {
       for (const [k, v] of Object.entries(fieldErrors)) errors[`servers.${i}.${k}`] = v;
       const serverName = plain(s.name);
       if (!serverName || [...serverName].length > WIZARD_LIMITS.name) errors[`servers.${i}.name`] = "required";
-      const key = `${s.game}|${String(s.host).trim().toLowerCase()}|${s.port}`;
+      const host = gameDef(s.game)?.protocol === "discord" ? String(s.host).trim() : (normalizeHost(s.host) ?? String(s.host).trim().toLowerCase());
+      const key = `${s.game}|${host}|${s.port}`;
       if (seen.has(key) || existing.some((r) => `${r.game}|${r.host}|${r.port}` === key)) errors[`servers.${i}.host`] = "duplicate_server";
       seen.add(key);
       out.push({ ...s, name: serverName, resolvedName: serverName });
