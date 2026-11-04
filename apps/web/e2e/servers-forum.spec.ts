@@ -58,6 +58,8 @@ test("asistentul: tipul, jocul, serverul verificat live, subforumurile, rezumatu
 
   await page.getByTestId("gcs-wizard-server-name").first().fill(SRV);
   await page.getByTestId("gcs-wizard-server-address").first().fill(`127.0.0.1:${fake.udpPort}`);
+  // „Top jucători” e oprit implicit (macheta); aici îl pornim, pentru cardul mare.
+  await page.getByRole("button", { name: "Top jucători" }).click();
   await page.getByTestId("gcs-wizard-verify").first().click();
   await expect(page.getByTestId("gcs-wizard-server-check").first()).toContainText("Online · de_mirage", { timeout: 15_000 });
   await shot(page, "wizard-3-servers");
