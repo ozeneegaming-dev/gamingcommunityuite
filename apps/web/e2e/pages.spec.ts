@@ -80,7 +80,7 @@ test("constructorul: o pagină cu o secțiune și un bloc de conținut, în meni
   await root.goto("/admin/pages");
   await root.getByTestId("gcs-acp-pages-new-open").click();
   const panel = root.getByTestId("gcs-acp-pages-new");
-  await panel.getByLabel("Titlu").fill(PAGE_TITLE);
+  await panel.getByLabel("Titlu", { exact: true }).fill(PAGE_TITLE);
   await panel.getByLabel("În meniul site-ului").check();
   await panel.getByRole("button", { name: "Creează" }).click();
   const node = root.getByTestId("gcs-acp-pages-node").filter({ hasText: PAGE_TITLE });
