@@ -510,6 +510,18 @@
   .gcsx-srvSummary__pill {
     font-size: 11px;
     padding: 4px 9px;
+    margin-left: 0;
+    white-space: normal;
+  }
+  /* Banda categoriei pe telefon: titlul și butonul pe primul rând, numărul serverelor și sumarul live dedesubt. */
+  .gcs-category__header:has(.gcsx-srvSummary) {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .gcs-category__slot:has(.gcsx-srvSummary) {
+    order: 5;
+    flex: 1 1 100%;
+    margin-left: 0;
   }
 }
 
