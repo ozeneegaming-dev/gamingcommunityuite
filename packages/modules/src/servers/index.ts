@@ -5,6 +5,7 @@ import { GcsBridgeAdmins } from "./bridge/admins";
 import { BRIDGE_PERMISSION, BRIDGE_SETTING_DEFS, BRIDGE_SETTINGS_SECTION, SERVER_ADMINS_ACP_SECTION, SERVER_MAPS_ACP_SECTION } from "./bridge/config";
 import { POLL_INTERVAL_SETTING, RETENTION_SETTING, SHOW_PLAYERS_SETTING } from "./poller";
 import { SERVERS_ACP_SECTION } from "./service";
+import { serversForumExtension } from "./forum";
 import { serverStatTiles } from "./stats";
 
 const GLOBAL_STAFF = { root_admin: true, admin: true, super_moderator: true } as const;
@@ -112,6 +113,8 @@ export const serversModule: GcsModule = {
   seed: ({ tx }) => GcsBridgeAdmins.seedPresets(tx),
   widgets: serverWidgets,
   stats: serverStatTiles,
+  // Serverele ca forumuri (macheta `ServerForum`): tabul „Server” al forumului și sloturile live.
+  forumExtensions: [serversForumExtension],
   // Imediat după Forum (macheta aprobată); adus de actualizarea meniului `nav:v3`. Submeniul (paginile punții, specul
   // 2026-10-08-servere-pagini §10) vine cu `nav:v6`: pe un site existent, copiii se adaugă activi sub itemul neschimbat.
   nav: [

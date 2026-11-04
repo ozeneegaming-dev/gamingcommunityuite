@@ -1,0 +1,67 @@
+{
+  "manifestVersion": 1,
+  "key": "gcs.recruitment",
+  "name": "Recrutare",
+  "version": "1.0.0",
+  "author": { "name": "GamingCommunitySuite", "url": "https://gamingcommunitysuite.com" },
+  "description": "Posturile deschise în echipa forumului și a serverelor (Moderator, Admin servere, Designer, Editor știri…): listă și panou în ACP, rândul „Recrutare” pe index cu starea fiecărui post (ON / OFF / NOU) și aplicarea printr-un formular, un topic sau un link. Aplicație premium GCS.",
+  "icon": "fa-solid fa-user-plus",
+  "license": "GCS Premium",
+  "minGcs": "0.11.0",
+  "capabilities": ["db", "pages", "acp", "api", "hooks", "settings", "permissions", "client-css"],
+  "settings": {
+    "tabs": [
+      {
+        "key": "general",
+        "label": "settings.tabs.general",
+        "icon": "fa-solid fa-sliders",
+        "fields": [
+          { "type": "textarea", "key": "intro", "label": "settings.intro", "hint": "settings.introHint", "default": "", "maxLength": 2000 },
+          { "type": "toggle", "key": "oneOpen", "label": "settings.oneOpen", "hint": "settings.oneOpenHint", "default": true },
+          { "type": "number", "key": "minLength", "label": "settings.minLength", "hint": "settings.minLengthHint", "default": 40, "min": 0, "max": 2000 }
+        ]
+      }
+    ]
+  },
+  "permissions": [
+    {
+      "key": "apply",
+      "scope": "group",
+      "label": "permissions.apply",
+      "default": { "root_admin": true, "admin": true, "super_moderator": true, "moderator": true, "member": true, "vip_bronze": true, "vip_silver": true, "vip_gold": true, "vip_legend": true }
+    }
+  ],
+  "hooks": [{ "point": "forum.list" }, { "point": "forum.page" }],
+  "forumTabs": [
+    {
+      "key": "recruitment",
+      "label": "tabs.recruitment",
+      "icon": "fa-solid fa-user-plus",
+      "position": 60,
+      "types": ["FORUM", "LINK", "PAGE"],
+      "description": "tabs.recruitmentHint",
+      "fields": [
+        { "type": "toggle", "key": "positions", "label": "tabs.positions", "hint": "tabs.positionsHint", "default": false },
+        { "type": "toggle", "key": "closed", "label": "tabs.closed", "default": true },
+        { "type": "toggle", "key": "card", "label": "tabs.card", "hint": "tabs.cardHint", "default": true }
+      ]
+    }
+  ],
+  "routes": {
+    "pages": [
+      { "path": "/", "title": "page.list" },
+      { "path": "/apply/:id", "title": "page.apply" }
+    ],
+    "acp": [
+      { "path": "/", "label": "acp.menu", "icon": "fa-solid fa-user-plus" },
+      { "path": "/applications", "label": "acp.applicationsMenu", "icon": "fa-solid fa-inbox" }
+    ],
+    "api": [
+      { "path": "/apply/:id", "methods": ["POST"], "permission": "apply" },
+      { "path": "/positions/save", "methods": ["POST"], "acp": "edit" },
+      { "path": "/positions/:id/delete", "methods": ["POST"], "acp": "delete" },
+      { "path": "/applications/:id/status", "methods": ["POST"], "acp": "edit" }
+    ]
+  },
+  "client": { "styles": ["assets/recruitment.css"] }
+}

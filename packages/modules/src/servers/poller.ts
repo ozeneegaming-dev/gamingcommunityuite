@@ -5,6 +5,7 @@ import type { PrismaClient } from "@gcs/db";
 import { serversAllowNets } from "./net";
 import { queryGameServer, type GcsQueryOptions, type GcsServerTarget } from "./query";
 import { rollupSnapshots } from "./rollup";
+import { serverAuth } from "./auth";
 import type { GcsServerStatusStore } from "./store";
 import { liveStatus, type GcsServerStatus } from "./types";
 
@@ -46,6 +47,16 @@ export type GcsServerQueryFn = (target: GcsServerTarget, opts: GcsQueryOptions) 
 function changed(before: GcsServerStatus | null, after: GcsServerStatus): boolean {
   if (!before) return true;
   return before.online !== after.online || before.players !== after.players || before.maxPlayers !== after.maxPlayers || before.map !== after.map || before.name !== after.name;
+}
+
+/**
+ * „Online de” și „Ultima dată”: păstrate din statusul anterior. Un server care tocmai a pornit primește ora de acum; unul
+ * căzut își păstrează ultima interogare reușită.
+ */
+export function withUptime(previous: GcsServerStatus | null, status: GcsServerStatus, at: number): GcsServerStatus {
+  const now = new Date(at).toISOString();
+  if (status.online) return { ...status, onlineSince: previous?.online ? (previous.onlineSince ?? now) : now, lastOnlineAt: now };
+  return { ...status, onlineSince: null, lastOnlineAt: previous?.online ? (previous.updatedAt ?? now) : (previous?.lastOnlineAt ?? null) };
 }
 
 /** Rulează `fn` pe toate elementele, cu cel mult `limit` în paralel. */
@@ -91,7 +102,7 @@ export class GcsServerPoller {
     if (!(await store.lock(token, LOCK_MS))) return 0;
     try {
       const [servers, interval, showPlayers] = await Promise.all([
-        db.gameServer.findMany({ where: { enabled: true }, orderBy: [{ position: "asc" }, { id: "asc" }], take: MAX_SERVERS, select: { id: true, game: true, host: true, port: true, queryPort: true } }),
+        db.gameServer.findMany({ where: { enabled: true }, orderBy: [{ position: "asc" }, { id: "asc" }], take: MAX_SERVERS, select: { id: true, game: true, host: true, port: true, queryPort: true, queryMode: true, queryUser: true, querySecret: true } }),
         settings.get<number>(POLL_INTERVAL_SETTING),
         settings.get<boolean>(SHOW_PLAYERS_SETTING),
       ]);
@@ -100,7 +111,9 @@ export class GcsServerPoller {
       const now = this.now();
       const due = servers.filter((s) => (next.get(s.id) ?? 0) <= now);
       await store.claim(due.map((s) => s.id), now + CLAIM_MS);
-      await eachLimited(due, CONCURRENCY, async (s) => void (await this.pollOne(s, { interval, failures: failures.get(s.id) ?? 0, players: showPlayers })));
+      await eachLimited(due, CONCURRENCY, async ({ queryMode, queryUser, querySecret, ...s }) =>
+        void (await this.pollOne({ ...s, auth: serverAuth({ queryMode, queryUser, querySecret }) }, { interval, failures: failures.get(s.id) ?? 0, players: showPlayers })),
+      );
       return due.length;
     } finally {
       await store.unlock(token);
@@ -111,12 +124,13 @@ export class GcsServerPoller {
   async pollOne(server: PollTarget, opts: { interval: number; failures: number; players: boolean }): Promise<GcsServerStatus> {
     const { db, store, realtime, cache } = this.deps;
     const previous = await store.get(server.id);
-    const status = await this.query(server, { players: opts.players, allow: (this.deps.allow ?? serversAllowNets)() });
-    const failures = status.online ? 0 : opts.failures + 1;
+    const queried = await this.query(server, { players: opts.players, allow: (this.deps.allow ?? serversAllowNets)() });
+    const failures = queried.online ? 0 : opts.failures + 1;
     const delay = nextPollDelay(opts.interval, failures);
     // Greutatea rândului = cât din timp acoperă (un server căzut, interogat mai rar, cântărește mai mult).
     const samples = Math.max(1, Math.round(delay / opts.interval));
     const at = this.now();
+    const status = withUptime(previous, queried, at);
     await store.save(server.id, status, { nextAt: at + delay * 1000, failures });
     await db.serverSnapshot
       .create({

@@ -1,5 +1,6 @@
 import dgram from "node:dgram";
 import dns from "node:dns";
+import http from "node:http";
 import net, { BlockList, isIP } from "node:net";
 import { isPublicAddress } from "@gcs/core";
 import { GcsQueryFailure } from "./protocols/reader";
@@ -260,5 +261,151 @@ export function tcpExchange<T>(
     });
     socket.on("error", (error) => finish(socketFailure(error)));
     socket.on("close", () => finish(new GcsQueryFailure(firstByteMs === null ? "refused" : "invalid_response")));
+  });
+}
+
+/** Cel mult atâția octeți primiți pe un canal TCP de interogare (ServerQuery). */
+const TCP_MAX_BYTES = 512 * 1024;
+
+/**
+ * Un canal TCP spre adresa deja verificată (fără a doua rezolvare DNS), pentru protocoalele cu mai multe schimburi
+ * (ServerQuery TeamSpeak): bucățile primite stau în coadă și se citesc cu un termen; peste 512 KB → `too_large`.
+ */
+export class GcsTcpChannel {
+  private readonly queue: Buffer[] = [];
+  private waiter: { resolve: (b: Buffer) => void; reject: (e: GcsQueryFailure) => void; timer: NodeJS.Timeout } | null = null;
+  private failure: GcsQueryFailure | null = null;
+  private received = 0;
+
+  private constructor(private readonly socket: net.Socket) {
+    socket.on("data", (chunk: Buffer) => {
+      this.received += chunk.length;
+      if (this.received > TCP_MAX_BYTES) return this.fail(new GcsQueryFailure("too_large"));
+      if (this.waiter) {
+        const w = this.waiter;
+        this.waiter = null;
+        clearTimeout(w.timer);
+        w.resolve(chunk);
+      } else {
+        this.queue.push(chunk);
+      }
+    });
+    socket.on("error", (error) => this.fail(socketFailure(error)));
+    socket.on("close", () => this.fail(new GcsQueryFailure(this.received === 0 ? "refused" : "invalid_response")));
+  }
+
+  static open(target: GcsResolvedAddress, port: number, deadline: number): Promise<GcsTcpChannel> {
+    return new Promise((resolve, reject) => {
+      const socket = net.connect({ host: target.address, port, family: target.family, noDelay: true });
+      const timer = setTimeout(() => {
+        socket.destroy();
+        reject(new GcsQueryFailure("timeout"));
+      }, Math.max(0, deadline - Date.now()));
+      socket.once("error", (error) => {
+        clearTimeout(timer);
+        socket.destroy();
+        reject(socketFailure(error));
+      });
+      socket.once("connect", () => {
+        clearTimeout(timer);
+        socket.removeAllListeners("error");
+        resolve(new GcsTcpChannel(socket));
+      });
+    });
+  }
+
+  private fail(error: GcsQueryFailure): void {
+    this.failure ??= error;
+    if (this.waiter) {
+      const w = this.waiter;
+      this.waiter = null;
+      clearTimeout(w.timer);
+      w.reject(this.failure);
+    }
+  }
+
+  send(buf: Buffer): void {
+    if (this.failure) throw this.failure;
+    this.socket.write(buf);
+  }
+
+  /** Următoarea bucată primită, sau `timeout` la termen (`Date.now()` în ms). */
+  next(deadline: number): Promise<Buffer> {
+    const queued = this.queue.shift();
+    if (queued) return Promise.resolve(queued);
+    if (this.failure) return Promise.reject(this.failure);
+    const wait = deadline - Date.now();
+    if (wait <= 0) return Promise.reject(new GcsQueryFailure("timeout"));
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.waiter = null;
+        reject(new GcsQueryFailure("timeout"));
+      }, wait);
+      this.waiter = { resolve, reject, timer };
+    });
+  }
+
+  close(): void {
+    if (this.waiter) clearTimeout(this.waiter.timer);
+    this.waiter = null;
+    this.socket.destroy();
+  }
+}
+
+/**
+ * Un GET HTTP (fără TLS) spre adresa deja verificată, cu `Host` pus de noi: fără redirecturi, cu termen și cu răspunsul
+ * plafonat (WebQuery-ul TeamSpeak). Doar statusul 2xx e reușit; 401 / 403 → `auth_failed`, 404 → `not_found`.
+ */
+export function httpGetJson(
+  target: GcsResolvedAddress,
+  port: number,
+  path: string,
+  opts: { host: string; headers?: Record<string, string>; deadline: number; maxBytes: number },
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (error: GcsQueryFailure | null, value?: unknown) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      req.destroy();
+      if (error) reject(error);
+      else resolve(value);
+    };
+    const req = http.request(
+      {
+        host: target.address,
+        family: target.family,
+        port,
+        path,
+        method: "GET",
+        agent: false,
+        headers: { host: opts.host.includes(":") ? `[${opts.host}]:${port}` : `${opts.host}:${port}`, accept: "application/json", "user-agent": "GamingCommunitySuite", ...(opts.headers ?? {}) },
+      },
+      (res) => {
+        const status = res.statusCode ?? 0;
+        if (status === 401 || status === 403) return finish(new GcsQueryFailure("auth_failed"));
+        if (status === 404) return finish(new GcsQueryFailure("not_found"));
+        if (status < 200 || status >= 300) return finish(new GcsQueryFailure("invalid_response"));
+        const chunks: Buffer[] = [];
+        let size = 0;
+        res.on("data", (chunk: Buffer) => {
+          size += chunk.length;
+          if (size > opts.maxBytes) return finish(new GcsQueryFailure("too_large"));
+          chunks.push(chunk);
+        });
+        res.on("end", () => {
+          try {
+            finish(null, JSON.parse(Buffer.concat(chunks).toString("utf8")));
+          } catch {
+            finish(new GcsQueryFailure("invalid_response"));
+          }
+        });
+        res.on("error", (error) => finish(socketFailure(error)));
+      },
+    );
+    const timer = setTimeout(() => finish(new GcsQueryFailure("timeout")), Math.max(0, opts.deadline - Date.now()));
+    req.on("error", (error) => finish(socketFailure(error)));
+    req.end();
   });
 }

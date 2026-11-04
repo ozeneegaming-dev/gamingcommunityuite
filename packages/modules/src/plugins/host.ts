@@ -609,6 +609,7 @@ export class GcsPluginHost {
         case "api.posts.get":
         case "api.posts.recent":
         case "api.forums.list":
+        case "api.groups.list":
         case "api.stats":
         case "api.vip.plans":
         case "api.vip.status":

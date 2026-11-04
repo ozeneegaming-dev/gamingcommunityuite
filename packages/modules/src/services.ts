@@ -158,6 +158,7 @@ import { GcsVipPublic } from "./vip/public";
 import { GcsServerPoller } from "./servers/poller";
 import { GcsServerQueries } from "./servers/queries";
 import { GcsServerService, SERVER_BANNER } from "./servers/service";
+import { GcsServerWizard } from "./servers/wizard";
 import { GcsServerStatusStore } from "./servers/store";
 import { GcsBridge } from "./servers/bridge";
 import { MAP_IMAGE, SANCTION_EVIDENCE } from "./servers/bridge/config";
@@ -375,6 +376,8 @@ export type GcsServices = {
   servers: GcsServerService;
   /** Citirile publice ale serverelor (`/servers`, widget-ul, statusurile live). */
   serverQueries: GcsServerQueries;
+  /** Asistentul „Creează categorie de servere” (ACP › Forumuri): categoria, forumurile serverelor, subforumurile. */
+  serverWizard: GcsServerWizard;
   /** Interogarea periodică a serverelor (rulează în `gcs-worker`). */
   serverPoller: GcsServerPoller;
   /**
@@ -847,6 +850,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   attachments.registerAccess(SERVER_BANNER, (actor, id) => serverQueries.canView(actor, Number(id)));
   // Aplicația Clanuri: serviciul, citirile publice, imaginile (le vede cine vede clanul) și notificările.
   const servers = new GcsServerService({ db, bus, acp, attachments, rateLimiter, store: serverStore });
+  const forumSlots = new GcsForumSlotService({ db, cache, bus, registry, apps, acp });
   // Puntea cu serverele de joc: furnizorul statisticilor (citit de clanuri), imaginile hărților (publice), dovezile
   // sancțiunilor (le vede cine vede sancțiunea), camera live a unui meci mix și notificările tichetelor.
   const bridge = new GcsBridge({
@@ -1155,7 +1159,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     search: new GcsForumSearch({ db, permissions, settings, rateLimiter, kv }),
     posting,
     forumModerators: new GcsForumModeratorService({ db, permissions, acp }),
-    forumSlots: new GcsForumSlotService({ db, cache, bus, registry, apps, acp }),
+    forumSlots,
+    serverWizard: new GcsServerWizard({ db, acp, forums, forumSlots, servers }),
     ratings,
     topicTools,
     archive,

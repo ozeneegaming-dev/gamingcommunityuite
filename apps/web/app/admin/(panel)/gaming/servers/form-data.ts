@@ -20,6 +20,6 @@ export async function serverFormData() {
     }
   };
   walk(null, 0);
-  const games: GcsServerFormGame[] = enabledGames().map((g) => ({ key: g.key, name: g.name, defaultPort: g.defaultPort, icon: iconDef(g.icon) }));
+  const games: GcsServerFormGame[] = enabledGames().map((g) => ({ key: g.key, name: g.name, defaultPort: g.defaultPort, defaultQueryPort: g.defaultQueryPort ?? null, protocol: g.protocol, icon: iconDef(g.icon) }));
   return { games, forums: tree, groups };
 }

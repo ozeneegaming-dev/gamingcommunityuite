@@ -429,6 +429,7 @@
       "unknown": "Unknown.",
       "migration_failed": "A database migration failed.",
       "invalid_host": "Invalid host (a public IP or domain name, without a port)",
+      "invalid_guild": "A Discord server ID has 17–20 digits",
       "blocked_address": "The address is not public (internal networks or localhost are not allowed)",
       "duplicate_server": "The server already exists (same game, host and port)",
       "invalid_chars": "Contains characters that are not allowed",
@@ -3145,7 +3146,23 @@
         "groups": "Who sees the server",
         "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
         "enabled": "Active (shown on the site and queried)",
-        "bannerUpload": "Upload the banner"
+        "bannerUpload": "Upload the banner",
+        "guildId": "Discord server ID",
+        "guildIdHint": "In Discord: Server Settings › Widget › Server ID (17–20 digits). Also turn on “Enable Server Widget”.",
+        "voicePort": "Voice port",
+        "tsQueryPortHint": "ServerQuery: 10011 · WebQuery: 10080 (empty = default).",
+        "queryMode": "TeamSpeak query",
+        "queryModes": {
+          "raw": "ServerQuery (query account)",
+          "http": "WebQuery (API key)"
+        },
+        "queryUser": "Query user",
+        "queryPassword": "Query password",
+        "queryKey": "API key (WebQuery)",
+        "querySecretSaved": "•••••• saved",
+        "querySecretKeep": "Leave empty to keep the saved one. It is never shown again.",
+        "querySecretHint": "Optional. Use an account that can only view; it is stored encrypted and never shown again.",
+        "querySecretClear": "Remove the saved password / key"
       },
       "test": "Test",
       "testing": "Querying…",
@@ -3165,7 +3182,10 @@
         "unreachable": "The server can't be reached.",
         "invalid_response": "The answer isn't from this game (check the game and the port).",
         "too_large": "The server's answer is too large.",
-        "unknown_game": "Unknown game."
+        "unknown_game": "Unknown game.",
+        "auth_failed": "The query account or API key is wrong (or cannot view the server).",
+        "widget_disabled": "The server widget is off: in Discord, Server Settings › Widget › “Enable Server Widget”.",
+        "not_found": "No server at this address or ID."
       },
       "save": "Save",
       "create": "Add the server",
@@ -7126,6 +7146,160 @@
           "body": "The catalogue could not load right now. Reload the page in a few minutes."
         }
       }
+    },
+    "forumServer": {
+      "tab": "Server",
+      "description": "Link the forum (or subforum) to a server: live stats show in lists, in the big card and, optionally, in topics. A forum without a linked server stays a normal forum.",
+      "save": "Save",
+      "server": "Linked server",
+      "serverAuto": "Automatic: {name} (from the server settings)",
+      "serverNone": "No server (normal forum)",
+      "serverHint": "Any forum or subforum, at any level. Servers are added in ACP › Gaming › Servers.",
+      "disabled": "off",
+      "style": "Style in lists",
+      "styles": {
+        "full": "Full",
+        "compact": "Compact",
+        "status": "ON/OFF only"
+      },
+      "whereTitle": "Where the stats appear",
+      "where": {
+        "row": "On the forum row, in lists",
+        "rowHint": "index and the parent forum page",
+        "parent": "In the parent's subforum list",
+        "parentHint": "the compact chips on the index",
+        "card": "Big card at the top of the forum page",
+        "topic": "Small bar in the forum's topics"
+      },
+      "showTitle": "What is shown",
+      "show": {
+        "status": "Online / offline status",
+        "players": "Players + bar",
+        "map": "Map / version",
+        "address": "IP + copy",
+        "connect": "Connect button",
+        "top": "Top players and 24 h chart",
+        "topHint": "big card only"
+      }
+    },
+    "serverWizard": {
+      "title": "Create category",
+      "lead": "A simple category or a server category: pick the game, add the servers, and the forums and live stats are created for you.",
+      "stepsLabel": "Wizard steps",
+      "steps": {
+        "type": "Type",
+        "game": "Game",
+        "servers": "Servers and forums",
+        "confirm": "Confirm"
+      },
+      "name": "Category name",
+      "description": "Description (optional)",
+      "type": "Category type",
+      "needName": "Enter the category name.",
+      "appBadge": "Servers app",
+      "premiumOff": "Needs the Servers app",
+      "types": {
+        "simple": {
+          "name": "Simple category",
+          "desc": "Just forums, as before.",
+          "p1": "You create the forums yourself",
+          "p2": "Any forum type",
+          "p3": "No server stats"
+        },
+        "servers": {
+          "name": "Server category",
+          "desc": "Pick the game and add the servers. Forums and live stats are created for you.",
+          "p1": "One forum per server, linked automatically",
+          "p2": "Live stats in the description: players, map, IP",
+          "p3": "Standard subforums: complaints, admin requests…"
+        }
+      },
+      "gameTitle": "Pick the game",
+      "gameHint": "Each server can have its own game; this is just the default for new servers.",
+      "soon": "Soon",
+      "protocols": {
+        "goldsrc": "GoldSrc query · map, players",
+        "source": "Source query · map, players",
+        "minecraft": "Minecraft status · version, players",
+        "bedrock": "Bedrock ping · version, players",
+        "teamspeak": "TS query · users, channels",
+        "discord": "Discord widget · members online, invite",
+        "mumble": "Mumble ping · users"
+      },
+      "notes": {
+        "default": "CS and Steam servers get a Connect button that opens the game straight on the server. The optional GCS server plugin adds per-player stats.",
+        "teamspeak": "TeamSpeak: besides the address you can add a query account (or a WebQuery API key) in ACP › Servers after creating it. The forum button opens the TeamSpeak client on the server.",
+        "discord": "Discord: instead of an IP, enter the Discord server ID and turn on “Server Widget” in Discord settings. The forum shows members online and the invite button.",
+        "minecraft": "Minecraft: the address can be a name (mc.example.com) without a port. The forum shows the version instead of the map and the button copies the address.",
+        "minecraft_bedrock": "Minecraft Bedrock: the default port is 19132. The forum shows the version and the button copies the address.",
+        "mumble": "Mumble: the default port is 64738. The forum shows connected users and a button that opens the Mumble client."
+      },
+      "serversTitle": "Servers",
+      "serversHint": "Each server gets its own forum. Press “Check” to see whether it answers.",
+      "col": {
+        "name": "Name",
+        "address": "Address (IP:port)",
+        "live": "Live answer"
+      },
+      "namePh": "e.g. Public 128 tick",
+      "guildPh": "Discord server ID",
+      "existing": "Existing server",
+      "online": "Online · {info}",
+      "checking": "Checking…",
+      "noAnswer": "No answer",
+      "verify": "Check",
+      "remove": "Remove",
+      "addServer": "Add server",
+      "pickExisting": "Pick an existing server",
+      "alreadyLinked": "already has a forum",
+      "subsTitle": "Subforums for every server",
+      "custom": "+ Custom",
+      "liveTitle": "What shows live in the forum description",
+      "subs": {
+        "complaints": "Complaints",
+        "admin_requests": "Admin requests",
+        "suggestions": "Suggestions",
+        "unban_requests": "Unban requests",
+        "guides": "Guides",
+        "events": "Events"
+      },
+      "live": {
+        "status": "Online status",
+        "players": "Players + bar",
+        "map": "Map / version",
+        "address": "IP + copy",
+        "connect": "Connect button",
+        "top": "Top players"
+      },
+      "treeTitle": "What gets created",
+      "treeType": "server category",
+      "noSubs": "no subforums",
+      "summaryTitle": "Summary",
+      "count": {
+        "category": "category",
+        "forums": "server forums",
+        "subforums": "subforums",
+        "linked": "linked servers"
+      },
+      "afterNote": "The look (background, icons, labels) is set after creating, in the “Appearance” tab. Everything can be changed or deleted later.",
+      "back": "Back",
+      "continue": "Continue",
+      "create": "Create category",
+      "stepOf": "Step {n} of {total}",
+      "errors": {
+        "timeout": "No answer (timeout)",
+        "blocked": "Address is not public",
+        "dns": "Name does not resolve",
+        "refused": "Port closed",
+        "unreachable": "Cannot be reached",
+        "invalid_response": "Another game or port",
+        "too_large": "Answer too large",
+        "unknown_game": "Unknown game",
+        "auth_failed": "Wrong query account",
+        "widget_disabled": "Discord widget is off",
+        "not_found": "No such server"
+      },
+      "createButton": "Create category"
     }
   },
   "settings": {
@@ -11141,6 +11315,49 @@
       "servers": "Servers",
       "players": "Players",
       "fill": "Fill"
+    },
+    "users": "{players} / {max} users",
+    "membersOnline": "{players} members online",
+    "joinVia": {
+      "teamspeak": "Join TeamSpeak",
+      "mumble": "Join Mumble",
+      "discord": "Join Discord"
+    },
+    "connectFull": "Connect",
+    "forumLive": {
+      "on": "ON",
+      "off": "OFF",
+      "unknown": "?",
+      "players": "Players",
+      "users": "Users",
+      "membersOnline": "Members online",
+      "map": "Map",
+      "version": "Version",
+      "channels": "Channels",
+      "lastSeen": "Last seen",
+      "offline": "Offline",
+      "unknown_state": "Unknown",
+      "chipsLabel": "Servers in the subforums",
+      "serversCount": "{count, plural, one {# server} other {# servers}}",
+      "live": "LIVE",
+      "summarySlots": "{players} / {slots} players online",
+      "summaryPlayers": "{count, plural, one {# player} other {# players}}",
+      "summaryVoice": "{count} on TS",
+      "summaryDiscord": "{count} on Discord",
+      "currentMap": "Current map",
+      "onlineSince": "Online for {since}",
+      "occupancy": "Occupancy",
+      "peakToday": "Peak today",
+      "last24h": "Players in the last 24 hours",
+      "onServerNow": "On the server now",
+      "kills": "{count, plural, one {# kill} other {# kills}}",
+      "allPlayers": "{count, plural, one {The player on the server} other {All # players}}",
+      "playersHidden": "The player list is not public.",
+      "noPlayerList": "The server does not send its player list.",
+      "nobody": "Nobody on the server right now.",
+      "upDays": "{count, plural, one {# day} other {# days}}",
+      "upHours": "{count, plural, one {# hour} other {# hours}}",
+      "upMinutes": "{count, plural, one {# minute} other {# minutes}}"
     }
   },
   "clans": {

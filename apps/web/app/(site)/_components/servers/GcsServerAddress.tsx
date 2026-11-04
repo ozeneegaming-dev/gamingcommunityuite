@@ -29,7 +29,7 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** Starea butonului de copiere: „Copiat” 2 secunde după copiere (anunțat și cititoarelor de ecran). */
-function useCopy(text: string) {
+export function useCopy(text: string) {
   const [state, setState] = useState<"idle" | "ok" | "fail">("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);

@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 const PREFIX = "GCS1";
 const SIGNED_HEADER = "GCS-LICENSE-V1\n";
 /** Aplicațiile premium (catalogul installer-ului, `packages/core/src/install/apps.ts`). */
-export const PREMIUM_APPS = ["servers", "shop", "vip_studio", "chat_pro", "groups_pro"];
+export const PREMIUM_APPS = ["servers", "shop", "vip_studio", "chat_pro", "groups_pro", "recruitment"];
 const KEY_ID = /^[A-Za-z0-9._-]{1,64}$/;
 /** Un domeniu (`forum.exemplu.ro`) sau un wildcard de subdomenii (`*.exemplu.ro`), fără schemă, port sau cale. */
 const DOMAIN = /^(\*\.)?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$|^localhost$/;

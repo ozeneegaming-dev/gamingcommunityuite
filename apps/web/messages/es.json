@@ -429,6 +429,7 @@
       "unknown": "Desconocido.",
       "migration_failed": "Una migración de bases de datos falló.",
       "invalid_host": "Invalid host (a public IP or domain name, without a port)",
+      "invalid_guild": "ID-ul serverului de Discord are 17–20 cifre",
       "blocked_address": "The address is private or local and can't be queried",
       "duplicate_server": "The server already exists (same game, host and port)",
       "invalid_chars": "Contains characters that are not allowed",
@@ -3145,7 +3146,23 @@
         "groups": "Who sees the server",
         "groupsHint": "Nothing ticked = everyone allowed to see the servers.",
         "enabled": "Active (shown on the site and queried)",
-        "bannerUpload": "Încarcă bannerul"
+        "bannerUpload": "Încarcă bannerul",
+        "guildId": "ID-ul serverului de Discord",
+        "guildIdHint": "Din Discord: Setări server › Widget › ID server (17–20 cifre). Pornește și „Activează widget-ul serverului”.",
+        "voicePort": "Portul de voce",
+        "tsQueryPortHint": "ServerQuery: 10011 · WebQuery: 10080 (gol = implicit).",
+        "queryMode": "Interogarea TeamSpeak",
+        "queryModes": {
+          "raw": "ServerQuery (cont de interogare)",
+          "http": "WebQuery (cheie API)"
+        },
+        "queryUser": "Utilizatorul de interogare",
+        "queryPassword": "Parola de interogare",
+        "queryKey": "Cheia API (WebQuery)",
+        "querySecretSaved": "•••••• salvată",
+        "querySecretKeep": "Lasă gol ca să rămână cea salvată. Nu se mai afișează niciodată.",
+        "querySecretHint": "Opțional. Folosește un cont doar cu drept de vizualizare; se salvează criptat și nu se mai afișează.",
+        "querySecretClear": "Șterge parola / cheia salvată"
       },
       "test": "Test",
       "testing": "Querying…",
@@ -3165,7 +3182,10 @@
         "unreachable": "The server can't be reached.",
         "invalid_response": "The answer isn't from this game (check the game and the port).",
         "too_large": "The server's answer is too large.",
-        "unknown_game": "Unknown game."
+        "unknown_game": "Unknown game.",
+        "auth_failed": "Contul de interogare sau cheia API nu e bun (ori nu are dreptul de a vedea serverul).",
+        "widget_disabled": "Widget-ul serverului e oprit: în Discord, Setări server › Widget › „Activează widget-ul serverului”.",
+        "not_found": "Serverul nu există la această adresă sau ID."
       },
       "save": "Save",
       "create": "Add the server",
@@ -7126,6 +7146,160 @@
           "body": "Catalogul nu s-a putut încărca acum. Reîncarcă pagina peste câteva minute."
         }
       }
+    },
+    "forumServer": {
+      "tab": "Server",
+      "description": "Leagă forumul (sau subforumul) de un server: statisticile live apar în liste, în cardul mare și, opțional, în topicuri. Un forum fără server legat rămâne un forum normal.",
+      "save": "Salvează",
+      "server": "Serverul legat",
+      "serverAuto": "Automat: {name} (din fișa serverului)",
+      "serverNone": "Niciun server (forum normal)",
+      "serverHint": "Poate fi orice forum sau subforum, la orice nivel. Serverele se adaugă în ACP › Gaming › Servere.",
+      "disabled": "oprit",
+      "style": "Stilul în liste",
+      "styles": {
+        "full": "Complet",
+        "compact": "Compact",
+        "status": "Doar ON/OFF"
+      },
+      "whereTitle": "Unde apar statisticile",
+      "where": {
+        "row": "Pe rândul forumului, în liste",
+        "rowHint": "index și pagina forumului părinte",
+        "parent": "În lista de subforumuri a părintelui",
+        "parentHint": "cipurile compacte de pe index",
+        "card": "Card mare sus, în pagina forumului",
+        "topic": "Bară mică în topicurile forumului"
+      },
+      "showTitle": "Ce se afișează",
+      "show": {
+        "status": "Status online / offline",
+        "players": "Jucători + bară",
+        "map": "Hartă / versiune",
+        "address": "IP + copiere",
+        "connect": "Buton Conectează-te",
+        "top": "Top jucători și grafic 24 h",
+        "topHint": "doar în cardul mare"
+      }
+    },
+    "serverWizard": {
+      "title": "Creează categorie",
+      "lead": "O categorie simplă sau o categorie de servere: alegi jocul, adaugi serverele, iar forumurile și statisticile live se creează singure.",
+      "stepsLabel": "Pașii asistentului",
+      "steps": {
+        "type": "Tip",
+        "game": "Joc",
+        "servers": "Servere și forumuri",
+        "confirm": "Confirmare"
+      },
+      "name": "Numele categoriei",
+      "description": "Descriere (opțional)",
+      "type": "Tipul categoriei",
+      "needName": "Scrie numele categoriei.",
+      "appBadge": "Aplicația Servere",
+      "premiumOff": "Necesită aplicația Servere",
+      "types": {
+        "simple": {
+          "name": "Categorie simplă",
+          "desc": "Doar forumuri, ca până acum.",
+          "p1": "Creezi forumurile manual",
+          "p2": "Orice tip de forum",
+          "p3": "Fără statistici de server"
+        },
+        "servers": {
+          "name": "Categorie servere",
+          "desc": "Alegi jocul și adaugi serverele. Forumurile și statisticile live se creează singure.",
+          "p1": "Un forum pentru fiecare server, legat automat",
+          "p2": "Statistici live în descriere: jucători, hartă, IP",
+          "p3": "Subforumuri standard: reclamații, cereri admin…"
+        }
+      },
+      "gameTitle": "Alege jocul",
+      "gameHint": "Fiecare server poate avea alt joc; asta e doar implicitul pentru serverele noi.",
+      "soon": "În curând",
+      "protocols": {
+        "goldsrc": "Interogare GoldSrc · hartă, jucători",
+        "source": "Interogare Source · hartă, jucători",
+        "minecraft": "Status Minecraft · versiune, jucători",
+        "bedrock": "Ping Bedrock · versiune, jucători",
+        "teamspeak": "Interogare TS · utilizatori, canale",
+        "discord": "Widget Discord · membri online, invitație",
+        "mumble": "Ping Mumble · utilizatori"
+      },
+      "notes": {
+        "default": "Serverele CS și cele pe Steam primesc butonul „Conectează-te” care deschide jocul direct pe server. Pluginul de server GCS (opțional) adaugă statistici pe jucător.",
+        "teamspeak": "TeamSpeak: pe lângă adresă, poți pune un cont de interogare (sau o cheie API WebQuery) din ACP › Servere, după creare. Butonul de pe forum deschide clientul TeamSpeak direct pe server.",
+        "discord": "Discord: în loc de IP pui ID-ul serverului de Discord și activezi „Widget server” din setările Discord. Pe forum apar membrii online și butonul de invitație.",
+        "minecraft": "Minecraft: adresa poate fi un nume (mc.exemplu.ro) fără port. Pe forum se arată versiunea în loc de hartă și butonul copiază adresa.",
+        "minecraft_bedrock": "Minecraft Bedrock: portul implicit e 19132. Pe forum se arată versiunea și butonul copiază adresa.",
+        "mumble": "Mumble: portul implicit e 64738. Pe forum apar utilizatorii conectați și butonul care deschide clientul Mumble."
+      },
+      "serversTitle": "Serverele",
+      "serversHint": "Fiecare server primește forumul lui. Apasă „Verifică” ca să vezi dacă răspunde.",
+      "col": {
+        "name": "Nume",
+        "address": "Adresă (IP:port)",
+        "live": "Răspuns live"
+      },
+      "namePh": "Ex. Public 128 tick",
+      "guildPh": "ID-ul serverului de Discord",
+      "existing": "Server existent",
+      "online": "Online · {info}",
+      "checking": "Se verifică…",
+      "noAnswer": "Nu răspunde",
+      "verify": "Verifică",
+      "remove": "Șterge",
+      "addServer": "Adaugă server",
+      "pickExisting": "Alege un server existent",
+      "alreadyLinked": "are deja forum",
+      "subsTitle": "Subforumuri pentru fiecare server",
+      "custom": "+ Personalizat",
+      "liveTitle": "Ce apare live în descrierea forumului",
+      "subs": {
+        "complaints": "Reclamații",
+        "admin_requests": "Cereri admin",
+        "suggestions": "Propuneri",
+        "unban_requests": "Cereri unban",
+        "guides": "Ghiduri",
+        "events": "Evenimente"
+      },
+      "live": {
+        "status": "Status online",
+        "players": "Jucători + bară",
+        "map": "Hartă / versiune",
+        "address": "IP + copiere",
+        "connect": "Buton Conectează-te",
+        "top": "Top jucători"
+      },
+      "treeTitle": "Ce se creează",
+      "treeType": "categorie servere",
+      "noSubs": "fără subforumuri",
+      "summaryTitle": "Rezumat",
+      "count": {
+        "category": "categorie",
+        "forums": "forumuri de server",
+        "subforums": "subforumuri",
+        "linked": "servere legate"
+      },
+      "afterNote": "Aspectul (fundal, iconițe, etichete) se setează după creare, din tabul „Aspect”. Totul se poate modifica sau șterge ulterior.",
+      "back": "Înapoi",
+      "continue": "Continuă",
+      "create": "Creează categoria",
+      "stepOf": "Pasul {n} din {total}",
+      "errors": {
+        "timeout": "Nu răspunde (timeout)",
+        "blocked": "Adresa nu e publică",
+        "dns": "Numele nu se rezolvă",
+        "refused": "Port închis",
+        "unreachable": "Nu poate fi contactat",
+        "invalid_response": "Alt joc sau alt port",
+        "too_large": "Răspuns prea mare",
+        "unknown_game": "Joc necunoscut",
+        "auth_failed": "Cont de interogare greșit",
+        "widget_disabled": "Widget-ul Discord e oprit",
+        "not_found": "Server inexistent"
+      },
+      "createButton": "Creează categorie"
     }
   },
   "settings": {
@@ -11141,6 +11315,49 @@
       "servers": "Servers",
       "players": "Players",
       "fill": "Fill"
+    },
+    "users": "{players} / {max} utilizatori",
+    "membersOnline": "{players} membri online",
+    "joinVia": {
+      "teamspeak": "Intră pe TeamSpeak",
+      "mumble": "Intră pe Mumble",
+      "discord": "Intră pe Discord"
+    },
+    "connectFull": "Conectează-te",
+    "forumLive": {
+      "on": "ON",
+      "off": "OFF",
+      "unknown": "?",
+      "players": "Jucători",
+      "users": "Utilizatori",
+      "membersOnline": "Membri online",
+      "map": "Hartă",
+      "version": "Versiune",
+      "channels": "Canale",
+      "lastSeen": "Ultima dată",
+      "offline": "Offline",
+      "unknown_state": "Necunoscut",
+      "chipsLabel": "Serverele din subforumuri",
+      "serversCount": "{count, plural, one {# server} many {# de servere} other {# de servere}}",
+      "live": "LIVE",
+      "summarySlots": "{players} / {slots} jucători online",
+      "summaryPlayers": "{count, plural, one {# jucător} many {# de jucători} other {# de jucători}}",
+      "summaryVoice": "{count} pe TS",
+      "summaryDiscord": "{count} pe Discord",
+      "currentMap": "Harta curentă",
+      "onlineSince": "Online de {since}",
+      "occupancy": "Ocupare",
+      "peakToday": "Maxim azi",
+      "last24h": "Jucători în ultimele 24 de ore",
+      "onServerNow": "Pe server acum",
+      "kills": "{count, plural, one {# ucidere} many {# de ucideri} other {# de ucideri}}",
+      "allPlayers": "{count, plural, one {Jucătorul de pe server} many {Toți cei # de jucători} other {Toți cei # de jucători}}",
+      "playersHidden": "Lista jucătorilor nu e publică.",
+      "noPlayerList": "Serverul nu trimite lista jucătorilor.",
+      "nobody": "Nimeni pe server acum.",
+      "upDays": "{count, plural, one {o zi} many {# de zile} other {# de zile}}",
+      "upHours": "{count, plural, one {o oră} many {# de ore} other {# de ore}}",
+      "upMinutes": "{count, plural, one {un minut} many {# de minute} other {# de minute}}"
     }
   },
   "clans": {

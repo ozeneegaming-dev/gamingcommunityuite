@@ -109,7 +109,13 @@ export default async function ServerPage({ params, searchParams }: Props) {
               {t("connect")}
             </a>
           )}
-          <GcsCopyAddressButton address={server.address} variant={server.connectHref ? "ghost" : "primary"} />
+          {server.joinHref && (
+            <a className="gcs-btn gcs-btn--primary" href={server.joinHref} data-testid="gcs-server-join" {...(server.joinHref.startsWith("https://") ? { target: "_blank", rel: "noopener nofollow" } : {})}>
+              <GcsIcon name="fa-solid fa-right-to-bracket" />
+              {t(`joinVia.${server.game.key}` as never)}
+            </a>
+          )}
+          {server.address && <GcsCopyAddressButton address={server.address} variant={server.connectHref || server.joinHref ? "ghost" : "primary"} />}
         </div>
       </header>
 
