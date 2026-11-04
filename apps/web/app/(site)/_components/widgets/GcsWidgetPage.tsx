@@ -29,9 +29,12 @@ async function GcsWidgetSlot({ placement, actor, page }: { placement: GcsWidgetP
   return <>{await renderPlacement(placement, actor, page)}</>;
 }
 
-/** Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). */
-function GcsWidgetSkeleton({ zone }: { zone: GcsWidgetZone }) {
-  return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} aria-hidden="true" />;
+/**
+ * Locul widget-ului cât timp se încarcă (aceeași lățime, o înălțime apropiată, ca pagina să nu sară). `data-skeleton`
+ * = tipul widget-ului: widget-urile înalte (ex. „Acum în comunitate”) își rezervă din CSS înălțimea lor.
+ */
+function GcsWidgetSkeleton({ zone, type }: { zone: GcsWidgetZone; type: string }) {
+  return <div className={`gcs-card gcs-widgetSkeleton gcs-widgetSkeleton--${zone}`} data-skeleton={type} aria-hidden="true" />;
 }
 
 type GcsLayout = Record<GcsWidgetZone, GcsWidgetPlacementView[]>;
@@ -68,7 +71,7 @@ export async function GcsWidgetPage({ page, children }: { page: GcsWidgetPageKey
   const zone = (z: GcsWidgetZone) =>
     layout[z].map((p) => {
       const slot = (
-        <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} />}>
+        <Suspense key={p.id} fallback={<GcsWidgetSkeleton zone={z} type={p.type} />}>
           <GcsWidgetSlot placement={p} actor={actor} page={page} />
         </Suspense>
       );

@@ -3,7 +3,8 @@ import path from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { novaSettings, patchNova, removeServers, restoreNova, seedLiveMatch, seedServers, type SeededServer } from "./cockpit-fixtures";
 import { fixture, forumTree, member, topicWithReplies, uid } from "./forum-fixtures";
-import { useFreshIp } from "./helpers";
+import { e2eKv } from "./kv";
+import { sql, useFreshIp } from "./helpers";
 
 /**
  * Prima pagină nouă, varianta A (macheta `home-hovercard`, 2026-11-03): consola compactă sub antet (salutul cu
@@ -27,6 +28,17 @@ async function shot(page: Page, name: string): Promise<void> {
 
 /** Un widget din coloana din dreapta (doar copia vizibilă: widget-urile vin în flux). */
 const sideWidget = (page: Page, type: string): Locator => page.locator(`[data-zone="sidebar"] [data-widget="${type}"]`).filter({ visible: true }).first();
+
+/** Pornește / oprește Chat Pro direct în baza E2E și golește cache-ul aplicațiilor (ca în `chat-pro.spec.ts`). */
+async function setChatPro(enabled: boolean): Promise<void> {
+  await sql(`INSERT INTO apps (key, enabled, "updatedAt") VALUES ('chat_pro', $1, now()) ON CONFLICT (key) DO UPDATE SET enabled = EXCLUDED.enabled, "updatedAt" = now()`, [enabled]);
+  const redis = await e2eKv();
+  try {
+    await redis.del("gcs:k:apps:enabled");
+  } finally {
+    redis.disconnect();
+  }
+}
 
 test.beforeAll(async () => {
   saved = await novaSettings();
@@ -240,6 +252,27 @@ test("macheta HomeComplete, 1440 px: „Acum în comunitate” sus, chat-ul în 
     expect(Math.abs(a.y - b.y)).toBeLessThan(2);
   });
   await shot(page, "home-complete-1440.png");
+
+  await test.step("Chat Pro (premium, după licență): în coloana din stânga, cu bara de vot și clasamentul alături", async () => {
+    await setChatPro(true);
+    const [bar] = await sql<{ id: number }>(`INSERT INTO chat_pro_bar_items (text, "ctaLabel", "ctaUrl", "updatedAt") VALUES ($1, 'Votează', '/servers', now()) RETURNING id`, [`[SERVERE] Votează serverele ${id}`]);
+    try {
+      await page.reload();
+      const chat = page.locator('[data-zone="main"] [data-testid="gcs-shoutbox"]').filter({ visible: true }).first();
+      await expect(chat.getByTestId("gcs-chatpro-bar")).toBeVisible();
+      const ranking = chat.getByTestId("gcs-chatpro-ranking");
+      await expect(ranking).toBeVisible();
+      // Clasamentul (podiumul, spammerul zilei, ultimul câștigător, statisticile tale) stă lângă mesaje, nu sub ele.
+      const r = (await ranking.boundingBox())!;
+      const c = (await chat.boundingBox())!;
+      expect(r.x).toBeGreaterThan(c.x + c.width / 3);
+      await chat.scrollIntoViewIfNeeded();
+      if (SHOTS) await chat.screenshot({ path: path.join(SHOTS, "home-complete-chatpro-1440.png"), animations: "disabled" });
+    } finally {
+      await sql(`DELETE FROM chat_pro_bar_items WHERE id = $1`, [bar!.id]);
+      await setChatPro(false);
+    }
+  });
 
   await test.step("telefon (375 px): fără derulare orizontală, widget-ul și chat-ul încap în ecran", async () => {
     await page.setViewportSize({ width: 375, height: 812 });

@@ -668,6 +668,15 @@ body:has(.gcs-pageSidebar) {
 .gcs-widgetSkeleton--sidebar {
   min-height: 220px;
 }
+/* „Acum în comunitate”: cât cutia consolei (banda, feed-ul cu meciul live, pastilele serverelor). */
+.gcs-widgetSkeleton[data-skeleton="core.nowCommunity"] {
+  min-height: 540px;
+}
+@media (max-width: 767px) {
+  .gcs-widgetSkeleton[data-skeleton="core.nowCommunity"] {
+    min-height: 460px;
+  }
+}
 @keyframes gcs-skeleton {
   from {
     background-position: 100% 0;
