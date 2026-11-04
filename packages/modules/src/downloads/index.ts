@@ -131,8 +131,8 @@ export const downloadsModule: GcsModule = {
   ],
   widgets,
   stats: downloadStatTiles,
-  // După Clanuri; adus de actualizarea meniului `nav:v7`.
-  nav: [{ key: "downloads", labelKey: "site.nav.downloads", icon: "fa-solid fa-download", href: "/downloads", position: 4, since: "nav:v7" }],
+  // După Membri (înaintea Clasamentului): pe un ecran îngust trece primul în „Mai mult”; adus de `nav:v7`.
+  nav: [{ key: "downloads", labelKey: "site.nav.downloads", icon: "fa-solid fa-download", href: "/downloads", position: 35, since: "nav:v7" }],
   navPrevious: [],
   memberGrants: downloadMemberGrants,
 };

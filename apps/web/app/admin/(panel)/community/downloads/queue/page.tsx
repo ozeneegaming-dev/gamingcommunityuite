@@ -57,7 +57,7 @@ export default async function AcpDownloadQueue({ searchParams }: Props) {
                   </span>
                 ))}
               </span>
-              <GcsAcpEditPanel label={t("queue.review")} title={r.file.title} titleIcon={<GcsIcon name="fa-solid fa-file-zipper" />} size="lg" testId="gcs-acp-queue-open"
+              <GcsAcpEditPanel label={t("queue.review")} title={r.file.title} titleIcon={<GcsIcon name="fa-solid fa-file-zipper" />} size="lg" testId="gcs-acp-queue-review"
                 footer={canEdit && r.status === "pending" ? (
                   <GcsActionForm action={rejectVersion.bind(null, r.versionId)} submitLabel={t("queue.reject")} submitKind="reject" variant="ghost" compact confirm={t("queue.rejectConfirm")}>
                     <label className="gcs-field">

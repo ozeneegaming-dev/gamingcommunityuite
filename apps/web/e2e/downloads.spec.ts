@@ -70,8 +70,8 @@ test("ACP: o categorie obișnuită și una VIP, din listă + panou", async ({ br
 
   for (const [name, vip] of [[CAT, false], [VIP_CAT, true]] as const) {
     await root.goto("/admin/community/downloads/categories");
-    await root.getByTestId("gcs-acp-dlcat-new").click();
-    const panel = root.locator(".gcs-drawer");
+    await root.getByTestId("gcs-acp-dlcat-new-open").click();
+    const panel = root.getByTestId("gcs-acp-dlcat-new");
     await panel.getByTestId("gcs-acp-dlcat-name").fill(name);
     if (vip) await panel.locator('input[name="vipOnly"]').check();
     await panel.getByRole("button", { name: /Creează/ }).click();
@@ -127,8 +127,8 @@ test("în așteptare, fișierul nu se vede de vizitatori; staff-ul îl aprobă d
 
   await root.goto("/admin/community/downloads/queue");
   const item = root.getByTestId("gcs-acp-queue-row").filter({ hasText: TITLE });
-  await item.getByTestId("gcs-acp-queue-open").click();
-  await root.locator(".gcs-drawer").getByRole("button", { name: /Aprobă/ }).click();
+  await item.getByTestId("gcs-acp-queue-review-open").click();
+  await root.getByTestId("gcs-acp-queue-review").getByRole("button", { name: /Aprobă/ }).click();
   await expect(root.getByTestId("gcs-acp-queue-row").filter({ hasText: TITLE })).toHaveCount(0);
 
   await g.goto(fileHref);
