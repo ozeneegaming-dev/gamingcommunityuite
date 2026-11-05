@@ -19,7 +19,7 @@ const shape = (areas: ReturnType<typeof acpAreas>) =>
 describe("zonele ACP ale aplicației", () => {
   test("zonele și grupurile, în ordinea din spec", () => {
     const { areas } = allAreas();
-    expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "stats", "apps"]);
+    expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "pages", "stats", "apps"]);
     expect(shape(areas)).toEqual({
       system: [
         ["acp.menu.system.overview", ["system.files", "system.status", "system.update", "system.license", "system.cron"]],
@@ -76,6 +76,10 @@ describe("zonele ACP ale aplicației", () => {
       vip: [
         ["acp.menu.vip.vip_group", ["vip.tiers", "vip.subscribers", "vip.history", "vip.name_styles", "vip.frames", "vip.page"]],
         ["acp.menu.vip.donations_group", ["vip.donations", "vip.donation_goals", "vip.donation_settings"]],
+      ],
+      pages: [
+        ["acp.menu.pages.content", ["pages.pages", "pages.blocks", "pages.databases", "pages.records", "pages.media"]],
+        ["acp.menu.pages.setup", ["pages.templates", "pages.settings"]],
       ],
       stats: [
         ["acp.menu.stats.overview_group", ["stats.overview"]],
