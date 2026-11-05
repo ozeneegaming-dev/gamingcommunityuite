@@ -9,17 +9,7 @@ services:
     env_file: .env
     restart: unless-stopped
     depends_on:
-      # Antivirusul aplicației Descărcări (ClamAV, semnăturile ținute în memorie, ~1,5 GB RAM). Pornește cu profilul
-  # `antivirus` (COMPOSE_PROFILES în .env, pus implicit de install.sh); fără el, ACP-ul arată antivirusul indisponibil.
-  clamav:
-    image: clamav/clamav:1.4
-    restart: unless-stopped
-    profiles: ["antivirus"]
-    volumes:
-      - clamavdb:/var/lib/clamav
-      - ./docker/clamav/clamd.conf:/etc/clamav/clamd.conf:ro
-
-  postgres:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -69,6 +59,16 @@ services:
       LT_LOAD_ONLY: en,ro,de,es,fr,ru
     volumes:
       - ltdata:/home/libretranslate/.local
+
+  # Antivirusul aplicației Descărcări (ClamAV, semnăturile ținute în memorie, ~1,5 GB RAM). Pornește cu profilul
+  # `antivirus` (COMPOSE_PROFILES în .env, pus implicit de install.sh); fără el, ACP-ul arată antivirusul indisponibil.
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    profiles: ["antivirus"]
+    volumes:
+      - clamavdb:/var/lib/clamav
+      - ./docker/clamav/clamd.conf:/etc/clamav/clamd.conf:ro
 
   postgres:
     image: postgres:16-alpine
