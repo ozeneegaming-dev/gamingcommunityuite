@@ -36,6 +36,7 @@ export * from "./content/files/localStore";
 export * from "./content/files/s3Store";
 export * from "./content/files/store";
 export * from "./content/files/svg";
+export * from "./content/files/watermark";
 export * from "./content/renderer";
 export * from "./content/richFields";
 export * from "./content/richRender";

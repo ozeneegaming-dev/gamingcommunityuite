@@ -660,6 +660,59 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
       </GcsWidgetCard>
     );
   },
+  // Aplicația Descărcări: cele mai noi / descărcate / notate / recomandate fișiere (din categoriile vizibile).
+  "downloads.latest": async ({ id, config, actor }) => {
+    const { downloads } = services();
+    if (!(await downloads.queries.canUseApp(actor))) return null;
+    const kind = config.kind === "downloaded" || config.kind === "rated" || config.kind === "featured" ? config.kind : "new";
+    const [t, td, list] = await Promise.all([getTranslations("widgets"), getTranslations("downloads"), downloads.queries.top(actor, kind, limitOf(config, 5))]);
+    return (
+      <GcsWidgetCard id={id} type="downloads.latest" config={config} title={t(`downloadsKind.${kind}`)} testId="gcs-widget-downloads">
+        {list.length === 0 ? (
+          <p className="gcs-sideCard__line">{td("widgetEmpty")}</p>
+        ) : (
+          <ol className="gcs-dlWidget">
+            {list.map((f) => (
+              <li key={f.id} className="gcs-dlWidget__row" data-testid="gcs-widget-download">
+                {f.cover ? <img className="gcs-dlWidget__thumb" src={f.cover} alt="" loading="lazy" /> : <GcsIcon name={f.category.icon || "fa-solid fa-file-zipper"} className="gcs-dlWidget__icon" />}
+                <span className="gcs-dlWidget__body">
+                  <Link href={f.href}>{f.title}</Link>
+                  <span className="gcs-dlWidget__meta">{td("widgetMeta", { downloads: f.downloads, category: f.category.name })}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        <Link href="/downloads" className="gcs-clanList__all">
+          {td("viewAll")}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
+
+  // Categoriile Descărcărilor cu numărul de fișiere.
+  "downloads.categories": async ({ id, config, actor }) => {
+    const { downloads } = services();
+    if (!(await downloads.queries.canUseApp(actor))) return null;
+    const [t, td, list] = await Promise.all([getTranslations("widgets"), getTranslations("downloads"), downloads.queries.categoryCounts(actor)]);
+    return (
+      <GcsWidgetCard id={id} type="downloads.categories" config={config} title={t("downloads.categories")} testId="gcs-widget-download-categories">
+        <ul className="gcs-dlWidget gcs-dlWidget--cats">
+          {list.map((c) => (
+            <li key={c.id} className="gcs-dlWidget__row">
+              <GcsIcon name={c.icon || "fa-solid fa-folder"} className="gcs-dlWidget__icon" />
+              <Link href={c.href}>{c.name}</Link>
+              <span className="gcs-dlWidget__count">{c.filesCount}</span>
+            </li>
+          ))}
+        </ul>
+        <Link href="/downloads" className="gcs-clanList__all">
+          {td("browseCategories")}
+        </Link>
+      </GcsWidgetCard>
+    );
+  },
+
   // Aplicația Pagini: înregistrările unei baze de date (cele mai noi, recomandate, bine notate…) și un bloc reutilizabil.
   "pages.records": async ({ id, config, actor, zone }) => {
     const databaseId = Number(config.database);

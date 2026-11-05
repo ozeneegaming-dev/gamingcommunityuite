@@ -19,7 +19,7 @@ const shape = (areas: ReturnType<typeof acpAreas>) =>
 describe("zonele ACP ale aplicației", () => {
   test("zonele și grupurile, în ordinea din spec", () => {
     const { areas } = allAreas();
-    expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "stats", "apps"]);
+    expect(areas.map((a) => a.key)).toEqual(["system", "community", "members", "appearance", "gaming", "vip", "pages", "stats", "apps"]);
     expect(shape(areas)).toEqual({
       system: [
         ["acp.menu.system.overview", ["system.files", "system.status", "system.update", "system.license", "system.cron"]],
@@ -52,6 +52,10 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.community.chat_group", ["community.chat_channels", "community.chat_settings", "community.chat_moderation", "community.chat_moderators"]],
         ["acp.menu.community.chat_pro_group", ["community.chat_pro_settings", "community.chat_pro_bar", "community.chat_pro_emotes"]],
         ["acp.menu.members.moderation", ["members.queue", "members.reports", "members.antispam", "members.warnings", "members.tickets"]],
+        [
+          "acp.menu.community.downloads_group",
+          ["community.downloads", "community.downloads_queue", "community.downloads_files", "community.downloads_categories", "community.downloads_fields", "community.downloads_antivirus", "community.downloads_settings"],
+        ],
       ],
       members: [
         ["acp.menu.members.members", ["members.members", "members.groups", "members.promotions", "members.ip_tools", "members.gdpr", "members.groups_legend"]],
@@ -73,10 +77,14 @@ describe("zonele ACP ale aplicației", () => {
         ["acp.menu.vip.vip_group", ["vip.tiers", "vip.subscribers", "vip.history", "vip.name_styles", "vip.frames", "vip.page"]],
         ["acp.menu.vip.donations_group", ["vip.donations", "vip.donation_goals", "vip.donation_settings"]],
       ],
+      pages: [
+        ["acp.menu.pages.content", ["pages.pages", "pages.blocks", "pages.databases", "pages.records", "pages.media"]],
+        ["acp.menu.pages.setup", ["pages.templates", "pages.settings"]],
+      ],
       stats: [
         ["acp.menu.stats.overview_group", ["stats.overview"]],
         ["acp.menu.stats.activity", ["stats.registrations", "stats.members", "stats.content", "stats.online"]],
-        ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans"]],
+        ["acp.menu.stats.apps", ["stats.vip", "stats.servers", "stats.clans", "stats.downloads"]],
       ],
       apps: [
         ["acp.menu.system.apps_manage", ["system.applications", "system.marketplace"]],

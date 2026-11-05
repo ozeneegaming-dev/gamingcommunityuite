@@ -4065,3 +4065,272 @@ model BotScheduledPost {
   @@index([status, publishAt])
   @@map("bot_scheduled_posts")
 }
+
+// ─── Descărcări (aplicația standard `downloads`, specul 2026-11-03-descarcari) ──────────────────────────────
+
+/// Starea unui fișier (și a unei versiuni): verificarea (antivirus + tipul real), coada de aprobare, publicat, respins,
+/// blocat de antivirus (carantină) sau ascuns de staff.
+enum DownloadStatus {
+  SCANNING
+  PENDING
+  APPROVED
+  REJECTED
+  QUARANTINED
+  HIDDEN
+}
+
+/// Rezultatul antivirusului pe un fișier încărcat. `SKIPPED` = fără antivirus (ediția Lite / serviciul oprit).
+enum DownloadScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  ERROR
+  SKIPPED
+}
+
+/// De unde vine un fișier al unei intrări: încărcat pe site, un link extern sau importat de pe server (staff).
+enum DownloadAssetSource {
+  UPLOAD
+  LINK
+  PATH
+}
+
+/// Încărcarea pe bucăți: `UPLOADING` → `RECEIVED` (toate bucățile) → `READY` (lipit și verificat) sau `FAILED`.
+enum DownloadAssetState {
+  UPLOADING
+  RECEIVED
+  READY
+  FAILED
+}
+
+/// Recenziile și comentariile: vizibile, în așteptarea aprobării sau ascunse de staff.
+enum DownloadPostStatus {
+  VISIBLE
+  PENDING
+  HIDDEN
+}
+
+/// O categorie de descărcări (container cu permisiuni: `downloads.*` pe tipul `downloads`). `options` = setările
+/// categoriei (comentarii, recenzii, trimiteri, versiuni, capturi, termeni, mesaje, topicul din forum, logul), validate
+/// de aplicație. `clanId` = categoria unui clan (drepturile vin din apartenență). `fieldIds` = câmpurile suplimentare.
+model DownloadCategory {
+  id              Int       @id @default(autoincrement())
+  parentId        Int?
+  position        Int       @default(0)
+  name            String
+  slug            String
+  descriptionJson Json?
+  descriptionHtml String    @default("")
+  icon            String    @default("")
+  iconId          String?
+  coverId         String?
+  enabled         Boolean   @default(true)
+  vipOnly         Boolean   @default(false)
+  clanId          Int?      @unique
+  options         Json      @default("{}")
+  fieldIds        Json      @default("[]")
+  filesCount      Int       @default(0)
+  lastFileAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  parent   DownloadCategory?  @relation("DownloadCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children DownloadCategory[] @relation("DownloadCategoryTree")
+  files    DownloadFile[]
+
+  @@index([parentId, position])
+  @@map("download_categories")
+}
+
+/// O intrare din Descărcări (pagina fișierului). `versionId` = versiunea curentă (publicată); `fields` = valorile
+/// câmpurilor suplimentare; `screenshotIds` = atașamentele capturilor (`downloads.screenshot`), în ordine.
+model DownloadFile {
+  id              Int            @id @default(autoincrement())
+  categoryId      Int
+  authorId        String?
+  title           String
+  slug            String
+  summary         String         @default("")
+  descriptionJson Json?
+  descriptionHtml String         @default("")
+  status          DownloadStatus @default(SCANNING)
+  vipOnly         Boolean        @default(false)
+  featured        Boolean        @default(false)
+  commentsLocked  Boolean        @default(false)
+  versionId       Int?
+  version         String         @default("")
+  fields          Json           @default("{}")
+  tags            Json           @default("[]")
+  screenshotIds   Json           @default("[]")
+  size            BigInt         @default(0)
+  filesCount      Int            @default(0)
+  downloads       Int            @default(0)
+  views           Int            @default(0)
+  ratingAvg       Float          @default(0)
+  reviewsCount    Int            @default(0)
+  commentsCount   Int            @default(0)
+  topicId         Int?
+  rejectReason    String?
+  approvedById    String?
+  approvedAt      DateTime?
+  /// Momentul ultimei versiuni publicate (sortarea „Actualizate recent”).
+  publishedAt     DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  category DownloadCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  versions DownloadVersion[]
+  assets   DownloadAsset[]
+  reviews  DownloadReview[]
+  comments DownloadComment[]
+  logs     DownloadLog[]
+
+  @@index([categoryId, status, publishedAt])
+  @@index([status, publishedAt])
+  @@index([status, downloads])
+  @@index([status, ratingAvg])
+  @@index([status, featured])
+  @@index([authorId, createdAt])
+  @@map("download_files")
+}
+
+/// O versiune a unui fișier: eticheta (`1.2.0`), lista schimbărilor și fișierele ei. Versiunile noi trec și ele prin
+/// verificare și aprobare; cele vechi rămân descărcabile cât le păstrează categoria.
+model DownloadVersion {
+  id            Int            @id @default(autoincrement())
+  fileId        Int
+  label         String         @default("")
+  changelogJson Json?
+  changelogHtml String         @default("")
+  status        DownloadStatus @default(SCANNING)
+  size          BigInt         @default(0)
+  downloads     Int            @default(0)
+  createdById   String?
+  rejectReason  String?
+  approvedAt    DateTime?
+  createdAt     DateTime       @default(now())
+
+  file   DownloadFile    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  assets DownloadAsset[]
+
+  @@index([fileId, createdAt])
+  @@index([status, createdAt])
+  @@map("download_versions")
+}
+
+/// Un fișier al unei versiuni (încărcat pe bucăți, link extern sau import de pe server). Până la trimiterea formularului
+/// `fileId` / `versionId` sunt goale; `categoryId` dă regulile (extensii, mărime). `kind` = tipul real, după conținut.
+model DownloadAsset {
+  id         String              @id @default(cuid())
+  fileId     Int?
+  versionId  Int?
+  categoryId Int?
+  uploaderId String?
+  source     DownloadAssetSource @default(UPLOAD)
+  state      DownloadAssetState  @default(UPLOADING)
+  name       String
+  url        String?
+  storageKey String?             @unique
+  size       BigInt              @default(0)
+  mime       String              @default("application/octet-stream")
+  kind       String              @default("")
+  sha256     String?
+  chunkSize  Int                 @default(0)
+  received   BigInt              @default(0)
+  scanStatus DownloadScanStatus  @default(PENDING)
+  scanResult String?
+  scanEngine String?
+  scannedAt  DateTime?
+  error      String?
+  position   Int                 @default(0)
+  downloads  Int                 @default(0)
+  createdAt  DateTime            @default(now())
+
+  file    DownloadFile?    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  version DownloadVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([fileId])
+  @@index([versionId])
+  @@index([uploaderId, createdAt])
+  @@index([state, createdAt])
+  @@index([scanStatus, scannedAt])
+  @@map("download_assets")
+}
+
+/// O recenzie: nota (1–5) și textul, una pe membru și fișier.
+model DownloadReview {
+  id        Int                @id @default(autoincrement())
+  fileId    Int
+  userId    String
+  rating    Int
+  bodyJson  Json?
+  bodyHtml  String             @default("")
+  version   String             @default("")
+  status    DownloadPostStatus @default(VISIBLE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  file DownloadFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, userId])
+  @@index([fileId, status, createdAt])
+  @@map("download_reviews")
+}
+
+/// Un comentariu pe pagina unui fișier (cu mențiuni).
+model DownloadComment {
+  id        Int                @id @default(autoincrement())
+  fileId    Int
+  authorId  String?
+  bodyJson  Json?
+  bodyHtml  String             @default("")
+  status    DownloadPostStatus @default(VISIBLE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  file DownloadFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, status, createdAt])
+  @@index([authorId, createdAt])
+  @@map("download_comments")
+}
+
+/// Logul descărcărilor (cine, ce versiune, când); păstrat cât spune categoria.
+model DownloadLog {
+  id        Int      @id @default(autoincrement())
+  fileId    Int
+  versionId Int?
+  assetId   String?
+  userId    String?
+  size      BigInt   @default(0)
+  createdAt DateTime @default(now())
+
+  file DownloadFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, createdAt])
+  @@index([userId, fileId])
+  @@index([createdAt])
+  @@map("download_logs")
+}
+
+/// Un câmp suplimentar al fișierelor (activat pe categorii): tipul, opțiunile, locul pe pagină, includerea în topicul
+/// din forum și grupurile care îl văd / completează (gol = toate).
+model DownloadField {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @default("")
+  type        String   @default("text")
+  options     Json     @default("[]")
+  multiple    Boolean  @default(false)
+  required    Boolean  @default(false)
+  location    String   @default("sidebar")
+  inTopic     Boolean  @default(false)
+  topicFormat String   @default("")
+  viewGroups  Json     @default("[]")
+  editGroups  Json     @default("[]")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([position])
+  @@map("download_fields")
+}

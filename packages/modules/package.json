@@ -13,7 +13,8 @@
     "./online-format": "./src/community/onlineFormat.ts",
     "./groups-pro-legend": "./src/groups-pro/legend.ts",
     "./field-groups": "./src/profile/fieldGroups.ts",
-    "./announcement": "./src/community/announcement.ts"
+    "./announcement": "./src/community/announcement.ts",
+    "./downloads-text": "./src/downloads/text.ts"
   },
   "scripts": {
     "lint": "eslint .",

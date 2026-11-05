@@ -166,6 +166,8 @@ import { registerBridgeNotifications } from "./servers/bridge/notify";
 import { GcsClanAdmin } from "./clans/admin";
 import type { GcsClanGameStatsSource } from "./clans/gameStats";
 import { registerClanNotifications } from "./clans/notify";
+import { downloadMemberData } from "./downloads/memberData";
+import { createDownloads, type GcsDownloads } from "./downloads/wire";
 import { GcsClanQueries } from "./clans/queries";
 import { CLAN_BANNER, CLAN_LOGO, GcsClanService } from "./clans/service";
 import { GcsGroupDirectory } from "./profile/groupDirectory";
@@ -391,6 +393,8 @@ export type GcsServices = {
   clanQueries: GcsClanQueries;
   /** ACP → Gaming → Clanuri: lista, fișa și opțiunile. */
   clanAdmin: GcsClanAdmin;
+  /** Descărcările (aplicația standard): trimiterile, versiunile, antivirusul, descărcarea, citirile și ACP-ul. */
+  downloads: GcsDownloads;
   /**
    * Ștergerea și unirea conturilor (specul 2026-10-09-stergere-unire-membri): ACP → Membri, cererea membrului din Setări →
    * Cont, jobul și pașii aplicațiilor (fiecare își tratează datele în `memberData.ts`).
@@ -593,7 +597,8 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
   });
   const files = createFileStore(opts.configDir);
   // Extensiile permise și imaginile (latura, calitatea, WebP, metadatele, miniaturile): ACP → Setări → Încărcări și imagini.
-  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter, policy: () => loadUploadPolicy(settings) });
+  // Antivirusul aplicației Descărcări scanează și atașamentele membrilor (setarea din ACP › Descărcări › Antivirus).
+  const attachments = new GcsAttachmentService({ db, store: files, permissions, rateLimiter, policy: () => loadUploadPolicy(settings), scan: (file) => downloads.uploads.scanAttachment(file) });
   // Logo-ul și favicon-ul temelor sunt publice (etapa 5).
   attachments.registerAccess("theme.logo", async () => true);
   attachments.registerAccess("theme.favicon", async () => true);
@@ -1028,6 +1033,13 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     if (typeof userId === "string") await jobs.enqueue(BOT_WELCOME_JOB, { userId }, { jobId: `bot-welcome-${userId}` });
   });
 
+  const downloads = createDownloads({
+    db, cache, bus, settings, permissions, acp, apps, registry, attachments, files, jobs, actors, rateLimiter, follows, notifications, topics, posts,
+    edition: infra.edition,
+    configDir: opts.configDir,
+    secret: () => process.env.GCS_SECRET ?? "gcs-dev-secret-not-for-production-use",
+  });
+
   // Sitemap-ul: ce vede grupul `guest` (forumuri, topicuri, profiluri publice, clanuri, servere).
   const sitemap = new GcsSitemapService({
     db,
@@ -1215,6 +1227,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     clans,
     clanQueries,
     clanAdmin: new GcsClanAdmin({ db, acp, settings, permissions, bus, registry, clans }),
+    downloads,
     memberRemoval: createMemberRemoval({ db, bus, acp, settings, jobs, reactions, attachments, posting, achievements, vip, clans, bridge, pagesRecords }),
     memberAdmin: new GcsMemberAdmin({ db, bus, acp, bans }),
     optInGroups: new GcsOptInGroups({ db, bus, permissions }),
@@ -1222,6 +1235,7 @@ export function createGcsServices(opts: GcsServicesOptions): GcsServices {
     whereabouts: new GcsWhereabouts({ kv }),
     memberPanels: new GcsMemberPanelData({ db }),
   };
+  services.memberRemoval.register(downloadMemberData({ db, service: downloads.service }));
   registerAppJobs(services);
   return services;
 }

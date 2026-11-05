@@ -21,13 +21,15 @@ const COMPOSERS: { file: string; how: RegExp; note: string }[] = [
   { file: "apps/web/app/(site)/_components/settings/GcsSettingsExtra.tsx", how: /mentionUrl/, note: "semnătura (fără notificări)" },
   { file: "apps/web/app/(site)/_components/editor/GcsRichTextInput.tsx", how: /includes\("mention"\)/, note: "câmpurile formatate cu `mention` permis" },
   { file: "apps/web/app/(site)/_components/servers/GcsTicketForm.tsx", how: /"mention"/, note: "tichete (aplicația Servere)" },
+  { file: "apps/web/app/(site)/_components/downloads/GcsDownloadActions.tsx", how: /GCS_RICH_FIELDS.downloadText/, note: "recenziile și comentariile fișierelor (Descărcări)" },
+  { file: "apps/web/app/(site)/_components/downloads/GcsDownloadForm.tsx", how: /GCS_RICH_FIELDS.downloadText/, note: "descrierea și schimbările unui fișier (Descărcări)" },
   { file: "apps/web/app/(site)/_components/pages/GcsRecordForm.tsx", how: /mentionUrl/, note: "înregistrările din Pagini (trimitere, editare)" },
   { file: "apps/web/app/(site)/_components/pages/GcsCommentComposer.tsx", how: /mentionUrl/, note: "comentariile la înregistrări (Pagini)" },
   { file: "apps/web/app/admin/(panel)/pages/[id]/builder/GcsPageBuilder.tsx", how: /mentionUrl/, note: "blocurile de conținut din constructorul paginilor" },
 ];
 
 /** Profilurile câmpurilor formatate care primesc mențiuni (descrierea clanului, câmpurile de profil, semnătura). */
-const RICH_WITH_MENTIONS = ["signature", "profileText", "clanDescription"];
+const RICH_WITH_MENTIONS = ["signature", "profileText", "clanDescription", "downloadText"];
 
 /** Locurile cu HTML brut: fiecare e trecut aici, cu motivul pentru care numele din el au stilul comun (sau n-au nume). */
 const RAW_HTML: Record<string, string> = {

@@ -44,7 +44,8 @@ export function sniffType(head: Uint8Array): string | null {
 /** Un tip e acceptat: exact, `image/*` sau extensia (`.json`) pentru fișierele fără semnătură. */
 export function typeAccepted(type: string, fileName: string, accept: string[]): boolean {
   const ext = fileName.includes(".") ? `.${fileName.split(".").pop()!.toLowerCase()}` : "";
-  return accept.some((a) => a === type || (a.endsWith("/*") && type.startsWith(a.slice(0, -1))) || (a.startsWith(".") && a.toLowerCase() === ext));
+  // `*` = orice fișier (ex. o categorie de descărcări fără listă de extensii; serverul verifică oricum conținutul).
+  return accept.some((a) => a === "*" || a === type || (a.endsWith("/*") && type.startsWith(a.slice(0, -1))) || (a.startsWith(".") && a.toLowerCase() === ext));
 }
 
 async function imageSize(file: File, type: string): Promise<{ width: number; height: number } | null> {
