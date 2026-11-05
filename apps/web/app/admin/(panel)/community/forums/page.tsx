@@ -1,7 +1,9 @@
 import { FORUMS_ACP_SECTION } from "@gcs/modules";
 import { GcsCard } from "@gcs/ui";
 import { resolveIcon } from "@gcs/ui/icon-registry";
+import { GcsIcon } from "@gcs/ui/icons";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAcpSection } from "@/lib/acp";
 import { services } from "@/lib/services";
@@ -19,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AcpForumsPage() {
   await requireAcpSection(FORUMS_ACP_SECTION);
   const t = await getTranslations("acp.forums");
+  const tw = await getTranslations("acp.serverWizard");
   const forums = await services().db.forum.findMany({
     orderBy: [{ position: "asc" }, { id: "asc" }],
     select: { id: true, parentId: true, type: true, name: true, slug: true, position: true, icon: true },
@@ -32,7 +35,18 @@ export default async function AcpForumsPage() {
 
   return (
     <>
-      <GcsAcpTitle icon="fa-solid fa-comments">{t("title")}</GcsAcpTitle>
+      <GcsAcpTitle
+        icon="fa-solid fa-comments"
+        actions={
+          // Asistentul „Creează categorie” (simplă sau, cu aplicația Servere, de servere).
+          <Link href="/admin/community/forums/new-category" className="gcs-btn gcs-btn--primary" data-testid="gcs-forum-wizard-open">
+            <GcsIcon name="fa-solid fa-folder-plus" />
+            {tw("createButton")}
+          </Link>
+        }
+      >
+        {t("title")}
+      </GcsAcpTitle>
       <GcsCard as="section" aria-label={t("tree")} style={{ padding: 16 }}>
         {/* Lista se reinițializează când se schimbă structura (ex. după „Creează”). */}
         <ForumTree key={forums.map((f) => `${f.id}:${f.parentId}:${f.position}:${f.name}:${f.icon ?? ""}`).join(",")} forums={nodes} />

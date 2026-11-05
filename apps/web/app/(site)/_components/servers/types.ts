@@ -16,8 +16,12 @@ export type GcsServerCardData = {
   gameName: string;
   gameIcon: GcsIconDef | null;
   hasMap: boolean;
+  /** `game` / `voice` (TeamSpeak, Mumble) / `community` (Discord): textele „jucători / utilizatori / membri”. */
+  kind: "game" | "voice" | "community";
   address: string;
   connectHref: string | null;
+  /** „Intră pe TeamSpeak / Mumble / Discord”; `null` la jocuri. */
+  joinHref: string | null;
   bannerUrl: string | null;
   bannerGradient: string;
   uptime30: number | null;
@@ -27,6 +31,9 @@ export type GcsServerCardData = {
   /** Imaginea hărții curente, rezolvată pe server (fără redirect); o hartă schimbată live trece prin rută. */
   mapImage?: GcsMapPictureData | null;
 };
+
+/** Cheia textului cu numărul de jucători: „jucători”, „utilizatori” (voce) sau „membri online” (Discord). */
+export const countKey = (kind: GcsServerCardData["kind"]) => (kind === "voice" ? "users" : kind === "community" ? "membersOnline" : "players");
 
 /** `/servers/{id}-{slug}`. */
 export const serverHref = (s: { id: number; slug: string }) => `/servers/${s.id}-${s.slug}`;

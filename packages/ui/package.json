@@ -33,6 +33,7 @@
     "./community.css": "./src/community.css",
     "./richtext.css": "./src/richtext.css",
     "./servers.css": "./src/servers.css",
+    "./servers-forum.css": "./src/servers-forum.css",
     "./clans.css": "./src/clans.css",
     "./pages.css": "./src/pages.css",
     "./pages-acp.css": "./src/pages-acp.css",

@@ -1,5 +1,5 @@
 import { GCS_RICH_FIELDS, richFieldHtml, sanitizeContentHtml, type GcsActor, type GcsWidgetPage, type GcsWidgetZone } from "@gcs/core";
-import { POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
+import { COMMUNITY_LIVE_MAX_ROWS, COMMUNITY_LIVE_WIDGET, POLL_INTERVAL_SETTING, type GcsUserRef } from "@gcs/modules";
 import { GcsAvatar, GcsBadge, GcsButton, GcsCard, GcsClanTag, GcsMemberName } from "@gcs/ui";
 import { GcsIcon } from "@gcs/ui/icons";
 import Link from "next/link";
@@ -32,7 +32,9 @@ import { GcsDonationGoal } from "../donations/GcsDonationGoal";
 import { donationCta } from "@/lib/donations.server";
 import { COMMUNITY_METRICS, WIDGET_METRICS } from "@/lib/ranking";
 import { isRankingMetric, isRankingPeriod, rankingMetrics, rankingRows } from "@/lib/ranking.server";
-import { liveMatchList } from "@/lib/cockpit.server";
+import { liveMatchList, nowCommunityData } from "@/lib/cockpit.server";
+import { FEED_TABS } from "@/lib/cockpit";
+import { GcsNowCommunity } from "../cockpit/GcsNowCommunity";
 import { GcsRecordList } from "../pages/GcsRecordList";
 
 /** Ce primește randarea unui widget: amplasarea (id, config), viewer-ul și locul ei (pagina, zona). */
@@ -162,6 +164,12 @@ export const WIDGET_RENDERERS: Record<string, Renderer> = {
     );
   },
 
+  // Comunitate Live (premium): „Acum în comunitate” — feed-ul cu tab-urile alese, „Live acum / Recomandat”, „Joacă acum”.
+  [COMMUNITY_LIVE_WIDGET]: async ({ id, config, actor }) => {
+    const tabs = FEED_TABS.filter((k) => k === "all" || config[`tab${k[0]!.toUpperCase()}${k.slice(1)}`] !== "hide");
+    const limit = typeof config.limit === "number" ? config.limit : COMMUNITY_LIVE_MAX_ROWS;
+    return <GcsNowCommunity id={id} data={await nowCommunityData(actor, { live: config.live !== "hide" })} tabs={tabs} limit={limit} />;
+  },
   "core.statsPanel": async ({ id, config }) => <GcsStatsPanel id={id} config={config} />,
   "core.onlineDay": async ({ id, config }) => <GcsWhoWasOnline id={id} config={config} />,
   // Doar vizitatorii îl văd (membrii sunt deja înăuntru).

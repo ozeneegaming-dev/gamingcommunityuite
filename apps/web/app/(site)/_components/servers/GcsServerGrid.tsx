@@ -8,7 +8,7 @@ import type { CSSProperties } from "react";
 import { GcsCopyAddressButton, GcsServerAddress } from "./GcsServerAddress";
 import { serverState, useServerStatus, useServerStatuses } from "./GcsServerLive";
 import { GcsMapPicture, mapPicture } from "./GcsMapPicture";
-import { fillPercent, isBridgeGameKey, type GcsServerCardData } from "./types";
+import { countKey, fillPercent, isBridgeGameKey, type GcsServerCardData } from "./types";
 
 /** Eticheta de status de pe banner: punctul și textul (culoarea nu e niciodată singură). */
 export function GcsServerStatusBadge({ state }: { state: "online" | "offline" | "unknown" }) {
@@ -96,14 +96,19 @@ function GcsServerCard({ server }: { server: GcsServerCardData }) {
         </header>
         <div className="gcs-serverCard__body">
           <div className="gcs-serverCard__players">
-            <strong data-testid="gcs-server-players">{status?.online ? t("players", { players: status.players, max: status.maxPlayers }) : t("playersZero")}</strong>
+            <strong data-testid="gcs-server-players">{status?.online ? t(countKey(server.kind), { players: status.players, max: status.maxPlayers }) : t("playersZero")}</strong>
             {server.uptime30 !== null && <span className="gcs-serverCard__uptime">{t("uptime", { value: format.number(server.uptime30, { style: "percent", maximumFractionDigits: 1 }) })}</span>}
           </div>
           <GcsServerBar status={status} />
           {/* Jocurile fără Connect (Minecraft): acțiunea principală e chiar copierea, deci banda nu mai are butonul ei. */}
-          <GcsServerAddress address={server.address} copy={server.connectHref !== null} />
+          {server.address && <GcsServerAddress address={server.address} copy={server.connectHref !== null || server.joinHref !== null} />}
           <div className="gcs-serverCard__actions">
-            {server.connectHref ? (
+            {server.joinHref ? (
+              <a className="gcs-btn gcs-btn--primary" href={server.joinHref} data-testid="gcs-server-join" {...(server.joinHref.startsWith("https://") ? { target: "_blank", rel: "noopener nofollow" } : {})}>
+                <GcsIconSvg icon={faRightToBracket} />
+                {t(`joinVia.${server.game}` as never)}
+              </a>
+            ) : server.connectHref ? (
               <a className="gcs-btn gcs-btn--primary" href={server.connectHref} data-testid="gcs-server-connect">
                 <GcsIconSvg icon={faRightToBracket} />
                 {t("connect")}

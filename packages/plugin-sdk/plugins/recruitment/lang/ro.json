@@ -1,0 +1,144 @@
+{
+  "page": {
+    "list": "Recrutare",
+    "apply": "Aplică",
+    "applyTo": "Aplică: {name}"
+  },
+  "tag": {
+    "on": "ON",
+    "off": "OFF",
+    "new": "NOU"
+  },
+  "status": {
+    "open": "Deschis (ON)",
+    "new": "Nou (NOU)",
+    "closed": "Închis (OFF)"
+  },
+  "mode": {
+    "form": "Formular",
+    "topic": "Topic",
+    "link": "Link"
+  },
+  "index": {
+    "label": "Posturile din echipă"
+  },
+  "card": {
+    "open": "Posturi deschise: {count}",
+    "none": "Momentan nu recrutăm.",
+    "all": "Vezi posturile"
+  },
+  "list": {
+    "mine": "Aplicațiile mele",
+    "closed": "Post închis",
+    "empty": "Nu există încă posturi."
+  },
+  "apply": {
+    "form": "Aplică",
+    "topic": "Aplică printr-un topic",
+    "link": "Aplică",
+    "back": "Înapoi la posturi",
+    "answers": "De ce ți se potrivește postul? (experiența, timpul disponibil, de când ești în comunitate)",
+    "min": "Minimum {count} caractere.",
+    "send": "Trimite aplicația",
+    "cancel": "Renunță"
+  },
+  "app": {
+    "pending": "În așteptare",
+    "accepted": "Acceptată",
+    "rejected": "Respinsă",
+    "all": "Toate",
+    "deleted": "membru șters",
+    "notePh": "Notă pentru decizie (opțional)",
+    "accept": "Acceptă",
+    "reject": "Respinge",
+    "empty": "Nicio aplicație aici."
+  },
+  "acp": {
+    "title": "Recrutare",
+    "menu": "Recrutare",
+    "applicationsMenu": "Aplicații recrutare",
+    "applicationsTitle": "Aplicațiile",
+    "pending": "Aplicații în așteptare",
+    "edit": "Editează: {name}",
+    "new": "Post nou",
+    "save": "Salvează postul",
+    "cancel": "Renunță",
+    "delete": "Șterge postul",
+    "deleteHint": "Se șterg și aplicațiile lui.",
+    "pick": "Alege un post din listă sau adaugă unul nou.",
+    "add": "Adaugă post",
+    "applications": "Aplicații",
+    "view": "Vezi pe site",
+    "list": "Posturile",
+    "empty": "Niciun post încă.",
+    "indexHint": "Rândul „Recrutare” de pe index: creează un forum, o pagină sau un link (ACP › Forumuri) și bifează „Arată posturile” în tabul Recrutare al lui.",
+    "back": "Înapoi la posturi"
+  },
+  "field": {
+    "name": "Numele postului",
+    "namePh": "Ex. Moderator, Admin servere, Designer",
+    "description": "Descriere",
+    "status": "Starea",
+    "group": "Grupul",
+    "noGroup": "— fără grup —",
+    "applyMode": "Aplicarea",
+    "applyModeHint": "Formular: răspunsurile ajung în ACP › Aplicații. Topic: un topic nou în forumul ales. Link: orice adresă (ex. un formular extern).",
+    "forum": "Forumul pentru topic",
+    "forumHint": "Doar la „Topic”.",
+    "url": "Linkul spre aplicare",
+    "urlHint": "Doar la „Link”: o adresă internă (/…) sau https://.",
+    "questions": "Întrebările formularului",
+    "questionsPh": "Câți ani ai?\nCât timp poți fi activ pe zi?",
+    "questionsHint": "Câte una pe rând (cel mult 10). Fără întrebări, formularul are un singur câmp.",
+    "icon": "Iconița (Font Awesome)",
+    "sort": "Ordinea"
+  },
+  "done": {
+    "applied": "Aplicația a fost trimisă. Staff-ul îți va răspunde.",
+    "saved": "Postul a fost salvat.",
+    "deleted": "Postul a fost șters.",
+    "accepted": "Aplicația a fost acceptată.",
+    "rejected": "Aplicația a fost respinsă."
+  },
+  "error": {
+    "guest": "Autentifică-te ca să aplici.",
+    "pending": "Ai deja o aplicație în așteptare pentru acest post.",
+    "answers_missing": "Răspunde la toate întrebările.",
+    "answers_short": "Răspunsul e prea scurt.",
+    "answers_long": "Răspunsul e prea lung.",
+    "position_name": "Numele postului are 2–60 de caractere.",
+    "position_description": "Descrierea e prea lungă.",
+    "position_status": "Alege starea postului.",
+    "position_group": "Grupul ales nu există.",
+    "position_icon": "Iconița nu e validă (ex. fa-solid fa-user-plus).",
+    "position_mode": "Alege modul de aplicare.",
+    "position_forum": "Alege forumul pentru topicuri.",
+    "position_url": "Linkul trebuie să fie intern (/…) sau https://.",
+    "position_questions": "Întrebările sunt prea lungi.",
+    "too_many": "S-a atins numărul maxim de posturi (50).",
+    "invalid_status": "Decizie necunoscută."
+  },
+  "settings": {
+    "tabs": {
+      "general": "General"
+    },
+    "intro": "Textul de sus al paginii Recrutare",
+    "introHint": "Opțional: ce oferă echipa, regulile pentru aplicanți.",
+    "oneOpen": "O singură aplicație în așteptare pe post",
+    "oneOpenHint": "Un membru nu poate trimite a doua aplicație la același post până nu primește răspuns.",
+    "minLength": "Lungimea minimă a aplicației (caractere)",
+    "minLengthHint": "Doar pentru formularul fără întrebări."
+  },
+  "permissions": {
+    "apply": "Poate aplica la posturi"
+  },
+  "tabs": {
+    "recruitment": "Recrutare",
+    "recruitmentHint": "Arată posturile din echipă pe rândul acestui forum (ca în lista de subforumuri), cu starea fiecăruia.",
+    "positions": "Arată posturile pe rând",
+    "positionsHint": "Fiecare post apare ca un subforum, cu ON / OFF / NOU.",
+    "closed": "Arată și posturile închise (OFF)",
+    "card": "Card cu posturile deschise sus, în pagina forumului",
+    "cardHint": "Cu linkul spre pagina Recrutare."
+  }
+}

@@ -82,3 +82,18 @@ export function cockpitShownOn(pages: "home" | "all", pathname: string): boolean
 export function feedTabOf(item: Pick<GcsFeedItem, "tag">): Exclude<GcsFeedTab, "all"> {
   return item.tag === "server" ? "servers" : item.tag === "mix" ? "mix" : "forum";
 }
+
+/**
+ * Widget-ul „Acum în comunitate” (aplicația premium Comunitate Live, macheta HomeComplete): cutia consolei pusă de admin
+ * oriunde pe pagină, fără să depindă de aspectul consolei din temă. `live` = cardul meciului mix (sau recomandatele),
+ * `null` când e ascuns din setări; `servers` = serverele vizibile (pentru „Joacă acum” din antet, fără listă);
+ * `players` = jucătorii de pe servere (chip-ul din antet).
+ */
+export type GcsNowCommunityData = {
+  feed: GcsFeedItem[];
+  live: GcsCockpitData["live"] | null;
+  servers: GcsCockpitServer[];
+  statuses: Record<number, GcsServerLive | null>;
+  pollSeconds: number;
+  players: number;
+};

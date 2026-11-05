@@ -158,6 +158,7 @@ export const PLUGIN_WORKER_SOURCE = String.raw`
         topics: Object.freeze({ get: (id) => rpc("api.topics.get", [id], token), recent: (limit) => rpc("api.topics.recent", [limit === undefined ? 10 : limit], token) }),
         posts: Object.freeze({ get: (id) => rpc("api.posts.get", [id], token), recent: (limit) => rpc("api.posts.recent", [limit === undefined ? 10 : limit], token) }),
         forums: Object.freeze({ list: () => rpc("api.forums.list", [], token) }),
+        groups: Object.freeze({ list: () => rpc("api.groups.list", [], token) }),
         stats: () => rpc("api.stats", [], token),
         vip: Object.freeze({
           plans: () => rpc("api.vip.plans", [], token),

@@ -1,5 +1,5 @@
 /** Codurile de eroare ale unei interogări (statusul serverului le păstrează în `error`). */
-export type GcsQueryError = "timeout" | "blocked" | "dns" | "refused" | "unreachable" | "invalid_response" | "too_large" | "unknown_game";
+export type GcsQueryError = "timeout" | "blocked" | "dns" | "refused" | "unreachable" | "invalid_response" | "too_large" | "unknown_game" | "auth_failed" | "widget_disabled" | "not_found";
 
 /** O interogare eșuată, cu un cod stabil (nu se afișează mesajul, doar codul tradus). */
 export class GcsQueryFailure extends Error {

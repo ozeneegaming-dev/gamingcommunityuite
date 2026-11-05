@@ -49,8 +49,8 @@ function Row({ server }: { server: GcsServerCardData }) {
           {status?.online && detail && <span>{detail}</span>}
         </span>
       </div>
-      {server.connectHref && (
-        <a className="gcs-serverRow__connect" href={server.connectHref} aria-label={`${t("connect")}: ${server.name}`}>
+      {(server.connectHref ?? server.joinHref) && (
+        <a className="gcs-serverRow__connect" href={(server.connectHref ?? server.joinHref)!} aria-label={`${t("connect")}: ${server.name}`} {...(server.joinHref?.startsWith("https://") ? { target: "_blank", rel: "noopener nofollow" } : {})}>
           {t("join")}
           <GcsIconSvg icon={faPlay} />
         </a>
@@ -60,7 +60,7 @@ function Row({ server }: { server: GcsServerCardData }) {
       </span>
       <FillRing pct={pct} state={state} label={t("capacity", { value: `${pct}%` })} />
       <div className="gcs-serverRow__actions">
-        <GcsCopyAddressButton address={server.address} compact />
+        {server.address && <GcsCopyAddressButton address={server.address} compact />}
         <Link className="gcs-iconBtn" href={server.href} aria-label={`${t("details")}: ${server.name}`} title={t("details")}>
           <GcsIconSvg icon={faChartSimple} />
         </Link>

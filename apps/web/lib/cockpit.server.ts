@@ -3,7 +3,7 @@ import type { GcsActor } from "@gcs/core";
 import type { GcsThemeSettings } from "@gcs/core/themes";
 import { levelProgress, normalizePrivacy, pickRank, POLL_INTERVAL_SETTING, type GcsServerView, type GcsUserRef } from "@gcs/modules";
 import { matchHref, serverHref } from "../app/(site)/_components/servers/types";
-import type { GcsCockpitData, GcsCockpitFeatured, GcsCockpitMatch, GcsCockpitUser, GcsFeedItem, GcsFeedTab, GcsLiveMatchRow } from "./cockpit";
+import type { GcsCockpitData, GcsCockpitFeatured, GcsCockpitMatch, GcsCockpitUser, GcsFeedItem, GcsFeedTab, GcsLiveMatchRow, GcsNowCommunityData } from "./cockpit";
 import { memberHref, postHref, topicHref } from "./forum-urls";
 import { EMPTY_SUMMARY } from "./live-summary";
 import { liveSummary, visibleServers } from "./live-summary.server";
@@ -215,6 +215,12 @@ async function welcome(actor: GcsActor): Promise<GcsCockpitData["welcome"]> {
   return { user: ref(display), unread: topics.size, friends, level: levelProgress({ ...user, rankId: user.rankId ?? pickRank(ladder, user) }, ladder), newTopic: null };
 }
 
+/** Aspectul compact: doar câte meciuri mix sunt live (butonul „Meciuri live (N)” al membrilor), fără meciul propriu-zis. */
+async function liveCount(actor: GcsActor): Promise<{ match: null; matches: number }> {
+  const list = await liveMatchList(actor, 1).catch(() => null);
+  return { match: null, matches: list?.total ?? 0 };
+}
+
 /** „Topic nou” din consola compactă: pagina de topic nou a primului forum în care membrul poate porni topicuri. */
 async function newTopicHref(actor: GcsActor): Promise<string | null> {
   const { forums } = await quickCreateItems(actor, "/").catch(() => ({ forums: [] as { href: string }[] }));
@@ -236,7 +242,7 @@ export async function cockpitData(actor: GcsActor, settings: GcsThemeSettings["c
   const [w, feed, live, feat, ranking, summary, poll, newTopic, registration] = await Promise.all([
     welcome(actor),
     wants("feed") ? cockpitFeed(actor, "all") : [],
-    wants("live") ? liveMatch(actor, servers) : { match: null, matches: 0 },
+    wants("live") ? liveMatch(actor, servers) : compact && actor.userId && servers.length > 0 ? liveCount(actor) : { match: null, matches: 0 },
     wants("live") || wants("featured") ? featured(actor) : [],
     wants("top") ? rankingRows(actor, metrics[0] ?? "posts", "week") : Promise.resolve({ metric: "posts" as const, period: "week" as const, rows: [], you: null }),
     compact ? EMPTY_SUMMARY : liveSummary(actor, servers),
@@ -257,5 +263,31 @@ export async function cockpitData(actor: GcsActor, settings: GcsThemeSettings["c
     statuses: Object.fromEntries(servers.map((s) => [s.id, s.status])),
     pollSeconds: poll,
     summary,
+  };
+}
+
+/**
+ * Datele widget-ului „Acum în comunitate” (aplicația Comunitate Live): feed-ul (Tot), meciul live cu recomandatele
+ * (dacă e afișat) și serverele vizibile cu statusul lor (doar pentru „Joacă acum” și jucătorii din antet). Fără
+ * aplicația Servere, doar feed-ul (și recomandatele).
+ */
+export async function nowCommunityData(actor: GcsActor, show: { live: boolean }): Promise<GcsNowCommunityData> {
+  const servers = await visibleServers(actor);
+  const [feed, live, feat, summary, poll] = await Promise.all([
+    cockpitFeed(actor, "all"),
+    show.live ? liveMatch(actor, servers) : null,
+    show.live ? featured(actor) : [],
+    servers.length > 0 ? liveSummary(actor, servers) : EMPTY_SUMMARY,
+    services()
+      .settings.get<number>(POLL_INTERVAL_SETTING)
+      .catch(() => 30),
+  ]);
+  return {
+    feed,
+    live: live ? { ...live, featured: feat } : null,
+    servers: servers.map((s) => ({ id: s.id, name: s.name, href: serverHref(s), connectHref: s.connectHref, address: s.address, game: s.game.key })),
+    statuses: Object.fromEntries(servers.map((s) => [s.id, s.status])),
+    pollSeconds: poll,
+    players: summary.servers.players,
   };
 }

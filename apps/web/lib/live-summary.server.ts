@@ -18,10 +18,12 @@ export async function visibleServers(actor: GcsActor): Promise<GcsServerView[]> 
 export async function liveSummary(actor: GcsActor, servers?: GcsServerView[]): Promise<GcsLiveSummary> {
   const { db, presence, bridge, apps } = services();
   const usable = await apps.accessFilter(actor);
-  const list = servers ?? (await visibleServers(actor));
+  // Doar serverele de joc: utilizatorii TeamSpeak / membrii Discord nu sunt „jucători online”.
+  const all = servers ?? (await visibleServers(actor));
+  const list = all.filter((s) => s.game.kind === "game");
   const online = list.filter((s) => s.status?.online);
   const [matches, total, present, chatOnline] = await Promise.all([
-    list.length > 0 && (await bridge.queries.canViewStats(actor).catch(() => false)) ? bridge.queries.matchCounts(actor, {}).then((c) => c.live).catch(() => 0) : 0,
+    all.length > 0 && (await bridge.queries.canViewStats(actor).catch(() => false)) ? bridge.queries.matchCounts(actor, {}).then((c) => c.live).catch(() => 0) : 0,
     db.user.count({ where: { isBot: false } }),
     presence.online().catch(() => ({ users: [] as string[], guests: 0, record: null })),
     usable("chat") ? chatPresence() : Promise.resolve(null),
@@ -29,7 +31,7 @@ export async function liveSummary(actor: GcsActor, servers?: GcsServerView[]): P
   return {
     ...EMPTY_SUMMARY,
     servers: {
-      enabled: list.length > 0,
+      enabled: all.length > 0,
       online: online.length,
       total: list.length,
       players: online.reduce((n, s) => n + (s.status?.players ?? 0), 0),

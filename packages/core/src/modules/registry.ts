@@ -138,7 +138,7 @@ export type GcsNotificationCategoryDef = { key: string; labelKey: string; icon: 
 /** Paginile cu zone de widget-uri și zonele lor (specul etapei 5). */
 export const GCS_WIDGET_PAGES = ["index", "forum", "topic"] as const;
 export type GcsWidgetPage = (typeof GCS_WIDGET_PAGES)[number];
-export const GCS_WIDGET_ZONES = ["top", "bottom", "sidebar"] as const;
+export const GCS_WIDGET_ZONES = ["top", "bottom", "sidebar", "main"] as const;
 export type GcsWidgetZone = (typeof GCS_WIDGET_ZONES)[number];
 
 /**

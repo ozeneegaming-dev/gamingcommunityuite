@@ -2,7 +2,6 @@
 
 import { faArrowRight, faBolt, faBullseye, faPenToSquare, faPlay, faSatelliteDish, faServer, faTowerBroadcast, faTrophy, faTv } from "@fortawesome/free-solid-svg-icons";
 import type { GcsCockpitPanel } from "@gcs/core/themes";
-import type { GcsServerLive } from "@gcs/modules";
 import { GcsAvatar, GcsIconSvg, GcsMemberName } from "@gcs/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -10,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { cockpitShownOn, FEED_TABS, feedTabOf, type GcsCockpitData, type GcsCockpitMatch, type GcsFeedItem, type GcsFeedTab } from "@/lib/cockpit";
 import { memberHref } from "@/lib/forum-urls";
-import { occupancy, pickPlayNow } from "@/lib/live-summary";
+import { pickPlayNow } from "@/lib/live-summary";
 import { COCKPIT_METRICS } from "@/lib/ranking";
 import { useRealtime } from "../realtime/GcsRealtimeProvider";
 import { GcsServerLiveProvider, useServerStatuses } from "../servers/GcsServerLive";
@@ -37,7 +36,21 @@ function Who({ user, name }: { user: GcsFeedItem["user"]; name: string }) {
 }
 
 /** „Feed live”: tab-urile Tot / Forum / Servere / Mix din fluxul de activitate, actualizat live. */
-function FeedPanel({ initial }: { initial: GcsFeedItem[] }) {
+export function FeedPanel({
+  initial,
+  bare = false,
+  ns = "gcs-cockpit",
+  tabs = FEED_TABS,
+  limit,
+}: {
+  initial: GcsFeedItem[];
+  bare?: boolean;
+  ns?: string;
+  /** Taburile afișate („Tot” mereu primul); implicit toate. */
+  tabs?: readonly GcsFeedTab[];
+  /** Câte rânduri (implicit toate cele primite). */
+  limit?: number;
+}) {
   const t = useTranslations("cockpit.feed");
   const format = useFormatter();
   const realtime = useRealtime();
@@ -73,15 +86,17 @@ function FeedPanel({ initial }: { initial: GcsFeedItem[] }) {
     };
   }, [realtime, tab, load]);
 
-  const shown = tab === "all" ? items : items.filter((i) => feedTabOf(i) === tab);
+  const shown = (tab === "all" ? items : items.filter((i) => feedTabOf(i) === tab)).slice(0, limit ?? items.length);
   return (
-    <section className="gcs-ck__panel gcs-ck__panel--feed" aria-label={t("title")} data-testid="gcs-cockpit-feed">
-      <PanelHead icon={faSatelliteDish} title={t("title")}>
-        <span className="gcs-ck__liveDot" aria-hidden="true" />
-      </PanelHead>
-      <div className="gcs-hbSeg gcs-ck__tabs" role="tablist" aria-label={t("title")} style={{ "--i": FEED_TABS.indexOf(tab), "--n": FEED_TABS.length } as CSSProperties}>
-        {FEED_TABS.map((k) => (
-          <button key={k} type="button" role="tab" aria-selected={k === tab} className={`gcs-hbSeg__btn${k === tab ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setTab(k)} data-testid={`gcs-cockpit-feed-tab-${k}`}>
+    <section className="gcs-ck__panel gcs-ck__panel--feed" aria-label={t("title")} data-testid={`${ns}-feed`}>
+      {!bare && (
+        <PanelHead icon={faSatelliteDish} title={t("title")}>
+          <span className="gcs-ck__liveDot" aria-hidden="true" />
+        </PanelHead>
+      )}
+      <div className="gcs-hbSeg gcs-ck__tabs" role="tablist" aria-label={t("title")} style={{ "--i": tabs.indexOf(tab), "--n": tabs.length } as CSSProperties}>
+        {tabs.map((k) => (
+          <button key={k} type="button" role="tab" aria-selected={k === tab} className={`gcs-hbSeg__btn${k === tab ? " gcs-hbSeg__btn--on" : ""}`} onClick={() => setTab(k)} data-testid={`${ns}-feed-tab-${k}`}>
             {t(`tabs.${k}`)}
           </button>
         ))}
@@ -91,7 +106,7 @@ function FeedPanel({ initial }: { initial: GcsFeedItem[] }) {
       ) : (
         <ul className="gcs-ck__feed" key={tab}>
           {shown.map((i) => (
-            <li key={i.key} className={`gcs-ck__card gcs-ck__feedRow${fresh.has(i.key) ? " gcs-ck__feedRow--new" : ""}`} data-testid="gcs-cockpit-feed-item" data-kind={i.kind}>
+            <li key={i.key} className={`gcs-ck__card gcs-ck__feedRow${fresh.has(i.key) ? " gcs-ck__feedRow--new" : ""}`} data-testid={`${ns}-feed-item`} data-kind={i.kind}>
               {i.user ? <GcsAvatar name={i.user.name} size="xs" userId={i.user.id} {...(i.user.image ? { src: i.user.image } : {})} /> : <span className="gcs-ck__blank" aria-hidden="true">{[...i.name][0]?.toUpperCase()}</span>}
               <span className="gcs-ck__feedText">
                 <Who user={i.user} name={i.name} />{" "}
@@ -156,16 +171,16 @@ function FeaturedCards({ items, compact }: { items: GcsCockpitData["live"]["feat
 }
 
 /** „Live acum”: meciul mix în desfășurare (scorul, echipele, Urmărește / Conectează-te / Toate meciurile) sau recomandatele. */
-function LivePanel({ data }: { data: GcsCockpitData["live"] }) {
+export function LivePanel({ data, ns = "gcs-cockpit" }: { data: GcsCockpitData["live"]; ns?: string }) {
   const t = useTranslations("cockpit.live");
   const match = useLiveMatch(data.match);
   return (
-    <section className="gcs-ck__panel gcs-ck__panel--live" aria-label={t("title")} data-testid="gcs-cockpit-live">
+    <section className="gcs-ck__panel gcs-ck__panel--live" aria-label={t("title")} data-testid={`${ns}-live`}>
       <PanelHead icon={faTowerBroadcast} title={t("title")}>
         {match && <span className="gcs-ck__liveBadge">{t("badge")}</span>}
       </PanelHead>
       {match ? (
-        <div className="gcs-ck__match" data-testid="gcs-cockpit-match">
+        <div className="gcs-ck__match" data-testid={`${ns}-match`}>
           <div className="gcs-ck__matchHead">
             <b>{[match.server, match.map, t("round", { round: match.round })].filter(Boolean).join(" · ")}</b>
           </div>
@@ -202,13 +217,13 @@ function LivePanel({ data }: { data: GcsCockpitData["live"] }) {
           </div>
           <div className="gcs-ck__actions">
             {match.watch && (
-              <a href={`steam://connect/${match.watch.address}`} className="gcs-btn gcs-btn--ghost gcs-btn--sm" data-testid="gcs-cockpit-watch">
+              <a href={`steam://connect/${match.watch.address}`} className="gcs-btn gcs-btn--ghost gcs-btn--sm" data-testid={`${ns}-watch`}>
                 <GcsIconSvg icon={faTv} />
                 {t("watch")}
               </a>
             )}
             {match.connectHref && (
-              <a href={match.connectHref} className="gcs-btn gcs-btn--primary gcs-btn--sm" data-testid="gcs-cockpit-connect">
+              <a href={match.connectHref} className="gcs-btn gcs-btn--primary gcs-btn--sm" data-testid={`${ns}-connect`}>
                 <GcsIconSvg icon={faPlay} />
                 {t("connect")}
               </a>
@@ -230,7 +245,7 @@ function LivePanel({ data }: { data: GcsCockpitData["live"] }) {
 }
 
 /** „Joacă acum”: conectarea la un server bun acum (online, cu locuri libere), altfel lista serverelor. */
-function PlayNow({ servers, className }: { servers: GcsCockpitData["servers"]; className: string }) {
+export function PlayNow({ servers, className, ns = "gcs-cockpit" }: { servers: GcsCockpitData["servers"]; className: string; ns?: string }) {
   const t = useTranslations("cockpit.servers");
   const statuses = useServerStatuses();
   const play = pickPlayNow(
@@ -240,51 +255,15 @@ function PlayNow({ servers, className }: { servers: GcsCockpitData["servers"]; c
     }),
   );
   return (
-    <a href={play?.connectHref ?? "/servers"} className={className} data-testid="gcs-cockpit-play">
+    <a href={play?.connectHref ?? "/servers"} className={className} data-testid={`${ns}-play`}>
       <GcsIconSvg icon={faPlay} />
       {t("playNow")}
     </a>
   );
 }
 
-/**
- * Benzile serverelor: lumina / umplerea = ocuparea, click = conectare; „Joacă acum” alege un server bun. În aspectul
- * compact sunt pastile (numele, jucătorii; plin = roșu, offline = estompat), derulate orizontal când nu încap, iar
- * „Joacă acum” stă în rândul salutului.
- */
-function ServerStrips({ servers, variant = "full" }: { servers: GcsCockpitData["servers"]; variant?: "full" | "compact" }) {
-  const t = useTranslations("cockpit.servers");
-  const statuses = useServerStatuses();
-  const list = servers.map((s) => ({ ...s, status: statuses[s.id] ?? null }));
-  return (
-    <div className={`gcs-ck__strips${variant === "compact" ? " gcs-ck__strips--compact" : ""}`} data-testid="gcs-cockpit-servers">
-      {list.map((s) => {
-        const st: GcsServerLive | null = s.status;
-        const occ = st?.online ? occupancy(st.players, st.maxPlayers) : { percent: 0, tone: "off" as const };
-        const label = st?.online ? t("strip", { name: s.name, players: st.players, max: st.maxPlayers, map: st.map ?? "" }) : t("offline", { name: s.name });
-        return (
-          <a
-            key={s.id}
-            href={s.connectHref ?? s.href}
-            className={`gcs-ck__strip gcs-ck__strip--${occ.tone}`}
-            style={{ "--pct": `${occ.percent}%` } as CSSProperties}
-            aria-label={label}
-            title={label}
-            data-testid="gcs-cockpit-strip"
-          >
-            <span className="gcs-ck__stripFill" aria-hidden="true" />
-            <b>{s.name}</b>
-            <span className="gcs-ck__stripCount">{st?.online ? `${st.players}/${st.maxPlayers}` : t("off")}</span>
-          </a>
-        );
-      })}
-      {variant === "full" && <PlayNow servers={servers} className="gcs-btn gcs-btn--primary gcs-btn--sm gcs-ck__play" />}
-    </div>
-  );
-}
-
 /** Indicatorul cardurilor de pe mobil (punctele), după poziția derulării. */
-function Dots({ track, count }: { track: React.RefObject<HTMLDivElement | null>; count: number }) {
+export function Dots({ track, count }: { track: React.RefObject<HTMLDivElement | null>; count: number }) {
   const t = useTranslations("cockpit");
   const [at, setAt] = useState(0);
   useEffect(() => {
@@ -381,6 +360,7 @@ function CockpitView({ data, siteName }: { data: GcsCockpitData; siteName: strin
         </div>
         {servers && (
           <div className="gcs-ck__heroActions">
+            <PlayNow servers={data.servers} className="gcs-btn gcs-btn--primary" />
             <Link href="/servers/matches?status=live" className="gcs-btn gcs-btn--ghost">
               {t("live.matches", { count: data.live.matches })}
             </Link>
@@ -406,7 +386,6 @@ function CockpitView({ data, siteName }: { data: GcsCockpitData; siteName: strin
           {panels.map(panel)}
         </div>
         {panels.length > 1 && <Dots track={track} count={panels.length} />}
-        {servers && <ServerStrips servers={data.servers} />}
       </div>
       <Link href="/activity" className="gcs-srOnly">
         {t("allActivity")}
@@ -418,9 +397,10 @@ function CockpitView({ data, siteName }: { data: GcsCockpitData; siteName: strin
 
 /**
  * Aspectul compact (prima pagină nouă, varianta A, 2026-11-03): un rând cu salutul, pastilele de stare (topicurile
- * necitite, prietenii online, rangul cu progresul) și butoanele rapide („Topic nou”, „Joacă acum”), apoi pastilele
- * serverelor. Vizitatorii văd bun venitul, o frază scurtă și intrarea / înregistrarea. Fără cutia cu panouri. Pe
- * telefon: salutul, pastilele pe mai multe rânduri (fără rang și butoane), serverele derulate orizontal.
+ * necitite, prietenii online, rangul cu progresul) și butoanele rapide („Topic nou”, „Joacă acum”, „Meciuri live (N)”).
+ * Vizitatorii văd bun venitul, o frază scurtă și intrarea / înregistrarea. Fără cutia cu panouri și fără benzile
+ * serverelor (serverele se văd prin widget-ul „Servere” și Zona serverelor). Pe telefon: salutul și pastilele pe mai
+ * multe rânduri (fără rang și butoane).
  */
 function CompactView({ data, siteName }: { data: GcsCockpitData; siteName: string }) {
   const t = useTranslations("cockpit");
@@ -482,6 +462,11 @@ function CompactView({ data, siteName }: { data: GcsCockpitData; siteName: strin
                 </Link>
               )}
               {servers && <PlayNow servers={data.servers} className="gcs-btn gcs-btn--primary gcs-btn--sm" />}
+              {servers && (
+                <Link href="/servers/matches?status=live" className="gcs-btn gcs-btn--ghost gcs-btn--sm" data-testid="gcs-cockpit-live-matches">
+                  {t("live.matches", { count: data.live.matches })}
+                </Link>
+              )}
             </div>
           )
         ) : (
@@ -497,7 +482,6 @@ function CompactView({ data, siteName }: { data: GcsCockpitData; siteName: strin
           </div>
         )}
       </div>
-      {servers && <ServerStrips servers={data.servers} variant="compact" />}
     </section>
   );
 }

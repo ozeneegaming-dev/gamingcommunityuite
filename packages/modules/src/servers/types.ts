@@ -23,6 +23,14 @@ export type GcsServerStatus = {
   playerList: GcsServerPlayer[] | null;
   /** Folderul jocului raportat prin A2S (`cstrike`, `csgo`; verificarea înrolărilor); lipsă la celelalte protocoale. */
   folder?: string | null;
+  /** Câte canale are serverul de voce (TeamSpeak) sau de Discord; lipsă la jocuri. */
+  channels?: number | null;
+  /** Invitația serverului de Discord (deja verificată, `https://discord.gg/…`), din widget. */
+  invite?: string | null;
+  /** De când e online fără întrerupere (ISO), ținut de worker între interogări. */
+  onlineSince?: string | null;
+  /** Ultima interogare reușită (ISO): „Ultima dată” la un server căzut. */
+  lastOnlineAt?: string | null;
   updatedAt: string;
   error: GcsQueryError | null;
 };

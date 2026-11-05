@@ -404,9 +404,9 @@ export default async function AcpForumPage({ params, searchParams }: Props) {
     const options = await forumExtOptions(fields);
     const ta = await getTranslations("acp.aspect");
     return (
-      <GcsCard as="section" aria-label={label(tAll, view.tab.labelKey)} style={{ padding: 16, maxWidth: 760 }} data-testid={`gcs-forum-ext-${view.extension}-${view.tab.key}`} data-aspect-card="">
+      <GcsCard as="section" aria-label={label(tAll, view.tab.labelKey)} style={{ padding: 16, maxWidth: view.tab.customForm ? 1200 : 760 }} data-testid={`gcs-forum-ext-${view.extension}-${view.tab.key}`} data-aspect-card="">
         {view.tab.descriptionKey && <p className="gcs-muted" style={{ marginTop: 0 }}>{label(tAll, view.tab.descriptionKey)}</p>}
-        {fields.length > 0 && (
+        {fields.length > 0 && !(view.tab.customForm && Component) && (
           <GcsActionForm action={saveForumExtensionTab.bind(null, f.id, view.extension, view.tab.key)} submitLabel={t("form.save")} submitKind="save">
             <GcsExtFields fields={fields} values={view.values} options={options} upload={{ scope: "forum", id: f.id, extension: view.extension, tab: view.tab.key }} />
           </GcsActionForm>

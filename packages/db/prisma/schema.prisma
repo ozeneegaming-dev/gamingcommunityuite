@@ -2571,6 +2571,11 @@ model GameServer {
   port        Int
   /// Portul de interogare, dacă diferă de portul jocului.
   queryPort   Int?
+  /// Contul de interogare al serverelor de voce (TeamSpeak): `raw` (ServerQuery) / `http` (WebQuery), utilizatorul și
+  /// secretul (parola sau cheia API) criptat cu `sealSecret`; se scrie din ACP, nu se mai afișează niciodată.
+  queryMode   String   @default("raw")
+  queryUser   String   @default("")
+  querySecret String?
   name        String
   slug        String
   position    Int      @default(0)

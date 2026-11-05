@@ -284,7 +284,8 @@ test("consola Hero Cockpit: pornită / oprită, feed-ul, meciul live, trofeele p
     await expect(page.getByTestId("gcs-cockpit-feed-item").first()).toBeVisible();
     await expect(page.getByTestId("gcs-cockpit-match")).toContainText("12");
     await expect(page.getByTestId("gcs-cockpit-match")).toContainText(`Autor0${id}`);
-    await expect.poll(async () => page.getByTestId("gcs-cockpit-strip").count()).toBeGreaterThanOrEqual(2);
+    // Fără benzile serverelor (serverele se văd prin widget-ul „Servere”); „Joacă acum” stă lângă „Meciuri live”.
+    await expect(page.getByTestId("gcs-cockpit-strip")).toHaveCount(0);
     await expect(page.getByTestId("gcs-cockpit-play")).toBeVisible();
     const top = page.getByTestId("gcs-cockpit-top");
     await top.getByTestId("gcs-cockpit-top-period-day").click();

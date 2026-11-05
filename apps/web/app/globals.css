@@ -23,6 +23,8 @@
 @import "@gcs/ui/community.css";
 @import "@gcs/ui/richtext.css";
 @import "@gcs/ui/servers.css";
+/* Aplicația Servere: serverele ca forumuri (bara live, cipurile, cardul mare, tabul „Server” din ACP). */
+@import "@gcs/ui/servers-forum.css";
 @import "@gcs/ui/clans.css";
 @import "@gcs/ui/downloads.css";
 /* Aplicația Pagini (orice temă): paginile construite, bazele de date, înregistrările și constructorul din ACP. */

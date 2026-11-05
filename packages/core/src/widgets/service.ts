@@ -51,7 +51,7 @@ export function widgetExtValues(config: Record<string, unknown> | null | undefin
   return Object.fromEntries(Object.entries(raw).filter((e): e is [string, Record<string, unknown>] => isRecord(e[1])));
 }
 const isZone = (v: unknown): v is GcsWidgetZone => GCS_WIDGET_ZONES.includes(v as GcsWidgetZone);
-const emptyLayout = (): GcsPageLayout => ({ top: [], bottom: [], sidebar: [] });
+const emptyLayout = (): GcsPageLayout => ({ top: [], bottom: [], sidebar: [], main: [] });
 
 /** Layout-ul implicit al unei pagini, din modulele înregistrate (în ordinea lor); tipurile necunoscute se sar. */
 export function defaultWidgetLayout(registry: GcsModuleRegistry, page: GcsWidgetPage): GcsWidgetPlacementInput[] {

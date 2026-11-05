@@ -3,9 +3,9 @@ import { describe, expect, test } from "vitest";
 import { createRegistry } from "./registry";
 
 /**
- * Prima pagină nouă, varianta A (2026-11-03): layout-ul implicit al instalărilor noi (anunțul sus; în coloana din
- * dreapta serverele, cine e online, topul săptămânii, ultimele postări, meciurile live și shoutbox-ul la final; panoul
- * de statistici jos) și widget-urile noi / câmpurile lor.
+ * Prima pagină (macheta HomeComplete, 2026-11-04): layout-ul implicit al instalărilor noi (anunțul și „Acum în
+ * comunitate” sus; chat-ul în coloana din stânga; în dreapta serverele, obiectivul lunii, cine e online, topul
+ * săptămânii, ultimele postări și meciurile live; panoul de statistici jos) și widget-urile noi / câmpurile lor.
  */
 describe("prima pagină implicită (instalările noi)", () => {
   const registry = createRegistry();
@@ -14,7 +14,8 @@ describe("prima pagină implicită (instalările noi)", () => {
   test("zonele și ordinea, cu configurările coloanei înguste", () => {
     const layout = defaultWidgetLayout(registry, "index");
     expect(layout.filter((p) => p.zone === "top").map((p) => p.type)).toEqual(["core.announcement"]);
-    expect(layout.filter((p) => p.zone === "sidebar").map((p) => p.type)).toEqual(["servers.list", "core.online", "core.ranking", "forums.recentPosts", "servers.liveMatches", "chat.shoutbox"]);
+    expect(layout.filter((p) => p.zone === "main").map((p) => p.type)).toEqual(["chat.shoutbox"]);
+    expect(layout.filter((p) => p.zone === "sidebar").map((p) => p.type)).toEqual(["servers.list", "vip.donationGoal", "core.online", "core.ranking", "forums.recentPosts", "servers.liveMatches"]);
     expect(layout.filter((p) => p.zone === "bottom").map((p) => p.type)).toEqual(["core.statsPanel"]);
     const config = (type: string) => layout.find((p) => p.type === type)?.config;
     expect(config("servers.list")).toEqual({ limit: 5, game: "", layout: "compact" });
@@ -30,14 +31,14 @@ describe("prima pagină implicită (instalările noi)", () => {
     // Registrul văzut fără widget-urile aplicației Servere (ca o instalare fără ea).
     const withoutServers = { all: () => registry.all(), widgetDef: (k: string) => (k.startsWith("servers.") ? undefined : registry.widgetDef(k)) } as unknown as GcsModuleRegistry;
     const layout = defaultWidgetLayout(withoutServers, "index");
-    expect(layout.filter((p) => p.zone === "sidebar").map((p) => p.type)).toEqual(["core.online", "core.ranking", "forums.recentPosts", "chat.shoutbox"]);
+    expect(layout.filter((p) => p.zone === "sidebar").map((p) => p.type)).toEqual(["vip.donationGoal", "core.online", "core.ranking", "forums.recentPosts"]);
   });
 
   test("„Meciuri live”: widget-ul aplicației Servere, cu câte meciuri arată", () => {
     const w = registry.widgetDef("servers.liveMatches")!;
     expect(w.module).toBe("servers");
     expect(w.def.icon).toBe("fa-solid fa-tower-broadcast");
-    expect(w.def.zones).toEqual(["top", "bottom", "sidebar"]);
+    expect(w.def.zones).toEqual(["top", "bottom", "sidebar", "main"]);
     expect(w.def.config({ limit: 3 })).toEqual({ limit: 3, icon: "" });
     expect(w.def.config({})).toEqual({ limit: 3, icon: "" });
     expect(w.def.config({ limit: 11 })).toBeNull();
@@ -50,5 +51,21 @@ describe("prima pagină implicită (instalările noi)", () => {
     expect(def("core.ranking").config({ metric: "posts", period: "day" })).toEqual({ tabs: "forum", metric: "posts", period: "day", icon: "" });
     expect(def("core.ranking").config({ tabs: "community", period: "week" })).toMatchObject({ tabs: "community", period: "week" });
     expect(def("core.ranking").config({ tabs: "clans" })).toBeNull();
+  });
+
+  test("Comunitate Live (premium): widget-ul „Acum în comunitate”, lat, cu tab-urile, rândurile și „Live acum” din setări; nu e pus implicit", () => {
+    const app = registry.module("community_live")?.app;
+    expect(app?.premium).toBe(true);
+    expect(app?.optional).toBe(true);
+    const w = registry.widgetDef("community_live.now")!;
+    expect(w.module).toBe("community_live");
+    expect(w.def.zones).toEqual(["top", "main", "bottom"]);
+    expect(w.def.config({})).toEqual({ limit: 8, live: "show", tabForum: "show", tabServers: "show", tabMix: "show" });
+    expect(w.def.config({ limit: 3, tabMix: "hide", live: "hide" })).toMatchObject({ limit: 3, tabMix: "hide", live: "hide" });
+    expect(w.def.config({ limit: 20 })).toBeNull();
+    expect(w.def.config({ tabForum: "maybe" })).toBeNull();
+    expect(w.def.fields?.map((f) => f.key)).toEqual(["limit", "live", "tabForum", "tabServers", "tabMix"]);
+    expect(registry.widgetDef("core.nowCommunity")).toBeUndefined();
+    expect(defaultWidgetLayout(registry, "index").some((p) => p.type === "community_live.now")).toBe(false);
   });
 });

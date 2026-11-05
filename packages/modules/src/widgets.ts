@@ -1,8 +1,19 @@
 import { fieldsConfig, type GcsWidgetDef, type GcsWidgetField } from "@gcs/core";
 import { isGcsIcon } from "@gcs/ui/icon-registry";
 
-const ALL_ZONES = ["top", "bottom", "sidebar"] as const;
+const ALL_ZONES = ["top", "bottom", "sidebar", "main"] as const;
 const limitField = (max = 20): GcsWidgetField => ({ key: "limit", labelKey: "widgets.fields.limit", type: "number", min: 1, max });
+/** Un câmp „Afișat / Ascuns” (valoarea implicită o dă `defaultConfig`). */
+export const showField = (key: string, labelKey: string): GcsWidgetField => ({
+  key,
+  labelKey,
+  type: "select",
+  options: [
+    { value: "show", labelKey: "widgets.choices.show" },
+    { value: "hide", labelKey: "widgets.choices.hide" },
+  ],
+});
+
 /** Iconița din titlul widget-ului, pe amplasare (gol = iconița widget-ului); validată cu registrul Font Awesome. */
 const iconField: GcsWidgetField = { key: "icon", labelKey: "widgets.fields.icon", type: "text", maxLength: 80 };
 
@@ -53,7 +64,7 @@ export const coreWidgets: GcsWidgetDef[] = [
     fields: [{ key: "unit", labelKey: "widgets.fields.adUnit", type: "select", optionsFrom: "ads.units" }],
   }),
   widget({ key: "core.online", labelKey: "widgets.core.online", descriptionKey: "widgets.desc.core.online", icon: "fa-solid fa-signal", defaultConfig: {} }),
-  widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", descriptionKey: "widgets.desc.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom"], defaultConfig: {} }),
+  widget({ key: "core.statsPanel", labelKey: "widgets.core.statsPanel", descriptionKey: "widgets.desc.core.statsPanel", icon: "fa-solid fa-rocket", zones: ["top", "bottom", "main"], defaultConfig: {} }),
   widget({ key: "core.onlineDay", labelKey: "widgets.core.onlineDay", descriptionKey: "widgets.desc.core.onlineDay", icon: "fa-solid fa-clock", defaultConfig: {} }),
   widget({ key: "core.groupLegend", labelKey: "widgets.core.groupLegend", descriptionKey: "widgets.desc.core.groupLegend", icon: "fa-solid fa-users-rectangle", defaultConfig: {} }),
   // Blocul pentru vizitatori (macheta GuestCta): înregistrare, autentificare și conectarea dintr-un click; membrii nu-l văd.
@@ -137,7 +148,7 @@ export const forumWidgets: GcsWidgetDef[] = [
     labelKey: "widgets.forums.featuredCarousel",
     descriptionKey: "widgets.desc.forums.featuredCarousel",
     icon: "fa-solid fa-images",
-    zones: ["top", "bottom"],
+    zones: ["top", "bottom", "main"],
     defaultConfig: { limit: 8 },
     fields: [limitField(12)],
   }),
@@ -216,16 +227,6 @@ export const serverWidgets: GcsWidgetDef[] = [
     fields: [limitField()],
   }),
 ];
-
-const showField = (key: string, labelKey: string): GcsWidgetField => ({
-  key,
-  labelKey,
-  type: "select",
-  options: [
-    { value: "show", labelKey: "widgets.choices.show" },
-    { value: "hide", labelKey: "widgets.choices.hide" },
-  ],
-});
 
 /**
  * „Obiectivul lunii” (VIP clasic › Donații): titlul obiectivului, bara de progres în culoarea accentului, „640 / 1.000

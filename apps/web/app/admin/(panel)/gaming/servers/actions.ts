@@ -25,6 +25,12 @@ export async function saveServer(id: number | null, fd: FormData): Promise<GcsRe
       groups: fd.getAll("groups").map(Number).filter(Number.isInteger),
       adminIds: fd.getAll("adminIds").filter((v): v is string => typeof v === "string"),
       enabled: fd.get("enabled") === "on",
+      // Contul de interogare (TeamSpeak): parola / cheia e „doar scrisă” (gol = neschimbată, bifa = ștearsă).
+      query: {
+        mode: field(fd, "queryMode") === "http" ? "http" : "raw",
+        user: field(fd, "queryUser"),
+        secret: fd.get("querySecretClear") === "on" ? "" : field(fd, "querySecret") || undefined,
+      },
       ...(bannerId ? { bannerId } : fd.get("removeBanner") === "on" ? { bannerId: null } : {}),
     });
   });

@@ -166,6 +166,8 @@ test("grila (1440 px, GCS Dark): cele patru stări ale zonei de imagine, trei ca
 test("clic pe zona goală a cardului (imaginea sau colțul) → forumul; clic pe un subforum → subforumul", async ({ browser }) => {
   const { context, page } = await visitor(browser, { width: 1440, ip: "100.93.2" });
   await page.goto("/");
+  // Widget-urile de sus vin în flux: cardurile se măsoară după ce s-au așezat toate (fără locuri rezervate).
+  await expect(page.locator(".gcs-widgetSkeleton").filter({ visible: true })).toHaveCount(0);
   const card = cardOf(page, forums.acp);
   await card.scrollIntoViewIfNeeded();
   expect(await card.evaluate((el) => getComputedStyle(el).cursor)).toBe("pointer");
@@ -175,6 +177,7 @@ test("clic pe zona goală a cardului (imaginea sau colțul) → forumul; clic pe
   await page.mouse.click(media.x + media.width / 2, media.y + media.height / 2);
   await expect(page).toHaveURL(forumUrl);
   await page.goBack();
+  await expect(page.locator(".gcs-widgetSkeleton").filter({ visible: true })).toHaveCount(0);
   // Colțul de jos din stânga (nici titlu, nici alt link).
   const box = (await cardOf(page, forums.acp).boundingBox())!;
   await page.mouse.click(box.x + 6, box.y + box.height - 6);

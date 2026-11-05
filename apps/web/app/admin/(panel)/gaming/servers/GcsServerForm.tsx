@@ -13,7 +13,8 @@ import { useErrorMessage } from "@/lib/use-error-message";
 import type { GcsAcpIconDef } from "../../_components/types";
 import { saveServer, testServer } from "./actions";
 
-export type GcsServerFormGame = { key: string; name: string; defaultPort: number; icon: GcsAcpIconDef | null };
+/** `protocol`: TeamSpeak cere contul de interogare, Discord doar ID-ul serverului (fără port). */
+export type GcsServerFormGame = { key: string; name: string; defaultPort: number; defaultQueryPort: number | null; protocol: string; icon: GcsAcpIconDef | null };
 export type GcsServerFormValues = {
   id: number | null;
   game: string;
@@ -27,6 +28,8 @@ export type GcsServerFormValues = {
   enabled: boolean;
   bannerUrl: string | null;
   admins: { id: string; name: string }[];
+  /** Contul de interogare (TeamSpeak), fără secret: doar dacă e salvat unul. */
+  query?: { mode: "raw" | "http"; user: string; hasSecret: boolean };
 };
 
 type Props = {
@@ -185,6 +188,10 @@ export function GcsServerForm({ values, games, forums, groups }: Props) {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [preview, setPreview] = useState<string | null>(values.bannerUrl);
+  const [queryMode, setQueryMode] = useState<"raw" | "http">(values.query?.mode ?? "raw");
+  const protocol = games.find((g) => g.key === game)?.protocol ?? "";
+  const discord = protocol === "discord";
+  const teamspeak = protocol === "teamspeak";
 
   /** Alt joc: portul implicit al jocului nou, dacă portul era cel implicit al jocului vechi (sau gol). */
   function chooseGame(key: string) {
@@ -204,6 +211,8 @@ export function GcsServerForm({ values, games, forums, groups }: Props) {
       host: String(fd.get("host") ?? ""),
       port: Number(fd.get("port")),
       queryPort: qp ? Number(qp) : null,
+      serverId: values.id,
+      ...(teamspeak ? { query: { mode: queryMode, user: String(fd.get("queryUser") ?? ""), ...(String(fd.get("querySecret") ?? "") ? { secret: String(fd.get("querySecret")) } : {}) } } : {}),
     });
     setTesting(false);
     setTest(res.ok ? { ok: true, status: res.data } : { ok: false, error: errorMessage(res.error) });
@@ -271,20 +280,58 @@ export function GcsServerForm({ values, games, forums, groups }: Props) {
         </label>
         <div style={ROW}>
           <label className="gcs-field" style={{ flex: "1 1 260px" }}>
-            {tf("host")}
-            <input className="gcs-input" name="host" defaultValue={values.host} required maxLength={253} autoComplete="off" spellCheck={false} />
-            <span className="gcs-field__hint">{tf("hostHint")}</span>
+            {discord ? tf("guildId") : tf("host")}
+            <input className="gcs-input" name="host" defaultValue={values.host} required maxLength={253} autoComplete="off" spellCheck={false} {...(discord ? { inputMode: "numeric" as const, pattern: "\\d{17,20}" } : {})} data-testid="gcs-server-host" />
+            <span className="gcs-field__hint">{discord ? tf("guildIdHint") : tf("hostHint")}</span>
           </label>
-          <label className="gcs-field" style={{ width: 130 }}>
-            {tf("port")}
-            <input className="gcs-input" name="port" type="number" min={1} max={65535} required value={port} onChange={(e) => setPort(e.target.value)} />
-          </label>
-          <label className="gcs-field" style={{ width: 170 }}>
-            {tf("queryPort")}
-            <input className="gcs-input" name="queryPort" type="number" min={1} max={65535} defaultValue={values.queryPort ?? ""} />
-            <span className="gcs-field__hint">{tf("queryPortHint")}</span>
-          </label>
+          {discord ? (
+            <input type="hidden" name="port" value="443" />
+          ) : (
+            <>
+              <label className="gcs-field" style={{ width: 130 }}>
+                {teamspeak ? tf("voicePort") : tf("port")}
+                <input className="gcs-input" name="port" type="number" min={1} max={65535} required value={port} onChange={(e) => setPort(e.target.value)} />
+              </label>
+              <label className="gcs-field" style={{ width: 170 }}>
+                {tf("queryPort")}
+                <input className="gcs-input" name="queryPort" type="number" min={1} max={65535} defaultValue={values.queryPort ?? ""} placeholder={teamspeak ? (queryMode === "http" ? "10080" : "10011") : undefined} />
+                <span className="gcs-field__hint">{teamspeak ? tf("tsQueryPortHint") : tf("queryPortHint")}</span>
+              </label>
+            </>
+          )}
         </div>
+        {teamspeak && (
+          <div className="gcs-acpFieldset" style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="gcs-server-query">
+            <div role="radiogroup" aria-label={tf("queryMode")} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(["raw", "http"] as const).map((m) => (
+                <label key={m} className="gcs-check">
+                  <input type="radio" name="queryMode" value={m} checked={queryMode === m} onChange={() => setQueryMode(m)} />
+                  {tf(`queryModes.${m}`)}
+                </label>
+              ))}
+            </div>
+            <div style={ROW}>
+              {queryMode === "raw" && (
+                <label className="gcs-field" style={{ flex: "1 1 220px" }}>
+                  {tf("queryUser")}
+                  <input className="gcs-input" name="queryUser" defaultValue={values.query?.user ?? ""} maxLength={100} autoComplete="off" spellCheck={false} data-testid="gcs-server-query-user" />
+                </label>
+              )}
+              <label className="gcs-field" style={{ flex: "1 1 260px" }}>
+                {queryMode === "http" ? tf("queryKey") : tf("queryPassword")}
+                {/* Doar scris: valoarea salvată nu se trimite niciodată înapoi în pagină. */}
+                <input className="gcs-input" name="querySecret" type="password" maxLength={200} autoComplete="new-password" placeholder={values.query?.hasSecret ? tf("querySecretSaved") : ""} data-testid="gcs-server-query-secret" />
+                <span className="gcs-field__hint">{values.query?.hasSecret ? tf("querySecretKeep") : tf("querySecretHint")}</span>
+              </label>
+            </div>
+            {values.query?.hasSecret && (
+              <label className="gcs-check">
+                <input type="checkbox" name="querySecretClear" />
+                {tf("querySecretClear")}
+              </label>
+            )}
+          </div>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
           <GcsButton type="button" variant="ghost" onClick={() => void runTest()} disabled={testing} icon={<GcsIconSvg icon={faPlay} />} data-testid="gcs-server-test">
             {testing ? t("testing") : t("test")}

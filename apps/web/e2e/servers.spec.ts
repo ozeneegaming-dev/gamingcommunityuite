@@ -67,7 +67,7 @@ test("ACP: „Testează” refuză adresele private, citește serverul fals; ad�
   await expect(page).toHaveURL(/\/admin\/gaming\/servers\/new$/);
   await fillServer(page, "Counter-Strike 2 / CS:GO", CS, "10.0.0.5", fake.udpPort);
   await page.getByTestId("gcs-server-test").click();
-  await expect(page.getByTestId("gcs-server-test-result")).toContainText("Adresa e privată sau locală");
+  await expect(page.getByTestId("gcs-server-test-result")).toContainText("Adresa nu e publică");
 
   await page.getByLabel("Host (IP sau domeniu)").fill("127.0.0.1");
   await page.getByTestId("gcs-server-test").click();
