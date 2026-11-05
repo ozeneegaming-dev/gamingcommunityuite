@@ -178,7 +178,8 @@ export function GcsServerChips({ items }: { items: { server: GcsServerCardData |
               {state === "online" ? (
                 <>
                   <strong className="gcsx-srv__count" data-fill={fillTone(status)}>
-                    {status!.players}/{status!.maxPlayers}
+                    {/* Discord: doar membrii online (widget-ul nu are sloturi). */}
+                    {server.kind === "community" ? status!.players : `${status!.players}/${status!.maxPlayers}`}
                   </strong>
                   {detail && <span className="gcsx-srvChip__map">{detail}</span>}
                 </>
