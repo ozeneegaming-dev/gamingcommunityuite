@@ -49,6 +49,25 @@ export function services(): GcsServices {
   if (!globalForServices.gcsServices) {
     const created = createServices();
     globalForServices.gcsServices = created;
+    // Mesaj privat de mulțumire expediat automat de contul botului la confirmarea unei donații VIP.
+    created.bus.on("donation.confirmed", async (e) => {
+      const userId = typeof e.payload.userId === "string" ? e.payload.userId : null;
+      if (!userId || e.payload.notify !== true) return;
+      try {
+        const botOn = await created.communityBot.enabled("donation_thank_you");
+        if (!botOn) return;
+        const amount = Number(e.payload.amount);
+        const currency = String(e.payload.currency);
+        const sum = amount % 100 === 0 ? `${amount / 100} ${currency}` : `${(amount / 100).toFixed(2)} ${currency}`;
+        await created.communityBot.pm("donation_thank_you", {
+          to: [userId],
+          title: "Mulțumim pentru donație!",
+          content: { text: `Îți mulțumim pentru sprijinul acordat comunității prin donația de ${sum}!` },
+        });
+      } catch {
+        // Eroarea de expediere nu blochează fluxul donației.
+      }
+    });
     // Pluginurile (etapa 6) se încarcă în fundal, doar pe un site instalat; paginile care le folosesc așteaptă prima
     // încărcare (`ready`).
     void new GcsInstallState(gcsConfigDir())
