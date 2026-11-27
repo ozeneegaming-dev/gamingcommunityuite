@@ -89,8 +89,13 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
       const next = s.pattern ? nextCronTime(s.pattern, now) : Number(s.nextRunAt) + every * Math.max(1, Math.ceil((now - Number(s.nextRunAt) + 1) / every));
       const claimed = await this.db.gcsJobSchedule.updateMany({ where: { id: s.id, nextRunAt: s.nextRunAt }, data: { nextRunAt: BigInt(next) } });
       if (claimed.count !== 1) continue;
-      await this.enqueue(s.name, JSON.parse(s.data) as GcsJobData, { jobId: `sched-${s.id}-${s.nextRunAt}` });
-      added++;
+      try {
+        await this.enqueue(s.name, JSON.parse(s.data) as GcsJobData, { jobId: `sched-${s.id}-${s.nextRunAt}` });
+        added++;
+      } catch (err) {
+        await this.db.gcsJobSchedule.updateMany({ where: { id: s.id, nextRunAt: BigInt(next) }, data: { nextRunAt: s.nextRunAt } });
+        throw err;
+      }
     }
     return added;
   }
@@ -124,17 +129,17 @@ export class GcsSqlJobQueue extends GcsJobRegistry implements GcsJobQueue {
     try {
       if (!def) throw new Error(`Job necunoscut: ${job.name}`);
       await this.runDef(def, JSON.parse(job.data) as GcsJobData);
-      await this.db.gcsJob.deleteMany({ where: { id: job.id } });
+      await this.db.gcsJob.deleteMany({ where: { id: job.id, attempts: job.attempts } });
       return true;
     } catch (error) {
       onError?.(job.name, error);
       const message = error instanceof Error ? error.message : String(error);
       if (job.attempts >= job.maxAttempts) {
-        await this.db.gcsJob.updateMany({ where: { id: job.id }, data: { status: "failed", lockedUntil: null, lastError: message.slice(0, 2000) } });
+        await this.db.gcsJob.updateMany({ where: { id: job.id, attempts: job.attempts }, data: { status: "failed", lockedUntil: null, lastError: message.slice(0, 2000) } });
         await this.pruneFailed();
       } else {
         const delay = BACKOFF_MS * 2 ** (job.attempts - 1);
-        await this.db.gcsJob.updateMany({ where: { id: job.id }, data: { status: "waiting", lockedUntil: null, runAt: BigInt(this.now() + delay), lastError: message.slice(0, 2000) } });
+        await this.db.gcsJob.updateMany({ where: { id: job.id, attempts: job.attempts }, data: { status: "waiting", lockedUntil: null, runAt: BigInt(this.now() + delay), lastError: message.slice(0, 2000) } });
       }
       return false;
     }
