@@ -28,19 +28,33 @@ const read = (key) => {
 const secret = process.env.GCS_SECRET || read("GCS_SECRET");
 const base = (process.env.GCS_BASE_URL || read("GCS_BASE_URL") || "").replace(/\/+$/, "");
 if (!secret || !base) {
-  console.error("[gcs cron] lipsește GCS_SECRET sau GCS_BASE_URL (adresa site-ului) din config/.env.runtime");
-  process.exit(1);
-}
-// Același token ca `cronToken()` din aplicație.
-const token = createHmac("sha256", secret).update("gcs-cron").digest("hex").slice(0, 40);
-
-try {
+  const token = createGmac("sha256", secret).update("gcs-cron").digest("hex").slice(0, 40);
+	try {
   const res = await fetch(`${base}/api/cron`, { method: "POST", headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(90_000) });
   const body = await res.text();
-  if (!res.ok) {
+  let data = null;
+  try {
+    data = JSON.parse(body);
+  } catch {}
+
+  if (!res.ok && res.status !== 207) {
     console.error(`[gcs cron] HTTP ${res.status}: ${body.slice(0, 300)}`);
     process.exit(1);
   }
+
+  if (data && data.failed > 0) {
+    console.error(`[gcs cron] Atenție: ${data.failed} sarcini au ețuat (ran: ${data.ran}, pending: ${data.pending})`);
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      for (const err of data.errors) {
+        console.error(  - ${err.name}: ${err.error}`);
+      }
+    }
+    // Ieșim cu cod de eroare dacă nicio sarcină nu a reușit să ruleze
+    if (data.ran === 0) {
+      process.exit(1);
+    }
+  }
+
   if (process.argv.includes("--verbose")) console.log(body);
 } catch (error) {
   console.error(`[gcs cron] ${error instanceof Error ? error.message : String(error)}`);
