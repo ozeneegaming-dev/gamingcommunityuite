@@ -17,10 +17,14 @@ export async function POST(req: Request): Promise<Response> {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
+
+    const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ permission: "pm.send" });
+
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     if (!(file instanceof File)) throw new GcsValidationError({ file: "required" });
-    return services().attachments.upload(await currentActor(), { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { permission: "pm.send" });
+    return services().attachments.upload(actor, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { permission: "pm.send" });
   });
   return Response.json(result, { status: result.ok ? 200 : result.error.status });
 }
