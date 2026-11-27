@@ -18,11 +18,12 @@ export async function POST(req: Request): Promise<Response> {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
+    const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ reason: "login_required" });
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const rawDb = form?.get("forumId");
     if (!(file instanceof File) || typeof rawDb !== "string" || !/^\d{1,10}$/.test(rawDb)) throw new GcsValidationError({ file: "required" });
-    const actor = await currentActor();
     const { pagesAccess, attachments } = services();
     const d = await pagesAccess.database(Number(rawDb));
     if (!d || !(await pagesAccess.canViewDatabase(actor, d))) throw new GcsNotFound();
