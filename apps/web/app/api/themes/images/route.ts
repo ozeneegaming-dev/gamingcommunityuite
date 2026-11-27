@@ -33,13 +33,13 @@ export async function POST(req: Request): Promise<Response> {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" }, { maxMb: "5" });
+    const actor = await assertAcpAction(THEMES_ACP_SECTION, "edit");
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const kind = form?.get("kind");
     const key = form?.get("theme");
     const slot = typeof kind === "string" && Object.hasOwn(SLOTS, kind) ? SLOTS[kind] : undefined;
     if (!(file instanceof File) || !slot || typeof key !== "string") throw new GcsValidationError({ file: "required" });
-    const actor = await assertAcpAction(THEMES_ACP_SECTION, "edit");
     const { attachments, themes } = services();
     if (!(await themes.get(key))) throw new GcsValidationError({ theme: "not_found" });
     const uploaded = await attachments.uploadSiteImage(actor, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { kind: slot.upload, themeKey: key });
