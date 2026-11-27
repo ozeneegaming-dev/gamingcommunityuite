@@ -20,12 +20,13 @@ export async function POST(req: Request): Promise<Response> {
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
     const { apps, chatQueries, attachments } = services();
     if (!(await apps.enabled("chat"))) throw new GcsNotFound();
+    const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ reason: "login_required" });
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const channel = form?.get("channel");
     if (!(file instanceof File)) throw new GcsValidationError({ file: "required" });
     if (typeof channel !== "string" || !KEY_RE.test(channel)) throw new GcsValidationError({ channel: "required" });
-    const actor = await currentActor();
     // Camerele private nu se dezvăluie: fără acces, „nu există”.
     if (!(await chatQueries.canRead(actor, channel))) throw new GcsNotFound();
     return attachments.upload(actor, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) }, { container: { type: "chat", id: channel }, permission: "chat.write" });
