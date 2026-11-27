@@ -17,6 +17,8 @@ export async function POST(req: Request): Promise<Response> {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
+    const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ reason: "login_required" });
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const num = (k: string) => {
@@ -27,7 +29,7 @@ export async function POST(req: Request): Promise<Response> {
     const categoryId = num("categoryId");
     const fileId = num("fileId");
     if (categoryId === null && fileId === null) throw new GcsValidationError({ categoryId: "required" });
-    return services().downloads.service.uploadScreenshot(await currentActor(), { categoryId: categoryId ?? 0, fileId }, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) });
+    return services().downloads.service.uploadScreenshot(actor, { categoryId: categoryId ?? 0, fileId }, { name: file.name, bytes: Buffer.from(await file.arrayBuffer()) });
   });
   return Response.json(result, { status: result.ok ? 200 : result.error.status });
 }
