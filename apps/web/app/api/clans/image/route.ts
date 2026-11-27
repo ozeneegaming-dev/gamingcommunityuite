@@ -20,6 +20,7 @@ export async function POST(req: Request): Promise<Response> {
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
     const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ reason: "unauthorized" });
     const form = await req.formData().catch(() => null);
     const kind = form?.get("kind");
     const rawClan = form?.get("clanId");
