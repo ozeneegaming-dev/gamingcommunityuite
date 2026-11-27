@@ -1,5 +1,5 @@
 /** Funcțiile nucleului care folosesc botul; pluginurile apar ca `plugin:<cheie>` (capabilitatea `bot.post`). */
-export const BOT_CORE_FEATURES = ["welcome_pm", "moderation_notes", "scheduled"] as const;
+export const BOT_CORE_FEATURES = ["welcome_pm", "moderation_notes", "scheduled", "donation_thank_you"] as const;
 export type GcsBotCoreFeature = (typeof BOT_CORE_FEATURES)[number];
 /** Comutatoarele pe funcție (ACP › Sistem › Botul comunității): `{ [funcție]: boolean }`; lipsa = valoarea implicită. */
 export const BOT_FEATURES_SETTING = "bot.features";
