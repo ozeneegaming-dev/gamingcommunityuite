@@ -19,6 +19,9 @@ export async function POST(req: Request): Promise<Response> {
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
 
+    const actor = await currentActor();
+    if (!actor.userId) throw new GcsForbidden({ permission: "forums.upload" });
+
     const form = await req.formData().catch(() => null);
     const file = form?.get("file");
     const forumId = form?.get("forumId");
@@ -27,7 +30,7 @@ export async function POST(req: Request): Promise<Response> {
     }
     const bytes = Buffer.from(await file.arrayBuffer());
     return services().attachments.upload(
-      await currentActor(),
+      actor,
       { name: file.name, bytes },
       { container: { type: "forum", id: forumId }, permission: "forums.upload" },
     );
