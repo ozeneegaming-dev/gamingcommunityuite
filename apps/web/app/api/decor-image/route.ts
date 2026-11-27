@@ -1,7 +1,7 @@
 import { GcsForbidden, GcsNotFound, GcsRateLimited, GcsValidationError, toResult, WIDGETS_ACP_SECTION, type GcsForumExtField } from "@gcs/core";
 import { FORUMS_ACP_SECTION } from "@gcs/modules";
 import { headers } from "next/headers";
-import { assertAcpAction } from "@/lib/acp";
+import { assertAcpAction, getAcpContext } from "@/lib/acp";
 import { isSameOrigin } from "@/lib/actions";
 import { safeModeActive } from "@/lib/plugins";
 import { services } from "@/lib/services";
@@ -22,6 +22,12 @@ export async function POST(req: Request): Promise<Response> {
     const h = await headers();
     if (!isSameOrigin(h)) throw new GcsForbidden({ reason: "csrf" });
     if (Number(h.get("content-length") ?? "0") > MAX_BODY_BYTES) throw new GcsValidationError({ file: "too_large" });
+    const ctx = await getAcpContext();
+    if (ctx.state !== "ok") throw new GcsForbidden({ reason: "acp_gate" });
+    const { acp } = services();
+    const canForums = await acp.can(ctx.actor, FORUMS_ACP_SECTION, "edit");
+    const canWidgets = await acp.can(ctx.actor, WIDGETS_ACP_SECTION, "edit");
+    if (!canForums && !canWidgets) throw new GcsForbidden({ reason: "acp_forbidden" });
     const form = await req.formData().catch(() => null);
     const get = (key: string) => {
       const v = form?.get(key);
