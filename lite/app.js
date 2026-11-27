@@ -189,12 +189,19 @@ const read = (key) => {
   return m[1].startsWith('"') ? JSON.parse(m[1]) : m[1];
 };
 if (!env.GCS_SECRET) {
-  const saved = read("GCS_SECRET");
+  let saved = read("GCS_SECRET");
   if (saved) env.GCS_SECRET = saved;
   else {
-    env.GCS_SECRET = crypto.randomBytes(48).toString("hex");
-    fs.writeFileSync(runtimeFile, `${runtime}${runtime && !runtime.endsWith("\n") ? "\n" : ""}GCS_SECRET=${env.GCS_SECRET}\n`, { mode: 0o600 });
-  }
+    const generated = crypto.randomBytes(48).toString("hex");
+    try {
+      fs.writeFileSync(runtimeFile, `${runtime}${runtime && !runtime.endsWith("\n") ? "\n" : ""}GCS_SECRET=${generated}\n`, { mode: 0o600, flag: "wx" });
+      env.GCS_SECRET = generated;
+    } catch {
+      const freshRuntime = fs.readFileSync(runtimeFile, "utf8");
+      const match = /^GCS_SECRET=(.*)$/m.exec(freshRuntime);
+      env.GCS_SECRET = match ? (match[1].startsWith('"') ? JSON.parse(match[1]) : match[1]) : generated;
+      }
+    }
 }
 for (const key of ["DATABASE_URL", "GCS_BASE_URL"]) {
   const saved = read(key);
